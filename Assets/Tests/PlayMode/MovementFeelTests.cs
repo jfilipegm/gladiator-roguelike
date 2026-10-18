@@ -163,7 +163,8 @@ namespace Gladiator.Tests
             Assert.Greater(stairY, 1.0f, "should walk up the stairs onto the platform");
 
             // 6) Coyote time: run off the platform edge and jump shortly after leaving it.
-            yield return Place(new Vector3(-10, 1.3f, 4f), 90); // on deck, facing +X (edge at x=-8)
+            // West edge (x=-12) is a real 1.2 m drop; the east side leads onto the ramp, stairs are north.
+            yield return Place(new Vector3(-10, 1.3f, 4f), 270); // on deck, facing -X
             bool leftGround = false; float leftAt = 0f; bool jumped = false;
             end = Time.time + 2f;
             while (Time.time < end && !jumped)

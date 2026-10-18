@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Analyse a player profiler capture in the Editor (slow frames + GC.Alloc callers). Usage: Tools/rawreport file.raw [slowFrames] [depth]
+DIR="$(cd "$(dirname "$0")" && pwd)"
+raw="$(realpath "$1")"; rm -f "$raw.report.txt"
+"$DIR/ueval" "return Gladiator.EditorTools.ProfilerReports.Analyze(\"$raw\", ${2:-3}, ${3:-5});" 300 >/dev/null 2>&1
+for i in $(seq 1 200); do [ -s "$raw.report.txt" ] && break; sleep 3; done
+cat "$raw.report.txt" 2>/dev/null || echo "no report (still running or failed) for $raw"

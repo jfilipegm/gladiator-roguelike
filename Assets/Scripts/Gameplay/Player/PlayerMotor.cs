@@ -66,12 +66,11 @@ namespace Gladiator.Gameplay
         Player _player;
         Vector3 _hv;          // horizontal velocity
         float _vy;            // vertical velocity
+        float _vyStep;        // vertical velocity used for this frame's displacement (average over the step)
         float _coyote, _jumpBuffer, _slideCooldown;
         int _airJumpsUsed;
         bool _jumpCutDone, _ascendingFromJump;
         float _takeoffY, _apexY;
-        readonly Vector3[] _wallNormals = new Vector3[4];
-        int _wallHitCount;
 
         void Awake()
         {
@@ -135,6 +134,7 @@ namespace Gladiator.Gameplay
             }
 
             // --- state update
+            _vyStep = _vy;
             switch (CurrentState)
             {
                 case State.Grounded: GroundMove(wishDir, wishMag, input, dt); break;
@@ -152,17 +152,23 @@ namespace Gladiator.Gameplay
                 move = along + Vector3.down * c.groundStick;
                 _vy = 0f;
             }
-            else move = _hv + Vector3.up * _vy;
+            else move = _hv + Vector3.up * _vyStep;
 
-            _wallHitCount = 0;
+            Vector3 before = transform.position;
             var flags = _cc.Move(move * dt);
             if ((flags & CollisionFlags.Above) != 0 && _vy > 0f) _vy = 0f;
-            for (int i = 0; i < _wallHitCount; i++)
+            if ((flags & CollisionFlags.Sides) != 0 && dt > 0f)
             {
-                // Remove velocity into walls so it doesn't build up while pressing against them.
-                Vector3 n = _wallNormals[i];
-                float into = Vector3.Dot(_hv, n);
-                if (into < 0f) _hv -= n * into;
+                // Remove velocity into walls so it doesn't build up while pressing against them. The part of the
+                // intended horizontal motion the controller didn't make is the into-the-wall part (no
+                // OnControllerColliderHit: Unity allocates a hit object per callback).
+                Vector3 moved = (transform.position - before) / dt;
+                Vector3 blocked = new Vector3(move.x - moved.x, 0f, move.z - moved.z);
+                if (blocked.sqrMagnitude > 1e-4f && TryWallNormal(blocked.normalized, out var n))
+                {
+                    float into = Vector3.Dot(_hv, n);
+                    if (into < 0f) _hv -= n * into;
+                }
             }
 
             if (!IsGrounded && transform.position.y > _apexY) _apexY = transform.position.y;
@@ -175,6 +181,26 @@ namespace Gladiator.Gameplay
             float hsNow = _hv.magnitude;
             if (hsNow > Telemetry.TopHorizontalSpeed) Telemetry.TopHorizontalSpeed = hsNow;
             if (IsSliding && hsNow > Telemetry.TopSlideSpeed) Telemetry.TopSlideSpeed = hsNow;
+        }
+
+        /// <summary>
+        /// Real contact normal toward `dir` via a short capsule cast (allocation-free). Only near-vertical surfaces
+        /// count as walls: ledge corners and slopes (normal.y > 0.3) must not eat momentum, or the player sticks at edges.
+        /// </summary>
+        bool TryWallNormal(Vector3 dir, out Vector3 normal)
+        {
+            normal = default;
+            float r = _cc.radius * 0.95f;
+            Vector3 center = transform.position + _cc.center;
+            float half = Mathf.Max(0f, _cc.height * 0.5f - _cc.radius);
+            Vector3 top = center + Vector3.up * half, bottom = center - Vector3.up * half;
+            if (!Physics.CapsuleCast(top, bottom, r, dir, out var hit, _cc.skinWidth + 0.1f, Layers.SolidMask, QueryTriggerInteraction.Ignore))
+                return false;
+            if (hit.normal.y > 0.3f) return false;
+            Vector3 n = new Vector3(hit.normal.x, 0f, hit.normal.z);
+            if (n.sqrMagnitude < 1e-4f) return false;
+            normal = n.normalized;
+            return true;
         }
 
         void GroundMove(Vector3 wishDir, float wishMag, in PlayerInputFrame input, float dt)
@@ -247,6 +273,7 @@ namespace Gladiator.Gameplay
         void AirMove(Vector3 wishDir, float wishMag, in PlayerInputFrame input, float dt)
         {
             var c = config;
+            float vyStart = _vy;
             _vy -= c.gravity * (_vy < 0f ? c.fallGravityMultiplier : 1f) * dt;
             if (_vy < -c.maxFallSpeed) _vy = -c.maxFallSpeed;
 
@@ -256,6 +283,9 @@ namespace Gladiator.Gameplay
                 _jumpCutDone = true;
             }
             if (_vy <= 0f) _ascendingFromJump = false;
+            // Trapezoid step: exact for constant gravity, so jump height is the same at 60 and 240 fps
+            // (plain semi-implicit Euler lost ~v0·dt/2 ≈ 8 cm of a 1.7 m jump at 60 fps).
+            _vyStep = (vyStart + _vy) * 0.5f;
 
             float speed = _hv.magnitude;
             if (wishMag > 0.01f)
@@ -339,14 +369,6 @@ namespace Gladiator.Gameplay
             _cc.height = h;
             _cc.radius = config.capsuleRadius;
             _cc.center = new Vector3(0f, h * 0.5f, 0f);
-        }
-
-        void OnControllerColliderHit(ControllerColliderHit hit)
-        {
-            if (hit.normal.y > 0.3f || _wallHitCount >= _wallNormals.Length) return;
-            Vector3 n = new Vector3(hit.normal.x, 0f, hit.normal.z);
-            if (n.sqrMagnitude < 1e-4f) return;
-            _wallNormals[_wallHitCount++] = n.normalized;
         }
     }
 }

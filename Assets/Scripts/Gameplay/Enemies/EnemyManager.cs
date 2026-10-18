@@ -32,6 +32,8 @@ namespace Gladiator.Gameplay
         public Vector2 boundsMax = new Vector2(26f, 26f);
         public float gridCellSize = 2f;
         public float heightCellSize = 0.5f;
+        [Tooltip("Editor-baked height grid + obstacles for this arena (rebuilt with the arena). Missing/stale → runtime bake.")]
+        public ArenaNavData navData;
         [Tooltip("Max climb per tick between height samples (m). Higher steps are walls.")]
         public float maxStepUp = 0.35f;
 
@@ -95,17 +97,31 @@ namespace Gladiator.Gameplay
             if (p != null) { _player = p.transform; _playerHealth = p.GetComponent<PlayerHealth>(); }
         }
 
-        /// <summary>Height grid from walkable surfaces + obstacle list from everything else. Call after arena changes.</summary>
+        /// <summary>Uses the Editor-baked nav data when it matches; otherwise bakes from the scene now (slower, logged).</summary>
         public void BakeWorld()
         {
-            int mask = Layers.EnvironmentMask;
-            _height = HeightGrid.Bake(boundsMin, boundsMax, heightCellSize, mask, 50f, 0f,
+            if (navData != null && navData.Matches(boundsMin, boundsMax, heightCellSize))
+            {
+                _height = navData.ToHeightGrid();
+                _obstacles = navData.ToObstacles();
+                return;
+            }
+            BakeScene(boundsMin, boundsMax, heightCellSize, out _height, out _obstacles);
+            Debug.Log($"[EnemyManager] runtime-baked height grid {_height.W}x{_height.H}, {_obstacles.Count} obstacles (no matching ArenaNavData — rebuild the arena to bake it)");
+        }
+
+        /// <summary>
+        /// Height grid from walkable surfaces + obstacle list from everything else (same code at runtime and in the
+        /// Editor bake). Physics must be in sync with the scene (Physics.SyncTransforms in edit mode).
+        /// </summary>
+        public static void BakeScene(Vector2 min, Vector2 max, float cell, out HeightGrid height, out StaticObstacles obstacles)
+        {
+            height = HeightGrid.Bake(min, max, cell, Layers.EnvironmentMask, 50f, 0f,
                 col => col.GetComponentInParent<WalkableSurface>() != null);
             var walkables = new HashSet<Collider>();
             foreach (var w in FindObjectsByType<WalkableSurface>())
                 foreach (var c in w.GetComponentsInChildren<Collider>()) walkables.Add(c);
-            _obstacles = StaticObstacles.FromScene(Layers.SolidMask, 0.5f, _height, walkables);
-            Debug.Log($"[EnemyManager] baked height grid {_height.W}x{_height.H}, {_obstacles.Count} obstacles");
+            obstacles = StaticObstacles.FromScene(Layers.SolidMask, 0.5f, height, walkables);
         }
 
         void OnEnable() => GameLoop.Register(this, TickGroup.Enemies);

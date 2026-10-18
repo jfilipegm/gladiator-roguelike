@@ -68,6 +68,10 @@ namespace Gladiator.Core
         float _startUnscaled;
         bool _recording;
         ProfilerRecorder _main, _gameplay, _gcBytes, _gcCount;
+        // -rawProfile <startSeconds> [-rawFrames N]: write a Unity Profiler capture (.raw) of N frames for Tools/rawreport.
+        float _rawStart = -1f;
+        int _rawLeft;
+        bool _rawOn;
 
         public int Count => _count;
         public bool IsRecording => _recording;
@@ -94,11 +98,37 @@ namespace Gladiator.Core
             _gcBytes = ProfilerRecorder.StartNew(ProfilerCategory.Memory, "GC Allocated In Frame", 1);
             _gcCount = ProfilerRecorder.StartNew(ProfilerCategory.Memory, "GC Allocation In Frame Count", 1);
             _recording = true;
+            _rawStart = CommandLine.GetFloat("-rawProfile", -1f);
+        }
+
+        void UpdateRawCapture(float t)
+        {
+            if (_rawStart >= 0f && !_rawOn && t >= _rawStart)
+            {
+                string dir = OutputDirectory();
+                Directory.CreateDirectory(dir);
+                UnityEngine.Profiling.Profiler.logFile = Path.Combine(dir, (string.IsNullOrEmpty(label) ? "capture" : label) + ".raw");
+                UnityEngine.Profiling.Profiler.enableBinaryLog = true;
+                UnityEngine.Profiling.Profiler.enabled = true;
+                _rawOn = true;
+                _rawLeft = CommandLine.GetInt("-rawFrames", 1500);
+                Debug.Log("[FrameStats] raw profiler capture → " + UnityEngine.Profiling.Profiler.logFile);
+            }
+            else if (_rawOn && --_rawLeft <= 0)
+            {
+                UnityEngine.Profiling.Profiler.enabled = false;
+                UnityEngine.Profiling.Profiler.enableBinaryLog = false;
+                UnityEngine.Profiling.Profiler.logFile = "";
+                _rawOn = false;
+                _rawStart = -1f;
+                Debug.Log("[FrameStats] raw profiler capture done");
+            }
         }
 
         void LateUpdate()
         {
             if (!_recording || _count >= _samples.Length) return;
+            if (_rawStart >= 0f || _rawOn) UpdateRawCapture(UnityEngine.Time.unscaledTime - _startUnscaled);
             ref var s = ref _samples[_count++];
             s.Time = UnityEngine.Time.unscaledTime - _startUnscaled;
             s.FrameMs = UnityEngine.Time.unscaledDeltaTime * 1000f;

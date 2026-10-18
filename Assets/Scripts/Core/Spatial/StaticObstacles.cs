@@ -55,6 +55,34 @@ namespace Gladiator.Core
             return new StaticObstacles { _circles = circles.ToArray(), _boxes = boxes.ToArray() };
         }
 
+        /// <summary>Flat arrays for baking into an asset: circles (x, z, r, 0); boxes A (cx, cz, axX, axZ), B (azX, azZ, halfX, halfZ).</summary>
+        public void ToArrays(out Vector4[] circles, out Vector4[] boxesA, out Vector4[] boxesB)
+        {
+            circles = new Vector4[_circles.Length];
+            for (int i = 0; i < circles.Length; i++) circles[i] = new Vector4(_circles[i].C.x, _circles[i].C.y, _circles[i].R, 0f);
+            boxesA = new Vector4[_boxes.Length];
+            boxesB = new Vector4[_boxes.Length];
+            for (int i = 0; i < _boxes.Length; i++)
+            {
+                var bx = _boxes[i];
+                boxesA[i] = new Vector4(bx.C.x, bx.C.y, bx.Ax.x, bx.Ax.y);
+                boxesB[i] = new Vector4(bx.Az.x, bx.Az.y, bx.Half.x, bx.Half.y);
+            }
+        }
+
+        public static StaticObstacles FromArrays(Vector4[] circles, Vector4[] boxesA, Vector4[] boxesB)
+        {
+            var o = new StaticObstacles { _circles = new Circle[circles.Length], _boxes = new Box[boxesA.Length] };
+            for (int i = 0; i < circles.Length; i++) o._circles[i] = new Circle { C = new Vector2(circles[i].x, circles[i].y), R = circles[i].z };
+            for (int i = 0; i < boxesA.Length; i++)
+                o._boxes[i] = new Box
+                {
+                    C = new Vector2(boxesA[i].x, boxesA[i].y), Ax = new Vector2(boxesA[i].z, boxesA[i].w),
+                    Az = new Vector2(boxesB[i].x, boxesB[i].y), Half = new Vector2(boxesB[i].z, boxesB[i].w),
+                };
+            return o;
+        }
+
         /// <summary>Push a circle of `radius` at pos out of every obstacle. Returns true if moved.</summary>
         public bool PushOut(ref Vector3 pos, float radius)
         {

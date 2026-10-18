@@ -13,6 +13,8 @@ namespace Gladiator.Gameplay
             bool stress = CommandLine.Has("-stress");
             bool profile = CommandLine.Has("-profile") || bot || stress;
             if (!bot && !stress && !profile) return;
+            int fps = CommandLine.GetInt("-fps", 0); // cap (e.g. for profiler captures); 0 = uncapped
+            if (fps > 0) { QualitySettings.vSyncCount = 0; Application.targetFrameRate = fps; }
 
             if ((bot || stress) && Object.FindAnyObjectByType<PlaytestBot>() == null)
             {

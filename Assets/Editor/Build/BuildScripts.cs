@@ -23,6 +23,7 @@ namespace Gladiator.EditorTools
             PlayerSettings.defaultScreenHeight = 900;
             PlayerSettings.resizableWindow = true;
             PlayerSettings.visibleInBackground = true;
+            PlayerSettings.bakeCollisionMeshes = true;      // pre-cook MeshColliders at build time (no load-time cooking)
             PlayerSettings.SetScriptingBackend(UnityEditor.Build.NamedBuildTarget.Standalone, ScriptingImplementation.Mono2x);
         }
 

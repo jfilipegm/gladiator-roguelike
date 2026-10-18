@@ -27,6 +27,9 @@ namespace Gladiator.Gameplay
             _probe = go.AddComponent<SphereCollider>();
             _probe.isTrigger = true;
             _probe.radius = clearance;
+            // Unity creates a collider's C# wrapper (24 B) the first time script code sees it. The camera's overlap
+            // queries (and Cinemachine's raycasts) would otherwise do that mid-run, one fence piece at a time.
+            foreach (var c in FindObjectsByType<Collider>()) { _ = c.transform; _ = c.gameObject; } // same for their Transform/GameObject wrappers
         }
 
         void OnEnable() => CinemachineCore.CameraUpdatedEvent.AddListener(OnCameraUpdated);

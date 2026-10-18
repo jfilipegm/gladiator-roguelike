@@ -1,7 +1,7 @@
 # Progress
 
-**Current phase:** Phase 1 — Feel
-**Current milestone:** GATE 1 (+ M1.4 test tools done) — "Feel check" (waiting for the producer's playtest; report in `docs/GATE1_REPORT.md`)
+**Current phase:** Phase 2 — Horde and roguelike core
+**Current milestone:** M2.2 — six enemy types + 3 elite affixes (Gate 1 passed 2026-10-18: "proceed", no feel changes)
 **Last updated:** 2026-10-18
 
 **Repository:** https://github.com/jfilipegm/gladiator-roguelike (public, branch `main`, remote `origin`, `.blend` files via Git LFS). Push only when the producer asks.
@@ -28,8 +28,11 @@
 
 - **M1.4 — test tools (producer request at Gate 1)** — `AdminController` + `AdminPanel` (F1, Editor/dev builds, pauses): % buffs (damage, attack speed, range, max HP, move speed, pickup range, crit) as a `DevSettings` layer over the run's bonuses; God mode (HP floors at 1), Timeless; level up, +gold, heal, timer to 0:10 / +1:00, kill me, restart; spawn N of any type from `EnemyCatalog` (auto-maintained by `EnemyCatalogUpdater`) near the player or around the arena; crowd size; kill all / clear pickups; game speed 0.25–2×. `RunEndController` + `RunEndPanel`: death → beat (slow motion, collapse pose, burst) → paused "YOU DIED" screen with stats; timer 0:00 → enemies pop → "SURVIVED!" (placeholder until Gorm); Retry reloads keeping dev switches; Quit. HUD tags (GOD / TIMELESS / BUFFS / SPEED) and "F1 admin" hint. Player input blocking is now a counter. Fence perimeter rebuilt: pieces follow the ring (they were rotated 90°), a solid 4 m wall on the fence line, pickups clamped inside. Bot runs are immortal + timeless (`-mortal`, `-timed`). **Verified:** screenshots (admin panel, +50 % damage numbers 18, death beat + screen, survived screen, fence from inside), `RunEndAndAdminTests` (6: death → screen → retry fresh run; timer end vs Timeless; God mode; buffs scale damage/HP and reset; spawn near/around; fence solid for player + pickups). **Bug found by the full suite and fixed:** a scene unloading while paused left the static pause on (next scene frozen) → `RunEndController`/`Player` release their pause on disable.
 
+- **M2.1 — enemy scale-up** — `ArenaNavData` (height grid + obstacles baked in the Editor by `ArenaNavBaker` on arena rebuild; runtime bake only as a logged fallback), `ArenaNavTests`. Tooling: `Tools/perfrun` (gamescope headless on the real GPU — works with the desktop locked), `-rawProfile/-rawFrames/-fps` player captures + `Tools/rawreport`. Fixes found with the captures: player wall handling no longer uses `OnControllerColliderHit` (40 B per wall-contact frame), collider/Transform/GameObject wrappers created at load (24 B each mid-run), jump integration is a trapezoid step (jump height now 1.70 m at any fps; was 1.61 m at 60 fps). Coyote test moved to a real ledge. **Measured (gamescope headless, RX 6600, 1080p):** 300 enemies 275 fps (3.64 ms, p95 4.98, p99 5.61), gameplay 1.07 ms / p95 1.52; 500 enemies 196 fps (5.10 ms, p95 8.28, p99 8.96), gameplay 1.79 / 2.53; 1,000 enemies (stress) 120 fps (8.36 ms, p95 16.4, p99 17.7), gameplay 3.51 / 5.13, no crash. GC after warm-up: 0 B in gameplay frames except ~1.4 KB per level-up (old UI, replaced in M2.4) and 4 first-occurrence allocations in the first 8 s. Startup hitch analysed (mostly first-use rendering → M3.5 loading beat). 10/10 EditMode, 15/15 PlayMode.
+
 ## Next
-1. **STOP — Gate 1.** Wait for the producer's playtest feedback (`docs/GATE1_REPORT.md`, updated with the M1.4 tools). Apply feel tuning they ask for, then start Phase 2 (M2.1 EnemyManager scale-up) only after their go-ahead.
+1. **M2.2** — six enemy types (Convict ✓, Pit Cur, Shield Thug, Slinger, Brute, + one assassin/area-denial type) with Blender models (≤300 tris, 64 px silhouette test), behaviours, pooled enemy projectiles (orange-red), and 3 elite affixes; C2 off-screen threat markers for ranged wind-ups/elites.
+2. M2.3 Director · M2.4 stats + upgrade data + real level-up UI · M2.5 four weapons · M2.6 ~14 Boons · M2.7 chests/gold/shrine. No gate until Gate 2 (end of Phase 4).
 
 ## Known issues
 - **Residual GC (target 0 B/frame):** ~1.2–1.5 KB per level-up open/close from UGUI `SetActive` + colour-tint tweens → M2.4's real level-up UI should use `Transition.None` + own highlight and never toggle objects. First level-up open allocates 26.6 KB (first-use warm-up) → open/close the panel once hidden during loading. One unattributed ~3.6 KB allocation on a crit frame ~40 s into stress runs, plus rare 24–406 B ones → attribute with the Profiler attached to the dev build in M2.1.

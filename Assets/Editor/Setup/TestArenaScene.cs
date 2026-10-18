@@ -64,7 +64,8 @@ namespace Gladiator.EditorTools
             ArenaSceneCommon.AddPerimeterFence(env, "Environment/SM_Fence_3m", r, 44, 4f);
 
             var (player, rig) = ArenaSceneCommon.AddPlayerAndCamera(Spawn, 0f);
-            ArenaSceneCommon.AddCombatSystems(player, r - 1f, debugEnemies: 25);
+            var (enemies, _) = ArenaSceneCommon.AddCombatSystems(player, r - 1f, debugEnemies: 25);
+            ArenaNavBaker.Bake(enemies, "TestArena");
             ArenaSceneCommon.AddRunSystems(player);
             var bot = new GameObject("[PlaytestBot]").AddComponent<PlaytestBot>();
             bot.arenaRadius = 18f;

@@ -17,3 +17,7 @@ When the player backs onto a pillar with the pillar between them and the camera,
 ## C4 — Measuring performance (RESOLVED in M1.2)
 Editor Play-mode frame times swing between ~18 fps and ~180 fps depending on focus and bridge traffic, so they're useless for the §8 budget.
 **Done:** `BuildScripts.BuildLinuxDev` produces a standalone development build; `-bot -profile` / `-stress -stressCount N` runs write the CSV + summary. Gate reports quote those numbers only. Caveat: they're from this PC (not a "mid-range" reference machine).
+
+## C5 — Enemy rendering cost at 1,000 enemies (WATCH)
+Each enemy is a pooled GameObject with ~6 rigid-part MeshRenderers. At 1,000 enemies frame time is bimodal: ~6 ms when the crowd is partly off-screen, ~15–16 ms when the camera faces all of it (draw submission, not gameplay; gameplay is 3.5 ms). 500 enemies stays at ~5 ms / p95 8 ms, so the §8 budget (300 → 500 peak at 60 fps) holds with a wide margin on this PC.
+**Proposal if an arena really needs 1,000+ on screen (Colosseum):** draw enemies with `Graphics.RenderMeshInstanced` per (enemy type × part), with part matrices computed in the central tick (the SoA state already holds everything); keep GameObjects only for elites/bosses. Decide in the Phase 4 perf pass with real arena numbers.

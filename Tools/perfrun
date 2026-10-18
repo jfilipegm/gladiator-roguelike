@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Run the Linux dev build headless on the real GPU (gamescope headless backend, 1920x1080) — works with the desktop
+# locked and never pops a window. Prints the FrameStatsRecorder summary and the GC scan.
+# Usage: Tools/perfrun bot [seconds] [extra player args...]
+#        Tools/perfrun stress <count> [seconds] [extra player args...]
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+mode="${1:-bot}"; shift
+args=(-bot -profile -profileDir "$ROOT/Profiling" -screen-fullscreen 0 -screen-width 1920 -screen-height 1080)
+if [ "$mode" = "stress" ]; then count="${1:-300}"; shift; args+=(-stress -stressCount "$count"); fi
+secs="${1:-45}"; shift
+args+=(-botSeconds "$secs" "$@")
+log="$ROOT/Profiling/player_${mode}.log"
+timeout -s KILL $((secs + 90)) gamescope --backend headless -W 1920 -H 1080 -w 1920 -h 1080 -- \
+  "$ROOT/Builds/LinuxDev/Gladiator.x86_64" "${args[@]}" -logFile "$log" > "$ROOT/Profiling/gamescope_out.txt" 2>&1
+echo "exit=$?"
+f=$(ls -t "$ROOT"/Profiling/*_"$mode"_*.csv 2>/dev/null | head -1)
+[ -n "$f" ] && cat "${f%.csv}.summary.txt" && "$ROOT/Tools/gcscan.py" "$f" 3 | tail -15
+grep -aE "Exception|NullReference" "$log" | head -5

@@ -4,6 +4,8 @@
 **Current milestone:** M1.3 — HUD, XP gems + magnet, stub level-up
 **Last updated:** 2026-10-18
 
+**Repository:** https://github.com/jfilipegm/gladiator-roguelike (public, branch `main`, remote `origin`, `.blend` files via Git LFS). Push only when the producer asks.
+
 ## Resume checklist (read first after a context reset)
 1. Read `CLAUDE.md`, then this file, then `docs/TOOLING.md`.
 2. `unity status --format json` → Editor ready? If not: `unity pipeline list --format json`.

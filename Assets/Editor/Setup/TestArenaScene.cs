@@ -64,7 +64,7 @@ namespace Gladiator.EditorTools
             ArenaSceneCommon.AddPerimeterFence(env, "Environment/SM_Fence_3m", r, 44, 4f);
 
             var (player, rig) = ArenaSceneCommon.AddPlayerAndCamera(Spawn, 0f);
-            var (enemies, _) = ArenaSceneCommon.AddCombatSystems(player, r - 1f, debugEnemies: 25);
+            var (enemies, _) = ArenaSceneCommon.AddCombatSystems(player, r - 1f, debugEnemies: 0); // the Director runs the horde; admin crowd adds extra
             ArenaNavBaker.Bake(enemies, "TestArena");
             ArenaSceneCommon.AddRunSystems(player);
             var bot = new GameObject("[PlaytestBot]").AddComponent<PlaytestBot>();

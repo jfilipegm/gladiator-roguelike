@@ -21,6 +21,7 @@ namespace Gladiator.Tests
             while (!op.isDone) yield return null;
             yield return null;
             Object.FindAnyObjectByType<DebugEnemySpawner>().enabled = false;
+            if (Director.Instance != null) Director.Instance.enabled = false; // tests place their own enemies
             Player.Main.OverrideSource = new ScriptedInput();
             EnemyManager.Instance.KillAll();
             yield return new WaitForSeconds(0.3f); // death pops finish

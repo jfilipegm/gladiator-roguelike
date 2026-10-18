@@ -25,6 +25,8 @@ namespace Gladiator.EditorTools
         public const string EnemyDir = "Assets/Data/Enemies/";
         public const string AffixDir = "Assets/Data/Enemies/Affixes/";
         public const string Models = "Assets/Art/Models/";
+        public const string DirectorPath = "Assets/Data/Config/DirectorConfig.asset";
+        public const string SlavePitTablePath = "Assets/Data/Arenas/ST_SlavePit.asset";
         public const string StoneMesh = Models + "Props/PR_SlingStone.fbx";
         public const string PotMesh = Models + "Props/PR_FirePot.fbx";
 
@@ -66,6 +68,8 @@ namespace Gladiator.EditorTools
             }
 
             CreateRoster(anim);
+            PlayerSetup.EnsureAsset<DirectorConfig>(DirectorPath);
+            CreateSlavePitTable();
 
             var telegraph = MakeMat(TelegraphMat, "Gladiator/Telegraph");
             telegraph.enableInstancing = true;
@@ -140,6 +144,38 @@ namespace Gladiator.EditorTools
                 a.hpMultiplier = 1.8f; a.scale = 1.2f; a.xpMultiplier = 3f; a.explodeOnDeath = true; a.fuse = 1f; a.explosionRadius = 2.6f;
                 a.explosionDamageToPlayer = 18f; a.explosionDamageToEnemies = 60f;
             });
+        }
+
+        /// <summary>
+        /// Arena 1's spawn table (used by the test arena too until the Slave Pit exists): convicts all run, curs from
+        /// 0:30, shield thugs 1:15, slingers 1:40, fire-pots 2:30, brutes 3:20; kiting and heavy types capped low.
+        /// Created once, then the designer's.
+        /// </summary>
+        static void CreateSlavePitTable()
+        {
+            if (AssetDatabase.LoadAssetAtPath<SpawnTableDef>(SlavePitTablePath) != null) return;
+            var t = PlayerSetup.EnsureAsset<SpawnTableDef>(SlavePitTablePath);
+            SpawnTableDef.Entry E(string asset, float from, float w0, float w1, int cap, bool swarm, bool elite) => new SpawnTableDef.Entry
+            {
+                enemy = AssetDatabase.LoadAssetAtPath<EnemyDef>(EnemyDir + asset + ".asset"),
+                from = from, weightStart = w0, weightEnd = w1, maxAlive = cap, swarm = swarm, elite = elite,
+            };
+            t.entries = new[]
+            {
+                E("EN_Convict", 0f, 10f, 5f, 0, true, true),
+                E("EN_PitCur", 30f, 2.5f, 4.5f, 70, true, true),
+                E("EN_ShieldThug", 75f, 1.2f, 2.5f, 35, false, true),
+                E("EN_Slinger", 100f, 1f, 1.6f, 10, false, true),
+                E("EN_FirePot", 150f, 0.6f, 1.1f, 6, false, true),
+                E("EN_Brute", 200f, 0.25f, 0.7f, 5, false, true),
+            };
+            t.affixes = new[]
+            {
+                AssetDatabase.LoadAssetAtPath<AffixDef>(AffixDir + "AF_Armored.asset"),
+                AssetDatabase.LoadAssetAtPath<AffixDef>(AffixDir + "AF_Fast.asset"),
+                AssetDatabase.LoadAssetAtPath<AffixDef>(AffixDir + "AF_Explosive.asset"),
+            };
+            EditorUtility.SetDirty(t);
         }
 
         static PartAnimProfile Profile(string name, System.Action<PartAnimProfile> init)

@@ -38,6 +38,7 @@ namespace Gladiator.Gameplay
         public int RequestStressSpawn(int count)
         {
             if (stressSpawner == null) return 0;
+            if (Director.Instance != null) Director.Instance.enabled = false; // stress = a fixed count, not the run's pacing
             // Grow the pool up front (allocation happens here, not during the measured run) and fill fast.
             var em = EnemyManager.Instance;
             var mix = stressSpawner.mix;

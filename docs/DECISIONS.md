@@ -108,3 +108,11 @@ One line each: what, and why. Newest at the bottom of each section.
 - **Per-type alive counts in `EnemyManager` (`AliveOf`)**; spawners cap kiting types. Pools are prewarmed to those caps, so a pool growing mid-run is a bug and logs a warning.
 - **Behaviour tests run without player i-frames** (`invulnerableTime = 0` in `EnemyRosterTests`): a random contact hit just before an attack made the attack tests flaky. The i-frame rule itself is unchanged in the game.
 
+### M2.3 — Director
+- **"Spawn budget" = a target head-count curve over run time + a fill-rate curve**, not threat points. The §8 targets are head-counts (300 by 5:00, ~500 at peak) and tougher types are already limited by low weights and caps, so points would add a second knob with no gain.
+- **Per-type caps live in the spawn table** (kiting/heavy types low), fixing CONCERNS C6 at the source. The periodic elite ignores caps (it's one special enemy).
+- **Swarms come from one direction** (50° arc) on top of the target, so they read as an event you can turn and face, and are announced on the HUD.
+- **The Director uses the run clock**: Timeless freezes pacing, the admin timer jumps it; events missed by a jump are rescheduled rather than all fired at once.
+- **Pools fill a few views per frame at run start, and spawning waits for them** (~0.4 s): no mid-fight instantiation and a smaller load hitch than one big prewarm.
+- **Spawn points are a ring near the arena edge for now**, preferring off-screen. Arena 1's real gates come from its `ArenaLayoutDef` in M3.2.
+

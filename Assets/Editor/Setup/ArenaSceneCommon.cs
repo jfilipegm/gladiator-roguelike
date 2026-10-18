@@ -126,6 +126,11 @@ namespace Gladiator.EditorTools
             spawner.targetAlive = debugEnemies;
             spawner.ringRadius = arenaRadius - 2f;
 
+            var director = new GameObject("Director").AddComponent<Director>();
+            director.transform.SetParent(systems, false);
+            director.config = AssetDatabase.LoadAssetAtPath<DirectorConfig>(CombatSetup.DirectorPath);
+            director.table = AssetDatabase.LoadAssetAtPath<SpawnTableDef>(CombatSetup.SlavePitTablePath);
+
             var sensor = new GameObject("RunBotSensor").AddComponent<RunBotSensor>();
             sensor.transform.SetParent(systems, false);
             sensor.stressSpawner = spawner;

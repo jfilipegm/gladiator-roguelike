@@ -183,6 +183,16 @@ namespace Gladiator.Gameplay
             for (int i = stack.Count; i < count; i++) stack.Push(CreateView(def));
         }
 
+        /// <summary>Incremental prewarm: grows `def`'s pool toward `total` views (free + in use), creating at most `maxCreate`. Returns how many it created.</summary>
+        public int PrewarmStep(EnemyDef def, int total, int maxCreate)
+        {
+            var stack = GetPool(def);
+            int have = stack.Count + AliveOf(def);
+            int n = 0;
+            while (have + n < total && n < maxCreate) { stack.Push(CreateView(def)); n++; }
+            return n;
+        }
+
         Stack<EnemyView> GetPool(EnemyDef def)
         {
             if (!_pools.TryGetValue(def, out var s)) { s = new Stack<EnemyView>(def.prewarm); _pools[def] = s; }

@@ -31,6 +31,7 @@ namespace Gladiator.Tests
             var spawner = Object.FindAnyObjectByType<DebugEnemySpawner>();
             _convict = spawner.enemy;
             spawner.enabled = false;              // the test places enemies itself
+            if (Director.Instance != null) Director.Instance.enabled = false; // tests place their own enemies
             _player.OverrideSource = new ScriptedInput(); // stand still
             yield return new WaitForSeconds(0.3f);
         }

@@ -24,7 +24,7 @@ namespace Gladiator.UI
         GameObject _root;
         Transform _panel;
         readonly TextMeshProUGUI[] _buffValues = new TextMeshProUGUI[AdminController.BuffCount];
-        Button _god, _timeless;
+        Button _god, _timeless, _director;
         TextMeshProUGUI _enemyName, _affix, _count, _crowd, _speed, _status;
         bool _shown;
         float _y;
@@ -34,7 +34,7 @@ namespace Gladiator.UI
         {
             var canvas = UiFactory.Canvas("AdminCanvas", transform, UiSortOrder.Debug).transform;
             _root = canvas.gameObject;
-            var bg = UiFactory.Image("AdminPanel", canvas, PanelColor, Vector2.one, Vector2.one, new Vector2(-20f, -80f), new Vector2(Width, 1000f), PixelIcons.White); // right side, below LV: HP/gold stay visible
+            var bg = UiFactory.Image("AdminPanel", canvas, PanelColor, Vector2.one, Vector2.one, new Vector2(-20f, -80f), new Vector2(Width, 1050f), PixelIcons.White); // right side, below LV: HP/gold stay visible
             bg.raycastTarget = true;
             _panel = bg.transform;
             _y = -12f;
@@ -57,6 +57,7 @@ namespace Gladiator.UI
             Buttons(("Timer to 0:10", () => Ctl.SetTimer(10f)), ("Timer +1:00", () => Ctl.AddTime(60f)), ("Kill me", () => Ctl.KillPlayer()));
 
             Section("ENEMIES");
+            _director = Buttons(("Director", () => Ctl.ToggleDirector()), ("Swarm now", () => Ctl.SwarmNow()), ("Elite now", () => Ctl.EliteNow()))[0];
             Row("Type", out _enemyName, () => Ctl.CycleEnemy(-1), () => Ctl.CycleEnemy(+1), 300f);
             Row("Elite", out _affix, () => Ctl.CycleAffix(-1), () => Ctl.CycleAffix(+1), 300f);
             Row("Spawn count", out _count, () => Ctl.CycleCount(-1), () => Ctl.CycleCount(+1));
@@ -95,6 +96,7 @@ namespace Gladiator.UI
             }
             Tint(_god, DevSettings.GodMode, "God mode: ON", "God mode: off");
             Tint(_timeless, DevSettings.Timeless, "Timeless: ON", "Timeless: off");
+            Tint(_director, Ctl.DirectorOn, "Director: ON", "Director: off");
             var def = Ctl.Selected;
             _enemyName.text = def != null ? def.displayName : "(no EnemyDefs)";
             var affix = Ctl.Affix;

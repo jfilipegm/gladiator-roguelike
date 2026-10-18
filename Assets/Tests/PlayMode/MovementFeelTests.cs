@@ -51,6 +51,7 @@ namespace Gladiator.Tests
             // Movement is measured without enemies: kills would grant XP, and a level-up pauses the game.
             var spawner = Object.FindAnyObjectByType<DebugEnemySpawner>();
             if (spawner != null) spawner.enabled = false;
+            if (Director.Instance != null) Director.Instance.enabled = false; // tests place their own enemies
             EnemyManager.Instance?.KillAll();
             _in = new ScriptedInput();
             _player.OverrideSource = _in;

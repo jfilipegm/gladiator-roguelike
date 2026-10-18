@@ -19,10 +19,10 @@ namespace Gladiator.UI
         public bool showDebug = true;
 
         Image _xpFill, _hpFill;
-        TextMeshProUGUI _timer, _level, _hpText, _gold, _kills, _toast, _pause, _debug, _tags;
+        TextMeshProUGUI _timer, _level, _hpText, _gold, _kills, _toast, _announce, _pause, _debug, _tags;
         readonly char[] _timeBuf = new char[8];
         int _lastSecond = -1, _lastLevel = -1, _lastGold = -1, _lastKills = -1, _lastHp = -1, _lastMaxHp = -1;
-        float _toastT = 10f, _debugT;
+        float _toastT = 10f, _announceT = 10f, _debugT;
         int _frames;
         int _lastTags = -1;
         float _lastSpeed = 1f;
@@ -61,6 +61,9 @@ namespace Gladiator.UI
 
             _toast = UiFactory.Text("Toast", canvas, "LEVEL UP!", 84, Gold, TextAlignmentOptions.Center, top, top, new Vector2(0, -170), new Vector2(900, 110), font, fontMaterial);
             _toast.alpha = 0f;
+            // Director announcer (swarm / elite). Constant strings, so swapping them never allocates.
+            _announce = UiFactory.Text("Announce", canvas, "THE PACK IS LOOSE!", 56, Color.white, TextAlignmentOptions.Center, top, top, new Vector2(0, -280), new Vector2(1100, 80), font, fontMaterial);
+            _announce.alpha = 0f;
             _pause = UiFactory.Text("Pause", canvas, "PAUSED\n<size=36>click to resume</size>", 90, Color.white, TextAlignmentOptions.Center, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(900, 260), font, fontMaterial);
             _pause.textWrappingMode = TextWrappingModes.Normal;
             _pause.alpha = 0f;
@@ -74,6 +77,8 @@ namespace Gladiator.UI
             PreSize(_gold, "88888888");
             PreSize(_kills, "88888888");
             PreSize(_level, "LV 8888");
+            PreSize(_announce, SwarmText);
+            PreSize(_announce, EliteText);
         }
 
         static void PreSize(TMP_Text t, string longest)
@@ -88,15 +93,29 @@ namespace Gladiator.UI
         {
             GameLoop.Register(this, TickGroup.Late, 50);
             GameEvents.OnLevelUp.Subscribe(OnLevelUp);
+            GameEvents.OnDirector.Subscribe(OnDirector);
         }
 
         void OnDisable()
         {
             GameLoop.Unregister(this);
             GameEvents.OnLevelUp.Unsubscribe(OnLevelUp);
+            GameEvents.OnDirector.Unsubscribe(OnDirector);
         }
 
         void OnLevelUp(in LevelUpEvent e) => _toastT = 0f;
+
+        const string SwarmText = "SWARM INCOMING!";
+        const string EliteText = "AN ELITE ENTERS!";
+
+        void OnDirector(in DirectorEvent e)
+        {
+            _announce.text = e.Kind == DirectorEventKind.Swarm ? SwarmText : EliteText;
+            var c = e.Color;
+            c.a = 1f;
+            _announce.color = c;
+            _announceT = 0f;
+        }
 
         public void Tick(float dt, float unscaledDt)
         {
@@ -145,6 +164,17 @@ namespace Gladiator.UI
                 _toast.rectTransform.localScale = new Vector3(s, s, 1f);
             }
             else _toast.alpha = 0f;
+
+            // announcer: slide in, hold, fade (game time, so it waits during level-ups)
+            _announceT += dt;
+            if (_announceT < 2f)
+            {
+                float t = _announceT / 2f;
+                _announce.alpha = t < 0.8f ? 1f : 1f - (t - 0.8f) / 0.2f;
+                float s = t < 0.08f ? Mathf.Lerp(1.4f, 1f, t / 0.08f) : 1f;
+                _announce.rectTransform.localScale = new Vector3(s, s, 1f);
+            }
+            else if (_announce.alpha > 0f) _announce.alpha = 0f;
 
             if (Keyboard.current != null && Keyboard.current.f3Key.wasPressedThisFrame) showDebug = !showDebug;
             _frames++;

@@ -46,6 +46,7 @@ namespace Gladiator.Tests
             _em = EnemyManager.Instance;
             _catalog = AdminController.Instance.catalog;
             Object.FindAnyObjectByType<DebugEnemySpawner>().enabled = false;
+            if (Director.Instance != null) Director.Instance.enabled = false; // tests place their own enemies
             _em.KillAll();
             DevSettings.GodMode = true; // HP never runs out; damage is still recorded
             // No i-frames: a contact hit landing just before an attack would otherwise swallow it at random

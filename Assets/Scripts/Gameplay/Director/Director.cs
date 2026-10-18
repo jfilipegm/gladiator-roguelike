@@ -1,0 +1,233 @@
+using Gladiator.Core;
+using UnityEngine;
+
+namespace Gladiator.Gameplay
+{
+    /// <summary>
+    /// Runs the horde (CLAUDE.md §6.5): keeps `targetAlive(t)` enemies alive by picking from the arena's weighted
+    /// spawn table (time windows, ramping weights, per-type caps), pours in a swarm from one side every so often, and
+    /// sends an elite every ~90 s. Uses the run clock, so Timeless freezes the pacing and the admin timer jumps it.
+    /// Spawns on a ring near the arena edge, away from the player and preferably off-screen. Zero allocation.
+    /// </summary>
+    public sealed class Director : MonoBehaviour, ITickable
+    {
+        public static Director Instance { get; private set; }
+
+        public DirectorConfig config;
+        public SpawnTableDef table;
+        [Tooltip("Multiplies the target-alive curve (difficulty knob; admin/tests).")]
+        public float densityMultiplier = 1f;
+
+        [Tooltip("Enemy views created per frame while filling the pools at the start of the run (spreads the load hitch).")]
+        public int prewarmPerFrame = 16;
+
+        float _spawnAcc, _nextSwarm, _nextElite;
+        int _swarmLeft, _prewarmIndex;
+        float _swarmAcc, _swarmAngle, _swarmRate;
+        int _swarmEntry = -1;
+        Transform _cam;
+
+        public int SwarmsStarted { get; private set; }
+        public int ElitesSent { get; private set; }
+        public float Clock => RunState.Current != null ? RunState.Current.Elapsed : Time.timeSinceLevelLoad;
+        public int TargetAlive => config == null ? 0 : Mathf.Min(config.hardCap, Mathf.RoundToInt(config.targetAlive.Evaluate(Clock) * densityMultiplier));
+        public float NextSwarmAt => _nextSwarm;
+        public float NextEliteAt => _nextElite;
+
+        void Awake()
+        {
+            Instance = this;
+            if (config != null) { _nextSwarm = config.firstSwarm; _nextElite = config.firstElite; }
+        }
+
+        /// <summary>
+        /// Pool size per table entry: its cap, or its share of the peak plus a full swarm. Pools fill a few views per
+        /// frame from the first frame (in table order, i.e. by when each type appears), so the run never instantiates
+        /// mid-fight and the load hitch stays small.
+        /// </summary>
+        int PoolTarget(in SpawnTableDef.Entry e)
+        {
+            if (e.maxAlive > 0) return e.maxAlive + 6;
+            float sum = 0f;
+            foreach (var x in table.entries) sum += Mathf.Max(0f, x.weightEnd);
+            float share = sum > 0f ? Mathf.Max(0f, e.weightEnd) / sum : 1f;
+            int swarm = e.swarm ? Mathf.CeilToInt(config.swarmSize.Evaluate(1e6f) * densityMultiplier) : 0;
+            return Mathf.CeilToInt(config.hardCap * share) + swarm + 16;
+        }
+
+        /// <summary>True once every table type has its pool.</summary>
+        public bool Prewarmed => table == null || _prewarmIndex >= table.entries.Length;
+
+        void PrewarmStep(EnemyManager em)
+        {
+            int budget = prewarmPerFrame;
+            while (budget > 0 && _prewarmIndex < table.entries.Length)
+            {
+                var e = table.entries[_prewarmIndex];
+                int made = e.enemy != null ? em.PrewarmStep(e.enemy, PoolTarget(e), budget) : 0;
+                budget -= made;
+                if (made == 0 || budget > 0) _prewarmIndex++;
+            }
+        }
+
+        void OnEnable() => GameLoop.Register(this, TickGroup.Director, -10);
+
+        void OnDisable()
+        {
+            GameLoop.Unregister(this);
+            if (Instance == this) Instance = null;
+        }
+
+        /// <summary>Admin/tests: start the next swarm / elite now.</summary>
+        public void TriggerSwarmNow() => _nextSwarm = Clock;
+        public void TriggerEliteNow() => _nextElite = Clock;
+
+        public void Tick(float dt, float unscaledDt)
+        {
+            var em = EnemyManager.Instance;
+            var run = RunState.Current;
+            if (dt <= 0f || em == null || config == null || table == null || table.entries.Length == 0) return;
+            if (!Prewarmed) { PrewarmStep(em); return; } // ~0.4 s at the start of a run: pools first, then the horde
+            if (run != null && run.Ended) { _swarmLeft = 0; return; }
+            if (_cam == null && Camera.main != null) _cam = Camera.main.transform;
+            float t = Clock;
+            float runLength = run != null ? run.config.runDuration : 480f;
+            // the clock jumped (admin timer, tests): reschedule instead of firing every missed event at once
+            if (t > _nextSwarm + 2f) _nextSwarm = t + config.swarmEvery * 0.5f;
+            if (t > _nextElite + 2f) _nextElite = t + config.eliteEvery * 0.5f;
+
+            // steady pressure
+            int target = TargetAlive;
+            if (em.AliveCount < target)
+            {
+                _spawnAcc = Mathf.Min(_spawnAcc + config.spawnPerSecond.Evaluate(t) * dt, 8f);
+                while (_spawnAcc >= 1f && em.AliveCount < target)
+                {
+                    _spawnAcc -= 1f;
+                    int k = Pick(em, t, runLength, swarmOnly: false, eliteOnly: false);
+                    if (k < 0) break;
+                    SpawnAt(em, table.entries[k].enemy, RandomAngle(), null);
+                }
+            }
+            else _spawnAcc = 0f;
+
+            // swarm: a burst from one direction on top of the target
+            if (t >= _nextSwarm)
+            {
+                _nextSwarm = t + config.swarmEvery;
+                _swarmEntry = Pick(em, t, runLength, swarmOnly: true, eliteOnly: false);
+                if (_swarmEntry >= 0)
+                {
+                    _swarmLeft = Mathf.RoundToInt(config.swarmSize.Evaluate(t) * densityMultiplier);
+                    _swarmRate = _swarmLeft / Mathf.Max(0.1f, config.swarmDuration);
+                    _swarmAcc = 1f; // first one right away
+                    _swarmAngle = RandomAngle();
+                    SwarmsStarted++;
+                    Vector3 at = RingPoint(em, _swarmAngle);
+                    GameEvents.OnDirector.Raise(new DirectorEvent { Kind = DirectorEventKind.Swarm, Position = at, Color = em.telegraphColor });
+                }
+            }
+            if (_swarmLeft > 0 && _swarmEntry >= 0)
+            {
+                _swarmAcc += dt * _swarmRate;
+                float halfArc = config.swarmArc * 0.5f * Mathf.Deg2Rad;
+                var def = table.entries[_swarmEntry].enemy;
+                while (_swarmAcc >= 1f && _swarmLeft > 0 && em.AliveCount < config.hardCap)
+                {
+                    _swarmAcc -= 1f;
+                    _swarmLeft--;
+                    SpawnAt(em, def, _swarmAngle + GameRandom.Range(-halfArc, halfArc), null, skipOffscreenTest: true);
+                }
+                if (em.AliveCount >= config.hardCap) _swarmLeft = 0;
+            }
+
+            // elite cadence
+            if (t >= _nextElite)
+            {
+                _nextElite = t + config.eliteEvery;
+                int k = Pick(em, t, runLength, swarmOnly: false, eliteOnly: true);
+                if (k >= 0 && table.affixes.Length > 0)
+                {
+                    var affix = table.affixes[GameRandom.Range(0, table.affixes.Length)];
+                    int slot = SpawnAt(em, table.entries[k].enemy, RandomAngle(), affix);
+                    if (slot >= 0)
+                    {
+                        ElitesSent++;
+                        GameEvents.OnDirector.Raise(new DirectorEvent { Kind = DirectorEventKind.Elite, Position = em.GetPosition(slot), Color = affix.color });
+                    }
+                }
+            }
+        }
+
+        /// <summary>Weighted pick among entries active at t and under their cap. -1 if none.</summary>
+        int Pick(EnemyManager em, float t, float runLength, bool swarmOnly, bool eliteOnly)
+        {
+            var entries = table.entries;
+            float total = 0f;
+            for (int i = 0; i < entries.Length; i++)
+            {
+                if (!Eligible(em, entries[i], t, swarmOnly, eliteOnly)) continue;
+                total += SpawnTableDef.Weight(entries[i], t, runLength);
+            }
+            if (total <= 0f) return -1;
+            float r = GameRandom.Value * total;
+            int last = -1;
+            for (int i = 0; i < entries.Length; i++)
+            {
+                if (!Eligible(em, entries[i], t, swarmOnly, eliteOnly)) continue;
+                float w = SpawnTableDef.Weight(entries[i], t, runLength);
+                if (w <= 0f) continue;
+                last = i;
+                if (r < w) return i;
+                r -= w;
+            }
+            return last;
+        }
+
+        static bool Eligible(EnemyManager em, in SpawnTableDef.Entry e, float t, bool swarmOnly, bool eliteOnly)
+        {
+            if (!SpawnTableDef.Active(e, t)) return false;
+            if (swarmOnly && !e.swarm) return false;
+            if (eliteOnly) return e.elite; // the elite ignores the cap: it's one special enemy
+            return e.maxAlive <= 0 || em.AliveOf(e.enemy) < e.maxAlive;
+        }
+
+        static float RandomAngle() => GameRandom.Range(0f, Mathf.PI * 2f);
+
+        Vector3 RingPoint(EnemyManager em, float angle)
+        {
+            float r = em.arenaRadius - config.ringInset;
+            return em.arenaCenter + new Vector3(Mathf.Cos(angle) * r, 0f, Mathf.Sin(angle) * r);
+        }
+
+        /// <summary>Spawns near `angle` on the ring, nudged away from the player and (if asked) out of view.</summary>
+        int SpawnAt(EnemyManager em, EnemyDef def, float angle, AffixDef affix, bool skipOffscreenTest = false)
+        {
+            Vector3 player = Player.Main != null ? Player.Main.transform.position : em.arenaCenter;
+            float min2 = config.minPlayerDistance * config.minPlayerDistance;
+            Vector3 best = RingPoint(em, angle);
+            for (int attempt = 0; attempt < 6; attempt++)
+            {
+                float a = attempt == 0 ? angle : (skipOffscreenTest ? angle + GameRandom.Range(-0.4f, 0.4f) : RandomAngle());
+                Vector3 p = RingPoint(em, a);
+                // a little depth so a ring of spawns doesn't look like a fence of enemies
+                p += (em.arenaCenter - p).normalized * GameRandom.Range(0f, 2.5f);
+                float dx = p.x - player.x, dz = p.z - player.z;
+                if (dx * dx + dz * dz < min2) continue;
+                best = p;
+                if (skipOffscreenTest || !config.preferOffscreen || _cam == null || !InView(p)) break;
+            }
+            return em.Spawn(def, best, affix);
+        }
+
+        bool InView(Vector3 p)
+        {
+            Vector3 d = p - _cam.position;
+            if (Vector3.Dot(d, _cam.forward) <= 0f) return false;
+            var cam = Camera.main;
+            if (cam == null) return false;
+            Vector3 vp = cam.WorldToViewportPoint(p + Vector3.up * 0.8f);
+            return vp.x > -0.05f && vp.x < 1.05f && vp.y > -0.05f && vp.y < 1.05f;
+        }
+    }
+}

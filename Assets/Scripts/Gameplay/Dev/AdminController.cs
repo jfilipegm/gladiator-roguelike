@@ -185,6 +185,15 @@ namespace Gladiator.Gameplay
         }
 
         public void KillAllEnemies() => EnemyManager.Instance?.KillAll();
+
+        public bool DirectorOn => Director.Instance != null && Director.Instance.enabled;
+        public void ToggleDirector()
+        {
+            var d = Director.Instance != null ? Director.Instance : FindAnyObjectByType<Director>(FindObjectsInactive.Include);
+            if (d != null) d.enabled = !d.enabled;
+        }
+        public void SwarmNow() { if (Director.Instance != null) Director.Instance.TriggerSwarmNow(); }
+        public void EliteNow() { if (Director.Instance != null) Director.Instance.TriggerEliteNow(); }
         public void ClearPickups() => pickups?.ClearAll();
 
         public int CrowdSize => crowd != null ? crowd.targetAlive : 0;

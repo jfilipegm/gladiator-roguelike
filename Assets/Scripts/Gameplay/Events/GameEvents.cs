@@ -13,6 +13,9 @@ namespace Gladiator.Gameplay
     public struct PickupEvent { public int Kind; public Vector3 Position; public float Amount; }
     public struct LevelUpEvent { public int NewLevel; }
     public struct RunEndEvent { public RunOutcome Outcome; public float Elapsed; }
+    public enum DirectorEventKind { Swarm, Elite }
+    /// <summary>The Director started a swarm or sent an elite (HUD announcer, crowd excitement later).</summary>
+    public struct DirectorEvent { public DirectorEventKind Kind; public Vector3 Position; public Color Color; }
 
     /// <summary>
     /// The typed event bus (CLAUDE.md §4): OnHit, OnKill, OnCrit, OnDamaged, OnLevelUp, OnJump, OnSlide, OnPickup (+ OnLand).
@@ -31,12 +34,13 @@ namespace Gladiator.Gameplay
         public static readonly EventChannel<PickupEvent> OnPickup = new EventChannel<PickupEvent>();
         /// <summary>The run is over (death or timer). Raised once, at the moment it happens (before the end screen).</summary>
         public static readonly EventChannel<RunEndEvent> OnRunEnd = new EventChannel<RunEndEvent>();
+        public static readonly EventChannel<DirectorEvent> OnDirector = new EventChannel<DirectorEvent>();
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         public static void ClearAll()
         {
             OnHit.Clear(); OnCrit.Clear(); OnKill.Clear(); OnDamaged.Clear(); OnLevelUp.Clear();
-            OnJump.Clear(); OnSlide.Clear(); OnLand.Clear(); OnPickup.Clear(); OnRunEnd.Clear();
+            OnJump.Clear(); OnSlide.Clear(); OnLand.Clear(); OnPickup.Clear(); OnRunEnd.Clear(); OnDirector.Clear();
         }
     }
 }

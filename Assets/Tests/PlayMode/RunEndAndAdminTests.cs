@@ -32,6 +32,7 @@ namespace Gladiator.Tests
             if (quiet)
             {
                 Object.FindAnyObjectByType<DebugEnemySpawner>().enabled = false;
+                if (Director.Instance != null) Director.Instance.enabled = false; // tests place their own enemies
                 EnemyManager.Instance.KillAll();
                 yield return new WaitForSeconds(0.3f);
                 PickupSystem.Instance.ClearAll();
@@ -85,7 +86,8 @@ namespace Gladiator.Tests
 
             DevSettings.Timeless = false;
             var spawner = Object.FindAnyObjectByType<DebugEnemySpawner>();
-            spawner.enabled = true;  // the crowd must stop once the run is over
+            spawner.enabled = true;  // the crowd and the Director must stop once the run is over
+            Object.FindAnyObjectByType<Director>(FindObjectsInactive.Include).enabled = true;
             var end = RunEndController.Instance;
             yield return WaitRealtime(() => end.ScreenShown, 5f);
             Assert.IsTrue(end.ScreenShown);

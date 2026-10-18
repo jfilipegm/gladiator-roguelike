@@ -71,6 +71,7 @@ namespace Gladiator.Gameplay
         int _airJumpsUsed;
         bool _jumpCutDone, _ascendingFromJump;
         float _takeoffY, _apexY;
+        Vector3 _pendingImpulse;
 
         void Awake()
         {
@@ -93,7 +94,14 @@ namespace Gladiator.Gameplay
             _cc.enabled = true;
             _hv = Vector3.zero;
             _vy = 0f;
+            _pendingImpulse = Vector3.zero;
         }
+
+        /// <summary>
+        /// Shove the player (velocity change, m/s), applied at the start of the next motor tick. A positive y launches
+        /// them into the air (no jump cut, counts as airborne) — e.g. the Brute's slam.
+        /// </summary>
+        public void AddImpulse(Vector3 velocity) => _pendingImpulse += velocity;
 
         public void Tick(float dt, float unscaledDt)
         {
@@ -125,6 +133,23 @@ namespace Gladiator.Gameplay
                 _takeoffY = _apexY = transform.position.y;
             }
             if (!grounded) _coyote -= dt;
+
+            // --- external impulse (knock-up / shove)
+            if (_pendingImpulse != Vector3.zero)
+            {
+                _hv += new Vector3(_pendingImpulse.x, 0f, _pendingImpulse.z);
+                if (_pendingImpulse.y > 0f)
+                {
+                    if (CurrentState == State.Sliding) ApplyCapsule(standing: true);
+                    CurrentState = State.Airborne;
+                    _vy = Mathf.Max(_vy, _pendingImpulse.y);
+                    _ascendingFromJump = true; // keeps the ground probe from snapping back down
+                    _jumpCutDone = true;
+                    _coyote = 0f;
+                    _takeoffY = _apexY = transform.position.y;
+                }
+                _pendingImpulse = Vector3.zero;
+            }
 
             // --- jump (ground / coyote / air)
             if (_jumpBuffer > 0f)

@@ -31,9 +31,18 @@ namespace Gladiator.Gameplay
         public int SpawnCountIndex { get; private set; } = 2;
         public int SpawnCount => SpawnCounts[SpawnCountIndex];
         public EnemyDef Selected => catalog != null && catalog.enemies.Length > 0 ? catalog.enemies[Mathf.Clamp(SelectedEnemy, 0, catalog.enemies.Length - 1)] : null;
+        /// <summary>0 = normal enemies, k = catalog.affixes[k-1] (every spawn from the menu is that elite).</summary>
+        public int SelectedAffix { get; private set; }
+        public AffixDef Affix => catalog != null && SelectedAffix > 0 && SelectedAffix <= catalog.affixes.Length ? catalog.affixes[SelectedAffix - 1] : null;
         public bool Available => allowInReleaseBuilds || Debug.isDebugBuild;
 
-        void Awake() => Instance = this;
+        void Awake()
+        {
+            Instance = this;
+            // start the type selector on whatever the background crowd spawns (the catalog is sorted by asset name)
+            if (catalog != null && crowd != null && crowd.enemy != null)
+                SelectedEnemy = Mathf.Max(0, System.Array.IndexOf(catalog.enemies, crowd.enemy));
+        }
         void OnEnable() => GameLoop.Register(this, TickGroup.Input, -10);
 
         void OnDisable()
@@ -128,6 +137,12 @@ namespace Gladiator.Gameplay
             if (crowd != null && Selected != null) crowd.enemy = Selected; // the background crowd follows the selection
         }
 
+        public void CycleAffix(int dir)
+        {
+            int n = (catalog != null ? catalog.affixes.Length : 0) + 1;
+            SelectedAffix = ((SelectedAffix + dir) % n + n) % n;
+        }
+
         public void CycleCount(int dir) => SpawnCountIndex = Mathf.Clamp(SpawnCountIndex + dir, 0, SpawnCounts.Length - 1);
 
         /// <summary>Spawns `count` of the selected type 3.5–7 m around the player.</summary>
@@ -164,7 +179,7 @@ namespace Gladiator.Gameplay
                 }
                 float dx = p.x - em.arenaCenter.x, dz = p.z - em.arenaCenter.z, d2 = dx * dx + dz * dz;
                 if (d2 > maxR * maxR) { float s = maxR / Mathf.Sqrt(d2); p.x = em.arenaCenter.x + dx * s; p.z = em.arenaCenter.z + dz * s; }
-                if (em.Spawn(def, p) >= 0) spawned++;
+                if (em.Spawn(def, p, Affix) >= 0) spawned++;
             }
             return spawned;
         }

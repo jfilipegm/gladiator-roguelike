@@ -105,7 +105,7 @@ namespace Gladiator.UI
     /// <summary>Tiny point-filtered pixel icons generated in code (no third-party art).</summary>
     public static class PixelIcons
     {
-        static Sprite _white, _coin, _skull, _heart;
+        static Sprite _white, _coin, _skull, _heart, _chevron;
 
         public static Sprite White => _white ??= Make(new[] { "#" }, Color.white, Color.white);
 
@@ -144,6 +144,19 @@ namespace Gladiator.UI
             "...##...",
             "........",
         }, new Color(1f, 0.33f, 0.3f), new Color(0.35f, 0.05f, 0.08f));
+
+        /// <summary>Arrow pointing up (+Y), white so Image.color tints it; rotate to aim.</summary>
+        public static Sprite Chevron => _chevron ??= Make(new[]
+        {
+            "....##....",
+            "...#OO#...",
+            "..#OOOO#..",
+            ".#OOOOOO#.",
+            "#OOO##OOO#",
+            "#OO#..#OO#",
+            "#O#....#O#",
+            "##......##",
+        }, Color.white, new Color(0.1f, 0.06f, 0.05f));
 
         /// <summary>'#' = outline colour, letters = fill (O/R) or highlight (Y), '.' = transparent.</summary>
         static Sprite Make(string[] rows, Color fill, Color outline, Color? highlight = null)

@@ -73,7 +73,8 @@ namespace Gladiator.UI
         void OnHit(in HitEvent e)
         {
             var c = feedback;
-            Spawn(e.Position, e.Damage, e.Crit ? c.critNumberColor : c.numberColor, e.Crit ? c.critNumberScale : c.numberScale, e.Crit);
+            if (e.Blocked) Spawn(e.Position, e.Damage, c.blockedNumberColor, c.blockedNumberScale, false);
+            else Spawn(e.Position, e.Damage, e.Crit ? c.critNumberColor : c.numberColor, e.Crit ? c.critNumberScale : c.numberScale, e.Crit);
         }
 
         void OnDamaged(in DamagedEvent e) => Spawn(e.Position, e.Damage, feedback.playerDamageColor, feedback.critNumberScale, false);

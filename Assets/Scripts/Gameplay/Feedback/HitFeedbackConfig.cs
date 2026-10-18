@@ -17,6 +17,8 @@ namespace Gladiator.Gameplay
         [Header("Hit-stop (only crit / elite / boss — keep it tiny)")]
         public float hitStopOnCrit = 0.035f;
         public float hitStopOnElite = 0.06f;
+        [Tooltip("Min seconds between elite-hit hit-stops (fast weapons would otherwise stutter constantly).")]
+        public float eliteHitStopInterval = 0.35f;
         public float hitStopOnPlayerHit = 0.05f;
 
         [Header("Death pop")]
@@ -34,6 +36,9 @@ namespace Gladiator.Gameplay
         public float critNumberScale = 1.55f;
         public Color numberColor = Color.white;
         public Color critNumberColor = new Color(1f, 0.82f, 0.29f);
+        [Tooltip("Hit soaked by a shield (grey, smaller): tells you to flank.")]
+        public Color blockedNumberColor = new Color(0.62f, 0.66f, 0.7f);
+        public float blockedNumberScale = 0.8f;
         [Tooltip("Damage the PLAYER takes — orange-red: hurts you.")]
         public Color playerDamageColor = new Color(1f, 0.33f, 0.2f);
 

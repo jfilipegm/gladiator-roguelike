@@ -39,8 +39,16 @@ namespace Gladiator.Gameplay
         {
             if (stressSpawner == null) return 0;
             // Grow the pool up front (allocation happens here, not during the measured run) and fill fast.
-            if (EnemyManager.Instance != null && stressSpawner.enemy != null)
-                EnemyManager.Instance.Prewarm(stressSpawner.enemy, count + 64);
+            var em = EnemyManager.Instance;
+            var mix = stressSpawner.mix;
+            if (em != null && mix != null && mix.Length > 0)
+            {
+                // same cap the Director will enforce per type (M2.3), with headroom for corpses mid death-pop
+                stressSpawner.maxPerType = Mathf.CeilToInt(count * 1.25f / mix.Length);
+                foreach (var d in mix) if (d != null) em.Prewarm(d, stressSpawner.maxPerType + 16);
+            }
+            else if (em != null && stressSpawner.enemy != null)
+                em.Prewarm(stressSpawner.enemy, count + 64);
             stressSpawner.targetAlive = Mathf.Max(stressSpawner.targetAlive, count);
             stressSpawner.spawnInterval = 0.01f;
             return count;

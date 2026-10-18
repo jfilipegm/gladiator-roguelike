@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 664674991ec87df7291301f37fcc64ac, type: 3}
+  m_Name: EN_Slinger
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.EnemyDef
+  id: slinger
+  displayName: Slinger
+  model: {fileID: 919132149155446097, guid: 197b3715f236054739e82aa3d3d40404, type: 3}
+  anim: {fileID: 11400000, guid: 13cb1487eb00393ca8898bf49cbdecec, type: 2}
+  scale: 1
+  maxHp: 16
+  moveSpeed: 3.4
+  speedJitter: 0.15
+  acceleration: 14
+  radius: 0.36
+  knockbackTaken: 1
+  contactDamage: 5
+  contactInterval: 0.9
+  behaviour: 3
+  windup: 0.7
+  attackCooldown: 2.6
+  attackRange: 14
+  attackDamage: 9
+  attackRadius: 2.5
+  recover: 0.35
+  turnRate: 540
+  lungeSpeed: 13
+  lungeTime: 0.28
+  blockArc: 120
+  blockReduction: 0.85
+  keepDistance: {x: 6, y: 10}
+  projectileSpeed: 13
+  lobTime: 0.95
+  projectileRadius: 0.22
+  zoneDuration: 3.5
+  zoneDps: 10
+  xp: 2
+  goldChance: 0.06
+  prewarm: 32

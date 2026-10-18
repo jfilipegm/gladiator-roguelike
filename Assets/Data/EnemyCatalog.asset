@@ -13,4 +13,13 @@ MonoBehaviour:
   m_Name: EnemyCatalog
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.EnemyCatalog
   enemies:
+  - {fileID: 11400000, guid: dadc94099a6e8005494fa3c710e62faf, type: 2}
   - {fileID: 11400000, guid: 824754529e64539a08f93ce5ea6b9028, type: 2}
+  - {fileID: 11400000, guid: 45a98fc17f9762fc4873616e13196ccf, type: 2}
+  - {fileID: 11400000, guid: 51fd6705a6918542c8a48f6531e10146, type: 2}
+  - {fileID: 11400000, guid: 729da0abfb08161378f0ed030335efd6, type: 2}
+  - {fileID: 11400000, guid: 677af5aa554d6225685c50de3950805f, type: 2}
+  affixes:
+  - {fileID: 11400000, guid: 9930d7c59d05924b99927b4eea4b3f13, type: 2}
+  - {fileID: 11400000, guid: 5e952c8a53800a37ca1c1f13de894bcd, type: 2}
+  - {fileID: 11400000, guid: 9f4e391d9abdd6ffd9af9add181c8de7, type: 2}

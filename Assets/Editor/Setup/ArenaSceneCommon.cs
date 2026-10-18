@@ -105,6 +105,21 @@ namespace Gladiator.EditorTools
             numbers.font = AssetDatabase.LoadAssetAtPath<TMPro.TMP_FontAsset>(CombatSetup.FontPath);
             numbers.fontMaterial = AssetDatabase.LoadAssetAtPath<Material>(CombatSetup.FontOutlinePath);
 
+            var tele = new GameObject("TelegraphRenderer").AddComponent<TelegraphRenderer>();
+            tele.transform.SetParent(systems, false);
+            tele.material = AssetDatabase.LoadAssetAtPath<Material>(CombatSetup.TelegraphMat);
+
+            var proj = new GameObject("EnemyProjectiles").AddComponent<EnemyProjectiles>();
+            proj.transform.SetParent(systems, false);
+            proj.material = em.bodyMaterial;
+            proj.stoneMesh = AssetDatabase.LoadAssetAtPath<Mesh>(CombatSetup.StoneMesh);
+            proj.potMesh = AssetDatabase.LoadAssetAtPath<Mesh>(CombatSetup.PotMesh);
+            proj.feedback = feedback;
+            proj.burst = pop;
+
+            var zones = new GameObject("HazardZones").AddComponent<HazardZones>();
+            zones.transform.SetParent(systems, false);
+
             var spawner = new GameObject("DebugEnemySpawner").AddComponent<DebugEnemySpawner>();
             spawner.transform.SetParent(systems, false);
             spawner.enemy = AssetDatabase.LoadAssetAtPath<EnemyDef>(CombatSetup.ConvictPath);
@@ -152,6 +167,8 @@ namespace Gladiator.EditorTools
             var hud = new GameObject("Hud").AddComponent<Gladiator.UI.Hud>();
             hud.transform.SetParent(root, false);
             hud.font = font; hud.fontMaterial = fontMat;
+            var threats = new GameObject("ThreatIndicators").AddComponent<Gladiator.UI.ThreatIndicators>();
+            threats.transform.SetParent(root, false);
             var panel = new GameObject("LevelUpPanel").AddComponent<Gladiator.UI.LevelUpPanel>();
             panel.transform.SetParent(root, false);
             panel.font = font; panel.fontMaterial = fontMat;

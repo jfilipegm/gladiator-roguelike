@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Gladiator.Gameplay
 {
-    /// <summary>Spawns PlaytestBot + FrameStatsRecorder from the command line in any gameplay scene.</summary>
+    /// <summary>Spawns PlaytestBot + FrameStatsRecorder from the command line in any gameplay scene (-mix: all enemy types).</summary>
     static class PlaytestBotBootstrap
     {
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -27,6 +27,15 @@ namespace Gladiator.Gameplay
                 b.godMode = !CommandLine.Has("-mortal");
                 b.timeless = !CommandLine.Has("-timed");
                 Object.DontDestroyOnLoad(go);
+                // -mix: the debug crowd spawns every enemy type from the catalog, with occasional elites
+                var admin = AdminController.Instance;
+                var spawner = Object.FindAnyObjectByType<DebugEnemySpawner>();
+                if (CommandLine.Has("-mix") && admin != null && admin.catalog != null && spawner != null)
+                {
+                    spawner.mix = admin.catalog.enemies;
+                    spawner.affixes = admin.catalog.affixes;
+                    spawner.eliteChance = CommandLine.GetFloat("-eliteChance", 0.03f);
+                }
             }
             if (profile && Object.FindAnyObjectByType<FrameStatsRecorder>() == null)
             {

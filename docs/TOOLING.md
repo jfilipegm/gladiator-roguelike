@@ -46,3 +46,7 @@ Machine: CachyOS (Linux), KDE Plasma on Wayland. Unity Hub + Unity **6000.6.6f1*
 - **A lone 24 B allocation** = Unity creating a C# wrapper for a native object script code touches for the first time (a collider from a raycast/overlap, `.transform`, `.gameObject`). Pre-touch them at load (see `CameraCollisionGuard.Awake`).
 - **Editor-only allocations to ignore:** IMGUI `GUI.Repaint` (~368 B/frame) and TMP formatted `SetText` (mirrors the text into `m_text` under `#if UNITY_EDITOR`, ~150 B per call — shows up as `Tick.Hud`).
 - **Analyse a run:** `Tools/gcscan.py Profiling/<run>.csv [warmup_s]` lists frames with `gc_bytes > 0` after warm-up and the frame-time/gameplay stats at ≥ 250 enemies (the summary.txt averages include the startup hitch).
+- **Mixed-roster perf runs:** add `-mix` (every EnemyDef in the catalog, random per spawn) and optionally `-eliteChance 0.03` to any bot/stress run, e.g. `Tools/perfrun stress 300 45 -mix`.
+- **Review screenshots of staged fights:** in Play mode, `Tools/ueval 'return Gladiator.EditorTools.DevShowcase.Lineup();'` (all types + elites in front of the camera) or `.Fight()`; `DevShowcase.Pause()` → `Tools/ushot <name> 1600 900` → `DevShowcase.Resume()`. Decals/projectiles stay drawn while paused.
+- **Don't recompile while in Play mode** (domain reload mid-play throws a stray SlashFx NullReference): `Tools/u editor_stop` first.
+

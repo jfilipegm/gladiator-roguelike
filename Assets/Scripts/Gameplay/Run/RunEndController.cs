@@ -81,6 +81,8 @@ namespace Gladiator.Gameplay
             {
                 _beatLeft = survivedBeat;
                 if (EnemyManager.Instance != null) EnemyManager.Instance.KillAll(); // the arena falls silent
+                if (EnemyProjectiles.Instance != null) EnemyProjectiles.Instance.Clear();
+                if (HazardZones.Instance != null) HazardZones.Instance.Clear();
                 if (burst != null) burst.Burst(at, 40, 8f, 0.22f, new Color(1f, 0.86f, 0.4f), new Color(0.43f, 0.95f, 1f));
             }
         }

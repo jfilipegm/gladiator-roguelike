@@ -25,7 +25,7 @@ namespace Gladiator.Gameplay
         readonly Matrix4x4[] _matrices = new Matrix4x4[Max];
         readonly Vector4[] _colors = new Vector4[Max];
         readonly Vector4[] _params = new Vector4[Max];
-        int _count;
+        int _count, _lastCount;
         Mesh _quad;
         MaterialPropertyBlock _mpb;
         RenderParams _rp;
@@ -66,7 +66,7 @@ namespace Gladiator.Gameplay
         /// </summary>
         public void Circle(Vector3 center, float radius, float fill, Color color, Style style, float thickness = 0.07f, float seed = 0f)
         {
-            if (_count >= Max) return;
+            if (_count >= Max || Time.deltaTime <= 0f) return; // paused: last frame's decals stay on screen
             float s = radius * 2f;
             _matrices[_count] = Matrix4x4.TRS(new Vector3(center.x, center.y + lift, center.z), Quaternion.identity, new Vector3(s, 1f, s));
             _colors[_count] = color;
@@ -76,11 +76,15 @@ namespace Gladiator.Gameplay
 
         public void Tick(float dt, float unscaledDt)
         {
-            if (_count == 0 || material == null) { _count = 0; return; }
-            _mpb.SetVectorArray(ColorId, _colors);
-            _mpb.SetVectorArray(ParamsId, _params);
-            Graphics.RenderMeshInstanced(_rp, _quad, 0, _matrices, _count);
-            _count = 0;
+            // While paused (level-up, pause menu) nothing ticks, so redraw the last frame instead of going blank.
+            int n = dt > 0f ? _count : _lastCount;
+            if (n > 0 && material != null)
+            {
+                _mpb.SetVectorArray(ColorId, _colors);
+                _mpb.SetVectorArray(ParamsId, _params);
+                Graphics.RenderMeshInstanced(_rp, _quad, 0, _matrices, n);
+            }
+            if (dt > 0f) { _lastCount = _count; _count = 0; }
         }
     }
 }

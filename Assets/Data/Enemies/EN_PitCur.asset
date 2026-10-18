@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 664674991ec87df7291301f37fcc64ac, type: 3}
+  m_Name: EN_PitCur
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.EnemyDef
+  id: pitcur
+  displayName: Pit Cur
+  model: {fileID: 919132149155446097, guid: 5364678d5d8ce69068f2ce633647eb41, type: 3}
+  anim: {fileID: 11400000, guid: 5fd5cc54310089be19819b3f5e699010, type: 2}
+  scale: 1
+  maxHp: 12
+  moveSpeed: 5.6
+  speedJitter: 0.15
+  acceleration: 20
+  radius: 0.32
+  knockbackTaken: 1
+  contactDamage: 6
+  contactInterval: 0.9
+  behaviour: 1
+  windup: 0.25
+  attackCooldown: 2
+  attackRange: 3.5
+  attackDamage: 10
+  attackRadius: 2.5
+  recover: 0.35
+  turnRate: 540
+  lungeSpeed: 13
+  lungeTime: 0.28
+  blockArc: 120
+  blockReduction: 0.85
+  keepDistance: {x: 6, y: 10}
+  projectileSpeed: 13
+  lobTime: 0.95
+  projectileRadius: 0.25
+  zoneDuration: 3.5
+  zoneDps: 10
+  xp: 1
+  goldChance: 0.04
+  prewarm: 48

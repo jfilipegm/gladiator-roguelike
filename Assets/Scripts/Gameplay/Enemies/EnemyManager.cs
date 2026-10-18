@@ -15,10 +15,20 @@ namespace Gladiator.Gameplay
         public bool Flashing;
     }
 
+    /// <summary>An enemy worth pointing at from the screen edge (winding up an attack, or an elite).</summary>
+    public struct EnemyThreat
+    {
+        public Vector3 Position;
+        public Color Color;
+        public bool Windup;
+    }
+
     /// <summary>
     /// All enemies, one central tick (CLAUDE.md §4): struct-of-arrays state, pooled views, spatial-hash separation,
     /// static-obstacle push-out, baked height grid for terrain, step-height rule (no wall climbing), contact damage,
-    /// hit flash / knockback / recoil, rigid-part run cycle, death pop. Zero allocation in steady state.
+    /// hit flash / knockback / recoil, rigid-part run cycle, death pop. Per-enemy attack state machine for the
+    /// behaviours in <see cref="EnemyBehaviour"/> (wind-up → attack → recover, telegraphed in orange-red) and elite
+    /// affixes (<see cref="AffixDef"/>). Zero allocation in steady state.
     /// </summary>
     public sealed class EnemyManager : MonoBehaviour, ITickable
     {
@@ -50,12 +60,36 @@ namespace Gladiator.Gameplay
         public int maxNeighbours = 10;
         public float playerRadius = 0.35f;
 
+        [Header("Attacks")]
+        [Tooltip("Orange-red: telegraphs, wind-up rings (CLAUDE.md §5 colour language).")]
+        public Color telegraphColor = new Color(1f, 0.22f, 0.06f, 0.95f);
+        [Tooltip("Brute slam knock-up on a grounded player: outward and upward speed (m/s).")]
+        public Vector2 slamImpulse = new Vector2(6f, 6.5f);
+        public Color slamDustA = new Color(0.55f, 0.42f, 0.3f), slamDustB = new Color(0.75f, 0.62f, 0.45f);
+        public Color blastColorA = new Color(1f, 0.48f, 0.12f), blastColorB = new Color(1f, 0.86f, 0.4f);
+
         // ---- state (struct of arrays) ----
         Vector3[] _pos, _vel, _knock;
         float[] _hp, _maxHp, _speed, _radius, _flash, _contactCd, _phase, _recoil, _dying, _yaw;
         int[] _uid;
         bool[] _used, _active;
         EnemyView[] _view;
+        // attack state machine + affixes
+        enum AiState : byte { Move = 0, Windup = 1, Attack = 2, Recover = 3 }
+        AiState[] _state;
+        float[] _stateT, _stateDur, _attackCd, _strafe, _dmgTakenMul, _knockMul, _atkTimeMul, _scale;
+        Vector3[] _aim;
+        bool[] _attackHit;
+        AffixDef[] _affix;
+
+        struct Blast { public Vector3 Pos; public float T, Fuse, Radius, ToPlayer, ToEnemies; }
+        readonly Blast[] _blasts = new Blast[64];
+        int _blastCount;
+        readonly int[] _blastQuery = new int[512];
+        readonly EnemyThreat[] _threats = new EnemyThreat[64];
+        int _threatCount;
+        float _nextEliteStop;
+        PlayerMotor _playerMotor;
         int[] _free;
         int _freeCount, _high, _nextUid = 1;
 
@@ -64,15 +98,25 @@ namespace Gladiator.Gameplay
         StaticObstacles _obstacles;
         readonly int[] _query = new int[512];
         readonly Dictionary<EnemyDef, Stack<EnemyView>> _pools = new Dictionary<EnemyDef, Stack<EnemyView>>();
+        readonly Dictionary<EnemyDef, int> _aliveByDef = new Dictionary<EnemyDef, int>();
         Transform _poolRoot;
         Transform _player;
         PlayerHealth _playerHealth;
         float _maxRadius = 0.5f;
 
         public int AliveCount { get; private set; }
+        /// <summary>Alive enemies of one type (spawners cap kiting types that would otherwise pile up).</summary>
+        public int AliveOf(EnemyDef def) => def != null && _aliveByDef.TryGetValue(def, out int n) ? n : 0;
+        /// <summary>Views created during play because a pool was empty (should stay 0 after warm-up).</summary>
+        public int PoolGrowths { get; private set; }
         public int HighWater => _high;
         public HeightGrid Height => _height;
+        public StaticObstacles Obstacles => _obstacles;
         public SpatialHashGrid Grid => _grid;
+        /// <summary>Enemies winding up an attack + elites, rebuilt every tick (threat indicators, bot).</summary>
+        public int ThreatCount => _threatCount;
+        public EnemyThreat GetThreat(int k) => _threats[k];
+        public int PendingBlasts => _blastCount;
 
         void Awake()
         {
@@ -82,6 +126,10 @@ namespace Gladiator.Gameplay
             _flash = new float[capacity]; _contactCd = new float[capacity]; _phase = new float[capacity];
             _recoil = new float[capacity]; _dying = new float[capacity]; _yaw = new float[capacity];
             _uid = new int[capacity]; _used = new bool[capacity]; _active = new bool[capacity];
+            _state = new AiState[capacity]; _stateT = new float[capacity]; _stateDur = new float[capacity];
+            _attackCd = new float[capacity]; _strafe = new float[capacity]; _dmgTakenMul = new float[capacity];
+            _knockMul = new float[capacity]; _atkTimeMul = new float[capacity]; _scale = new float[capacity];
+            _aim = new Vector3[capacity]; _attackHit = new bool[capacity]; _affix = new AffixDef[capacity];
             _view = new EnemyView[capacity];
             _free = new int[capacity];
             for (int i = capacity - 1; i >= 0; i--) _free[_freeCount++] = i;
@@ -94,7 +142,7 @@ namespace Gladiator.Gameplay
         {
             BakeWorld();
             var p = Player.Main;
-            if (p != null) { _player = p.transform; _playerHealth = p.GetComponent<PlayerHealth>(); }
+            if (p != null) { _player = p.transform; _playerHealth = p.GetComponent<PlayerHealth>(); _playerMotor = p.GetComponent<PlayerMotor>(); }
         }
 
         /// <summary>Uses the Editor-baked nav data when it matches; otherwise bakes from the scene now (slower, logged).</summary>
@@ -160,13 +208,21 @@ namespace Gladiator.Gameplay
             return new EnemyView { Def = def, Go = go, Root = go.transform, Rig = new PartRig(model.transform), Renderers = renderers };
         }
 
-        /// <summary>Returns the slot index, or -1 when full.</summary>
-        public int Spawn(EnemyDef def, Vector3 position)
+        /// <summary>Returns the slot index, or -1 when full. With an affix the enemy is an elite.</summary>
+        public int Spawn(EnemyDef def, Vector3 position, AffixDef affix = null)
         {
             if (_freeCount == 0) return -1;
             int i = _free[--_freeCount];
             var pool = GetPool(def);
-            var v = pool.Count > 0 ? pool.Pop() : CreateView(def);
+            EnemyView v;
+            if (pool.Count > 0) v = pool.Pop();
+            else
+            {
+                // Pool ran dry mid-run: creating a view allocates (~4.5 KB). Raise that type's prewarm.
+                v = CreateView(def);
+                PoolGrowths++;
+                Debug.LogWarning($"[EnemyManager] pool grew at runtime: {def.id} ({PoolGrowths} so far)");
+            }
             v.Go.SetActive(true);
             if (v.Flashing) SetMaterial(v, bodyMaterial);
             _view[i] = v;
@@ -176,17 +232,31 @@ namespace Gladiator.Gameplay
             _pos[i] = position;
             _vel[i] = Vector3.zero;
             _knock[i] = Vector3.zero;
-            _hp[i] = _maxHp[i] = def.maxHp;
-            _speed[i] = def.moveSpeed * (1f + GameRandom.Range(-def.speedJitter, def.speedJitter));
-            _radius[i] = def.radius;
-            if (def.radius > _maxRadius) _maxRadius = def.radius;
+            float scale = affix != null ? affix.scale : 1f;
+            _affix[i] = affix;
+            _scale[i] = scale;
+            _hp[i] = _maxHp[i] = def.maxHp * (affix != null ? affix.hpMultiplier : 1f);
+            _speed[i] = def.moveSpeed * (1f + GameRandom.Range(-def.speedJitter, def.speedJitter)) * (affix != null ? affix.speedMultiplier : 1f);
+            _radius[i] = def.radius * scale;
+            if (_radius[i] > _maxRadius) _maxRadius = _radius[i];
+            _dmgTakenMul[i] = affix != null ? affix.damageTakenMultiplier : 1f;
+            _knockMul[i] = affix != null ? affix.knockbackMultiplier : 1f;
+            _atkTimeMul[i] = affix != null ? affix.attackTimeMultiplier : 1f;
+            _state[i] = AiState.Move;
+            _stateT[i] = GameRandom.Range(1.5f, 3.5f); // Move: strafe-flip timer
+            _stateDur[i] = 1f;
+            _attackCd[i] = GameRandom.Range(0.6f, 1.4f) * def.attackCooldown * 0.5f; // don't all fire on the same frame
+            _strafe[i] = (GameRandom.NextUInt() & 1) == 0 ? 1f : -1f;
+            _attackHit[i] = false;
+            _aim[i] = Vector3.forward;
             _flash[i] = 0f; _contactCd[i] = 0.5f; _phase[i] = GameRandom.Range(0f, 6.28f); _recoil[i] = 0f; _dying[i] = 0f;
             _uid[i] = _nextUid++;
             Vector3 toPlayer = _player != null ? _player.position - position : Vector3.forward;
             _yaw[i] = Mathf.Atan2(toPlayer.x, toPlayer.z) * Mathf.Rad2Deg;
             v.Root.SetPositionAndRotation(position, Quaternion.Euler(0f, _yaw[i], 0f));
-            v.Root.localScale = Vector3.one;
+            v.Root.localScale = Vector3.one * scale;
             if (i >= _high) _high = i + 1;
+            _aliveByDef[def] = AliveOf(def) + 1;
             AliveCount++;
             DevCounters.Enemies = AliveCount;
             return i;
@@ -198,16 +268,19 @@ namespace Gladiator.Gameplay
             v.Go.SetActive(false);
             GetPool(v.Def).Push(v);
             _view[i] = null;
+            _affix[i] = null;
             _used[i] = false;
             _active[i] = false;
             _free[_freeCount++] = i;
             while (_high > 0 && !_used[_high - 1]) _high--;
         }
 
+        /// <summary>Kills everything at once (run end, tests). No explosions: pending blasts are dropped too.</summary>
         public void KillAll()
         {
             for (int i = 0; i < _high; i++)
-                if (_active[i]) Kill(i, new DamageInfo());
+                if (_active[i]) Kill(i, new DamageInfo(), allowBlast: false);
+            _blastCount = 0;
         }
 
         // ------------------------------------------------------------------ queries (weapons, bot, pickups)
@@ -217,6 +290,13 @@ namespace Gladiator.Gameplay
         public float GetRadius(int i) => _radius[i];
         public int GetUid(int i) => _uid[i];
         public float GetHp(int i) => _hp[i];
+        public float GetMaxHp(int i) => _maxHp[i];
+        public float GetYaw(int i) => _yaw[i];
+        public EnemyDef GetDef(int i) => _view[i] != null ? _view[i].Def : null;
+        public AffixDef GetAffix(int i) => _affix[i];
+        public bool IsElite(int i) => _affix[i] != null;
+        /// <summary>0 move, 1 wind-up, 2 attack, 3 recover (tests / debug).</summary>
+        public int GetAiState(int i) => (int)_state[i];
         public float MaxRadius => _maxRadius;
 
         /// <summary>Alive enemies whose body circle touches the query circle (XZ). Returns count written to results.</summary>
@@ -267,39 +347,129 @@ namespace Gladiator.Gameplay
 
         // ------------------------------------------------------------------ damage
 
+        /// <summary>True if a hit pushing along `dir` comes from inside the enemy's shield arc.</summary>
+        public bool IsBlocking(int i, Vector3 dir)
+        {
+            var def = _view[i].Def;
+            if (def.behaviour != EnemyBehaviour.ShieldBearer || def.blockArc <= 0f) return false;
+            dir.y = 0f;
+            float m = dir.magnitude;
+            if (m < 1e-3f) return false;
+            float yaw = _yaw[i] * Mathf.Deg2Rad;
+            // the attacker sits opposite the push direction
+            float cos = -(Mathf.Sin(yaw) * dir.x + Mathf.Cos(yaw) * dir.z) / m;
+            return cos > Mathf.Cos(def.blockArc * 0.5f * Mathf.Deg2Rad);
+        }
+
         public void ApplyDamage(int i, in DamageInfo info)
         {
             if (!IsAlive(i)) return;
             var def = _view[i].Def;
-            _hp[i] -= info.Amount;
-            _knock[i] += info.Direction * (info.Knockback * def.knockbackTaken);
-            _recoil[i] = feedback != null ? feedback.hitRecoilTime : 0.15f;
+            bool blocked = IsBlocking(i, info.Direction);
+            float amount = info.Amount * _dmgTakenMul[i] * (blocked ? 1f - def.blockReduction : 1f);
+            bool elite = _affix[i] != null;
+            _hp[i] -= amount;
+            _knock[i] += info.Direction * (info.Knockback * def.knockbackTaken * _knockMul[i] * (blocked ? 0.4f : 1f));
+            _recoil[i] = feedback != null ? feedback.hitRecoilTime * (blocked ? 0.5f : 1f) : 0.15f;
             if (feedback != null)
             {
                 _flash[i] = feedback.flashDuration;
                 if (!_view[i].Flashing) SetMaterial(_view[i], flashMaterial);
             }
-            var hit = new HitEvent { TargetId = _uid[i], Position = _pos[i] + Vector3.up * 1.2f, Damage = info.Amount, Crit = info.IsCrit, SourceId = info.SourceId };
+            var hit = new HitEvent
+            {
+                TargetId = _uid[i], Position = _pos[i] + Vector3.up * (1.2f * _scale[i]), Damage = amount, Crit = info.IsCrit && !blocked,
+                SourceId = info.SourceId, Blocked = blocked, Elite = elite,
+            };
             GameEvents.OnHit.Raise(hit);
-            if (info.IsCrit)
+            if (hit.Crit)
             {
                 GameEvents.OnCrit.Raise(hit);
                 if (feedback != null) { TimeController.HitStop(feedback.hitStopOnCrit); ScreenShake.Add(feedback.shakeOnCrit); }
             }
-            if (_hp[i] <= 0f) Kill(i, info);
+            else if (elite && feedback != null && Time.unscaledTime >= _nextEliteStop)
+            {
+                _nextEliteStop = Time.unscaledTime + feedback.eliteHitStopInterval;
+                TimeController.HitStop(feedback.hitStopOnElite);
+            }
+            if (_hp[i] <= 0f) Kill(i, info, allowBlast: true);
         }
 
-        void Kill(int i, in DamageInfo info)
+        void Kill(int i, in DamageInfo info, bool allowBlast)
         {
             _active[i] = false;
             _dying[i] = feedback != null ? feedback.deathPopTime : 0.1f;
             AliveCount--;
             DevCounters.Enemies = AliveCount;
             var def = _view[i].Def;
-            GameEvents.OnKill.Raise(new KillEvent { TargetId = _uid[i], Position = _pos[i], EnemyTypeId = def.RuntimeId, Elite = false, SourceId = info.SourceId, Xp = def.xp, GoldChance = def.goldChance });
+            _aliveByDef[def] = AliveOf(def) - 1;
+            var affix = _affix[i];
+            bool elite = affix != null;
+            GameEvents.OnKill.Raise(new KillEvent
+            {
+                TargetId = _uid[i], Position = _pos[i], EnemyTypeId = def.RuntimeId, Elite = elite, SourceId = info.SourceId,
+                Xp = def.xp * (elite ? affix.xpMultiplier : 1f), GoldChance = def.goldChance,
+            });
             if (deathPop != null && feedback != null)
                 deathPop.Emit(_pos[i] + Vector3.up * 0.7f, info.Direction, feedback);
             if (feedback != null && feedback.shakeOnKill > 0f) ScreenShake.Add(feedback.shakeOnKill);
+            if (elite && feedback != null && allowBlast)
+            {
+                TimeController.HitStop(feedback.hitStopOnElite * 1.5f);
+                ScreenShake.Add(0.15f);
+            }
+            if (elite && affix.explodeOnDeath && allowBlast && _blastCount < _blasts.Length)
+                _blasts[_blastCount++] = new Blast
+                {
+                    Pos = _pos[i], T = affix.fuse, Fuse = Mathf.Max(0.05f, affix.fuse), Radius = affix.explosionRadius,
+                    ToPlayer = affix.explosionDamageToPlayer, ToEnemies = affix.explosionDamageToEnemies,
+                };
+        }
+
+        /// <summary>
+        /// Explosive elites: a filling orange-red circle during the fuse, then the blast hurts the player and other
+        /// enemies (which can chain into more blasts). Runs before the enemy loop; the grid is already built.
+        /// </summary>
+        void TickBlasts(float dt, Vector3 player)
+        {
+            var tele = TelegraphRenderer.Instance;
+            for (int b = 0; b < _blastCount; b++)
+            {
+                ref var bl = ref _blasts[b];
+                bl.T -= dt;
+                if (bl.T > 0f)
+                {
+                    if (tele != null) tele.Circle(bl.Pos, bl.Radius, 1f - bl.T / bl.Fuse, telegraphColor, TelegraphRenderer.Style.Telegraph, 0.09f);
+                    continue;
+                }
+                Detonate(bl.Pos, bl.Radius, bl.ToPlayer, bl.ToEnemies, player);
+                _blasts[b] = _blasts[--_blastCount];
+                b--;
+            }
+        }
+
+        void Detonate(Vector3 pos, float radius, float toPlayer, float toEnemies, Vector3 player)
+        {
+            if (deathPop != null) deathPop.Burst(pos + Vector3.up * 0.5f, 26, 7.5f, 0.2f, blastColorA, blastColorB);
+            Vector3 d = player - pos;
+            float pd = new Vector2(d.x, d.z).magnitude;
+            ScreenShake.Add(pd < radius * 3f ? 0.35f : 0.12f);
+            if (_playerHealth != null && pd < radius + playerRadius && d.y > -1f && d.y < 1.6f)
+            {
+                Vector3 dir = pd > 1e-3f ? new Vector3(d.x, 0f, d.z) / pd : Vector3.forward;
+                if (_playerHealth.TakeDamage(new DamageInfo { Amount = toPlayer, Flags = DamageFlags.Area, Point = player, Direction = dir }) && _playerMotor != null)
+                    _playerMotor.AddImpulse(dir * 4f + Vector3.up * 3f);
+            }
+            if (toEnemies <= 0f) return;
+            int n = QueryAlive(pos, radius, _blastQuery);
+            for (int k = 0; k < n; k++)
+            {
+                int j = _blastQuery[k];
+                Vector3 e = _pos[j] - pos;
+                e.y = 0f;
+                float m = e.magnitude;
+                ApplyDamage(j, new DamageInfo { Amount = toEnemies, Flags = DamageFlags.Area, Point = _pos[j], Direction = m > 1e-3f ? e / m : Vector3.forward, Knockback = 6f });
+            }
         }
 
         void SetMaterial(EnemyView v, Material m)
@@ -313,16 +483,24 @@ namespace Gladiator.Gameplay
 
         public void Tick(float dt, float unscaledDt)
         {
-            if (_high == 0 || dt <= 0f) return;
+            _threatCount = 0;
+            if ((_high == 0 && _blastCount == 0) || dt <= 0f) return;
             _grid.Build(_pos, _active, _high);
-            if (_player == null && Player.Main != null) { _player = Player.Main.transform; _playerHealth = Player.Main.GetComponent<PlayerHealth>(); }
+            if (_player == null && Player.Main != null)
+            {
+                _player = Player.Main.transform;
+                _playerHealth = Player.Main.GetComponent<PlayerHealth>();
+                _playerMotor = Player.Main.GetComponent<PlayerMotor>();
+            }
             Vector3 player = _player != null ? _player.position : arenaCenter;
+            if (_blastCount > 0) TickBlasts(dt, player);
             var cam = Camera.main;
             Vector3 camPos = cam != null ? cam.transform.position : player;
             float animD2 = animDistance * animDistance;
             float knockDecay = feedback != null ? Mathf.Exp(-feedback.knockbackDecay * dt) : 0.85f;
             float recoilTime = feedback != null ? feedback.hitRecoilTime : 0.15f;
             float recoilAngle = feedback != null ? feedback.hitRecoilAngle : 20f;
+            var tele = TelegraphRenderer.Instance;
 
             for (int i = 0; i < _high; i++)
             {
@@ -334,7 +512,7 @@ namespace Gladiator.Gameplay
                     // death pop: quick swell then shrink, then back to the pool
                     _dying[i] -= dt;
                     float popT = feedback != null ? 1f - Mathf.Clamp01(_dying[i] / feedback.deathPopTime) : 1f;
-                    float s = popT < 0.35f ? 1f + popT * 0.8f : Mathf.Lerp(1.28f, 0f, (popT - 0.35f) / 0.65f);
+                    float s = (popT < 0.35f ? 1f + popT * 0.8f : Mathf.Lerp(1.28f, 0f, (popT - 0.35f) / 0.65f)) * _scale[i];
                     v.Root.localScale = new Vector3(s, s * (1f - popT * 0.3f), s);
                     if (_dying[i] <= 0f) Release(i);
                     continue;
@@ -345,7 +523,11 @@ namespace Gladiator.Gameplay
                 Vector3 to = player - p;
                 to.y = 0f;
                 float dist = to.magnitude;
-                Vector3 desired = dist > 0.05f ? to * (_speed[i] / dist) : Vector3.zero;
+                Vector3 dirTo = dist > 0.01f ? to / dist : Vector3.forward;
+
+                // behaviour: desired velocity + where to face
+                bool facePlayer;
+                Vector3 desired = Think(i, def, p, player, dirTo, dist, dt, tele, out facePlayer);
 
                 // separation (bounded neighbour checks)
                 Vector3 sep = Vector3.zero;
@@ -367,7 +549,8 @@ namespace Gladiator.Gameplay
                     sep.z += dz * push;
                 }
 
-                _vel[i] = Vector3.MoveTowards(_vel[i], desired, def.acceleration * dt);
+                if (_state[i] == AiState.Attack && def.behaviour == EnemyBehaviour.Lunger) _vel[i] = desired; // the leap ignores acceleration
+                else _vel[i] = Vector3.MoveTowards(_vel[i], desired, def.acceleration * dt);
                 Vector3 np = p + (_vel[i] + _knock[i]) * dt + sep * Mathf.Min(1f, separationStrength * dt);
                 _knock[i] *= knockDecay;
 
@@ -386,18 +569,39 @@ namespace Gladiator.Gameplay
                 np.y = Mathf.MoveTowards(h0, h1, 12f * dt + Mathf.Abs(h1 - h0) * 0.5f);
                 _pos[i] = np;
 
-                // contact damage
+                // contact damage (a lunging cur deals its leap damage instead)
                 _contactCd[i] -= dt;
-                if (_playerHealth != null && _contactCd[i] <= 0f && dist < _radius[i] + playerRadius + 0.15f && Mathf.Abs(player.y - np.y) < 1.1f)
+                bool touching = dist < _radius[i] + playerRadius + 0.15f && Mathf.Abs(player.y - np.y) < 1.1f;
+                if (_playerHealth != null && touching)
                 {
-                    var hit = new DamageInfo { Amount = def.contactDamage, Flags = DamageFlags.Contact, Point = player, Direction = dist > 0.01f ? to / dist : Vector3.forward };
-                    if (_playerHealth.TakeDamage(hit)) _contactCd[i] = def.contactInterval;
+                    if (_state[i] == AiState.Attack && def.behaviour == EnemyBehaviour.Lunger)
+                    {
+                        if (!_attackHit[i] && _playerHealth.TakeDamage(new DamageInfo { Amount = def.attackDamage, Flags = DamageFlags.Melee, Point = player, Direction = _aim[i] }))
+                        {
+                            _attackHit[i] = true;
+                            _contactCd[i] = def.contactInterval;
+                        }
+                    }
+                    else if (_contactCd[i] <= 0f)
+                    {
+                        var hit = new DamageInfo { Amount = def.contactDamage, Flags = DamageFlags.Contact, Point = player, Direction = dist > 0.01f ? to / dist : Vector3.forward };
+                        if (_playerHealth.TakeDamage(hit)) _contactCd[i] = def.contactInterval;
+                    }
                 }
 
-                // facing
-                Vector3 face = _vel[i];
-                if (face.x * face.x + face.z * face.z > 0.04f)
-                    _yaw[i] = Mathf.MoveTowardsAngle(_yaw[i], Mathf.Atan2(face.x, face.z) * Mathf.Rad2Deg, 540f * dt);
+                // facing: shield bearers / shooters / wind-ups look at the player (turn-rate limited), others look where they go
+                Vector3 face = facePlayer ? dirTo : (_state[i] == AiState.Attack ? _aim[i] : _vel[i]);
+                if (face.x * face.x + face.z * face.z > (facePlayer ? 1e-4f : 0.04f))
+                    _yaw[i] = Mathf.MoveTowardsAngle(_yaw[i], Mathf.Atan2(face.x, face.z) * Mathf.Rad2Deg, def.turnRate * dt);
+
+                // elite marker + threat list
+                var affix = _affix[i];
+                if (affix != null)
+                {
+                    if (tele != null) tele.Circle(np, _radius[i] * 2.1f, 0f, affix.color, TelegraphRenderer.Style.Ring, 0.16f, i * 0.37f);
+                    if (_state[i] != AiState.Windup && _threatCount < _threats.Length)
+                        _threats[_threatCount++] = new EnemyThreat { Position = np, Color = affix.color, Windup = false };
+                }
 
                 // flash restore
                 if (_flash[i] > 0f) { _flash[i] -= dt; if (_flash[i] <= 0f && v.Flashing) SetMaterial(v, bodyMaterial); }
@@ -411,9 +615,150 @@ namespace Gladiator.Gameplay
             }
         }
 
+        void SetState(int i, AiState state, float duration)
+        {
+            _state[i] = state;
+            _stateT[i] = _stateDur[i] = Mathf.Max(0.01f, duration);
+        }
+
+        void AddWindupThreat(Vector3 p)
+        {
+            if (_threatCount < _threats.Length) _threats[_threatCount++] = new EnemyThreat { Position = p, Color = telegraphColor, Windup = true };
+        }
+
+        /// <summary>
+        /// Per-behaviour state machine: Move → Windup (telegraphed) → Attack → Recover → Move. Returns the desired
+        /// velocity; `facePlayer` turns the body toward the player instead of along the velocity.
+        /// </summary>
+        Vector3 Think(int i, EnemyDef def, Vector3 p, Vector3 player, Vector3 dirTo, float dist, float dt, TelegraphRenderer tele, out bool facePlayer)
+        {
+            float speed = _speed[i];
+            float atkMul = _atkTimeMul[i];
+            _attackCd[i] -= dt;
+            _stateT[i] -= dt;
+            facePlayer = false;
+            float dy = player.y - p.y;
+
+            switch (def.behaviour)
+            {
+                case EnemyBehaviour.ShieldBearer:
+                    facePlayer = true;
+                    return dirTo * speed;
+
+                case EnemyBehaviour.Lunger:
+                    switch (_state[i])
+                    {
+                        case AiState.Windup:
+                            facePlayer = true;
+                            if (_stateT[i] <= 0f)
+                            {
+                                _aim[i] = dirTo;
+                                _attackHit[i] = false;
+                                SetState(i, AiState.Attack, def.lungeTime);
+                                _attackCd[i] = def.attackCooldown * atkMul;
+                            }
+                            return Vector3.zero;
+                        case AiState.Attack:
+                            if (_stateT[i] <= 0f) SetState(i, AiState.Recover, def.recover);
+                            return _aim[i] * def.lungeSpeed;
+                        case AiState.Recover:
+                            if (_stateT[i] <= 0f) _state[i] = AiState.Move;
+                            return dirTo * (speed * 0.3f);
+                        default:
+                            if (_attackCd[i] <= 0f && dist < def.attackRange && Mathf.Abs(dy) < 1f)
+                                SetState(i, AiState.Windup, def.windup * atkMul);
+                            return dirTo * speed;
+                    }
+
+                case EnemyBehaviour.Slammer:
+                    switch (_state[i])
+                    {
+                        case AiState.Windup:
+                        {
+                            facePlayer = true;
+                            float fill = 1f - _stateT[i] / _stateDur[i];
+                            if (tele != null) tele.Circle(p, def.attackRadius * _scale[i], fill, telegraphColor, TelegraphRenderer.Style.Telegraph, 0.07f);
+                            AddWindupThreat(p);
+                            if (_stateT[i] <= 0f) { Slam(i, def, p, player, dirTo, dist); SetState(i, AiState.Recover, def.recover); }
+                            return Vector3.zero;
+                        }
+                        case AiState.Recover:
+                            if (_stateT[i] <= 0f) _state[i] = AiState.Move;
+                            return Vector3.zero;
+                        default:
+                            if (_attackCd[i] <= 0f && dist < def.attackRange && Mathf.Abs(dy) < 1.5f)
+                                SetState(i, AiState.Windup, def.windup * atkMul);
+                            return dirTo * speed;
+                    }
+
+                case EnemyBehaviour.Ranged:
+                case EnemyBehaviour.Lobber:
+                    facePlayer = true;
+                    switch (_state[i])
+                    {
+                        case AiState.Windup:
+                            if (tele != null) tele.Circle(p, _radius[i] * 2.2f, 1f, telegraphColor, TelegraphRenderer.Style.Ring, 0.14f);
+                            AddWindupThreat(p);
+                            if (_stateT[i] <= 0f)
+                            {
+                                Throw(i, def, p, player);
+                                SetState(i, AiState.Recover, def.recover);
+                                _attackCd[i] = def.attackCooldown * atkMul;
+                            }
+                            return Vector3.zero;
+                        case AiState.Recover:
+                            if (_stateT[i] <= 0f) { _state[i] = AiState.Move; _stateT[i] = GameRandom.Range(1.5f, 3.5f); }
+                            return Vector3.zero;
+                        default:
+                        {
+                            if (_attackCd[i] <= 0f && dist < def.attackRange && dist > 1.5f)
+                            {
+                                SetState(i, AiState.Windup, def.windup * atkMul);
+                                return Vector3.zero;
+                            }
+                            // keep-distance band: approach / back off / strafe (flip side now and then)
+                            if (_stateT[i] <= 0f) { _strafe[i] = -_strafe[i]; _stateT[i] = GameRandom.Range(1.5f, 3.5f); }
+                            if (dist > def.keepDistance.y) return dirTo * speed;
+                            if (dist < def.keepDistance.x) return -dirTo * speed;
+                            return new Vector3(dirTo.z, 0f, -dirTo.x) * (_strafe[i] * speed * 0.55f);
+                        }
+                    }
+
+                default: // Chaser
+                    return dirTo * speed;
+            }
+        }
+
+        void Slam(int i, EnemyDef def, Vector3 p, Vector3 player, Vector3 dirTo, float dist)
+        {
+            float r = def.attackRadius * _scale[i];
+            if (deathPop != null) deathPop.Burst(p + Vector3.up * 0.15f, 16, 5f, 0.16f, slamDustA, slamDustB);
+            if (dist < 12f) ScreenShake.Add(dist < r * 1.5f ? 0.3f : 0.12f);
+            bool grounded = _playerMotor == null || _playerMotor.IsGrounded;
+            float dy = player.y - p.y;
+            if (_playerHealth == null || !grounded || dist > r + playerRadius || dy > 1.2f || dy < -1.2f) return;
+            if (_playerHealth.TakeDamage(new DamageInfo { Amount = def.attackDamage, Flags = DamageFlags.Area | DamageFlags.Melee, Point = player, Direction = dirTo })
+                && _playerMotor != null)
+                _playerMotor.AddImpulse(dirTo * slamImpulse.x + Vector3.up * slamImpulse.y);
+        }
+
+        void Throw(int i, EnemyDef def, Vector3 p, Vector3 player)
+        {
+            var proj = EnemyProjectiles.Instance;
+            if (proj == null) return;
+            float yaw = _yaw[i] * Mathf.Deg2Rad;
+            Vector3 fwd = new Vector3(Mathf.Sin(yaw), 0f, Mathf.Cos(yaw));
+            Vector3 hand = p + Vector3.up * (1.25f * _scale[i]) + fwd * (_radius[i] + 0.15f);
+            if (def.behaviour == EnemyBehaviour.Lobber)
+                proj.Lob(hand + Vector3.up * 0.3f, player, def.lobTime, def.attackRadius, def.zoneDuration, def.zoneDps);
+            else
+                proj.FireStraight(hand, player + Vector3.up * 0.9f, def.projectileSpeed, def.attackDamage, def.projectileRadius, def.attackRange * 1.25f);
+        }
+
         void Animate(int i, EnemyView v, float dt, float recoilTime, float recoilAngle)
         {
-            var prof = v.Def.anim;
+            var def = v.Def;
+            var prof = def.anim;
             float speed = new Vector2(_vel[i].x, _vel[i].z).magnitude;
             float run01 = prof != null ? Mathf.Clamp01(speed / Mathf.Max(0.1f, prof.fullRunSpeed)) : 0.5f;
             float stride = prof != null ? prof.strideLength : 1.2f;
@@ -427,12 +772,75 @@ namespace Gladiator.Gameplay
             pose.ArmL = PartPose.Swing(-s * arm);
             pose.ArmR = PartPose.Swing(s * arm);
             pose.RootY = Mathf.Abs(s) * (prof != null ? prof.bobHeight : 0.05f) * run01;
+            if (def.behaviour == EnemyBehaviour.ShieldBearer) pose.ArmL = PartPose.Swing(-s * arm * 0.15f); // shield stays up
+
+            // attack poses (the body language IS the telegraph)
+            var st = _state[i];
+            if (st != AiState.Move)
+            {
+                float k = st == AiState.Windup ? 1f - Mathf.Clamp01(_stateT[i] / _stateDur[i]) : Mathf.Clamp01(_stateT[i] / _stateDur[i]);
+                float shake = st == AiState.Windup ? Mathf.Sin(Time.time * 60f + i) * k : 0f;
+                switch (def.behaviour)
+                {
+                    case EnemyBehaviour.Lunger:
+                        if (st == AiState.Windup)
+                        {
+                            pose.Body = PartPose.Lean(18f * k);
+                            pose.ArmL = pose.ArmR = PartPose.Swing(-25f * k);
+                            pose.LegL = pose.LegR = PartPose.Swing(35f * k);
+                            pose.RootY = -0.1f * k;
+                            pose.RootScale = new Vector3(1f + 0.1f * k, 1f - 0.15f * k, 1f);
+                        }
+                        else if (st == AiState.Attack)
+                        {
+                            pose.ArmL = pose.ArmR = PartPose.Swing(65f);
+                            pose.LegL = pose.LegR = PartPose.Swing(-55f);
+                            pose.Body = PartPose.Lean(-8f);
+                            pose.RootY = 0.25f;
+                            pose.RootScale = new Vector3(0.92f, 0.95f, 1.18f);
+                        }
+                        break;
+                    case EnemyBehaviour.Slammer:
+                        if (st == AiState.Windup)
+                        {
+                            pose.ArmL = PartPose.Swing(165f * k) + new Vector3(0f, 0f, -15f * k);
+                            pose.ArmR = PartPose.Swing(165f * k) + new Vector3(0f, 0f, 15f * k);
+                            pose.Body = PartPose.Lean(-14f * k + shake * 2f);
+                            pose.Head = PartPose.Lean(-10f * k);
+                            pose.RootY = 0.05f * k;
+                        }
+                        else
+                        {
+                            pose.ArmL = pose.ArmR = PartPose.Swing(60f * k);
+                            pose.Body = PartPose.Lean(28f * k);
+                            pose.RootY = -0.12f * k;
+                            pose.RootScale = new Vector3(1f + 0.08f * k, 1f - 0.08f * k, 1f + 0.08f * k);
+                        }
+                        break;
+                    case EnemyBehaviour.Ranged:
+                    case EnemyBehaviour.Lobber:
+                        if (st == AiState.Windup)
+                        {
+                            // throwing arm swings back and up, the sling/pot whirls overhead
+                            pose.ArmR = PartPose.Swing(140f * k) + new Vector3(0f, Mathf.Sin(Time.time * 25f) * 25f * k, 0f);
+                            pose.ArmL = PartPose.Swing(35f * k);
+                            pose.Body = PartPose.Lean(-12f * k);
+                        }
+                        else
+                        {
+                            pose.ArmR = PartPose.Swing(70f * k);
+                            pose.Body = PartPose.Lean(15f * k);
+                        }
+                        break;
+                }
+            }
+
             if (_recoil[i] > 0f)
             {
                 float k = _recoil[i] / recoilTime;
-                pose.Body = PartPose.Lean(-recoilAngle * k);
-                pose.Head = PartPose.Lean(-recoilAngle * 0.5f * k);
-                pose.RootScale = new Vector3(1f + 0.12f * k, 1f - 0.12f * k, 1f + 0.12f * k);
+                pose.Body += PartPose.Lean(-recoilAngle * k);
+                pose.Head += PartPose.Lean(-recoilAngle * 0.5f * k);
+                pose.RootScale = Vector3.Scale(pose.RootScale, new Vector3(1f + 0.12f * k, 1f - 0.12f * k, 1f + 0.12f * k));
             }
             v.Rig.Apply(pose);
         }

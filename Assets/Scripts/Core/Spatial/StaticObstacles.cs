@@ -83,6 +83,23 @@ namespace Gladiator.Core
             return o;
         }
 
+        /// <summary>True if a circle of `radius` at p (XZ) overlaps any obstacle (projectiles hitting walls/pillars).</summary>
+        public bool Overlaps(Vector2 p, float radius)
+        {
+            for (int i = 0; i < _circles.Length; i++)
+            {
+                float r = _circles[i].R + radius;
+                if ((p - _circles[i].C).sqrMagnitude < r * r) return true;
+            }
+            for (int i = 0; i < _boxes.Length; i++)
+            {
+                var b = _boxes[i];
+                var d = p - b.C;
+                if (Mathf.Abs(Vector2.Dot(d, b.Ax)) < b.Half.x + radius && Mathf.Abs(Vector2.Dot(d, b.Az)) < b.Half.y + radius) return true;
+            }
+            return false;
+        }
+
         /// <summary>Push a circle of `radius` at pos out of every obstacle. Returns true if moved.</summary>
         public bool PushOut(ref Vector3 pos, float radius)
         {

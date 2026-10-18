@@ -25,7 +25,7 @@ namespace Gladiator.UI
         Transform _panel;
         readonly TextMeshProUGUI[] _buffValues = new TextMeshProUGUI[AdminController.BuffCount];
         Button _god, _timeless;
-        TextMeshProUGUI _enemyName, _count, _crowd, _speed, _status;
+        TextMeshProUGUI _enemyName, _affix, _count, _crowd, _speed, _status;
         bool _shown;
         float _y;
         const float Width = 600f;
@@ -34,7 +34,7 @@ namespace Gladiator.UI
         {
             var canvas = UiFactory.Canvas("AdminCanvas", transform, UiSortOrder.Debug).transform;
             _root = canvas.gameObject;
-            var bg = UiFactory.Image("AdminPanel", canvas, PanelColor, Vector2.one, Vector2.one, new Vector2(-20f, -80f), new Vector2(Width, 950f), PixelIcons.White); // right side, below LV: HP/gold stay visible
+            var bg = UiFactory.Image("AdminPanel", canvas, PanelColor, Vector2.one, Vector2.one, new Vector2(-20f, -80f), new Vector2(Width, 1000f), PixelIcons.White); // right side, below LV: HP/gold stay visible
             bg.raycastTarget = true;
             _panel = bg.transform;
             _y = -12f;
@@ -58,6 +58,7 @@ namespace Gladiator.UI
 
             Section("ENEMIES");
             Row("Type", out _enemyName, () => Ctl.CycleEnemy(-1), () => Ctl.CycleEnemy(+1), 300f);
+            Row("Elite", out _affix, () => Ctl.CycleAffix(-1), () => Ctl.CycleAffix(+1), 300f);
             Row("Spawn count", out _count, () => Ctl.CycleCount(-1), () => Ctl.CycleCount(+1));
             Buttons(("Spawn near me", () => Ctl.SpawnNearPlayer(Ctl.SpawnCount)), ("Spawn around arena", () => Ctl.SpawnAroundArena(Ctl.SpawnCount)));
             Row("Crowd (keeps alive)", out _crowd, () => Ctl.AdjustCrowd(-25), () => Ctl.AdjustCrowd(+25));
@@ -96,6 +97,9 @@ namespace Gladiator.UI
             Tint(_timeless, DevSettings.Timeless, "Timeless: ON", "Timeless: off");
             var def = Ctl.Selected;
             _enemyName.text = def != null ? def.displayName : "(no EnemyDefs)";
+            var affix = Ctl.Affix;
+            _affix.text = affix != null ? affix.displayName : "None";
+            _affix.color = affix != null ? affix.color : Color.white;
             _count.SetText("{0}", Ctl.SpawnCount);
             _crowd.SetText("{0}", Ctl.CrowdSize);
             _speed.SetText("x{0:2}", TimeController.GameSpeed);

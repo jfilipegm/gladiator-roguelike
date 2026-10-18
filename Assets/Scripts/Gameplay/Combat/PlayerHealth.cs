@@ -43,20 +43,24 @@ namespace Gladiator.Gameplay
             Hp = Mathf.Clamp(Hp / oldMaxHp * MaxHp, 1f, MaxHp);
         }
 
-        /// <summary>Returns true if damage was applied.</summary>
+        /// <summary>
+        /// Returns true if damage was applied. Status damage (burning ground, later bleed/curse) ticks through the
+        /// invulnerability window, doesn't grant one, and gets lighter feedback (no hit-stop) so a DoT doesn't stutter.
+        /// </summary>
         public bool TakeDamage(in DamageInfo info)
         {
-            if (IsDead || IsInvulnerable) return false;
+            bool status = (info.Flags & DamageFlags.Status) != 0;
+            if (IsDead || (IsInvulnerable && !status)) return false;
             float floor = DevSettings.GodMode ? 1f : 0f;
             float before = Hp;
             Hp = Mathf.Max(floor, Hp - info.Amount);
             DamageTaken += before - Hp;
-            _invulnerableUntil = Time.time + invulnerableTime;
+            if (!status) _invulnerableUntil = Time.time + invulnerableTime;
             GameEvents.OnDamaged.Raise(new DamagedEvent { Position = transform.position + Vector3.up * 1.4f, Damage = info.Amount, HealthAfter = Hp, HealthMax = MaxHp });
             if (feedback != null)
             {
-                ScreenShake.Add(feedback.shakeOnPlayerHit);
-                TimeController.HitStop(feedback.hitStopOnPlayerHit);
+                ScreenShake.Add(status ? feedback.shakeOnPlayerHit * 0.3f : feedback.shakeOnPlayerHit);
+                if (!status) TimeController.HitStop(feedback.hitStopOnPlayerHit);
             }
             if (Hp <= 0f) Die();
             return true;

@@ -96,10 +96,11 @@ namespace Gladiator.Tests
             Assert.Greater(wallCols.Count, 0, "test arena walls not found");
             _player.GetComponent<PlayerMotor>().Teleport(new Vector3(-3f, 0.1f, -15.5f));
             DevSettings.GodMode = true; // eight convicts reach the player while the test watches the wall
+            _weapons.enabled = false;   // no kills → no XP → no level-up pause freezing Time.time mid-test
             for (int k = 0; k < 8; k++) _em.Spawn(_convict, new Vector3(-4.5f + k * 0.6f, 0f, -10.5f));
             int violations = 0;
-            float end = Time.time + 4f;
-            while (Time.time < end)
+            float end = Time.time + 4f, realEnd = Time.realtimeSinceStartup + 20f;
+            while (Time.time < end && Time.realtimeSinceStartup < realEnd)
             {
                 for (int i = 0; i < _em.HighWater; i++)
                 {

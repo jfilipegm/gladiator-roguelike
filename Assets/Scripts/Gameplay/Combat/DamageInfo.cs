@@ -3,7 +3,7 @@ using UnityEngine;
 namespace Gladiator.Gameplay
 {
     [System.Flags]
-    public enum DamageFlags { None = 0, Crit = 1, Melee = 2, Projectile = 4, Status = 8, Contact = 16 }
+    public enum DamageFlags { None = 0, Crit = 1, Melee = 2, Projectile = 4, Status = 8, Contact = 16, Area = 32 }
 
     /// <summary>Everything a hit carries through the central damage pipeline (CLAUDE.md §4).</summary>
     public struct DamageInfo

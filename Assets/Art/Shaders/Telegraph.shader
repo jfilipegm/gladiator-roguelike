@@ -5,7 +5,7 @@ Shader "Gladiator/Telegraph"
 {
     Properties
     {
-        _Intensity ("Emission Boost", Range(1, 4)) = 1.6
+        _Intensity ("Emission Boost", Range(0.5, 4)) = 1.1
     }
     SubShader
     {
@@ -66,8 +66,9 @@ Shader "Gladiator/Telegraph"
                     float fill = saturate(prm.x);
                     float inside = d < fill ? 1 : 0;
                     float front = 1 - saturate(abs(d - fill) / 0.05);
-                    a = max(ring * 0.95, 0.10 + inside * 0.32 + front * fill * 0.55);
-                    c *= _Intensity * (1 + front * 0.6);
+                    // keep it saturated: brightness pushed through bloom/grading washes orange-red out to cream
+                    a = max(ring, 0.18 + inside * 0.36 + front * fill * 0.5);
+                    c *= _Intensity * (1 + front * 0.35);
                 }
                 else if (prm.y < 1.5)
                 {

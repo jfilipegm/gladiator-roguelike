@@ -92,7 +92,19 @@ One line each: what, and why. Newest at the bottom of each section.
 - **Coyote feel test now uses the platform's west edge** (a real 1.2 m drop); it used to run onto the ramp and only passed because the old wall code tripped the player on the ramp lip.
 - **Collider wrappers are created at load** (`CameraCollisionGuard.Awake` touches every collider, its Transform and GameObject): Unity allocates a 24 B C# wrapper the first time script sees a native object, so the camera's overlap queries and Cinemachine's raycasts were allocating mid-run each time they met a new fence piece. After this, steady-state gameplay allocates 0 B outside the level-up UI.
 
-### M2.2 — enemy roster (design, in progress)
+### M2.2 — enemy roster
 - **Sixth enemy = Fire-Pot Thrower (area denial), not the Assassin**: its burning patches only hurt you while you're on the ground, so jumping and positioning become the counter — it makes the movement kit matter. The Assassin's dash moves to Arena 2–3.
 - **Elite affixes for the slice: Armored, Fast, Explosive.** Explosive blasts also damage enemies (chain reactions). Gilded waits for M2.7 so gold has a use first.
 - **All "will hurt you" ground warnings go through one instanced `TelegraphRenderer`** (one extra material, `M_FxTelegraph`), keeping the scene within ~8 shared materials. Elite rings use the same renderer in the affix colour.
+- **Behaviour = one state machine in `EnemyManager` (Move → Windup → Attack → Recover)**, switched on `EnemyDef.behaviour`; numbers stay in data. No per-enemy components, so 300+ enemies keep one central tick.
+- **The Pit Cur's wind-up is a pose only (crouch), no ground decal.** Curs come in packs; dozens of decals would drown out the ones that matter (Brute slam, fire-pot landing). Ranged enemies get a small pulsing ring while winding up; the Brute's slam and pot landings get the full filling circle.
+- **Hits are blocked by the Shield Thug's facing, not by a collider**: a hit is blocked if it comes from within `blockArc` of where the thug faces (turn rate 200°/s, so circling works). Blocked hits deal 15 %, knock back 40 %, show a grey number and never crit.
+- **Elite hit-stop is rate-limited (one per 0.35 s) plus a bigger one on the elite's death.** Hit-stop on every hit would stutter constantly with a fast weapon.
+- **Burning ground ("Status" damage) ignores and doesn't grant the 0.4 s invulnerability, and has no hit-stop.** Otherwise a fire patch would protect you from the crowd, and 0.5 s burn ticks would stutter the game.
+- **Brute slam: jumping avoids it; a grounded hit knocks you up and away** (`PlayerMotor.AddImpulse`). Explosions don't care about jumping (they reach 1.6 m up).
+- **Explosive elites leave a 1 s fuse circle at their death spot**; the blast chains to enemies. `KillAll` (run end, tests) never triggers blasts.
+- **Projectiles stop at walls through the baked obstacle list, not physics.** Same data enemies use for push-out; zero colliders on projectiles.
+- **Off-screen threat arrows (concern C2)**: up to 16 chevrons at the screen edge, wind-ups first (pulsing orange-red), then elites (affix colour).
+- **Per-type alive counts in `EnemyManager` (`AliveOf`)**; spawners cap kiting types. Pools are prewarmed to those caps, so a pool growing mid-run is a bug and logs a warning.
+- **Behaviour tests run without player i-frames** (`invulnerableTime = 0` in `EnemyRosterTests`): a random contact hit just before an attack made the attack tests flaky. The i-frame rule itself is unchanged in the game.
+

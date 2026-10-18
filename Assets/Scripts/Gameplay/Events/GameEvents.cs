@@ -7,7 +7,7 @@ namespace Gladiator.Gameplay
     public struct JumpEvent { public Vector3 Position; public bool FromSlide; public bool AirJump; }
     public struct SlideEvent { public Vector3 Position; public Vector3 Velocity; public float Boost; }
     public struct LandEvent { public Vector3 Position; public float FallSpeed; }
-    public struct HitEvent { public int TargetId; public Vector3 Position; public float Damage; public bool Crit; public int SourceId; }
+    public struct HitEvent { public int TargetId; public Vector3 Position; public float Damage; public bool Crit; public int SourceId; public bool Blocked; public bool Elite; }
     public struct KillEvent { public int TargetId; public Vector3 Position; public int EnemyTypeId; public bool Elite; public int SourceId; public float Xp; public float GoldChance; }
     public struct DamagedEvent { public Vector3 Position; public float Damage; public float HealthAfter; public float HealthMax; }
     public struct PickupEvent { public int Kind; public Vector3 Position; public float Amount; }

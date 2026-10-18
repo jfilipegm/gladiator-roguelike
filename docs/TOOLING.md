@@ -28,3 +28,8 @@ Machine: CachyOS (Linux), KDE Plasma on Wayland. Unity Hub + Unity **6000.6.6f1*
 1. Edit C# → `Tools/ucompile` (must print `errors=0`).
 2. `Tools/u editor_play` → let it run → state dump via `Tools/ueval` / `Tools/u console` / `Tools/u capture_game_view --save_path …` → `Tools/u editor_stop`.
 3. Tests: `Tools/u run_tests --mode EditMode` / `--mode PlayMode`.
+
+## Gotchas learned
+- **Editor throttling:** unfocused, with no bridge traffic, the Editor runs at ~18 fps; while bridge calls arrive it runs at full speed. Never quote Editor FPS. Allocation checks are fine in the Editor (heap growth columns in the frame-stat CSV), but avoid bridge calls during the measured window: the Pipeline server thread's allocations show up in the process-wide heap counter.
+- **`capture_game_view` always writes under `Assets/Screenshots`** — use `Tools/ushot`, which moves it out.
+- **Dev input from the bridge:** `Tools/ueval 'return Gladiator.Gameplay.DevInput.Hold(0, 1);'` (… `DevInput.Jump()`, `DevInput.Release()`); state dump: `Tools/ueval -f Tools/snippets/player_state.cs`.

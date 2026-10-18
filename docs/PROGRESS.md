@@ -1,7 +1,7 @@
 # Progress
 
 **Current phase:** Phase 1 — Feel
-**Current milestone:** M1.1 — Player controller + third-person camera on a test arena
+**Current milestone:** M1.2 — Placeholder enemies + gladius arc + hit feedback
 **Last updated:** 2026-10-18
 
 ## Resume checklist (read first after a context reset)
@@ -18,12 +18,13 @@
 
 - **M0.4** — Look-dev. `Gladiator/PaletteLit` + `Gladiator/SkyGradient` shaders, shared role materials, `VP_Gladiator` post profile, URP tuned (SSAO off, 40 m/2-cascade shadows, MSAA 4×, static batching), `EnvironmentLighting`. Blender assets: `CH_Nobody` (828 tris, iteration 2), `EN_Convict` (192 tris), `SM_PitFloor`, mound, rock, crate, barrel, 3 m fence, brazier (emissive fire), ramp, stairs, platform. `Dev/LookDev` scene rebuilt by `Gladiator/Setup/Dev/Build Look-Dev Scene`. **Verified:** Play-mode capture shows bloom/vignette/grade, fog, sky, soft shadows, pixel grain; 3 materials in scene; 266 renderers static-batched. **Pipeline bug found and fixed:** FBX empties broke with `bake_space_transform` → switched to native axes + Unity `bakeAxisConversion`, guarded by `ModelPipelineTests` (8/8 EditMode green).
 
+- **M1.1** — `PlayerMotor` (CharacterController state machine) + `MovementConfig`, `Player` (single shared input frame, pause/cursor), `PlayerCameraRig` + `CameraConfig` (CM3 orbit + deoccluder + decollider, speed FOV kick), `CameraProximityFade`, `PartRig`/`PlayerPartAnimator`/`PartAnimProfile`, typed `GameEvents` bus, layers + physics matrix (`ProjectSetup`), `P_Player` prefab (`PlayerSetup`), `Dev/TestArena` (`TestArenaScene`: runway, 30°/20° hill, platform via stairs or ramp, wall corner, pillars, props, boundary). FBX root yaw baked on import. **Measured (PlayMode `MovementFeelTests`):** run 7.50 m/s (config 7.5), 0→90 % in 0.10 s, stop in 0.49 m; jump held 1.67 m (config 1.7) / tapped 0.47 m; slide +4.00 boost, flat top 11.5 m/s, 30° downhill 15.5 m/s; stairs to deck y=1.27; coyote jump 72 ms after the edge (window 120 ms); camera: 0 frames touching geometry, 0 blocked line of sight in a 25 s bot run (closest 0.45 m). Gameplay+scripts heap growth 0 B over 19 s. 9/9 EditMode, 3/3 PlayMode green.
+
 ## Next
-- M1.1 PlayerMotor + MovementConfig + third-person camera (Cinemachine orbit + deoccluder) on a test arena with slope, stairs and a raised platform.
 - M1.2 placeholder enemies + gladius arc + hit feedback.
 - M1.3 HUD, XP gems + magnet, stub level-up.
 - Gate 1 report.
 
 ## Known issues
-- `DevKinematicMover` is a stand-in; delete when `PlayerMotor` lands (M1.1).
-- Smoke test points at `Dev/BotSandbox`; move to the test arena in M1.1 and to Arena 1 in Phase 3 (`SmokeTestSettings.ScenePath`).
+- Smoke test points at `Dev/TestArena`; move to Arena 1 in Phase 3 (`SmokeTestSettings.ScenePath`).
+- No standalone build yet → no trustworthy FPS numbers (Editor throttles when unfocused). First standalone stress run in M2.1.

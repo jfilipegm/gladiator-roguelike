@@ -50,6 +50,18 @@ namespace Gladiator.Tests
         }
 
         [Test]
+        public void AllModels_RootNodesHaveIdentityRotation()
+        {
+            foreach (var guid in AssetDatabase.FindAssets("t:Model", new[] { "Assets/Art/Models" }))
+            {
+                var path = AssetDatabase.GUIDToAssetPath(guid);
+                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+                foreach (Transform node in prefab.transform)
+                    Assert.Less(Quaternion.Angle(Quaternion.identity, node.localRotation), 0.01f, path + " root node " + node.name + " is rotated");
+            }
+        }
+
+        [Test]
         public void Rig_EmptiesAndRotatedJointsSurvive()
         {
             var go = Spawn("Assets/Art/Models/Dev/SM_RoundTripRig.fbx");
@@ -59,7 +71,7 @@ namespace Gladiator.Tests
                 AssertVec(new Vector3(-0.125f, 1.0f, 0.2165f), RendererBounds(go, "Arm").center, "arm under rotated empty");
                 foreach (var t in go.GetComponentsInChildren<Transform>())
                 {
-                    if (t.name == "Body" || t.name == "Arm")
+                    if (t.name == "SM_RoundTripRig" || t.name == "Body" || t.name == "Arm")
                         Assert.Less(Quaternion.Angle(Quaternion.identity, t.localRotation), 0.01f, t.name + " should keep identity local rotation");
                     if (t.name == "Joint")
                         Assert.AreEqual(-30f, Mathf.DeltaAngle(0, t.localEulerAngles.y), 0.01f, "joint yaw");

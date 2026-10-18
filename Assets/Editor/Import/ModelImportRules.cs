@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using UnityEditor;
+using UnityEngine;
 
 namespace Gladiator.EditorTools
 {
@@ -35,6 +37,47 @@ namespace Gladiator.EditorTools
             mi.optimizeMeshVertices = true;
             mi.weldVertices = false;                            // keep hard edges / palette UV seams
             mi.preserveHierarchy = true;                        // rigid-part characters keep their joints
+        }
+
+        /// <summary>
+        /// gladiator_kit.export_fbx gives each FBX root node a 180° yaw (so assets face +Z). Bake it into the subtree
+        /// so every node arrives with identity rotation and part-local +Z == character forward:
+        /// for all descendants p' = q·p, r' = q·r·q⁻¹, and every mesh's vertices/normals v' = q·v.
+        /// </summary>
+        void OnPostprocessModel(GameObject root)
+        {
+            if (!assetPath.StartsWith(ModelsRoot)) return;
+            foreach (Transform node in root.transform)
+            {
+                var q = node.localRotation;
+                if (Quaternion.Angle(q, Quaternion.identity) < 0.01f) continue;
+                var done = new HashSet<Mesh>();
+                RotateMeshes(node, q, done);
+                foreach (Transform child in node) Conjugate(child, q, done);
+                node.localRotation = Quaternion.identity;
+            }
+        }
+
+        static void Conjugate(Transform t, Quaternion q, HashSet<Mesh> done)
+        {
+            t.localPosition = q * t.localPosition;
+            t.localRotation = q * t.localRotation * Quaternion.Inverse(q);
+            RotateMeshes(t, q, done);
+            foreach (Transform child in t) Conjugate(child, q, done);
+        }
+
+        static void RotateMeshes(Transform t, Quaternion q, HashSet<Mesh> done)
+        {
+            var mf = t.GetComponent<MeshFilter>();
+            if (mf == null || mf.sharedMesh == null || !done.Add(mf.sharedMesh)) return;
+            var mesh = mf.sharedMesh;
+            var v = mesh.vertices;
+            var n = mesh.normals;
+            for (int i = 0; i < v.Length; i++) v[i] = q * v[i];
+            for (int i = 0; i < n.Length; i++) n[i] = q * n[i];
+            mesh.vertices = v;
+            if (n.Length == v.Length) mesh.normals = n;
+            mesh.RecalculateBounds();
         }
     }
 }

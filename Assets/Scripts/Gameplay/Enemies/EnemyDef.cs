@@ -2,6 +2,23 @@ using UnityEngine;
 
 namespace Gladiator.Gameplay
 {
+    /// <summary>How an enemy fights. Behaviour = code (EnemyManager); numbers = data (below).</summary>
+    public enum EnemyBehaviour
+    {
+        /// <summary>Walk at the player, hurt on contact (Convict).</summary>
+        Chaser,
+        /// <summary>Close in fast, crouch, leap (Pit Cur).</summary>
+        Lunger,
+        /// <summary>Chaser that turns to face you and blocks most frontal damage (Shield Thug).</summary>
+        ShieldBearer,
+        /// <summary>Keeps its distance, winds up, throws a straight projectile (Slinger).</summary>
+        Ranged,
+        /// <summary>Slow; telegraphed ground slam around itself — jump to avoid (Brute).</summary>
+        Slammer,
+        /// <summary>Keeps its distance, lobs onto a marked spot that burns for a while (Fire-Pot Thrower).</summary>
+        Lobber,
+    }
+
     /// <summary>An enemy type as data (CLAUDE.md §2.4). New enemies = new assets; new behaviours = new code.</summary>
     [CreateAssetMenu(menuName = "Gladiator/Enemy", fileName = "EN_")]
     public sealed class EnemyDef : ScriptableObject
@@ -30,6 +47,42 @@ namespace Gladiator.Gameplay
         public float contactDamage = 8f;
         [Tooltip("Seconds between contact hits from the same enemy.")]
         public float contactInterval = 0.9f;
+
+        [Header("Behaviour")]
+        public EnemyBehaviour behaviour = EnemyBehaviour.Chaser;
+        [Tooltip("Wind-up / telegraph before the attack lands (s). Readability lives here.")]
+        public float windup = 0.6f;
+        [Tooltip("Seconds between special attacks.")]
+        public float attackCooldown = 2.5f;
+        [Tooltip("Lunger/Slammer: distance that triggers the attack. Ranged/Lobber: max throw distance.")]
+        public float attackRange = 3f;
+        public float attackDamage = 10f;
+        [Tooltip("Slammer: slam radius. Lobber: fire patch radius.")]
+        public float attackRadius = 2.5f;
+        [Tooltip("Recovery after the attack (vulnerable, slow) (s).")]
+        public float recover = 0.4f;
+        [Tooltip("Max turn rate (deg/s). Shield bearers turn slowly so flanking works.")]
+        public float turnRate = 540f;
+
+        [Header("Lunger")]
+        public float lungeSpeed = 13f;
+        public float lungeTime = 0.28f;
+
+        [Header("Shield bearer")]
+        [Tooltip("Hits from within this frontal arc (deg) are blocked.")]
+        [Range(0f, 360f)] public float blockArc = 120f;
+        [Range(0f, 1f)] public float blockReduction = 0.85f;
+
+        [Header("Ranged / Lobber")]
+        [Tooltip("Preferred distance band to the player (m).")]
+        public Vector2 keepDistance = new Vector2(6f, 10f);
+        public float projectileSpeed = 13f;
+        [Tooltip("Lobber: flight time of the lob (s).")]
+        public float lobTime = 0.95f;
+        public float projectileRadius = 0.25f;
+        [Tooltip("Lobber: fire patch duration (s) and damage per second while you stand in it.")]
+        public float zoneDuration = 3.5f;
+        public float zoneDps = 10f;
 
         [Header("Rewards")]
         public float xp = 1f;

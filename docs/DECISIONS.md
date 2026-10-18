@@ -91,3 +91,8 @@ One line each: what, and why. Newest at the bottom of each section.
 - **Jump integration is a trapezoid step** (average of start/end vertical velocity): jump height is now exactly `jumpHeight` at any frame rate. Plain semi-implicit Euler lost ~8 cm (5 %) at 60 fps vs ~3 cm at 180 fps, so 60 Hz players jumped lower.
 - **Coyote feel test now uses the platform's west edge** (a real 1.2 m drop); it used to run onto the ramp and only passed because the old wall code tripped the player on the ramp lip.
 - **Collider wrappers are created at load** (`CameraCollisionGuard.Awake` touches every collider, its Transform and GameObject): Unity allocates a 24 B C# wrapper the first time script sees a native object, so the camera's overlap queries and Cinemachine's raycasts were allocating mid-run each time they met a new fence piece. After this, steady-state gameplay allocates 0 B outside the level-up UI.
+
+### M2.2 — enemy roster (design, in progress)
+- **Sixth enemy = Fire-Pot Thrower (area denial), not the Assassin**: its burning patches only hurt you while you're on the ground, so jumping and positioning become the counter — it makes the movement kit matter. The Assassin's dash moves to Arena 2–3.
+- **Elite affixes for the slice: Armored, Fast, Explosive.** Explosive blasts also damage enemies (chain reactions). Gilded waits for M2.7 so gold has a use first.
+- **All "will hurt you" ground warnings go through one instanced `TelegraphRenderer`** (one extra material, `M_FxTelegraph`), keeping the scene within ~8 shared materials. Elite rings use the same renderer in the affix colour.

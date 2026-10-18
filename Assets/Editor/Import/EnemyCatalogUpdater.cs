@@ -18,9 +18,19 @@ namespace Gladiator.EditorTools
         static bool Touches(string[] paths)
         {
             foreach (var p in paths)
-                if (p.EndsWith(".asset") && p != CatalogPath && (p.StartsWith("Assets/Data/Enemies/") || AssetDatabase.GetMainAssetTypeAtPath(p) == typeof(EnemyDef)))
+                if (p.EndsWith(".asset") && p != CatalogPath && (p.StartsWith("Assets/Data/Enemies/") || AssetDatabase.GetMainAssetTypeAtPath(p) == typeof(EnemyDef) || AssetDatabase.GetMainAssetTypeAtPath(p) == typeof(AffixDef)))
                     return true;
             return false;
+        }
+
+        static List<T> Collect<T>(string filter) where T : Object
+        {
+            var paths = new List<string>();
+            foreach (var guid in AssetDatabase.FindAssets(filter)) paths.Add(AssetDatabase.GUIDToAssetPath(guid));
+            paths.Sort(System.StringComparer.Ordinal);
+            var list = new List<T>();
+            foreach (var path in paths) { var a = AssetDatabase.LoadAssetAtPath<T>(path); if (a != null) list.Add(a); }
+            return list;
         }
 
         [MenuItem("Gladiator/Setup/Refresh Enemy Catalog")]
@@ -41,11 +51,14 @@ namespace Gladiator.EditorTools
                 var d = AssetDatabase.LoadAssetAtPath<EnemyDef>(p);
                 if (d != null) list.Add(d);
             }
-            bool changed = catalog.enemies == null || catalog.enemies.Length != list.Count;
+            var affixes = Collect<AffixDef>("t:AffixDef");
+            bool changed = catalog.enemies == null || catalog.enemies.Length != list.Count || catalog.affixes == null || catalog.affixes.Length != affixes.Count;
             for (int i = 0; !changed && i < list.Count; i++) changed = catalog.enemies[i] != list[i];
+            for (int i = 0; !changed && i < affixes.Count; i++) changed = catalog.affixes[i] != affixes[i];
             if (changed)
             {
                 catalog.enemies = list.ToArray();
+                catalog.affixes = affixes.ToArray();
                 EditorUtility.SetDirty(catalog);
                 AssetDatabase.SaveAssetIfDirty(catalog);
             }

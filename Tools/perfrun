@@ -8,7 +8,8 @@ mode="${1:-bot}"; shift
 args=(-bot -profile -profileDir "$ROOT/Profiling" -screen-fullscreen 0 -screen-width 1920 -screen-height 1080)
 if [ "$mode" = "stress" ]; then count="${1:-300}"; shift; args+=(-stress -stressCount "$count"); fi
 secs="${1:-45}"; shift
-args+=(-botSeconds "$secs" "$@")
+# ~800 fps headroom so an uncapped run never fills the frame recorder before the end
+args+=(-botSeconds "$secs" -profileFrames $(( (secs + 15) * 800 )) "$@")
 log="$ROOT/Profiling/player_${mode}.log"
 timeout -s KILL $((secs + 90)) gamescope --backend headless -W 1920 -H 1080 -w 1920 -h 1080 -- \
   "$ROOT/Builds/LinuxDev/Gladiator.x86_64" "${args[@]}" -logFile "$log" > "$ROOT/Profiling/gamescope_out.txt" 2>&1

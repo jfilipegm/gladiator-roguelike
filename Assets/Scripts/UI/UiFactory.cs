@@ -102,14 +102,18 @@ namespace Gladiator.UI
         }
     }
 
-    /// <summary>Tiny point-filtered pixel icons generated in code (no third-party art).</summary>
+    /// <summary>
+    /// Tiny point-filtered pixel icons generated in code (no third-party art). Cached with Unity's null check (not ??=)
+    /// and flagged DontUnloadUnusedAsset: a scene load (Retry) unloads unreferenced runtime assets, and with domain
+    /// reload off the statics outlive a play session — either way the HUD showed white squares.
+    /// </summary>
     public static class PixelIcons
     {
         static Sprite _white, _coin, _skull, _heart, _chevron;
 
-        public static Sprite White => _white ??= Make(new[] { "#" }, Color.white, Color.white);
+        public static Sprite White => _white != null ? _white : _white = Make(new[] { "#" }, Color.white, Color.white);
 
-        public static Sprite Coin => _coin ??= Make(new[]
+        public static Sprite Coin => _coin != null ? _coin : _coin = Make(new[]
         {
             "..####..",
             ".#OOOO#.",
@@ -121,7 +125,7 @@ namespace Gladiator.UI
             "..####..",
         }, new Color(1f, 0.82f, 0.25f), new Color(0.72f, 0.53f, 0.16f), new Color(1f, 0.95f, 0.6f));
 
-        public static Sprite Skull => _skull ??= Make(new[]
+        public static Sprite Skull => _skull != null ? _skull : _skull = Make(new[]
         {
             ".######.",
             "#OOOOOO#",
@@ -133,7 +137,7 @@ namespace Gladiator.UI
             "..#####.",
         }, new Color(0.95f, 0.93f, 0.88f), new Color(0.12f, 0.1f, 0.1f));
 
-        public static Sprite Heart => _heart ??= Make(new[]
+        public static Sprite Heart => _heart != null ? _heart : _heart = Make(new[]
         {
             ".##..##.",
             "#RR##RR#",
@@ -146,7 +150,7 @@ namespace Gladiator.UI
         }, new Color(1f, 0.33f, 0.3f), new Color(0.35f, 0.05f, 0.08f));
 
         /// <summary>Arrow pointing up (+Y), white so Image.color tints it; rotate to aim.</summary>
-        public static Sprite Chevron => _chevron ??= Make(new[]
+        public static Sprite Chevron => _chevron != null ? _chevron : _chevron = Make(new[]
         {
             "....##....",
             "...#OO#...",
@@ -171,7 +175,10 @@ namespace Gladiator.UI
                     tex.SetPixel(x, y, col);
                 }
             tex.Apply();
-            return Sprite.Create(tex, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), 8f);
+            tex.hideFlags = HideFlags.DontUnloadUnusedAsset;
+            var sprite = Sprite.Create(tex, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), 8f);
+            sprite.hideFlags = HideFlags.DontUnloadUnusedAsset;
+            return sprite;
         }
     }
 }

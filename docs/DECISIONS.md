@@ -113,6 +113,7 @@ One line each: what, and why. Newest at the bottom of each section.
 - **Per-type caps live in the spawn table** (kiting/heavy types low), fixing CONCERNS C6 at the source. The periodic elite ignores caps (it's one special enemy).
 - **Swarms come from one direction** (50° arc) on top of the target, so they read as an event you can turn and face, and are announced on the HUD.
 - **The Director uses the run clock**: Timeless freezes pacing, the admin timer jumps it; events missed by a jump are rescheduled rather than all fired at once.
-- **Pools fill a few views per frame at run start, and spawning waits for them** (~0.4 s): no mid-fight instantiation and a smaller load hitch than one big prewarm.
+- **Pools fill a few views per frame at run start, and spawning waits for them** (~0.8 s): no mid-fight instantiation and a smaller load hitch than one big prewarm.
+- **Pool sizes come from simulating the run's head-count** (`Director.ComputePoolTargets`), not each type's weight share: capped types top out and hand their share to the uncapped ones, so by 8:00 convicts are ~330 of 460, not 32 %. Swarm types add a full swarm (swarms ignore caps), +10 % + 8 for enemies still dying. The first 8-minute run with the share formula grew the convict pool 127 times mid-fight.
 - **Spawn points are a ring near the arena edge for now**, preferring off-screen. Arena 1's real gates come from its `ArenaLayoutDef` in M3.2.
 

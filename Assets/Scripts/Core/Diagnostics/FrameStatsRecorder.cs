@@ -55,7 +55,7 @@ namespace Gladiator.Core
     [DefaultExecutionOrder(10000)] // LateUpdate last, so the script heap window covers every other script
     public sealed class FrameStatsRecorder : MonoBehaviour
     {
-        [Tooltip("Max frames kept (ring stops recording when full).")]
+        [Tooltip("Max frames kept (recording stops when full). -profileFrames N overrides it (long uncapped perf runs).")]
         public int capacity = 120 * 60 * 15;
         [Tooltip("Seconds ignored by the summary (loading hitches, pool warm-up).")]
         public float warmupSeconds = 3f;
@@ -90,7 +90,8 @@ namespace Gladiator.Core
 
         public void Begin()
         {
-            _samples ??= new FrameSample[capacity];
+            capacity = CommandLine.GetInt("-profileFrames", capacity);
+            if (_samples == null || _samples.Length < capacity) _samples = new FrameSample[capacity];
             _count = 0;
             _startUnscaled = UnityEngine.Time.unscaledTime;
             _main = ProfilerRecorder.StartNew(ProfilerCategory.Internal, "Main Thread", 1);

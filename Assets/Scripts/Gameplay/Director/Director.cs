@@ -25,6 +25,7 @@ namespace Gladiator.Gameplay
         int _swarmLeft, _prewarmIndex;
         float _swarmAcc, _swarmAngle, _swarmRate;
         int _swarmEntry = -1;
+        int[] _poolTargets;
         Transform _cam;
 
         public int SwarmsStarted { get; private set; }
@@ -41,18 +42,62 @@ namespace Gladiator.Gameplay
         }
 
         /// <summary>
-        /// Pool size per table entry: its cap, or its share of the peak plus a full swarm. Pools fill a few views per
-        /// frame from the first frame (in table order, i.e. by when each type appears), so the run never instantiates
-        /// mid-fight and the load hitch stays small.
+        /// Views each table entry needs over the whole run. Simulates the head-count every 5 s: the target curve is
+        /// shared out by weight among the active entries, a type at its cap hands its leftover to the others (so the
+        /// uncapped convicts end up with far more than their weight share), then a full swarm is added on top for
+        /// swarm types (swarms ignore caps) plus slack for enemies still playing their death. Pools fill a few views
+        /// per frame from the first frame, so the run never instantiates mid-fight and the load hitch stays small.
         /// </summary>
-        int PoolTarget(in SpawnTableDef.Entry e)
+        public int[] ComputePoolTargets(float runLength)
         {
-            if (e.maxAlive > 0) return e.maxAlive + 6;
-            float sum = 0f;
-            foreach (var x in table.entries) sum += Mathf.Max(0f, x.weightEnd);
-            float share = sum > 0f ? Mathf.Max(0f, e.weightEnd) / sum : 1f;
-            int swarm = e.swarm ? Mathf.CeilToInt(config.swarmSize.Evaluate(1e6f) * densityMultiplier) : 0;
-            return Mathf.CeilToInt(config.hardCap * share) + swarm + 16;
+            var entries = table.entries;
+            int n = entries.Length;
+            var need = new int[n];
+            var share = new float[n];
+            var open = new bool[n];
+            for (float t = 0f; t <= runLength + 0.01f; t += 5f)
+            {
+                float total = Mathf.Min(config.hardCap, config.targetAlive.Evaluate(t) * densityMultiplier);
+                for (int i = 0; i < n; i++)
+                {
+                    share[i] = 0f;
+                    open[i] = SpawnTableDef.Active(entries[i], t) && SpawnTableDef.Weight(entries[i], t, runLength) > 0f;
+                }
+                float left = total;
+                for (int pass = 0; pass < n && left > 0.01f; pass++)
+                {
+                    float wsum = 0f;
+                    for (int i = 0; i < n; i++) if (open[i]) wsum += SpawnTableDef.Weight(entries[i], t, runLength);
+                    if (wsum <= 0f) break;
+                    bool hitCap = false;
+                    for (int i = 0; i < n; i++)
+                    {
+                        if (!open[i] || entries[i].maxAlive <= 0) continue;
+                        float want = left * SpawnTableDef.Weight(entries[i], t, runLength) / wsum;
+                        float room = entries[i].maxAlive - share[i];
+                        if (want < room) continue;
+                        share[i] += room;
+                        open[i] = false;
+                        hitCap = true;
+                    }
+                    if (!hitCap)
+                    {
+                        for (int i = 0; i < n; i++)
+                            if (open[i]) share[i] += left * SpawnTableDef.Weight(entries[i], t, runLength) / wsum;
+                        break;
+                    }
+                    left = total;
+                    for (int i = 0; i < n; i++) left -= share[i];
+                }
+                for (int i = 0; i < n; i++) need[i] = Mathf.Max(need[i], Mathf.CeilToInt(share[i]));
+            }
+            int swarm = Mathf.CeilToInt(config.swarmSize.Evaluate(runLength) * densityMultiplier);
+            for (int i = 0; i < n; i++)
+            {
+                if (entries[i].swarm) need[i] += swarm;
+                need[i] = Mathf.CeilToInt(need[i] * 1.1f) + 8;
+            }
+            return need;
         }
 
         /// <summary>True once every table type has its pool.</summary>
@@ -60,11 +105,13 @@ namespace Gladiator.Gameplay
 
         void PrewarmStep(EnemyManager em)
         {
+            if (_poolTargets == null)
+                _poolTargets = ComputePoolTargets(RunState.Current != null ? RunState.Current.config.runDuration : 480f);
             int budget = prewarmPerFrame;
             while (budget > 0 && _prewarmIndex < table.entries.Length)
             {
                 var e = table.entries[_prewarmIndex];
-                int made = e.enemy != null ? em.PrewarmStep(e.enemy, PoolTarget(e), budget) : 0;
+                int made = e.enemy != null ? em.PrewarmStep(e.enemy, _poolTargets[_prewarmIndex], budget) : 0;
                 budget -= made;
                 if (made == 0 || budget > 0) _prewarmIndex++;
             }

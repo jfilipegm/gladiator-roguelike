@@ -2,8 +2,8 @@
 
 Conventions (CLAUDE.md §3.3, §7):
   * 1 Blender unit = 1 m. Z up. An asset's FRONT faces -Y (Blender "Front" view looks at it).
-    After export (-Z forward, Y up, baked space transform) the front faces +Z in Unity, and
-    Blender +X (the character's left) lands on Unity -X (the character's left). Verified in M0.2.
+    After export (see export_fbx) the front faces +Z in Unity and Blender +X (the character's left) lands on
+    Unity -X (the character's left). Verified by the EditMode test ModelPipelineTests.
   * Every face gets its UVs collapsed onto one palette swatch centre (palette.json), so each asset
     uses the single shared palette material and batches.
   * Origins: characters/props at the base, rigid parts at their joint.
@@ -59,6 +59,7 @@ def palette_material():
     img_path = os.path.join(PALETTE_DIR, "PAL_Master.png")
     img = bpy.data.images.get("PAL_Master.png") or bpy.data.images.load(img_path)
     img.reload()
+    img.alpha_mode = "NONE"  # palette alpha = 1 - emission, not transparency
     tex.image = img
     tex.interpolation = "Closest"
     nt.links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
@@ -207,6 +208,36 @@ def wedge(name, size=(1, 1, 1), location=(0, 0, 0), pivot=(0, 0, -1), swatch="st
     return object_from_bmesh(name, bm, location, parent, swatch)
 
 
+def extrude_poly(name, points, thickness, plane="YZ", location=(0, 0, 0), swatch="stone_grey", parent=None):
+    """Convex-or-not 2D outline extruded symmetrically along the plane's normal axis.
+
+    plane="YZ": points are (y, z), thickness along X (blades held forward: edges up/down, flats left/right).
+    plane="XZ": points are (x, z), thickness along Y (banners, shield faces seen from the front).
+    plane="XY": points are (x, y), thickness along Z (floor decals, flat plates).
+    The origin is the 2D origin of the outline."""
+    bm = bmesh.new()
+    h = thickness / 2
+
+    def to3(p, d):
+        if plane == "YZ":
+            return Vector((d, p[0], p[1]))
+        if plane == "XZ":
+            return Vector((p[0], d, p[1]))
+        return Vector((p[0], p[1], d))
+
+    front = [bm.verts.new(to3(p, -h)) for p in points]
+    back = [bm.verts.new(to3(p, h)) for p in points]
+    bm.faces.new(front)
+    bm.faces.new(list(reversed(back)))
+    n = len(points)
+    for i in range(n):
+        j = (i + 1) % n
+        bm.faces.new([front[i], front[j], back[j], back[i]])
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    bmesh.ops.triangulate(bm, faces=[f for f in bm.faces if len(f.verts) > 4])
+    return object_from_bmesh(name, bm, location, parent, swatch)
+
+
 # --------------------------------------------------------------------------- ops
 
 def mirror_x(obj, new_name=None):
@@ -271,20 +302,33 @@ def world_bounds(objs):
 # --------------------------------------------------------------------------- export / save
 
 def export_fbx(root, rel_path):
-    """Export `root` and its descendants to Assets/Art/Models/<rel_path>.fbx. Returns the absolute path."""
+    """Export `root` and its descendants to Assets/Art/Models/<rel_path>.fbx. Returns the absolute path.
+
+    Axis handling (verified M0.4, see docs/DECISIONS.md): write Blender's native Z-up axes and let Unity's
+    `bakeAxisConversion` (ModelImportRules) convert, because Blender's `bake_space_transform` mis-converts EMPTY
+    nodes (rigid-part rigs are full of them). Unity's conversion maps Blender -Y to -Z, so the root gets a temporary
+    180 deg yaw here: asset front (Blender -Y) arrives at Unity +Z, asset left (Blender +X) at Unity -X, every
+    part keeps identity rotation, and only the FBX root node carries the 180 deg yaw (under an identity prefab root).
+    """
+    import math
     path = os.path.join(MODELS_DIR, rel_path if rel_path.endswith(".fbx") else rel_path + ".fbx")
     os.makedirs(os.path.dirname(path), exist_ok=True)
     bpy.ops.object.select_all(action="DESELECT")
     for o in descendants(root):
         o.select_set(True)
     bpy.context.view_layer.objects.active = root
-    bpy.ops.export_scene.fbx(
-        filepath=path, use_selection=True, object_types={"MESH", "EMPTY"},
-        apply_unit_scale=True, apply_scale_options="FBX_SCALE_UNITS", global_scale=1.0,
-        axis_forward="-Z", axis_up="Y", bake_space_transform=True,
-        mesh_smooth_type="FACE", use_mesh_modifiers=True, use_tspace=False, colors_type="NONE",
-        add_leaf_bones=False, bake_anim=False, use_custom_props=False,
-        path_mode="STRIP", embed_textures=False)
+    saved_rot = root.rotation_euler.copy()
+    root.rotation_euler.z += math.pi
+    try:
+        bpy.ops.export_scene.fbx(
+            filepath=path, use_selection=True, object_types={"MESH", "EMPTY"},
+            apply_unit_scale=True, apply_scale_options="FBX_SCALE_UNITS", global_scale=1.0,
+            axis_forward="Y", axis_up="Z", bake_space_transform=False,
+            mesh_smooth_type="FACE", use_mesh_modifiers=True, use_tspace=False, colors_type="NONE",
+            add_leaf_bones=False, bake_anim=False, use_custom_props=False,
+            path_mode="STRIP", embed_textures=False)
+    finally:
+        root.rotation_euler = saved_rot
     return path
 
 
@@ -336,7 +380,7 @@ def review_render(root, name, size=480, sil_px=64):
 
     cam_data = bpy.data.cameras.new("_ReviewCam")
     cam_data.type = "ORTHO"
-    cam_data.ortho_scale = extent * 1.25
+    cam_data.ortho_scale = extent * 1.7
     cam = bpy.data.objects.new("_ReviewCam", cam_data)
     scene.collection.objects.link(cam)
     scene.camera = cam

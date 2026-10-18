@@ -1,19 +1,19 @@
-// M0.2: instantiate the round-trip FBX and report world-space size / marker directions.
-var go = UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.GameObject>("Assets/Art/Models/Dev/SM_RoundTripBox.fbx");
-if (go == null) return "FBX not imported";
-var inst = (UnityEngine.GameObject)UnityEditor.PrefabUtility.InstantiatePrefab(go);
-inst.transform.position = UnityEngine.Vector3.zero;
+// Instantiates the round-trip FBXs and reports world-space positions / sizes / rotations of every node.
 var sb = new System.Text.StringBuilder();
-foreach (var t in inst.GetComponentsInChildren<UnityEngine.Transform>())
+foreach (var path in new[] { "Assets/Art/Models/Dev/SM_RoundTripBox.fbx", "Assets/Art/Models/Dev/SM_RoundTripRig.fbx" })
 {
-    var r = t.GetComponent<UnityEngine.MeshRenderer>();
-    sb.AppendLine(t.name + " localPos=" + t.localPosition.ToString("F3") + " localRot=" + t.localEulerAngles.ToString("F1") + " localScale=" + t.localScale.ToString("F3")
-        + (r ? " worldCenter=" + r.bounds.center.ToString("F3") + " worldSize=" + r.bounds.size.ToString("F3") : ""));
+    UnityEditor.AssetDatabase.ImportAsset(path, UnityEditor.ImportAssetOptions.ForceUpdate);
+    var go = UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.GameObject>(path);
+    if (go == null) { sb.AppendLine(path + " NOT IMPORTED"); continue; }
+    var inst = (UnityEngine.GameObject)UnityEditor.PrefabUtility.InstantiatePrefab(go);
+    inst.transform.position = UnityEngine.Vector3.zero;
+    sb.AppendLine("== " + path);
+    foreach (var t in inst.GetComponentsInChildren<UnityEngine.Transform>())
+    {
+        var r = t.GetComponent<UnityEngine.MeshRenderer>();
+        sb.AppendLine("  " + t.name + " pos=" + t.position.ToString("F3") + " rot=" + t.rotation.eulerAngles.ToString("F1") + " scale=" + t.lossyScale.ToString("F3")
+            + (r ? " meshCenter=" + r.bounds.center.ToString("F4") + " size=" + r.bounds.size.ToString("F3") : ""));
+    }
+    UnityEngine.Object.DestroyImmediate(inst);
 }
-var imp = (UnityEditor.ModelImporter)UnityEditor.AssetImporter.GetAtPath("Assets/Art/Models/Dev/SM_RoundTripBox.fbx");
-sb.AppendLine("importer: fileScale=" + imp.fileScale + " useFileScale=" + imp.useFileScale + " globalScale=" + imp.globalScale + " materials=" + imp.materialImportMode + " collider=" + imp.addCollider + " readable=" + imp.isReadable + " compression=" + imp.meshCompression);
-var box = inst.transform.Find("SM_RoundTripBox") ?? inst.transform;
-var mf = box.GetComponent<UnityEngine.MeshFilter>();
-if (mf) sb.AppendLine("box mesh: verts=" + mf.sharedMesh.vertexCount + " tris=" + (mf.sharedMesh.triangles.Length / 3) + " localBounds=" + mf.sharedMesh.bounds.size.ToString("F3"));
-UnityEngine.Object.DestroyImmediate(inst);
 return sb.ToString();

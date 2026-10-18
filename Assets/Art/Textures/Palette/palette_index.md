@@ -26,12 +26,12 @@
 | wood | A1_mud_rust | 2 | 7 | 0.46875 | 0.84375 | #7E5631 | 0.0 |
 | wood_light | A1_mud_rust | 2 | 8 | 0.53125 | 0.84375 | #A5784A | 0.0 |
 | rope | A1_mud_rust | 2 | 9 | 0.59375 | 0.84375 | #C9A66B | 0.0 |
-| dirt_floor | A1_mud_rust | 2 | 10 | 0.65625 | 0.84375 | #9B7452 | 0.0 |
-| dirt_floor_d | A1_mud_rust | 2 | 11 | 0.71875 | 0.84375 | #876246 | 0.0 |
+| dirt_floor | A1_mud_rust | 2 | 10 | 0.65625 | 0.84375 | #8E7A62 | 0.0 |
+| dirt_floor_d | A1_mud_rust | 2 | 11 | 0.71875 | 0.84375 | #837059 | 0.0 |
 | ochre_d | A2_ochre_grass | 3 | 0 | 0.03125 | 0.78125 | #A57A2A | 0.0 |
 | ochre | A2_ochre_grass | 3 | 1 | 0.09375 | 0.78125 | #C99A3B | 0.0 |
 | straw | A2_ochre_grass | 3 | 2 | 0.15625 | 0.78125 | #E0C36A | 0.0 |
-| grass_dry | A2_ochre_grass | 3 | 3 | 0.21875 | 0.78125 | #A9A04A | 0.0 |
+| grass_dry | A2_ochre_grass | 3 | 3 | 0.21875 | 0.78125 | #959050 | 0.0 |
 | grass_dry_d | A2_ochre_grass | 3 | 4 | 0.28125 | 0.78125 | #7D7A35 | 0.0 |
 | grass_green | A2_ochre_grass | 3 | 5 | 0.34375 | 0.78125 | #6E9A3A | 0.0 |
 | leaf | A2_ochre_grass | 3 | 6 | 0.40625 | 0.78125 | #4E7E2E | 0.0 |

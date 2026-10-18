@@ -18,7 +18,7 @@ namespace Gladiator.EditorTools
 
             mi.globalScale = 1f;
             mi.useFileScale = true;
-            mi.bakeAxisConversion = false;
+            mi.bakeAxisConversion = true;   // Blender Z-up -> Unity Y-up baked into meshes AND node transforms (works for empties too)
             mi.materialImportMode = ModelImporterMaterialImportMode.None;
             mi.addCollider = false;
             mi.importAnimation = false;

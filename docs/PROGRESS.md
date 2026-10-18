@@ -1,7 +1,7 @@
 # Progress
 
-**Current phase:** Phase 0 — Foundations
-**Current milestone:** M0.4 — Look-dev scene
+**Current phase:** Phase 1 — Feel
+**Current milestone:** M1.1 — Player controller + third-person camera on a test arena
 **Last updated:** 2026-10-18
 
 ## Resume checklist (read first after a context reset)
@@ -16,8 +16,13 @@
 
 - **M0.3** — `GameLoop` (central tick + profiler markers), `TimeController`, input abstraction (`HumanInputSource` in code / `PlaytestBot`), `PlaytestBot` (seeded; seek pickups, flee threats, stay in arena, jump/slide rhythm, camera orbit, random cards; `-bot -stress -stressCount -botSeconds -profile` via `PlaytestBotBootstrap`), `FrameStatsRecorder` (ProfilerRecorder main-thread/gameplay/GC + heap-growth → `Profiling/*.csv` + `.summary.txt`). Tests: 6 EditMode (frame-stat maths, palette guards) + PlayMode smoke test (boots scene, runs bot, asserts no errors + budget). `Tools/utest`. **Verified:** bot drives the stand-in player in `Dev/BotSandbox` (rebuilt by `Gladiator/Setup/Dev/Build Bot Sandbox`); CSV written; 6/6 EditMode pass; smoke test pass (15 s); steady-state gameplay heap growth 0 B (only bumps coincide with external bridge requests).
 
+- **M0.4** — Look-dev. `Gladiator/PaletteLit` + `Gladiator/SkyGradient` shaders, shared role materials, `VP_Gladiator` post profile, URP tuned (SSAO off, 40 m/2-cascade shadows, MSAA 4×, static batching), `EnvironmentLighting`. Blender assets: `CH_Nobody` (828 tris, iteration 2), `EN_Convict` (192 tris), `SM_PitFloor`, mound, rock, crate, barrel, 3 m fence, brazier (emissive fire), ramp, stairs, platform. `Dev/LookDev` scene rebuilt by `Gladiator/Setup/Dev/Build Look-Dev Scene`. **Verified:** Play-mode capture shows bloom/vignette/grade, fog, sky, soft shadows, pixel grain; 3 materials in scene; 266 renderers static-batched. **Pipeline bug found and fixed:** FBX empties broke with `bake_space_transform` → switched to native axes + Unity `bakeAxisConversion`, guarded by `ModelPipelineTests` (8/8 EditMode green).
+
 ## Next
-- M0.4 look-dev scene.
+- M1.1 PlayerMotor + MovementConfig + third-person camera (Cinemachine orbit + deoccluder) on a test arena with slope, stairs and a raised platform.
+- M1.2 placeholder enemies + gladius arc + hit feedback.
+- M1.3 HUD, XP gems + magnet, stub level-up.
+- Gate 1 report.
 
 ## Known issues
 - `DevKinematicMover` is a stand-in; delete when `PlayerMotor` lands (M1.1).

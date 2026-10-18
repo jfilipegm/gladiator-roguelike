@@ -57,3 +57,12 @@ One line each: what, and why. Newest at the bottom of each section.
 - **Stable content ids**: `EnemyDef.RuntimeId` / `WeaponDef.RuntimeId` = FNV-1a of the string id (`GetInstanceID` is obsolete in 6.6 and not stable across sessions anyway).
 - **Camera: final collision guard** after CinemachineBrain (`CameraCollisionGuard`, ComputePenetration with a 0.16 m sphere) + camera radius 0.25 m (< player capsule 0.32 m, so the target is always a legal fallback). Cinemachine still does the smooth work; the guard removes the rare squeeze that the bot found with enemies around.
 - **Perf numbers come from a standalone development build** (`BuildScripts`, Linux, IL2CPP default, windowed, runInBackground) run with `-bot/-stress -profile`.
+
+## Run loop (M1.3)
+- **Pickups are data + instanced draws** (`PickupSystem`: one `RenderMeshInstanced` per kind — small/medium/large XP gem, gold coin), never GameObjects. At capacity (700) new value merges into the nearest pickup of the same family, so nothing is lost and nothing allocates.
+- **Base magnet radius 2.2 m < gladius reach 2.6 m.** At 3.5 m every melee kill's gems were vacuumed instantly, which makes "collecting" and pickup-range upgrades pointless. Tune at Gate 1.
+- **XP curve** `xpToNext(L) = 5 + 4·(L−1)^1.35` (5, 9, 14, 19, 25, … 83 at L10) in `ProgressionConfig`; convicts give 1 XP. Placeholder until the Director (M2.3) sets real kill rates.
+- **Level-up is a stub on purpose**: 7 placeholder boons that are plain stat multipliers (damage, attack speed, move speed, max HP, pickup range, reach, crit). This violates the long-term "no flat-stat grinding" rule only *within a run*, and the whole thing is replaced by data-driven cards with tags/rarity/reroll/banish in M2.4. Flow: XP threshold → 0.35 s burst beat → pause (timeScale 0, input off, cursor free) → pick (mouse / 1-4 / gamepad) → resume; queued level-ups open back-to-back.
+- **Particles use scaled time**, so the level-up pause freeze-frames the burst (looks intentional; keep).
+- **HUD built in code** (`Hud`, `LevelUpPanel`, `UiFactory`, procedural `PixelIcons`): XP bar top, countdown to the boss top-centre (8:00 = `runDuration`), `LV n` top-right, HP/gold/kills top-left, F3 debug line. Text changes only when values change; the timer writes a char buffer (`SetCharArray`) so the HUD is allocation-free.
+- **Movement feel tests run without enemies** (a kill → XP → level-up pause would freeze their scaled-time loops); the camera test runs with enemies because fleeing produced the squeeze cases.

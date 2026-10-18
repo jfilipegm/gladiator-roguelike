@@ -45,6 +45,10 @@ namespace Gladiator.Tests
             _player = Player.Main;
             _motor = _player.GetComponent<PlayerMotor>();
             _rig = Object.FindAnyObjectByType<PlayerCameraRig>();
+            // Movement is measured without enemies: kills would grant XP, and a level-up pauses the game.
+            var spawner = Object.FindAnyObjectByType<DebugEnemySpawner>();
+            if (spawner != null) spawner.enabled = false;
+            EnemyManager.Instance?.KillAll();
             _in = new ScriptedInput();
             _player.OverrideSource = _in;
             yield return new WaitForSeconds(0.3f);
@@ -181,6 +185,7 @@ namespace Gladiator.Tests
         {
             yield return Boot();
             _player.OverrideSource = null;
+            Object.FindAnyObjectByType<DebugEnemySpawner>().enabled = true; // camera squeeze cases came from fleeing enemies
             var botGo = Object.FindAnyObjectByType<PlaytestBot>(FindObjectsInactive.Include);
             botGo.gameObject.SetActive(true);
             botGo.cameraOrbitAmount = 0.8f;

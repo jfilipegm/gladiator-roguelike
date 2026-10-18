@@ -20,11 +20,13 @@ namespace Gladiator.EditorTools
         public const string SlashMesh = "Assets/Art/Models/FX/FX_SlashArc.fbx";
         public const string FontPath = "Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF.asset";
         public const string FontOutlinePath = "Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF - Outline.mat";
+        public const string ProgressionPath = "Assets/Data/Config/ProgressionConfig.asset";
 
         [MenuItem("Gladiator/Setup/Combat/Create Or Update Combat Assets")]
         public static string CreateOrUpdate()
         {
             PlayerSetup.EnsureAsset<HitFeedbackConfig>(FeedbackPath);
+            PlayerSetup.EnsureAsset<ProgressionConfig>(ProgressionPath);
 
             bool newAnim = AssetDatabase.LoadAssetAtPath<PartAnimProfile>(ConvictAnimPath) == null;
             var anim = PlayerSetup.EnsureAsset<PartAnimProfile>(ConvictAnimPath);

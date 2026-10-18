@@ -70,6 +70,7 @@ namespace Gladiator.EditorTools
 
             var (player, rig) = ArenaSceneCommon.AddPlayerAndCamera(Spawn, 0f);
             ArenaSceneCommon.AddCombatSystems(player, r - 1f, debugEnemies: 25);
+            ArenaSceneCommon.AddRunSystems(player);
             var bot = new GameObject("[PlaytestBot]").AddComponent<PlaytestBot>();
             bot.arenaRadius = 18f;
             bot.gameObject.SetActive(false); // enabled by -bot / smoke test

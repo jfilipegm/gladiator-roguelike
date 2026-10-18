@@ -117,6 +117,49 @@ namespace Gladiator.EditorTools
             return (em, spawner);
         }
 
+        const string Props = "Assets/Art/Models/Props/";
+
+        /// <summary>Run state, XP gems/coins, level-up flow, HUD, level-up cards, EventSystem.</summary>
+        public static void AddRunSystems(Player player)
+        {
+            var progression = AssetDatabase.LoadAssetAtPath<ProgressionConfig>(CombatSetup.ProgressionPath);
+            var font = AssetDatabase.LoadAssetAtPath<TMPro.TMP_FontAsset>(CombatSetup.FontPath);
+            var fontMat = AssetDatabase.LoadAssetAtPath<Material>(CombatSetup.FontOutlinePath);
+            var root = new GameObject("[Run]").transform;
+
+            var run = new GameObject("RunState").AddComponent<RunState>();
+            run.transform.SetParent(root, false);
+            run.config = progression;
+
+            var pickups = new GameObject("PickupSystem").AddComponent<PickupSystem>();
+            pickups.transform.SetParent(root, false);
+            pickups.config = progression;
+            pickups.gemSmall = AssetDatabase.LoadAssetAtPath<Mesh>(Props + "PR_GemXP_S.fbx");
+            pickups.gemMedium = AssetDatabase.LoadAssetAtPath<Mesh>(Props + "PR_GemXP_M.fbx");
+            pickups.gemLarge = AssetDatabase.LoadAssetAtPath<Mesh>(Props + "PR_GemXP_L.fbx");
+            pickups.coin = AssetDatabase.LoadAssetAtPath<Mesh>(Props + "PR_Coin.fbx");
+            pickups.material = AssetDatabase.LoadAssetAtPath<Material>(LookSetup.CharMat);
+
+            var lvl = new GameObject("LevelUpController").AddComponent<LevelUpController>();
+            lvl.transform.SetParent(root, false);
+            lvl.run = run;
+            lvl.weapons = player.GetComponent<WeaponSystem>();
+            lvl.motor = player.GetComponent<PlayerMotor>();
+            lvl.health = player.GetComponent<PlayerHealth>();
+            lvl.pickups = pickups;
+            lvl.burst = Object.FindAnyObjectByType<DeathPopFx>();
+
+            var hud = new GameObject("Hud").AddComponent<Gladiator.UI.Hud>();
+            hud.transform.SetParent(root, false);
+            hud.font = font; hud.fontMaterial = fontMat;
+            var panel = new GameObject("LevelUpPanel").AddComponent<Gladiator.UI.LevelUpPanel>();
+            panel.transform.SetParent(root, false);
+            panel.font = font; panel.fontMaterial = fontMat;
+
+            var es = new GameObject("EventSystem", typeof(UnityEngine.EventSystems.EventSystem), typeof(UnityEngine.InputSystem.UI.InputSystemUIInputModule));
+            es.transform.SetParent(root, false);
+        }
+
         /// <summary>Big static geometry: Environment layer, mesh colliders, static batching. The camera avoids it.</summary>
         public static GameObject PlaceSolid(string model, Transform parent, Vector3 pos, float yaw, Vector3? scale = null, bool walkable = false)
         {

@@ -41,6 +41,22 @@ namespace Gladiator.Gameplay
             _ps.Play();
         }
 
+        /// <summary>Radial burst (level-up, pickups of note). Player colours: cyan/white/gold.</summary>
+        public void Burst(Vector3 position, int count, float speed, float size, Color a, Color b)
+        {
+            for (int k = 0; k < count; k++)
+            {
+                float ang = k * Mathf.PI * 2f / count + GameRandom.Range(-0.1f, 0.1f);
+                Vector3 dir = new Vector3(Mathf.Cos(ang), GameRandom.Range(0.2f, 1.1f), Mathf.Sin(ang)).normalized;
+                _ep.position = position;
+                _ep.velocity = dir * speed * GameRandom.Range(0.7f, 1.2f);
+                _ep.startSize = size * GameRandom.Range(0.7f, 1.3f);
+                _ep.startColor = (k & 1) == 0 ? a : b;
+                _ep.startLifetime = GameRandom.Range(0.45f, 0.75f);
+                _ps.Emit(_ep, 1);
+            }
+        }
+
         public void Emit(Vector3 position, Vector3 pushDir, HitFeedbackConfig c)
         {
             int n = c.deathPopParticles;

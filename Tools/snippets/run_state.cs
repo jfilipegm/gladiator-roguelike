@@ -1,0 +1,3 @@
+var r = Gladiator.Gameplay.RunState.Current; var l = Gladiator.Gameplay.LevelUpController.Instance; var p = Gladiator.Gameplay.PickupSystem.Instance;
+var ws = Gladiator.Gameplay.Player.Main.GetComponent<Gladiator.Gameplay.WeaponSystem>();
+return "t=" + r.Elapsed.ToString("F1") + " remaining=" + r.TimeRemaining.ToString("F0") + " LV=" + r.Level + " xp=" + r.Xp.ToString("F0") + "/" + r.XpToNext + " gold=" + r.Gold + " kills=" + r.Kills + " pending=" + r.PendingLevelUps + " panelOpen=" + l.IsOpen + " chosen=" + l.TimesChosen + " pickupsActive=" + p.ActiveCount + " dmgMul=" + ws.damageMultiplier.ToString("F2") + " atkSpd=" + ws.attackSpeedMultiplier.ToString("F2") + " timeScale=" + UnityEngine.Time.timeScale;

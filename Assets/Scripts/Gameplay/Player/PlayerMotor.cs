@@ -58,6 +58,8 @@ namespace Gladiator.Gameplay
         public float TimeSinceJump { get; private set; } = 10f;
         /// <summary>Air jumps granted on top of config.extraJumps (upgrades).</summary>
         public int BonusAirJumps { get; set; }
+        /// <summary>Run/air speed multiplier (upgrades). Slide physics are left alone on purpose.</summary>
+        public float SpeedMultiplier { get; set; } = 1f;
         public MotorTelemetry Telemetry;
 
         CharacterController _cc;
@@ -187,17 +189,18 @@ namespace Gladiator.Gameplay
                 return;
             }
 
-            if (speed > c.maxSpeed + 0.01f && wishMag > 0.01f)
+            float maxSpeed = c.maxSpeed * SpeedMultiplier;
+            if (speed > maxSpeed + 0.01f && wishMag > 0.01f)
             {
                 // Above run speed (after a slide / slide-jump): keep momentum, steer, bleed off slowly.
                 Vector3 dir = Vector3.RotateTowards(_hv / speed, wishDir, c.highSpeedTurnRate * Mathf.Deg2Rad * dt, 0f);
-                speed = Mathf.MoveTowards(speed, c.maxSpeed, c.overspeedDecel * dt);
+                speed = Mathf.MoveTowards(speed, maxSpeed, c.overspeedDecel * dt);
                 _hv = dir * speed;
             }
             else
             {
-                Vector3 target = wishDir * (c.maxSpeed * wishMag);
-                float accel = wishMag > 0.01f ? c.groundAccel : (speed > c.maxSpeed ? c.overspeedDecel : c.groundDecel);
+                Vector3 target = wishDir * (maxSpeed * wishMag);
+                float accel = wishMag > 0.01f ? c.groundAccel : (speed > maxSpeed ? c.overspeedDecel : c.groundDecel);
                 _hv = Vector3.MoveTowards(_hv, target, accel * dt);
             }
         }
@@ -259,10 +262,11 @@ namespace Gladiator.Gameplay
             {
                 // Quake-style: accelerate along the wish direction up to airMaxSpeed; never brakes existing momentum.
                 float along = Vector3.Dot(_hv, wishDir);
-                float add = c.airMaxSpeed * wishMag - along;
+                float airMax = c.airMaxSpeed * SpeedMultiplier;
+                float add = airMax * wishMag - along;
                 if (add > 0f) _hv += wishDir * Mathf.Min(c.airAccel * dt, add);
                 speed = _hv.magnitude;
-                if (speed > c.airMaxSpeed) _hv = _hv / speed * Mathf.Max(c.airMaxSpeed, speed - c.airOverspeedDrag * dt);
+                if (speed > airMax) _hv = _hv / speed * Mathf.Max(airMax, speed - c.airOverspeedDrag * dt);
             }
             else if (speed > 0f)
             {

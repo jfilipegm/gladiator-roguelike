@@ -32,6 +32,12 @@ namespace Gladiator.Gameplay
         public float critChanceBonus = 0f;
         public float rangeMultiplier = 1f;
 
+        // Effective values: the run's own bonuses × the admin/dev buff layer.
+        public float DamageMul => damageMultiplier * DevSettings.DamageMul;
+        public float AttackSpeedMul => attackSpeedMultiplier * DevSettings.AttackSpeedMul;
+        public float RangeMul => rangeMultiplier * DevSettings.RangeMul;
+        public float CritBonus => critChanceBonus + DevSettings.CritBonus;
+
         readonly List<WeaponInstance> _weapons = new List<WeaponInstance>(MaxSlots);
         readonly int[] _hits = new int[256];
 
@@ -92,23 +98,23 @@ namespace Gladiator.Gameplay
             }
             if (w.Cooldown > 0f || em == null) return;
             Vector3 origin = transform.position;
-            if (!em.TryGetNearest(origin, d.acquireRange * rangeMultiplier, out int target)) return;
+            if (!em.TryGetNearest(origin, d.acquireRange * RangeMul, out int target)) return;
             Vector3 aim = em.GetPosition(target) - origin;
             aim.y = 0f;
             w.AimDir = aim.sqrMagnitude > 1e-4f ? aim.normalized : transform.forward;
             w.SwingT = 0f;
             w.Impacted = false;
-            w.Cooldown = d.cooldown / Mathf.Max(0.1f, attackSpeedMultiplier);
+            w.Cooldown = d.cooldown / Mathf.Max(0.1f, AttackSpeedMul);
             Swings++;
             if (slashFx != null)
-                slashFx.Play(origin + Vector3.up * 0.75f, w.AimDir, d.range * rangeMultiplier, d.arcDegrees, d.swingDuration);
+                slashFx.Play(origin + Vector3.up * 0.75f, w.AimDir, d.range * RangeMul, d.arcDegrees, d.swingDuration);
         }
 
         void MeleeArcHit(WeaponInstance w, EnemyManager em)
         {
             var d = w.Def;
             Vector3 origin = transform.position;
-            float range = d.range * rangeMultiplier;
+            float range = d.range * RangeMul;
             float halfArc = d.arcDegrees * 0.5f;
             int n = em.QueryAlive(origin, range, _hits);
             int sourceId = d.RuntimeId;
@@ -119,10 +125,10 @@ namespace Gladiator.Gameplay
                 to.y = 0f;
                 float dist = to.magnitude;
                 if (dist > 0.7f && Vector3.Angle(w.AimDir, to) > halfArc) continue; // point-blank always connects
-                bool crit = GameRandom.Chance(d.critChance + critChanceBonus);
+                bool crit = GameRandom.Chance(d.critChance + CritBonus);
                 var info = new DamageInfo
                 {
-                    Amount = d.damage * damageMultiplier * (crit ? d.critMultiplier : 1f),
+                    Amount = d.damage * DamageMul * (crit ? d.critMultiplier : 1f),
                     Flags = DamageFlags.Melee | (crit ? DamageFlags.Crit : 0),
                     Point = em.GetPosition(i),
                     Direction = dist > 1e-3f ? to / dist : w.AimDir,

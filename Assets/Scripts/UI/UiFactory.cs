@@ -65,6 +65,30 @@ namespace Gladiator.UI
             return t;
         }
 
+        static readonly Color ButtonColor = new Color(0.16f, 0.2f, 0.25f, 0.98f);
+
+        /// <summary>Flat button with a centred label. Returns the button; the label is its child "Label".</summary>
+        public static Button Button(string name, Transform parent, string label, Vector2 anchor, Vector2 pivot, Vector2 pos, Vector2 size,
+            TMP_FontAsset font, Material mat, UnityEngine.Events.UnityAction onClick, float fontSize = 24f)
+        {
+            var img = Image(name, parent, ButtonColor, anchor, pivot, pos, size, PixelIcons.White);
+            img.raycastTarget = true;
+            var btn = img.gameObject.AddComponent<Button>();
+            var colors = btn.colors;
+            colors.highlightedColor = new Color(1.35f, 1.35f, 1.35f);
+            colors.pressedColor = new Color(0.7f, 0.95f, 1f);
+            colors.selectedColor = Color.white;
+            colors.fadeDuration = 0.05f;
+            btn.colors = colors;
+            btn.navigation = new Navigation { mode = Navigation.Mode.None };
+            if (onClick != null) btn.onClick.AddListener(onClick);
+            var t = Text("Label", img.transform, label, fontSize, Color.white, TextAlignmentOptions.Center, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, size, font, mat);
+            t.fontStyle = FontStyles.Normal;
+            return btn;
+        }
+
+        public static TextMeshProUGUI Label(Button b) => b.GetComponentInChildren<TextMeshProUGUI>();
+
         /// <summary>Background + horizontally filled foreground. Returns the fill image.</summary>
         public static Image Bar(string name, Transform parent, Color bg, Color fill, Vector2 anchor, Vector2 pivot, Vector2 pos, Vector2 size)
         {

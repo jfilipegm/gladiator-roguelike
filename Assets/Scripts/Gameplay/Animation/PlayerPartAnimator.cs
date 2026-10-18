@@ -15,6 +15,8 @@ namespace Gladiator.Gameplay
         public float AttackT { get; set; } = -1f;
         /// <summary>World direction of the current swing (the body twists toward it).</summary>
         public Vector3 AttackDirection { get; set; } = Vector3.forward;
+        /// <summary>Collapse into the death pose (placeholder until M3.3's proper death animation).</summary>
+        public bool Dead { get; set; }
 
         PartRig _rig;
         PartPose _pose = PartPose.Identity;
@@ -33,7 +35,18 @@ namespace Gladiator.Gameplay
             float run01 = Mathf.Clamp01(speed / p.fullRunSpeed);
             var target = PartPose.Identity;
 
-            switch (motor.CurrentState)
+            if (Dead)
+            {
+                // knees give, body tips back, sword arm drops: a readable "down" at 64 px
+                target.Body = PartPose.Lean(-70f);
+                target.Head = PartPose.Lean(-25f);
+                target.LegL = PartPose.Swing(85f);
+                target.LegR = PartPose.Swing(70f);
+                target.ArmL = PartPose.Swing(-35f) + new Vector3(0, 0, -50f);
+                target.ArmR = PartPose.Swing(-20f) + new Vector3(0, 0, 55f);
+                target.RootY = -0.55f;
+            }
+            else switch (motor.CurrentState)
             {
                 case PlayerMotor.State.Sliding:
                     target.Body = PartPose.Lean(p.slideBodyLean);
@@ -78,7 +91,7 @@ namespace Gladiator.Gameplay
             }
 
             // Weapon swing overrides the sword arm (additive body twist sells it).
-            if (AttackT >= 0f)
+            if (AttackT >= 0f && !Dead)
             {
                 float k = p.swingCurve.Evaluate(Mathf.Clamp01(AttackT));
                 float yaw = Mathf.Lerp(p.swingYawStart, p.swingYawEnd, k);

@@ -14,6 +14,9 @@ namespace Gladiator.Tests
 
         IEnumerator Boot()
         {
+            DevSettings.ResetAll(); // static test switches must not leak between tests
+            Gladiator.Core.TimeController.GameSpeed = 1f;
+            Gladiator.Core.TimeController.ResetForNewRun();
             var op = SceneManager.LoadSceneAsync(Scene, LoadSceneMode.Single);
             while (!op.isDone) yield return null;
             yield return null;

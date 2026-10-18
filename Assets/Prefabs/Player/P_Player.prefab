@@ -177,7 +177,6 @@ MonoBehaviour:
   maxHp: 100
   invulnerableTime: 0.4
   feedback: {fileID: 11400000, guid: 0327740b5aa030136919a4b2d5feb6a6, type: 2}
-  refillOnDeath: 1
 --- !u!114 &806913137643507375
 MonoBehaviour:
   m_ObjectHideFlags: 0

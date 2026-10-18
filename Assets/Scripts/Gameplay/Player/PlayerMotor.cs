@@ -189,7 +189,7 @@ namespace Gladiator.Gameplay
                 return;
             }
 
-            float maxSpeed = c.maxSpeed * SpeedMultiplier;
+            float maxSpeed = c.maxSpeed * SpeedMultiplier * DevSettings.MoveSpeedMul;
             if (speed > maxSpeed + 0.01f && wishMag > 0.01f)
             {
                 // Above run speed (after a slide / slide-jump): keep momentum, steer, bleed off slowly.
@@ -262,7 +262,7 @@ namespace Gladiator.Gameplay
             {
                 // Quake-style: accelerate along the wish direction up to airMaxSpeed; never brakes existing momentum.
                 float along = Vector3.Dot(_hv, wishDir);
-                float airMax = c.airMaxSpeed * SpeedMultiplier;
+                float airMax = c.airMaxSpeed * SpeedMultiplier * DevSettings.MoveSpeedMul;
                 float add = airMax * wishMag - along;
                 if (add > 0f) _hv += wishDir * Mathf.Min(c.airAccel * dt, add);
                 speed = _hv.magnitude;

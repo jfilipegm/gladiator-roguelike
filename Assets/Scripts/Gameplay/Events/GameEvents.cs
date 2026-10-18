@@ -12,6 +12,7 @@ namespace Gladiator.Gameplay
     public struct DamagedEvent { public Vector3 Position; public float Damage; public float HealthAfter; public float HealthMax; }
     public struct PickupEvent { public int Kind; public Vector3 Position; public float Amount; }
     public struct LevelUpEvent { public int NewLevel; }
+    public struct RunEndEvent { public RunOutcome Outcome; public float Elapsed; }
 
     /// <summary>
     /// The typed event bus (CLAUDE.md §4): OnHit, OnKill, OnCrit, OnDamaged, OnLevelUp, OnJump, OnSlide, OnPickup (+ OnLand).
@@ -28,12 +29,14 @@ namespace Gladiator.Gameplay
         public static readonly EventChannel<SlideEvent> OnSlide = new EventChannel<SlideEvent>();
         public static readonly EventChannel<LandEvent> OnLand = new EventChannel<LandEvent>();
         public static readonly EventChannel<PickupEvent> OnPickup = new EventChannel<PickupEvent>();
+        /// <summary>The run is over (death or timer). Raised once, at the moment it happens (before the end screen).</summary>
+        public static readonly EventChannel<RunEndEvent> OnRunEnd = new EventChannel<RunEndEvent>();
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         public static void ClearAll()
         {
             OnHit.Clear(); OnCrit.Clear(); OnKill.Clear(); OnDamaged.Clear(); OnLevelUp.Clear();
-            OnJump.Clear(); OnSlide.Clear(); OnLand.Clear(); OnPickup.Clear();
+            OnJump.Clear(); OnSlide.Clear(); OnLand.Clear(); OnPickup.Clear(); OnRunEnd.Clear();
         }
     }
 }

@@ -22,6 +22,8 @@ namespace Gladiator.Gameplay
                 b.stressCount = CommandLine.GetInt("-stressCount", b.stressCount);
                 b.runSeconds = CommandLine.GetFloat("-botSeconds", 600f);
                 b.seed = CommandLine.GetInt("-seed", b.seed);
+                b.godMode = !CommandLine.Has("-mortal");
+                b.timeless = !CommandLine.Has("-timed");
                 Object.DontDestroyOnLoad(go);
             }
             if (profile && Object.FindAnyObjectByType<FrameStatsRecorder>() == null)

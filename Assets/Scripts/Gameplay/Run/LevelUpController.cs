@@ -53,6 +53,7 @@ namespace Gladiator.Gameplay
         void OnEnable()
         {
             GameLoop.Register(this, TickGroup.Late, 10);
+            GameEvents.OnRunEnd.Subscribe(OnRunEnd);
             RunBotSensor.PendingCards = BotPending;
             RunBotSensor.ChooseCardHook = Choose;
         }
@@ -60,15 +61,24 @@ namespace Gladiator.Gameplay
         void OnDisable()
         {
             GameLoop.Unregister(this);
+            GameEvents.OnRunEnd.Unsubscribe(OnRunEnd);
             if (IsOpen) Close();
             if (Instance == this) Instance = null;
         }
 
         int BotPending() => IsOpen ? ChoiceCount : 0;
 
+        // The run is over: drop the open card (nothing applied) and anything queued.
+        void OnRunEnd(in RunEndEvent e)
+        {
+            if (run != null) run.PendingLevelUps = 0;
+            if (IsOpen) Close();
+            _delay = -1f;
+        }
+
         public void Tick(float dt, float unscaledDt)
         {
-            if (IsOpen || run == null || run.PendingLevelUps <= 0) return;
+            if (IsOpen || run == null || run.PendingLevelUps <= 0 || run.Ended) return;
             if (_delay < 0f)
             {
                 _delay = openDelay;
@@ -95,7 +105,7 @@ namespace Gladiator.Gameplay
             }
             IsOpen = true;
             TimeController.PushPause();
-            if (Player.Main != null) Player.Main.InputEnabled = false;
+            if (Player.Main != null) Player.Main.BlockInput();
         }
 
         public void Choose(int index)
@@ -112,7 +122,7 @@ namespace Gladiator.Gameplay
             IsOpen = false;
             _delay = -1f;
             TimeController.PopPause();
-            if (Player.Main != null) Player.Main.InputEnabled = true;
+            if (Player.Main != null) Player.Main.UnblockInput();
         }
 
         void Apply(StubBoon b)

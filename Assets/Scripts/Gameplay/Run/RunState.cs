@@ -3,7 +3,9 @@ using UnityEngine;
 
 namespace Gladiator.Gameplay
 {
-    /// <summary>One run's live numbers: timer, level/XP, gold, kills, pending level-ups.</summary>
+    public enum RunOutcome { None, Died, Survived }
+
+    /// <summary>One run's live numbers: timer, level/XP, gold, kills, pending level-ups, and how it ended.</summary>
     public sealed class RunState : MonoBehaviour, ITickable
     {
         public static RunState Current { get; private set; }
@@ -20,7 +22,10 @@ namespace Gladiator.Gameplay
         public float Xp01 => Mathf.Clamp01(Xp / Mathf.Max(1f, XpToNext));
         public int Gold { get; private set; }
         public int Kills { get; private set; }
+        public float DamageDealt { get; private set; }
         public int PendingLevelUps { get; set; }
+        public RunOutcome Outcome { get; private set; }
+        public bool Ended => Outcome != RunOutcome.None;
 
         void Awake() => Current = this;
 
@@ -28,21 +33,42 @@ namespace Gladiator.Gameplay
         {
             GameLoop.Register(this, TickGroup.Late);
             GameEvents.OnKill.Subscribe(OnKill);
+            GameEvents.OnHit.Subscribe(OnHit);
         }
 
         void OnDisable()
         {
             GameLoop.Unregister(this);
             GameEvents.OnKill.Unsubscribe(OnKill);
+            GameEvents.OnHit.Unsubscribe(OnHit);
             if (Current == this) Current = null;
         }
 
-        void OnKill(in KillEvent e) => Kills++;
+        void OnKill(in KillEvent e) { if (!Ended) Kills++; }
+        void OnHit(in HitEvent e) { if (!Ended) DamageDealt += e.Damage; }
 
-        public void Tick(float dt, float unscaledDt) => Elapsed += dt;
+        public void Tick(float dt, float unscaledDt)
+        {
+            if (Ended || DevSettings.Timeless) return;
+            Elapsed += dt;
+            if (Elapsed >= config.runDuration) End(RunOutcome.Survived);
+        }
+
+        /// <summary>Ends the run once (later calls are ignored) and raises OnRunEnd.</summary>
+        public void End(RunOutcome outcome)
+        {
+            if (Ended || outcome == RunOutcome.None) return;
+            Outcome = outcome;
+            Debug.Log($"[RunState] run ended: {outcome} at {Elapsed:0.0}s, level {Level}, kills {Kills}");
+            GameEvents.OnRunEnd.Raise(new RunEndEvent { Outcome = outcome, Elapsed = Elapsed });
+        }
+
+        /// <summary>Dev/admin: jump the countdown (e.g. to 0:10 to see the timer end).</summary>
+        public void SetTimeRemaining(float seconds) => Elapsed = Mathf.Clamp(config.runDuration - seconds, 0f, config.runDuration);
 
         public void AddXp(float amount)
         {
+            if (Ended) return;
             Xp += amount * xpMultiplier;
             while (Xp >= XpToNext)
             {
@@ -53,6 +79,6 @@ namespace Gladiator.Gameplay
             }
         }
 
-        public void AddGold(int amount) => Gold += amount;
+        public void AddGold(int amount) { if (!Ended) Gold += amount; }
     }
 }

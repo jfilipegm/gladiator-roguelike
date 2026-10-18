@@ -19,11 +19,13 @@ namespace Gladiator.UI
         public bool showDebug = true;
 
         Image _xpFill, _hpFill;
-        TextMeshProUGUI _timer, _level, _hpText, _gold, _kills, _toast, _pause, _debug;
+        TextMeshProUGUI _timer, _level, _hpText, _gold, _kills, _toast, _pause, _debug, _tags;
         readonly char[] _timeBuf = new char[8];
         int _lastSecond = -1, _lastLevel = -1, _lastGold = -1, _lastKills = -1, _lastHp = -1, _lastMaxHp = -1;
         float _toastT = 10f, _debugT;
         int _frames;
+        int _lastTags = -1;
+        float _lastSpeed = 1f;
 
         static readonly Color XpColor = new Color(0.31f, 0.89f, 0.82f);
         static readonly Color HpColor = new Color(0.88f, 0.2f, 0.17f);
@@ -43,6 +45,7 @@ namespace Gladiator.UI
             _xpFill.fillMethod = Image.FillMethod.Horizontal;
 
             _timer = UiFactory.Text("Timer", canvas, "8:00", 58, Color.white, TextAlignmentOptions.Center, top, top, new Vector2(0, -26), new Vector2(300, 70), font, fontMaterial);
+            _tags = UiFactory.Text("DevTags", canvas, "", 22, new Color(1f, 0.84f, 0.3f), TextAlignmentOptions.Center, top, top, new Vector2(0, -88), new Vector2(700, 30), font, fontMaterial);
             _level = UiFactory.Text("Level", canvas, "LV 1", 46, Color.white, TextAlignmentOptions.Right, new Vector2(1, 1), new Vector2(1, 1), new Vector2(-28, -26), new Vector2(300, 60), font, fontMaterial);
 
             // HP bar + icon
@@ -66,7 +69,7 @@ namespace Gladiator.UI
             // Pre-size TMP buffers with the longest strings each label shows and parse them now: in players the first
             // frame's huge delta fires the first debug update before anything renders, and TMP then grew its
             // character array one char at a time (~12 KB per growth) as the line got longer.
-            PreSize(_debug, "88888 fps   88888 enemies   88888 pickups");
+            PreSize(_debug, "88888 fps   88888 enemies   88888 pickups   F1 admin");
             PreSize(_hpText, "8888 / 8888");
             PreSize(_gold, "88888888");
             PreSize(_kills, "88888888");
@@ -114,10 +117,22 @@ namespace Gladiator.UI
                 if (h != null)
                 {
                     _hpFill.fillAmount = Mathf.MoveTowards(_hpFill.fillAmount, h.Hp01, unscaledDt * 2.5f);
-                    int hp = Mathf.CeilToInt(h.Hp), max = Mathf.CeilToInt(h.maxHp);
+                    int hp = Mathf.CeilToInt(h.Hp), max = Mathf.CeilToInt(h.MaxHp);
                     if (hp != _lastHp || max != _lastMaxHp) { _lastHp = hp; _lastMaxHp = max; _hpText.SetText("{0} / {1}", (float)hp, (float)max); }
                 }
                 _pause.alpha = player.IsPaused ? 1f : 0f;
+            }
+
+            // Dev switches in effect (so a test never silently runs with God mode on). Rebuilt only when they change.
+            int tags = (DevSettings.GodMode ? 1 : 0) | (DevSettings.Timeless ? 2 : 0) | (DevSettings.AnyBuff ? 4 : 0) |
+                       (!Mathf.Approximately(TimeController.GameSpeed, 1f) ? 8 : 0);
+            if (tags != _lastTags || TimeController.GameSpeed != _lastSpeed)
+            {
+                _lastTags = tags;
+                _lastSpeed = TimeController.GameSpeed;
+                _tags.text = tags == 0 ? "" :
+                    ((tags & 1) != 0 ? "GOD   " : "") + ((tags & 2) != 0 ? "TIMELESS   " : "") + ((tags & 4) != 0 ? "BUFFS   " : "") +
+                    ((tags & 8) != 0 ? "SPEED x" + TimeController.GameSpeed.ToString("0.##") : "");
             }
 
             // LEVEL UP toast: pop in, hold, fade
@@ -136,7 +151,7 @@ namespace Gladiator.UI
             _debugT += unscaledDt;
             if (_debugT >= 0.5f)
             {
-                if (showDebug) _debug.SetText("{0} fps   {1} enemies   {2} pickups", Mathf.Round(_frames / _debugT), DevCounters.Enemies, DevCounters.Pickups);
+                if (showDebug) _debug.SetText("{0} fps   {1} enemies   {2} pickups   F1 admin", Mathf.Round(_frames / _debugT), DevCounters.Enemies, DevCounters.Pickups);
                 else _debug.SetText("");
                 _frames = 0;
                 _debugT = 0f;

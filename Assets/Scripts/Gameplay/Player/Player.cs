@@ -16,7 +16,11 @@ namespace Gladiator.Gameplay
         public PlayerInputFrame Input { get; private set; }
         /// <summary>Yaw (deg) that "forward" on the stick means. Set from the gameplay camera.</summary>
         public float ReferenceYaw { get; set; }
-        public bool InputEnabled { get; set; } = true;
+        /// <summary>False while any screen (level-up, admin menu, run end) blocks gameplay input.</summary>
+        public bool InputEnabled => _inputBlocks == 0;
+        /// <summary>Block/unblock gameplay input; calls nest (each Block needs one Unblock).</summary>
+        public void BlockInput() => _inputBlocks++;
+        public void UnblockInput() => _inputBlocks = Mathf.Max(0, _inputBlocks - 1);
         public bool IsBotControlled => _source is PlaytestBot || _source == OverrideSource && OverrideSource != null;
         /// <summary>Takes precedence over bot and human (scripted input for automated feel tests).</summary>
         public IPlayerInputSource OverrideSource { get; set; }
@@ -24,6 +28,7 @@ namespace Gladiator.Gameplay
         IPlayerInputSource _source;
         HumanInputSource _human;
         bool _paused;
+        int _inputBlocks;
 
         void OnEnable()
         {
@@ -34,6 +39,7 @@ namespace Gladiator.Gameplay
         void OnDisable()
         {
             GameLoop.Unregister(this);
+            if (_paused) SetPaused(false); // release the static pause if the scene goes away mid-pause
             if (Main == this) Main = null;
             _human?.Dispose();
             _human = null;
@@ -57,7 +63,7 @@ namespace Gladiator.Gameplay
 
             var frame = _source.Read();
 
-            if (frame.PausePressed && !IsBotControlled) SetPaused(!_paused);
+            if (frame.PausePressed && !IsBotControlled && (InputEnabled || _paused)) SetPaused(!_paused); // screens that block input own Esc
             if (_paused && !IsBotControlled && UnityEngine.InputSystem.Mouse.current != null &&
                 UnityEngine.InputSystem.Mouse.current.leftButton.wasPressedThisFrame)
                 SetPaused(false);

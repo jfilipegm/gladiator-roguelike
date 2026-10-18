@@ -156,6 +156,28 @@ namespace Gladiator.EditorTools
             panel.transform.SetParent(root, false);
             panel.font = font; panel.fontMaterial = fontMat;
 
+            // How a run ends (death / timer) + the end screen.
+            var end = new GameObject("RunEndController").AddComponent<RunEndController>();
+            end.transform.SetParent(root, false);
+            end.run = run;
+            end.health = player.GetComponent<PlayerHealth>();
+            end.animator = player.GetComponent<PlayerPartAnimator>();
+            end.burst = lvl.burst;
+            var endPanel = new GameObject("RunEndPanel").AddComponent<Gladiator.UI.RunEndPanel>();
+            endPanel.transform.SetParent(root, false);
+            endPanel.font = font; endPanel.fontMaterial = fontMat;
+
+            // Admin / test tools (F1; Editor and development builds).
+            var admin = new GameObject("AdminController").AddComponent<AdminController>();
+            admin.transform.SetParent(root, false);
+            admin.catalog = EnemyCatalogUpdater.Refresh();
+            admin.crowd = Object.FindAnyObjectByType<DebugEnemySpawner>();
+            admin.health = player.GetComponent<PlayerHealth>();
+            admin.pickups = pickups;
+            var adminPanel = new GameObject("AdminPanel").AddComponent<Gladiator.UI.AdminPanel>();
+            adminPanel.transform.SetParent(root, false);
+            adminPanel.font = font; adminPanel.fontMaterial = fontMat;
+
             var es = new GameObject("EventSystem", typeof(UnityEngine.EventSystems.EventSystem), typeof(UnityEngine.InputSystem.UI.InputSystemUIInputModule));
             es.transform.SetParent(root, false);
         }
@@ -205,22 +227,31 @@ namespace Gladiator.EditorTools
             return go;
         }
 
-        /// <summary>Invisible cylinder-ish wall so nothing leaves the arena (Environment layer: camera stays in too).</summary>
-        public static void AddBoundaryRing(Transform parent, float radius, float height, int segments)
+        /// <summary>
+        /// Closed fence perimeter: `segments` fence pieces whose long axis follows the circle so neighbouring posts meet,
+        /// each with a solid wall collider on exactly the fence line (taller than the fence so nobody jumps out;
+        /// Environment layer so the camera stays inside too).
+        /// </summary>
+        public static void AddPerimeterFence(Transform parent, string model, float radius, int segments, float wallHeight)
         {
-            var ring = new GameObject("BoundaryRing").transform;
-            ring.SetParent(parent, false);
-            float seg = 2f * Mathf.PI * radius / segments * 1.05f;
+            var root = new GameObject("Perimeter").transform;
+            root.SetParent(parent, false);
+            float step = Mathf.PI * 2f / segments;
+            float chord = 2f * radius * Mathf.Sin(step * 0.5f);
+            float mid = radius * Mathf.Cos(step * 0.5f); // chord midpoints sit slightly inside the circle
             for (int i = 0; i < segments; i++)
             {
-                float a = i * Mathf.PI * 2f / segments;
-                var w = new GameObject("Wall" + i);
+                float a = (i + 0.5f) * step;
+                var pos = new Vector3(Mathf.Sin(a), 0f, Mathf.Cos(a)) * mid;
+                float yaw = a * Mathf.Rad2Deg; // local +X (the fence's long axis) → tangent (cos a, 0, -sin a)
+                var fence = PlaceDecor(model, root, pos, yaw);
+                fence.name = "Fence" + i;
+                var w = new GameObject("FenceWall" + i);
                 w.layer = Layers.Environment;
-                w.transform.SetParent(ring, false);
-                w.transform.SetPositionAndRotation(new Vector3(Mathf.Sin(a), 0, Mathf.Cos(a)) * (radius + 0.5f) + Vector3.up * height * 0.5f,
-                    Quaternion.Euler(0, a * Mathf.Rad2Deg, 0));
+                w.transform.SetParent(root, false);
+                w.transform.SetPositionAndRotation(pos + Vector3.up * wallHeight * 0.5f, Quaternion.Euler(0f, yaw, 0f));
                 var bc = w.AddComponent<BoxCollider>();
-                bc.size = new Vector3(seg, height, 1f);
+                bc.size = new Vector3(chord + 0.12f, wallHeight, 0.3f);
                 GameObjectUtility.SetStaticEditorFlags(w, StaticEditorFlags.BatchingStatic);
             }
         }

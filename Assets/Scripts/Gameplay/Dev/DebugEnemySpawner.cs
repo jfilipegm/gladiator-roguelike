@@ -30,6 +30,7 @@ namespace Gladiator.Gameplay
         {
             var em = EnemyManager.Instance;
             if (em == null || enemy == null) return;
+            if (RunState.Current != null && RunState.Current.Ended) return; // the arena stays quiet after the run
             _timer -= dt;
             while (_timer <= 0f && em.AliveCount < targetAlive)
             {

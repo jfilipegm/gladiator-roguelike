@@ -19,6 +19,9 @@ namespace Gladiator.Tests
 
         IEnumerator Boot()
         {
+            DevSettings.ResetAll(); // static test switches must not leak between tests
+            Gladiator.Core.TimeController.GameSpeed = 1f;
+            Gladiator.Core.TimeController.ResetForNewRun();
             var op = SceneManager.LoadSceneAsync(Scene, LoadSceneMode.Single);
             while (!op.isDone) yield return null;
             yield return null;
@@ -92,7 +95,7 @@ namespace Gladiator.Tests
                 if (c.name == "SM_Wall_Stone_4m") wallCols.Add(c);
             Assert.Greater(wallCols.Count, 0, "test arena walls not found");
             _player.GetComponent<PlayerMotor>().Teleport(new Vector3(-3f, 0.1f, -15.5f));
-            _player.GetComponent<PlayerHealth>().refillOnDeath = true;
+            DevSettings.GodMode = true; // eight convicts reach the player while the test watches the wall
             for (int k = 0; k < 8; k++) _em.Spawn(_convict, new Vector3(-4.5f + k * 0.6f, 0f, -10.5f));
             int violations = 0;
             float end = Time.time + 4f;

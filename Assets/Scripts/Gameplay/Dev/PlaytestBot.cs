@@ -23,6 +23,9 @@ namespace Gladiator.Gameplay
         public float runSeconds = 0f;
         public int stressCount = 1000;
         public int seed = 1234;
+        [Tooltip("Perf/smoke runs shouldn't end early: God mode + Timeless while the bot plays (-mortal / -timed turn them off).")]
+        public bool godMode = true;
+        public bool timeless = true;
 
         [Header("Arena")]
         public Vector3 arenaCenter = Vector3.zero;
@@ -49,17 +52,30 @@ namespace Gladiator.Gameplay
         /// <summary>The body the bot steers (the player calls this when it adopts the bot as input).</summary>
         public void Bind(Transform body) => _body = body;
 
+        bool _prevGod, _prevTimeless;
+
         void OnEnable()
         {
             Active = this;
+            _prevGod = DevSettings.GodMode; _prevTimeless = DevSettings.Timeless;
+            if (godMode) DevSettings.GodMode = true;
+            if (timeless) DevSettings.Timeless = true;
             _rng = (uint)Mathf.Max(1, seed);
             _nextJump = Rand(jumpEvery);
             _nextSlide = Rand(slideEvery);
         }
 
+        // Fields can be set right after AddComponent (bootstrap), i.e. after OnEnable: apply them again.
+        void Start()
+        {
+            DevSettings.GodMode = godMode || _prevGod;
+            DevSettings.Timeless = timeless || _prevTimeless;
+        }
+
         void OnDisable()
         {
             if (Active == this) Active = null;
+            DevSettings.GodMode = _prevGod; DevSettings.Timeless = _prevTimeless;
         }
 
         void Update()

@@ -6,7 +6,7 @@ namespace Gladiator.EditorTools
 {
     /// <summary>
     /// M1.1 feel-test arena: flat runway, 30°/20° slide hill, platform reachable by stairs or ramp, a stone-wall
-    /// corner and pillars for camera occlusion, props, mound bumps, fence ring + invisible boundary.
+    /// corner and pillars for camera occlusion, props, mound bumps, closed fence perimeter (solid wall on the fence line).
     /// Layout (Unity, +Z forward from spawn): spawn (0,0,-8) facing +Z.
     /// </summary>
     public static class TestArenaScene
@@ -59,14 +59,9 @@ namespace Gladiator.EditorTools
                 l.type = LightType.Point; l.color = new Color(1f, 0.6f, 0.25f); l.range = 6f; l.intensity = 3f; l.shadows = LightShadows.None;
             }
 
-            // Fence ring (visual + props collider) and the invisible boundary.
+            // Closed fence perimeter: 44 × 3 m pieces whose posts meet, solid 4 m wall on the fence line.
             const float r = 21f;
-            for (int i = 0; i < 44; i++)
-            {
-                float a = (i + 0.5f) / 44f * Mathf.PI * 2f;
-                ArenaSceneCommon.PlaceDecor("Environment/SM_Fence_3m", env, new Vector3(Mathf.Sin(a), 0, Mathf.Cos(a)) * r, a * Mathf.Rad2Deg + 90f);
-            }
-            ArenaSceneCommon.AddBoundaryRing(env, r, 4f, 48);
+            ArenaSceneCommon.AddPerimeterFence(env, "Environment/SM_Fence_3m", r, 44, 4f);
 
             var (player, rig) = ArenaSceneCommon.AddPlayerAndCamera(Spawn, 0f);
             ArenaSceneCommon.AddCombatSystems(player, r - 1f, debugEnemies: 25);

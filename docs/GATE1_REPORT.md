@@ -1,6 +1,6 @@
 # Gate 1 — "Feel check" report
 
-*2026-10-18 · commit `9e1dc9b` · Phase 0 + Phase 1 (M1.1–M1.3) complete*
+*2026-10-18 · Phase 0 + Phase 1 (M1.1–M1.3) complete, plus M1.4 test tools added at your request*
 
 ## 1. What works
 
@@ -23,6 +23,13 @@
   - A kill drops a gem that pops out, then gets pulled in by the magnet and adds XP.
   - On level-up the game pauses and shows 3 cards; your pick applies and the game resumes. Level-ups that stack open one after another.
   - The HUD shows the XP bar, an 8:00 countdown, level, HP, gold and kills.
+
+- **Test tools (M1.4):**
+  - **F1 admin menu:** % buffs, God mode, Timeless, level up, gold, heal, jump the timer, kill yourself; spawn any enemy type near you or around the arena; crowd size; game speed; restart. Each was checked by a test or a screenshot.
+  - **Dying** plays a death beat, then a "YOU DIED" screen with your stats.
+  - **The timer reaching 0:00** shows a "SURVIVED!" screen.
+  - **Retry** starts a fresh run and keeps your admin settings.
+  - **The fence** is now one closed, solid perimeter. Nothing gets through it: not you (even jumping into it), not enemies, not gems.
 
 **Built but not verified by me:**
 - **Feel:** I can't feel it. That's what this gate is for.
@@ -55,13 +62,23 @@
 
 Your weapon swings on its own; 25 convicts keep spawning around the arena.
 
+**Admin menu (F1, opening it pauses the game).** The HUD shows GOD / TIMELESS / BUFFS / SPEED under the timer whenever any of those switches is on.
+- Use the % buffs to compare before and after: +50% damage turns every 12 into an 18.
+- God mode floors your HP at 1. Timeless freezes the timer.
+- **Timer to 0:10** previews the end of a run.
+- **Kill me** previews the death screen.
+- **Spawn near me / around arena** spawns the selected type in the chosen count. The list fills itself from the enemy data, so new mobs and bosses show up there automatically.
+- **Crowd** sets how many enemies the background spawner keeps alive (0–300).
+- **Game speed** runs from 0.25× to 2×.
+
 **Try, roughly in this order:**
 1. **Run and stop** on the long runway. Does starting and stopping feel snappy or skatey?
 2. **Jump:** tap it, then hold it. Jump off the platform edges, including a little late. Is the height right? Does it feel floaty or heavy?
 3. **Slide:** slide on flat ground, then down the 30° hill. Slide-jump in a chain and steer in the air. Does momentum feel rewarding? Is holding to keep sliding OK?
 4. **Camera:** orbit freely, back into the wall corner and the pillars, and stand on the platform. Look for clipping, the camera fighting you, the speed FOV kick, and the player fading out when the camera gets close.
 5. **Combat:** let the convicts reach you. Does the auto-swing hit what you expect? Are hits readable (flash, numbers, pop)? Is the crit hit-stop noticeable but not annoying? Is the shake when you get hit OK?
-6. **Gems and level-ups:** each gem should pop out briefly before the magnet pulls it in. The first level-up comes at 5 kills, then at 9, 14, 19 and so on. How does that pacing feel? Pick cards with the mouse, the number keys and the gamepad.
+6. **Death and timer end:** die for real (God mode off), and let the timer run out once (Timer to 0:10). Check the death beat, the end screen, and Retry.
+7. **Gems and level-ups:** each gem should pop out briefly before the magnet pulls it in. The first level-up comes at 5 kills, then at 9, 14, 19 and so on. How does that pacing feel? Pick cards with the mouse, the number keys and the gamepad.
 
 Notes from even a sentence per item are enough. "Too floaty", "camera too close" and "slide feels great but stops too soon" are all useful.
 
@@ -90,7 +107,7 @@ All of these are assets under `Assets/Data/`. Edit them in the Inspector while i
 - **`Config/ProgressionConfig`:**
   - `magnetRadius` 2.2; `magnetDelay` 0.25
   - XP curve: `baseXp` 5, `perLevelXp` 4, `exponent` 1.35
-- **In the scene:** the `DebugEnemySpawner` object's `targetAlive` is 25. Raise it to feel a crowd.
+- **In the scene:** `DebugEnemySpawner.targetAlive` 25 (or use Crowd in the admin menu). `RunEndController`: `deathBeat` 1.6 s, `deathSlowMotion` 0.3, `survivedBeat` 1.2 s.
 
 ## 4. Measurements
 

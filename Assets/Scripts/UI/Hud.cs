@@ -63,7 +63,22 @@ namespace Gladiator.UI
             _pause.alpha = 0f;
             _debug = UiFactory.Text("Debug", canvas, "", 20, new Color(1f, 1f, 1f, 0.75f), TextAlignmentOptions.BottomLeft, Vector2.zero, Vector2.zero, new Vector2(16, 12), new Vector2(900, 30), font, fontMaterial);
             _debug.fontStyle = FontStyles.Normal;
-            _debug.SetText("88888 fps 88888 enemies 88888 pickups"); // pre-size buffers
+            // Pre-size TMP buffers with the longest strings each label shows and parse them now: in players the first
+            // frame's huge delta fires the first debug update before anything renders, and TMP then grew its
+            // character array one char at a time (~12 KB per growth) as the line got longer.
+            PreSize(_debug, "88888 fps   88888 enemies   88888 pickups");
+            PreSize(_hpText, "8888 / 8888");
+            PreSize(_gold, "88888888");
+            PreSize(_kills, "88888888");
+            PreSize(_level, "LV 8888");
+        }
+
+        static void PreSize(TMP_Text t, string longest)
+        {
+            string current = t.text;
+            t.SetText(longest);
+            t.ForceMeshUpdate(true, true);
+            t.SetText(current);
         }
 
         void OnEnable()

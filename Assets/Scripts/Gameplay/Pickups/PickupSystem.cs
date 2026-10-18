@@ -23,7 +23,7 @@ namespace Gladiator.Gameplay
         public float hoverHeight = 0.45f;
 
         Vector3[] _pos, _vel;
-        float[] _value, _age;
+        float[] _value, _age, _phase;
         Kind[] _kind;
         bool[] _active, _vacuum;
         int[] _free;
@@ -41,7 +41,7 @@ namespace Gladiator.Gameplay
             Instance = this;
             int cap = config.maxPickups;
             _pos = new Vector3[cap]; _vel = new Vector3[cap];
-            _value = new float[cap]; _age = new float[cap];
+            _value = new float[cap]; _age = new float[cap]; _phase = new float[cap];
             _kind = new Kind[cap]; _active = new bool[cap]; _vacuum = new bool[cap];
             _free = new int[cap];
             for (int i = cap - 1; i >= 0; i--) _free[_freeCount++] = i;
@@ -107,7 +107,8 @@ namespace Gladiator.Gameplay
             _vacuum[i] = false;
             _kind[i] = kind;
             _value[i] = value;
-            _age[i] = GameRandom.Range(0f, 3f);
+            _age[i] = 0f;
+            _phase[i] = GameRandom.Range(0f, 3f); // desyncs bob/spin only; age must start at 0 so the pop isn't skipped
             _pos[i] = pos + Vector3.up * 0.6f;
             _vel[i] = new Vector3(GameRandom.Range(-2.2f, 2.2f), GameRandom.Range(3.5f, 5.5f), GameRandom.Range(-2.2f, 2.2f));
             if (i >= _high) _high = i + 1;
@@ -148,6 +149,7 @@ namespace Gladiator.Gameplay
             float magnet = config.magnetRadius * magnetMultiplier;
             float magnet2 = magnet * magnet;
             float collect2 = config.collectRadius * config.collectRadius;
+            float magnetDelay = config.magnetDelay;
 
             for (int i = 0; i < _high; i++)
             {
@@ -157,7 +159,7 @@ namespace Gladiator.Gameplay
                 Vector3 to = target - p;
                 float d2 = to.sqrMagnitude;
 
-                if (_player != null && !_vacuum[i] && d2 < magnet2 && _age[i] > 0.25f) { _vacuum[i] = true; _vel[i] = Vector3.zero; }
+                if (_player != null && !_vacuum[i] && d2 < magnet2 && _age[i] > magnetDelay) { _vacuum[i] = true; _vel[i] = Vector3.zero; }
 
                 if (_vacuum[i])
                 {
@@ -188,9 +190,10 @@ namespace Gladiator.Gameplay
                 _pos[i] = p;
 
                 int kind = (int)_kind[i];
-                float bob = _vacuum[i] ? 0f : Mathf.Sin(_age[i] * 3f) * 0.08f;
+                float t = _age[i] + _phase[i];
+                float bob = _vacuum[i] ? 0f : Mathf.Sin(t * 3f) * 0.08f;
                 float s = _vacuum[i] ? 0.85f : 1f;
-                _matrices[kind][_batchCount[kind]++] = Matrix4x4.TRS(new Vector3(p.x, p.y + bob, p.z), Quaternion.Euler(0f, _age[i] * 120f, 0f), new Vector3(s, s, s));
+                _matrices[kind][_batchCount[kind]++] = Matrix4x4.TRS(new Vector3(p.x, p.y + bob, p.z), Quaternion.Euler(0f, t * 120f, 0f), new Vector3(s, s, s));
             }
 
             for (int k = 0; k < KindCount; k++)

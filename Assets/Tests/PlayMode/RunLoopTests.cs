@@ -35,26 +35,16 @@ namespace Gladiator.Tests
             float xp0 = run.Xp + (run.Level - 1) * 1000f;
             int kills0 = run.Kills;
             em.Spawn(def, Player.Main.transform.position + new Vector3(0f, 0f, 1.6f));
-            int sawPickup = 0, pickedUp = 0;
-            var log = new System.Text.StringBuilder();
-            Gladiator.Core.EventHandler<PickupEvent> onPick = (in PickupEvent e) => { pickedUp++; log.Append($" [pick f{Time.frameCount} amt={e.Amount}]"); };
-            Gladiator.Core.EventHandler<KillEvent> onKill = (in KillEvent e) => log.Append($" [kill f{Time.frameCount} xp={e.Xp}]");
-            GameEvents.OnPickup.Subscribe(onPick);
-            GameEvents.OnKill.Subscribe(onKill);
+            int sawPickup = 0;
             float end = Time.time + 4f;
-            int frames = 0;
             while (Time.time < end)
             {
-                if (frames++ < 40) log.Append($" f{Time.frameCount}:a{pickups.ActiveCount}k{run.Kills}");
                 if (pickups.ActiveCount > 0) sawPickup++;
                 if (run.Kills > kills0 && pickups.ActiveCount == 0 && sawPickup > 0) break;
                 yield return null;
             }
-            GameEvents.OnPickup.Unsubscribe(onPick);
-            GameEvents.OnKill.Unsubscribe(onKill);
-            Debug.Log("[GemTest] sameInstance=" + ReferenceEquals(pickups, PickupSystem.Instance) + log);
             Assert.AreEqual(kills0 + 1, run.Kills, "the convict should die");
-            Assert.Greater(sawPickup + pickedUp, 0, "a gem should have dropped (and/or been picked up)");
+            Assert.Greater(sawPickup, 0, "a gem should drop and stay visible for its pop before the magnet takes it");
             Assert.AreEqual(0, pickups.ActiveCount, "the gem should be vacuumed up (drops within magnet range)");
             Assert.Greater(run.Xp + (run.Level - 1) * 1000f, xp0, "XP should increase");
         }

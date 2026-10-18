@@ -1,7 +1,7 @@
 # Progress
 
 **Current phase:** Phase 1 — Feel
-**Current milestone:** M1.3 — HUD, XP gems + magnet, stub level-up
+**Current milestone:** GATE 1 — "Feel check" (waiting for the producer's playtest; report in `docs/GATE1_REPORT.md`)
 **Last updated:** 2026-10-18
 
 **Repository:** https://github.com/jfilipegm/gladiator-roguelike (public, branch `main`, remote `origin`, `.blend` files via Git LFS). Push only when the producer asks.
@@ -24,24 +24,14 @@
 
 - **M1.2** — `EnemyManager` (SoA, pools, central tick, spatial hash separation, obstacle push-out, height grid + step rule, contact damage, flash/knockback/recoil, rigid-part run cycle, death pop), `EnemyDef` (EN_Convict), `WeaponDef` + `WeaponSystem` (MeleeArc gladius: auto-aim, arc hit via spatial hash, crits), `DamageInfo` pipeline, `PlayerHealth` (i-frames), `HitFeedbackConfig`, `ScreenShake`, `DeathPopFx`, `BlobShadowRenderer`, `SlashFx` + `FX_SlashArc` (Blender) + `Gladiator/FxSlash` & `Gladiator/BlobShadow` shaders, `DamageNumbers` (UI), `DebugEnemySpawner`, `RunBotSensor`, `CameraCollisionGuard`, TMP essentials imported, `BuildScripts` (Linux dev build). **Verified:** swing sequence screenshots (slash arc, white flash, white/gold/orange-red numbers, death-pop particles, body twist); `CombatTests` (front hit / behind safe, forced crit → hit-stop that ends + OnKill, enemies never inside walls); camera test with enemies 3/3 green. **Standalone dev build, 1080p windowed, this PC:** 25 enemies 884 fps avg (1.13 ms, p95 1.51 ms), gameplay 0.14 ms; early stress (188 alive) 573 fps (1.74 ms, p95 3.15 ms), gameplay 0.38 ms avg. GC: startup hitch 322 ms / 1.1 MB (pool prewarm + bakes at load); sporadic TMP buffer growth found by profiler and fixed (pre-sizing) — re-verify in the next standalone run. 9/9 EditMode, 6/6 PlayMode.
 
-## In progress — M1.3 (state at the WIP commit "WIP M1.3")
-**Built and working in Play mode (verified by screenshots + state dumps):**
-- `ProgressionConfig` (XP curve `5 + 4·(L−1)^1.35`, magnet 2.2 m, collect 0.7 m, gem tiers 1/5/25, run 480 s, 3 cards) — asset `Assets/Data/Config/ProgressionConfig.asset`.
-- `RunState` (timer, level/XP, gold, kills, pending level-ups), `PickupSystem` (instanced gems S/M/L + coin, pop/bounce/bob/spin, magnet vacuum, merge at cap, `ClearAll`, bot hook), `LevelUpController` (stub: 7 placeholder boons, 0.35 s burst beat → pause → choose → resume, queued level-ups chain), `PlayerMotor.SpeedMultiplier`, `DeathPopFx.Burst`.
-- UI: `Hud` (XP bar, countdown, LV, HP/gold/kills, LEVEL UP toast, pause overlay, F3 debug line), `LevelUpPanel` (mouse / 1-4 / gamepad), `UiFactory`, `PixelIcons`. EventSystem added by `ArenaSceneCommon.AddRunSystems`.
-- Blender: `BlenderSrc/props/pickups.py` → `Assets/Art/Models/Props/PR_GemXP_S/M/L.fbx`, `PR_Coin.fbx` (coin joined into one mesh).
-- Test arena rebuilt with run systems (`Gladiator/Setup/Dev/Build Test Arena`).
-
-**Tests:** EditMode 10/10 green (incl. new `ProgressionTests`). PlayMode: `RunLoopTests.LevelUp_Pauses_AppliesChoice_Resumes` passes; everything else from M1.1/M1.2 passed in the last full run.
-**OPEN BUG (first thing to do on resume):** `RunLoopTests.Kill_DropsGem_MagnetCollects_AddsXp` fails with "a gem should have dropped" (kill registers, but `PickupSystem.ActiveCount` never reads > 0 inside the test), while the *same* sequence done live through the bridge works (gem appears, is vacuumed ~0.3 s later, XP +1). The test currently carries temporary per-frame instrumentation (`[GemTest]` log line) — run it once, read the log, fix, then remove the instrumentation. Suspects: `PickupSystem` spawns with a random `_age` (0–3 s) so gems can be vacuumed immediately; test-boot ordering (KillAll → ClearAll).
-**Last test run was aborted** (test runner error "SaveCurrentModifiedScenesIfUserWantsTo during play mode" after a cancel) — if PlayMode tests misbehave: `Tools/u cancel_tests`, `Tools/u editor_stop`, `Tools/ucompile`, retry. Never call `GetInstanceID()` in code (obsolete = compile error in 6.6; a compile error makes `Tools/utest PlayMode` wait forever).
+- **M1.3** — `ProgressionConfig` (XP curve `5 + 4·(L−1)^1.35`, magnet 2.2 m, collect 0.7 m, magnet delay 0.25 s, gem tiers 1/5/25, run 480 s, 3 cards), `RunState` (timer, level/XP, gold, kills, queued level-ups), `PickupSystem` (instanced XP gems S/M/L + coins; pop/bounce/bob/spin, magnet vacuum, merge at cap), `LevelUpController` (stub: 7 placeholder stat boons; burst → pause → pick → resume; chained level-ups), `Hud` (XP bar, countdown, LV, HP/gold/kills, LEVEL UP toast, pause overlay, F3 debug line), `LevelUpPanel` (mouse / 1-4 / gamepad), `UiFactory`, `PixelIcons`; Blender `PR_GemXP_S/M/L`, `PR_Coin`. **Bug fixed:** gems spawned with a random age and skipped their pop, so melee-range gems vanished on the frame they dropped (also why the gem test failed). **GC work:** level-up card texts and HUD labels pre-sized + force-parsed (TMP was growing arrays: ~27 KB per level-up, ~12 KB per longer debug line). **Verified:** screenshots (panel open / closed, combat resumes), 10/10 EditMode, 8/8 PlayMode. **Standalone (i5-12400F + RX 6600, 1080p windowed):** bot 25 enemies 871 fps (1.15 ms, p95 1.47), gameplay 0.15 ms; stress at 250–300 enemies 251 fps (3.98 ms, p95 5.89, p99 6.78), gameplay 1.18 ms avg / 1.68 p95. GC after warm-up (headless re-run with all fixes): gameplay frames 0 B except ~6 rare events in 72 s (24 B–3.6 KB, ~4 KB total); each level-up ~1.2–1.5 KB (UGUI internals, game paused); first level-up 26.6 KB one-time.
 
 ## Next
-1. Fix the gem test (above), run `Tools/utest EditMode` + `GLADIATOR_SMOKE_SECONDS=20 Tools/utest PlayMode "" 900` (run it with `run_in_background`; the full PlayMode suite takes ~3 min).
-2. Rebuild the standalone dev build (`Tools/ueval 'return Gladiator.EditorTools.BuildScripts.BuildLinuxDev();'` — the HTTP call times out but the build runs; wait for `[Build]` in `Logs/Editor.log`), then run normal + stress (`-stress -stressCount 300`) and confirm the TMP pre-size fix removed the sporadic GC (target: 0 B/frame after warm-up).
-3. Commit M1.3, then write the **Gate 1 report** (CLAUDE.md §11) — and STOP for the producer's playtest.
+1. **STOP — Gate 1.** Wait for the producer's playtest feedback (`docs/GATE1_REPORT.md`). Apply feel tuning they ask for, then start Phase 2 (M2.1 EnemyManager scale-up) only after their go-ahead.
 
 ## Known issues
+- **Residual GC (target 0 B/frame):** ~1.2–1.5 KB per level-up open/close from UGUI `SetActive` + colour-tint tweens → M2.4's real level-up UI should use `Transition.None` + own highlight and never toggle objects. First level-up open allocates 26.6 KB (first-use warm-up) → open/close the panel once hidden during loading. One unattributed ~3.6 KB allocation on a crit frame ~40 s into stress runs, plus rare 24–406 B ones → attribute with the Profiler attached to the dev build in M2.1.
+- **Standalone perf runs need an unlocked desktop** (a locked KDE session hangs the windowed player; headless `-batchmode` runs are valid for GC only).
 - Smoke test points at `Dev/TestArena`; move to Arena 1 in Phase 3 (`SmokeTestSettings.ScenePath`).
 - First-frame hitch in builds (~320 ms, 1.1 MB GC): pool prewarm + height-grid/obstacle bake run on the first gameplay frame. Move behind a loading/"FIGHT!" beat in M3.5 (or bake the grid into arena data in M2.1/M3.2).
 - Editor-only: ~368 B/frame IMGUI `GUI.Repaint` allocation (not ours; absent in players).

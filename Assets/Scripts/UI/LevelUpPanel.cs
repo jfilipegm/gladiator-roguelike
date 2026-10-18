@@ -11,6 +11,9 @@ namespace Gladiator.UI
     /// <summary>
     /// Level-up card picker (M1.3 stub look): dimmed screen, "LEVEL UP!", N cards. Mouse click, keys 1-4, or
     /// gamepad (EventSystem navigation + South). Shown while LevelUpController.IsOpen (the game is paused).
+    /// Card texts are pre-sized in Awake so TMP never grows its buffers when a card opens (that was ~27 KB per open).
+    /// Show/hide is a plain SetActive: measured ~1.1 KB of UGUI internals per open+close, while toggling the
+    /// Canvas/CanvasGroup instead cost ~7.7 KB (colour-tint tweens + canvas-hierarchy callbacks).
     /// </summary>
     public sealed class LevelUpPanel : MonoBehaviour, ITickable
     {
@@ -62,6 +65,14 @@ namespace Gladiator.UI
                 _descs[i].fontStyle = FontStyles.Normal;
                 UiFactory.Text("Key", border.transform, "[" + (i + 1) + "]", 30, new Color(1f, 1f, 1f, 0.55f), TextAlignmentOptions.Center, mid, mid, new Vector2(0, -170), new Vector2(200, 50), font, fontMaterial);
             }
+            // Pre-size every card's TMP buffers with longer text than any card will show.
+            for (int i = 0; i < _cards.Length; i++)
+            {
+                _titles[i].SetText("WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW");
+                _descs[i].SetText("WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW");
+                _titles[i].ForceMeshUpdate(true, true);
+                _descs[i].ForceMeshUpdate(true, true);
+            }
             _root.SetActive(false);
         }
 
@@ -83,6 +94,7 @@ namespace Gladiator.UI
                 _shown = open;
                 _root.SetActive(open);
                 if (open) Show(c);
+                else if (EventSystem.current != null && EventSystem.current.currentSelectedGameObject != null) EventSystem.current.SetSelectedGameObject(null);
             }
             if (!open) return;
             var kb = Keyboard.current;
@@ -104,7 +116,7 @@ namespace Gladiator.UI
             for (int i = 0; i < _cards.Length; i++)
             {
                 bool on = i < n;
-                _cards[i].gameObject.SetActive(on);
+                if (_cards[i].gameObject.activeSelf != on) _cards[i].gameObject.SetActive(on);
                 if (!on) continue;
                 ((RectTransform)_cards[i].transform).anchoredPosition = new Vector2(x0 + i * spacing, -20f);
                 _titles[i].text = c.Choices[i].Title;

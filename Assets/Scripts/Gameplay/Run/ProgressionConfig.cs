@@ -15,6 +15,8 @@ namespace Gladiator.Gameplay
         [Tooltip("Gems inside this radius get vacuumed to the player (m).")]
         public float magnetRadius = 2.2f;
         public float collectRadius = 0.7f;
+        [Tooltip("Seconds a new gem pops/bounces before the magnet may grab it (keeps the drop readable).")]
+        public float magnetDelay = 0.25f;
         public float vacuumStartSpeed = 6f;
         public float vacuumAcceleration = 40f;
         [Tooltip("Gem values per tier: small / medium / large.")]

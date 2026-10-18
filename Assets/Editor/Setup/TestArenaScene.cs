@@ -26,15 +26,15 @@ namespace Gladiator.EditorTools
             ArenaSceneCommon.AddGameLoop();
 
             var env = new GameObject("Environment").transform;
-            ArenaSceneCommon.PlaceSolid("Environment/SM_PitFloor", env, Vector3.zero, 0);
+            ArenaSceneCommon.PlaceWalkable("Environment/SM_PitFloor", env, Vector3.zero, 0);
 
             // Slide hill (steep 30° face toward +Z; climb the 20° back ramp from -Z).
-            ArenaSceneCommon.PlaceSolid("Environment/SM_TestHill", env, HillPos, 0);
+            ArenaSceneCommon.PlaceWalkable("Environment/SM_TestHill", env, HillPos, 0);
 
             // Platform (deck 1.2 m, x -12..-8, z 2..6) + stairs from the north + ramp from the east.
-            ArenaSceneCommon.PlaceSolid("Environment/SM_Platform", env, new Vector3(-10, 0, 4), 0);
-            ArenaSceneCommon.PlaceSolid("Environment/SM_Stairs", env, new Vector3(-10, 0, 8), 0);
-            ArenaSceneCommon.PlaceSolid("Environment/SM_Ramp", env, new Vector3(-4, 0, 4), 90);
+            ArenaSceneCommon.PlaceWalkable("Environment/SM_Platform", env, new Vector3(-10, 0, 4), 0);
+            ArenaSceneCommon.PlaceWalkable("Environment/SM_Stairs", env, new Vector3(-10, 0, 8), 0);
+            ArenaSceneCommon.PlaceWalkable("Environment/SM_Ramp", env, new Vector3(-4, 0, 4), 90);
 
             // Camera-occlusion corner + pillars.
             ArenaSceneCommon.PlaceSolid("Environment/SM_Wall_Stone_4m", env, new Vector3(-3, 0, -14), 0);
@@ -44,8 +44,8 @@ namespace Gladiator.EditorTools
                 ArenaSceneCommon.PlaceSolid("Environment/SM_Pillar", env, p, 0);
 
             // Bumps and props.
-            ArenaSceneCommon.PlaceSolid("Environment/SM_Mound_A", env, new Vector3(-8, 0, -4), 30);
-            ArenaSceneCommon.PlaceSolid("Environment/SM_Mound_A", env, new Vector3(3, 0, 6), 80, new Vector3(1.2f, 0.6f, 1.2f));
+            ArenaSceneCommon.PlaceWalkable("Environment/SM_Mound_A", env, new Vector3(-8, 0, -4), 30);
+            ArenaSceneCommon.PlaceWalkable("Environment/SM_Mound_A", env, new Vector3(3, 0, 6), 80, new Vector3(1.2f, 0.6f, 1.2f));
             ArenaSceneCommon.PlaceProp("Environment/PR_Crate", env, new Vector3(4, 0, 2), 15);
             ArenaSceneCommon.PlaceProp("Environment/PR_Crate", env, new Vector3(4.9f, 0, 2.6f), -10);
             ArenaSceneCommon.PlaceProp("Environment/PR_Barrel", env, new Vector3(5.6f, 0, 1.2f), 0);
@@ -69,6 +69,7 @@ namespace Gladiator.EditorTools
             ArenaSceneCommon.AddBoundaryRing(env, r, 4f, 48);
 
             var (player, rig) = ArenaSceneCommon.AddPlayerAndCamera(Spawn, 0f);
+            ArenaSceneCommon.AddCombatSystems(player, r - 1f, debugEnemies: 25);
             var bot = new GameObject("[PlaytestBot]").AddComponent<PlaytestBot>();
             bot.arenaRadius = 18f;
             bot.gameObject.SetActive(false); // enabled by -bot / smoke test

@@ -1,7 +1,7 @@
 # Progress
 
 **Current phase:** Phase 1 — Feel
-**Current milestone:** M1.2 — Placeholder enemies + gladius arc + hit feedback
+**Current milestone:** M1.3 — HUD, XP gems + magnet, stub level-up
 **Last updated:** 2026-10-18
 
 ## Resume checklist (read first after a context reset)
@@ -20,11 +20,13 @@
 
 - **M1.1** — `PlayerMotor` (CharacterController state machine) + `MovementConfig`, `Player` (single shared input frame, pause/cursor), `PlayerCameraRig` + `CameraConfig` (CM3 orbit + deoccluder + decollider, speed FOV kick), `CameraProximityFade`, `PartRig`/`PlayerPartAnimator`/`PartAnimProfile`, typed `GameEvents` bus, layers + physics matrix (`ProjectSetup`), `P_Player` prefab (`PlayerSetup`), `Dev/TestArena` (`TestArenaScene`: runway, 30°/20° hill, platform via stairs or ramp, wall corner, pillars, props, boundary). FBX root yaw baked on import. **Measured (PlayMode `MovementFeelTests`):** run 7.50 m/s (config 7.5), 0→90 % in 0.10 s, stop in 0.49 m; jump held 1.67 m (config 1.7) / tapped 0.47 m; slide +4.00 boost, flat top 11.5 m/s, 30° downhill 15.5 m/s; stairs to deck y=1.27; coyote jump 72 ms after the edge (window 120 ms); camera: 0 frames touching geometry, 0 blocked line of sight in a 25 s bot run (closest 0.45 m). Gameplay+scripts heap growth 0 B over 19 s. 9/9 EditMode, 3/3 PlayMode green.
 
+- **M1.2** — `EnemyManager` (SoA, pools, central tick, spatial hash separation, obstacle push-out, height grid + step rule, contact damage, flash/knockback/recoil, rigid-part run cycle, death pop), `EnemyDef` (EN_Convict), `WeaponDef` + `WeaponSystem` (MeleeArc gladius: auto-aim, arc hit via spatial hash, crits), `DamageInfo` pipeline, `PlayerHealth` (i-frames), `HitFeedbackConfig`, `ScreenShake`, `DeathPopFx`, `BlobShadowRenderer`, `SlashFx` + `FX_SlashArc` (Blender) + `Gladiator/FxSlash` & `Gladiator/BlobShadow` shaders, `DamageNumbers` (UI), `DebugEnemySpawner`, `RunBotSensor`, `CameraCollisionGuard`, TMP essentials imported, `BuildScripts` (Linux dev build). **Verified:** swing sequence screenshots (slash arc, white flash, white/gold/orange-red numbers, death-pop particles, body twist); `CombatTests` (front hit / behind safe, forced crit → hit-stop that ends + OnKill, enemies never inside walls); camera test with enemies 3/3 green. **Standalone dev build, 1080p windowed, this PC:** 25 enemies 884 fps avg (1.13 ms, p95 1.51 ms), gameplay 0.14 ms; early stress (188 alive) 573 fps (1.74 ms, p95 3.15 ms), gameplay 0.38 ms avg. GC: startup hitch 322 ms / 1.1 MB (pool prewarm + bakes at load); sporadic TMP buffer growth found by profiler and fixed (pre-sizing) — re-verify in the next standalone run. 9/9 EditMode, 6/6 PlayMode.
+
 ## Next
-- M1.2 placeholder enemies + gladius arc + hit feedback.
 - M1.3 HUD, XP gems + magnet, stub level-up.
 - Gate 1 report.
 
 ## Known issues
 - Smoke test points at `Dev/TestArena`; move to Arena 1 in Phase 3 (`SmokeTestSettings.ScenePath`).
-- No standalone build yet → no trustworthy FPS numbers (Editor throttles when unfocused). First standalone stress run in M2.1.
+- First-frame hitch in builds (~320 ms, 1.1 MB GC): pool prewarm + height-grid/obstacle bake run on the first gameplay frame. Move behind a loading/"FIGHT!" beat in M3.5 (or bake the grid into arena data in M2.1/M3.2).
+- Editor-only: ~368 B/frame IMGUI `GUI.Repaint` allocation (not ours; absent in players).

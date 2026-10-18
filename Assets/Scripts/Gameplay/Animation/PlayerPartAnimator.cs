@@ -13,6 +13,8 @@ namespace Gladiator.Gameplay
 
         /// <summary>Set by the melee weapon: 0..1 through the swing, negative = not swinging.</summary>
         public float AttackT { get; set; } = -1f;
+        /// <summary>World direction of the current swing (the body twists toward it).</summary>
+        public Vector3 AttackDirection { get; set; } = Vector3.forward;
 
         PartRig _rig;
         PartPose _pose = PartPose.Identity;
@@ -82,7 +84,10 @@ namespace Gladiator.Gameplay
                 float yaw = Mathf.Lerp(p.swingYawStart, p.swingYawEnd, k);
                 float raise = Mathf.Sin(k * Mathf.PI) * 0.4f + 0.6f;
                 target.ArmR = new Vector3(-p.swingRaise * raise, yaw, 0f);
-                target.Body += new Vector3(0f, yaw * 0.25f, 0f);
+                // Twist the upper body toward the target (the legs keep running where the player steers).
+                Vector3 fwd = transform.forward;
+                float twist = Mathf.Clamp(Vector3.SignedAngle(new Vector3(fwd.x, 0f, fwd.z), AttackDirection, Vector3.up), -80f, 80f);
+                target.Body += new Vector3(0f, twist + yaw * 0.2f, 0f);
             }
 
             float blend = 1f - Mathf.Exp(-p.poseSharpness * dt);

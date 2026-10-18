@@ -38,7 +38,12 @@ namespace Gladiator.Core
             public int Order;
             public ITickable System;
             public ProfilerMarker Marker;
+            public long HeapGrowth;
+            public int HeapFrames;
         }
+
+        /// <summary>Debug: attribute managed-heap growth to each system (Tools: GameLoop.HeapReport()).</summary>
+        public static bool TrackHeapPerSystem;
 
         static GameLoop _instance;
         readonly List<Entry> _entries = new List<Entry>(32);
@@ -86,6 +91,15 @@ namespace Gladiator.Core
                 if (ReferenceEquals(list[i].System, system)) list.RemoveAt(i);
         }
 
+        public static string HeapReport()
+        {
+            if (_instance == null) return "no loop";
+            var sb = new System.Text.StringBuilder();
+            foreach (var e in _instance._entries)
+                sb.Append(e.System.GetType().Name).Append(": ").Append(e.HeapGrowth).Append("B/").Append(e.HeapFrames).Append("fr\n");
+            return sb.ToString();
+        }
+
         void Awake()
         {
             if (_instance != null && _instance != this) { Destroy(gameObject); return; }
@@ -110,9 +124,15 @@ namespace Gladiator.Core
                 for (int i = 0; i < _entries.Count; i++)
                 {
                     var e = _entries[i];
+                    long h0 = TrackHeapPerSystem ? UnityEngine.Profiling.Profiler.GetMonoUsedSizeLong() : 0;
                     e.Marker.Begin();
                     e.System.Tick(dt, udt);
                     e.Marker.End();
+                    if (TrackHeapPerSystem && i < _entries.Count)
+                    {
+                        long d = UnityEngine.Profiling.Profiler.GetMonoUsedSizeLong() - h0;
+                        if (d > 0) { e.HeapGrowth += d; e.HeapFrames++; _entries[i] = e; }
+                    }
                 }
             }
             long heap1 = UnityEngine.Profiling.Profiler.GetMonoUsedSizeLong();

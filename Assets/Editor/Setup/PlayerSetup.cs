@@ -28,6 +28,7 @@ namespace Gladiator.EditorTools
         public static string BuildPrefab()
         {
             ProjectSetup.EnsureLayersAndPhysics();
+            CombatSetup.CreateOrUpdate();
             var move = EnsureAsset<MovementConfig>(MovementPath);
             EnsureAsset<CameraConfig>(CameraPath);
             var anim = EnsureAsset<PartAnimProfile>(AnimPath);
@@ -38,6 +39,8 @@ namespace Gladiator.EditorTools
             root.AddComponent<Player>();
             var motor = root.AddComponent<PlayerMotor>();
             motor.config = move;
+            var feedback = AssetDatabase.LoadAssetAtPath<HitFeedbackConfig>(CombatSetup.FeedbackPath);
+            root.AddComponent<PlayerHealth>().feedback = feedback;
 
             var visual = new GameObject("Visual").transform;
             visual.SetParent(root.transform, false);
@@ -57,6 +60,10 @@ namespace Gladiator.EditorTools
             animator.profile = anim;
             animator.motor = motor;
             animator.visualRoot = visual;
+
+            var weapons = root.AddComponent<WeaponSystem>();
+            weapons.startingWeapons = new[] { AssetDatabase.LoadAssetAtPath<WeaponDef>(CombatSetup.GladiusPath) };
+            weapons.animator = animator;
 
             System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(PrefabPath));
             PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);

@@ -26,6 +26,6 @@ MonoBehaviour:
   speedFovKick: 12
   speedFovRange: {x: 8, y: 20}
   fovSharpness: 5
-  cameraRadius: 0.4
+  cameraRadius: 0.25
   minDistance: 0.05
   occlusionReturnDamping: 0.35

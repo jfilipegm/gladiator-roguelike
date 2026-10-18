@@ -109,10 +109,10 @@ Shader "Gladiator/PaletteLit"
             half3 Ambient(half3 n)
             {
                 half3 sky = _GLAmbientSky.rgb;
-                if (dot(sky, sky) + dot(_GLAmbientGround.rgb, _GLAmbientGround.rgb) < 1e-6)
-                    return SampleSH(n);
                 half up = n.y;
-                return up >= 0 ? lerp(_GLAmbientEquator.rgb, sky, up) : lerp(_GLAmbientEquator.rgb, _GLAmbientGround.rgb, -up);
+                half3 hemi = up >= 0 ? lerp(_GLAmbientEquator.rgb, sky, up) : lerp(_GLAmbientEquator.rgb, _GLAmbientGround.rgb, -up);
+                bool unset = dot(sky, sky) + dot(_GLAmbientGround.rgb, _GLAmbientGround.rgb) < 1e-6;
+                return unset ? SampleSH(n) : hemi;
             }
 
             Varyings Vert(Attributes v)

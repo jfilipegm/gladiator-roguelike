@@ -38,6 +38,7 @@ namespace Gladiator.EditorTools
 
             var camGo = new GameObject("Main Camera", typeof(Camera), typeof(AudioListener), typeof(CinemachineBrain));
             camGo.tag = "MainCamera";
+            camGo.AddComponent<CameraCollisionGuard>();
             var cam = camGo.GetComponent<Camera>();
             cam.nearClipPlane = 0.1f;
             cam.farClipPlane = 300f;
@@ -65,17 +66,70 @@ namespace Gladiator.EditorTools
             rig.motor = go.GetComponent<PlayerMotor>();
             rig.vcam = vcam;
             rig.lookTarget = target;
+            rig.feedback = AssetDatabase.LoadAssetAtPath<HitFeedbackConfig>(CombatSetup.FeedbackPath);
             return (player, rig);
         }
 
+        /// <summary>Enemies, weapon FX, death pops, blob shadows, damage numbers, bot sensor, debug spawner.</summary>
+        public static (EnemyManager enemies, DebugEnemySpawner spawner) AddCombatSystems(Player player, float arenaRadius, int debugEnemies)
+        {
+            var feedback = AssetDatabase.LoadAssetAtPath<HitFeedbackConfig>(CombatSetup.FeedbackPath);
+            var systems = new GameObject("[Combat]").transform;
+
+            var popGo = new GameObject("DeathPopFx", typeof(ParticleSystem));
+            popGo.transform.SetParent(systems, false);
+            var pop = popGo.AddComponent<DeathPopFx>();
+            pop.particleMaterial = AssetDatabase.LoadAssetAtPath<Material>(CombatSetup.ParticleMat);
+
+            var em = new GameObject("EnemyManager").AddComponent<EnemyManager>();
+            em.transform.SetParent(systems, false);
+            em.arenaRadius = arenaRadius;
+            em.bodyMaterial = AssetDatabase.LoadAssetAtPath<Material>(LookSetup.CharMat);
+            em.flashMaterial = AssetDatabase.LoadAssetAtPath<Material>(LookSetup.FlashMat);
+            em.feedback = feedback;
+            em.deathPop = pop;
+
+            var blobs = new GameObject("BlobShadows").AddComponent<BlobShadowRenderer>();
+            blobs.transform.SetParent(systems, false);
+            blobs.material = AssetDatabase.LoadAssetAtPath<Material>(CombatSetup.BlobMat);
+
+            var slash = new GameObject("SlashFx").AddComponent<SlashFx>();
+            slash.transform.SetParent(systems, false);
+            slash.arcMesh = AssetDatabase.LoadAssetAtPath<Mesh>(CombatSetup.SlashMesh);
+            slash.material = AssetDatabase.LoadAssetAtPath<Material>(CombatSetup.SlashMat);
+            player.GetComponent<WeaponSystem>().slashFx = slash;
+
+            var numbers = new GameObject("DamageNumbers").AddComponent<Gladiator.UI.DamageNumbers>();
+            numbers.transform.SetParent(systems, false);
+            numbers.feedback = feedback;
+            numbers.font = AssetDatabase.LoadAssetAtPath<TMPro.TMP_FontAsset>(CombatSetup.FontPath);
+            numbers.fontMaterial = AssetDatabase.LoadAssetAtPath<Material>(CombatSetup.FontOutlinePath);
+
+            var spawner = new GameObject("DebugEnemySpawner").AddComponent<DebugEnemySpawner>();
+            spawner.transform.SetParent(systems, false);
+            spawner.enemy = AssetDatabase.LoadAssetAtPath<EnemyDef>(CombatSetup.ConvictPath);
+            spawner.targetAlive = debugEnemies;
+            spawner.ringRadius = arenaRadius - 2f;
+
+            var sensor = new GameObject("RunBotSensor").AddComponent<RunBotSensor>();
+            sensor.transform.SetParent(systems, false);
+            sensor.stressSpawner = spawner;
+            return (em, spawner);
+        }
+
         /// <summary>Big static geometry: Environment layer, mesh colliders, static batching. The camera avoids it.</summary>
-        public static GameObject PlaceSolid(string model, Transform parent, Vector3 pos, float yaw, Vector3? scale = null)
+        public static GameObject PlaceSolid(string model, Transform parent, Vector3 pos, float yaw, Vector3? scale = null, bool walkable = false)
         {
             var go = Place(model, parent, pos, yaw, scale, Layers.Environment);
             foreach (var mf in go.GetComponentsInChildren<MeshFilter>(true))
                 mf.gameObject.AddComponent<MeshCollider>().sharedMesh = mf.sharedMesh;
+            if (walkable) go.AddComponent<WalkableSurface>();
             return go;
         }
+
+        /// <summary>Ground enemies can walk on it (feeds the height grid; never an obstacle).</summary>
+        public static GameObject PlaceWalkable(string model, Transform parent, Vector3 pos, float yaw, Vector3? scale = null) =>
+            PlaceSolid(model, parent, pos, yaw, scale, walkable: true);
 
         /// <summary>Small props: Props layer (player collides, camera ignores), one fitted box collider.</summary>
         public static GameObject PlaceProp(string model, Transform parent, Vector3 pos, float yaw, Vector3? scale = null)

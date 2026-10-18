@@ -38,8 +38,8 @@ namespace Gladiator.Gameplay
         public float fovSharpness = 5f;
 
         [Header("Walls")]
-        [Tooltip("Camera sphere radius used to keep it out of geometry.")]
-        public float cameraRadius = 0.4f;
+        [Tooltip("Camera sphere radius used to keep it out of geometry. Keep it below the player capsule radius (0.32) so the target itself is always a legal camera spot.")]
+        public float cameraRadius = 0.25f;
         [Tooltip("Never pull the camera closer than this to the target.")]
         public float minDistance = 0.05f;
         [Tooltip("Return-to-distance damping after an occlusion clears (s).")]

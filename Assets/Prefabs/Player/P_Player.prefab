@@ -75,8 +75,10 @@ GameObject:
   - component: {fileID: 4275805521266120438}
   - component: {fileID: 1469098544168003787}
   - component: {fileID: 3442605643400915903}
+  - component: {fileID: 7524997544282564053}
   - component: {fileID: 806913137643507375}
   - component: {fileID: 4759577533021436214}
+  - component: {fileID: 3068265213352874394}
   m_Layer: 9
   m_Name: P_Player
   m_TagString: Untagged
@@ -160,6 +162,22 @@ MonoBehaviour:
     Jumps: 0
     Slides: 0
     Lands: 0
+--- !u!114 &7524997544282564053
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3120198515773125934}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 34523c005bde7cf9da888e85295a563a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.PlayerHealth
+  maxHp: 100
+  invulnerableTime: 0.4
+  feedback: {fileID: 11400000, guid: 0327740b5aa030136919a4b2d5feb6a6, type: 2}
+  refillOnDeath: 1
 --- !u!114 &806913137643507375
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -189,6 +207,26 @@ MonoBehaviour:
   profile: {fileID: 11400000, guid: 6e0e3f4ee6c1273689b021d64b6062aa, type: 2}
   motor: {fileID: 3442605643400915903}
   visualRoot: {fileID: 2545547385822470409}
+--- !u!114 &3068265213352874394
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3120198515773125934}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1f4d3a4f7ae4a72f9a2c9fba817670d0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.WeaponSystem
+  startingWeapons:
+  - {fileID: 11400000, guid: 1e64e81441c35618692cc0a42fe51ce8, type: 2}
+  animator: {fileID: 4759577533021436214}
+  slashFx: {fileID: 0}
+  damageMultiplier: 1
+  attackSpeedMultiplier: 1
+  critChanceBonus: 0
+  rangeMultiplier: 1
 --- !u!1001 &601906944168044144
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -17,6 +17,7 @@ namespace Gladiator.Gameplay
         public PlayerMotor motor;
         public CinemachineCamera vcam;
         public Transform lookTarget;
+        public HitFeedbackConfig feedback;
 
         CinemachineOrbitalFollow _orbit;
         CinemachineRotationComposer _composer;
@@ -64,8 +65,10 @@ namespace Gladiator.Gameplay
             _pitch = Mathf.Clamp(_pitch, c.minPitch, c.maxPitch);
             if (_yaw > 360f || _yaw < -360f) _yaw %= 360f;
 
-            _orbit.HorizontalAxis.Value = _yaw;
-            _orbit.VerticalAxis.Value = _pitch;
+            // Screen shake = small orbit jitter + roll (never a positional offset → can't push into walls).
+            ScreenShake.Update(unscaledDt, feedback);
+            _orbit.HorizontalAxis.Value = _yaw + ScreenShake.Yaw;
+            _orbit.VerticalAxis.Value = Mathf.Clamp(_pitch + ScreenShake.Pitch, c.minPitch, c.maxPitch);
             player.ReferenceYaw = _yaw;
 
             // Speed FOV kick (slides/slide-jumps feel fast).
@@ -75,6 +78,7 @@ namespace Gladiator.Gameplay
             _fov = Mathf.Lerp(_fov, targetFov, 1f - Mathf.Exp(-c.fovSharpness * unscaledDt));
             var lens = vcam.Lens;
             lens.FieldOfView = _fov;
+            lens.Dutch = ScreenShake.Roll;
             vcam.Lens = lens;
         }
 

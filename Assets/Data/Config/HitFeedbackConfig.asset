@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 496025b132c0d68d187d2f52acbc209f, type: 3}
+  m_Name: HitFeedbackConfig
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.HitFeedbackConfig
+  flashDuration: 0.08
+  knockbackDecay: 9
+  hitRecoilAngle: 22
+  hitRecoilTime: 0.18
+  hitStopOnCrit: 0.035
+  hitStopOnElite: 0.06
+  hitStopOnPlayerHit: 0.05
+  deathPopTime: 0.12
+  deathPopParticles: 9
+  deathPopSpeed: 4.5
+  deathPopSize: 0.16
+  deathPopColor: {r: 0.92, g: 0.86, b: 0.74, a: 1}
+  deathPopAccent: {r: 0.91, g: 0.23, b: 0.56, a: 1}
+  numberLifetime: 0.7
+  numberRise: 1.4
+  numberScale: 1
+  critNumberScale: 1.55
+  numberColor: {r: 1, g: 1, b: 1, a: 1}
+  critNumberColor: {r: 1, g: 0.82, b: 0.29, a: 1}
+  playerDamageColor: {r: 1, g: 0.33, b: 0.2, a: 1}
+  shakeOnCrit: 0.12
+  shakeOnPlayerHit: 0.35
+  shakeOnKill: 0
+  shakeDecay: 2.2
+  shakeMaxRoll: 2.5
+  shakeMaxAngle: 0.7
+  shakeFrequency: 22

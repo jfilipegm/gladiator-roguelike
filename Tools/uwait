@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Wait until the live Editor is reachable, not compiling and not reloading. Usage: Tools/uwait [timeout_s]
+DIR="$(cd "$(dirname "$0")" && pwd)"; T=${1:-180}; t=0
+while [ $t -lt $T ]; do
+  s=$("$DIR/u" editor_status 2>/dev/null)
+  if echo "$s" | grep -q '"compiling": false' && echo "$s" | grep -q '"domainReloadInProgress": false'; then echo "editor ready (${t}s)"; exit 0; fi
+  sleep 2; t=$((t+2))
+done
+echo "editor NOT ready after ${T}s"; echo "$s"; exit 1

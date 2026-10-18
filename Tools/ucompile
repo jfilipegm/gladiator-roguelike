@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Refresh assets + recompile in the live Editor, wait for the domain reload, then print the console.
+# Usage: Tools/ucompile [--logs]   (exit 1 if console has errors)
+DIR="$(cd "$(dirname "$0")" && pwd)"
+"$DIR/ueval" 'UnityEditor.AssetDatabase.Refresh(UnityEditor.ImportAssetOptions.ForceSynchronousImport); return "refreshed";' >/dev/null 2>&1
+sleep 1
+"$DIR/u" recompile >/dev/null 2>&1
+sleep 2
+"$DIR/uwait" 300 || exit 1
+for i in 1 2 3 4 5 6 7 8 9 10; do
+  st=$("$DIR/u" recompile_status 2>/dev/null)
+  echo "$st" | grep -qE '"(status|state)": "(compiling|triggered)"' || break
+  sleep 2
+done
+"$DIR/uwait" 120 >/dev/null || exit 1
+out=$("$DIR/ueval" -f "$DIR/snippets/console_dump.cs" 2>&1)
+res=$(echo "$out" | python3 -c 'import json,sys
+try:
+  d=json.load(sys.stdin); print(d.get("result") if isinstance(d,dict) else d)
+except Exception as ex: print(sys.stdin.read())' 2>/dev/null)
+[ -z "$res" ] && res="$out"
+if [ "$1" = "--logs" ]; then echo "$res"; else echo "$res" | grep -vE '^LOG: '; fi
+echo "$res" | head -1 | grep -q 'errors=0' || exit 1

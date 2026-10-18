@@ -1,0 +1,30 @@
+# Tooling — how Claude drives Unity and Blender on this machine
+
+Machine: CachyOS (Linux), KDE Plasma on Wayland. Unity Hub + Unity **6000.6.6f1** (Web module only — Linux standalone is the native target). Blender **5.2.2 LTS**.
+
+## Why not the MCP tools directly
+- The **Blender MCP** server (Blender Lab, `ant.dir.gh.blender.blender-mcp`) is installed as a Claude Desktop *extension*, so its tools are only exposed to the Chat tab, not to Claude Code sessions.
+- No **Unity MCP** server is configured at all.
+- Both apps are reachable through equivalent local bridges, so nothing is blocked. To get native MCP tools in a future Code session instead: `unity mcp configure claude-code` (Unity) — optional.
+
+## Unity — Unity CLI + Pipeline package
+- `com.unity.pipeline` (0.8.0-exp.1) is in `Packages/manifest.json`. It runs an HTTP server inside the open Editor that `unity command` talks to (~200–600 ms per call, no domain reload).
+- `unity command set_autotick --enable true --persist true` is on, so the Editor keeps ticking while unfocused (Wayland would otherwise throttle it).
+- Wrappers in `Tools/`:
+  - `Tools/u <command> [--param value]` — any Pipeline command, prints only the result. `Tools/u` with no args lists ~160 commands (`editor_play`, `editor_stop`, `capture_game_view`, `run_tests`, `console`, `package_add`, `simulate_key`, `build`, …).
+  - `Tools/ueval '<C# body with return>'` / `Tools/ueval -f file.cs` — Roslyn eval inside the Editor.
+  - `Tools/uwait [s]` — block until not compiling / not reloading.
+  - `Tools/ucompile [--logs]` — AssetDatabase.Refresh + recompile + wait + dump console; exit 1 if errors.
+  - `Tools/snippets/*.cs` — reusable eval snippets (console dump, …).
+- If the Editor ever stops answering: `unity pipeline list --format json` (checks Safe Mode → compile errors → read `Logs/Editor.log`).
+- First-time package resolution needed the window focused once; done via a KWin script (`qdbus6 org.kde.KWin /Scripting …`). `Tools/u editor_focus` does the same now.
+
+## Blender — direct socket client for the Blender Lab MCP add-on
+- The add-on listens on `localhost:9876`. Protocol (same as the MCP server's `connection.py`): send `{"type":"execute","code":…,"strict_json":false}` + NUL, receive JSON + NUL. Code runs on Blender's main thread; assign a dict to `result` to get data back.
+- `python3 Tools/blender_bridge.py -c '<python>'` or `python3 Tools/blender_bridge.py BlenderSrc/<script>.py --arg key=value`. Scripts get `ARGS` (dict) and `REPO` injected, and `BlenderSrc/` on `sys.path` (so `import gladiator_kit` works; call `importlib.reload` after editing it).
+- Keep each call short (seconds). Screenshots: render via the scripts in `BlenderSrc/` to `Screenshots/blender/…png`, then read the PNG.
+
+## Verification loop for code changes
+1. Edit C# → `Tools/ucompile` (must print `errors=0`).
+2. `Tools/u editor_play` → let it run → state dump via `Tools/ueval` / `Tools/u console` / `Tools/u capture_game_view --save_path …` → `Tools/u editor_stop`.
+3. Tests: `Tools/u run_tests --mode EditMode` / `--mode PlayMode`.

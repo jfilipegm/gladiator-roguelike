@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Thin wrapper over `unity command` for the live Editor: prints just the result (or the error).
+# Usage: Tools/u <command> [--param value ...]
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+unity command "$@" --project-path "$ROOT" --format json 2>/dev/null | python3 -c '
+import json, sys
+raw = sys.stdin.read()
+try:
+    d = json.loads(raw)
+except Exception:
+    print(raw); sys.exit(1)
+if not d.get("success"):
+    print(json.dumps(d.get("errors") or d, indent=1)); sys.exit(1)
+r = (d.get("data") or {}).get("result")
+print(r if isinstance(r, str) else json.dumps(r, indent=1))
+'

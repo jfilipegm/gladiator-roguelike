@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Run C# in the live Editor. Usage: Tools/ueval 'return Application.unityVersion;'   or   Tools/ueval -f file.cs
+DIR="$(cd "$(dirname "$0")" && pwd)"
+if [ "$1" = "-f" ]; then "$DIR/u" eval_file --file "$(realpath "$2")" --timeout "${3:-60}"; else "$DIR/u" eval --code "$1" --timeout "${2:-60}"; fi

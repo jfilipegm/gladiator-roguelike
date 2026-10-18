@@ -5,7 +5,7 @@ var entryType = System.Type.GetType("UnityEditor.LogEntry,UnityEditor");
 int count = (int)t.GetMethod("GetCount").Invoke(null, null);
 var e = System.Activator.CreateInstance(entryType);
 var fMsg = entryType.GetField("message"); var fMode = entryType.GetField("mode");
-const int ErrMask = 1 | 2 | 16 | 64 | 256 | 2048 | 131072 | 1048576 | 2097152 | 4194304 | 8388608;
+const int ErrMask = 1 | 2 | 16 | 64 | 256 | 2048 | 131072 | 1048576 | 2097152; // bit 23 = IsCalledFromManaged, bit 14 = MayIgnoreLineNumber (not severities)
 const int WarnMask = 128 | 512 | 4096;
 var sb = new System.Text.StringBuilder();
 int errs = 0, warns = 0, logs = 0;

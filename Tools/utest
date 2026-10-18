@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# Run Unity tests in the live Editor and print a compact report (exit 0 = all passed).
+# Usage: Tools/utest EditMode|PlayMode [filter] [timeout_s]
+# PlayMode runs async (play mode reloads the domain) and is polled via test_status.
+# Smoke-test duration: GLADIATOR_SMOKE_SECONDS (default 60), forwarded into the Editor process.
+DIR="$(cd "$(dirname "$0")" && pwd)"
+mode="${1:-EditMode}"; filter="$2"; to="${3:-900}"
+"$DIR/ueval" "System.Environment.SetEnvironmentVariable(\"GLADIATOR_SMOKE_SECONDS\", \"${GLADIATOR_SMOKE_SECONDS:-60}\"); return \"ok\";" >/dev/null
+args=(run_tests --mode "$mode" --timeout "$to")
+[ -n "$filter" ] && args+=(--filter "$filter")
+if [ "$mode" = "PlayMode" ]; then
+  "$DIR/u" "${args[@]}" --async_tests true >/dev/null 2>&1
+  sleep 3
+  for i in $(seq 1 $((to / 3))); do
+    out=$("$DIR/u" test_status 2>/dev/null)
+    if [ -n "$out" ] && ! echo "$out" | grep -q '"status": "running"'; then break; fi
+    sleep 3
+  done
+else
+  out=$("$DIR/u" "${args[@]}" 2>&1)
+fi
+echo "$out" | python3 -c '
+import json, sys
+raw = sys.stdin.read()
+try:
+    d = json.loads(raw)
+except Exception:
+    print(raw[:4000]); sys.exit(1)
+tests, summary = [], {}
+def walk(x):
+    if isinstance(x, dict):
+        if "FullName" in x and "Status" in x: tests.append(x)
+        lk = {k.lower(): v for k, v in x.items()}
+        if "total" in lk and "passed" in lk and not isinstance(lk["total"], (dict, list)): summary.update(lk)
+        for v in x.values(): walk(v)
+    elif isinstance(x, list):
+        for v in x: walk(v)
+walk(d)
+for t in tests:
+    print("%-7s %s (%.1fs)" % (t["Status"], t["FullName"].replace("Gladiator.Tests.", ""), t.get("Duration") or 0))
+    if t["Status"] != "Passed" and t.get("Message"): print("        " + t["Message"].strip().replace("\n", "\n        ")[:2000])
+print("SUMMARY", json.dumps(summary) if summary else raw[:1500])
+sys.exit(0 if summary and summary.get("failed", 1) == 0 and summary.get("passed", 0) > 0 else 1)
+'

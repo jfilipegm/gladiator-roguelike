@@ -17,3 +17,11 @@ One line each: what, and why. Newest at the bottom of each section.
 - **Palette alpha = 1 − emission** — glowing swatches (XP, fire, VFX, affixes) come from the same texture, so no extra emissive materials are needed.
 - **"One material per palette family" interpreted as: one master palette texture, shared materials split by *shader role*** (opaque lit, hit-flash, unlit VFX, transparent, crowd-instanced, blob shadow). Arena families live as palette rows. This keeps every asset on one material and gives ≤ 8 materials per scene.
 - **Review renders use Workbench** (studio light for shape, then flat black at 64 px for the silhouette), composed into one contact sheet `Screenshots/blender/<name>_review.png`.
+
+## Architecture
+- **`GameLoop` = the only gameplay `Update()`**; systems implement `ITickable` and register with a `TickGroup` (Input → Player → Director → Enemies → Weapons → Projectiles → Pickups → Feedback → Camera → Late). Each tick has its own ProfilerMarker; the whole loop is wrapped in `Gladiator.Gameplay` (the "gameplay logic ≤ 4 ms" number).
+- **`TimeController` owns `Time.timeScale`**: pause (level-up/menus) > hit-stop > 1. Hit-stop runs on unscaled time so it always ends.
+- **Input is an `IPlayerInputSource` returning a `PlayerInputFrame` struct**; the human source builds Input System actions in code (no generated class, reproducible). PlaytestBot implements the same interface, so the bot exercises the real controller path.
+- **PlaytestBot perceives the world only through `IBotSensor`** (pickups, threats, level-up, stress spawn), so gameplay systems plug in as they're built.
+- **Zero-GC verification = managed-heap growth, not the "GC Allocated In Frame" counter, when running in the Editor.** In Play mode that counter includes the Editor's own allocations (~10–30 KB/frame with nothing running). `FrameStatsRecorder` also records `Profiler.GetMonoUsedSizeLong()` growth across the GameLoop window and the whole Update→LateUpdate window. It's page-granular, so any steady per-frame allocation shows up over a run; allocation-free code sums to exactly 0. Standalone dev builds use the real GC counter.
+- **PlayMode tests run async** (entering play mode reloads the domain, which drops the HTTP request); `Tools/utest PlayMode` polls `test_status`.

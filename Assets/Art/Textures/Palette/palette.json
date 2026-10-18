@@ -1,0 +1,23 @@
+{
+  "_comment": "Single source of truth for the master palette. 16x16 grid of 8x8 px swatches in a 128x128 point-filtered texture. Row = family, column = index in the row. Optional 3rd value = emission 0..1 (stored as 1-alpha). Regenerate PAL_Master.png with: python3 Tools/build_palette.py",
+  "size": 128,
+  "cell": 8,
+  "rows": [
+    { "family": "neutral", "swatches": [["white","#F5F1E8"],["bone","#E3D7BC"],["ash","#BDB6A8"],["stone_grey","#8E8A82"],["slate","#5F5C58"],["charcoal","#3A3633"],["ink","#1E1B19"]] },
+    { "family": "skin", "swatches": [["skin_pale","#F2C9A0"],["skin_light","#E3A97A"],["skin_mid","#C68052"],["skin_tan","#9E6038"],["skin_dark","#6B3E25"],["skin_goblin","#7FB04A"],["skin_undead","#A6A89A"]] },
+    { "family": "A1_mud_rust", "swatches": [["mud_dark","#4A3324"],["mud","#6B4A32"],["dirt","#8A6243"],["dirt_light","#A87C55"],["rust","#A0482A"],["rust_light","#C2663A"],["wood_dark","#5A3A22"],["wood","#7E5631"],["wood_light","#A5784A"],["rope","#C9A66B"],["dirt_floor","#9B7452"],["dirt_floor_d","#876246"]] },
+    { "family": "A2_ochre_grass", "swatches": [["ochre_d","#A57A2A"],["ochre","#C99A3B"],["straw","#E0C36A"],["grass_dry","#A9A04A"],["grass_dry_d","#7D7A35"],["grass_green","#6E9A3A"],["leaf","#4E7E2E"],["leaf_d","#355A22"]] },
+    { "family": "A3_sandstone", "swatches": [["sand_d","#B08A5A"],["sand","#D2AE78"],["sand_l","#E8CF9C"],["sandstone","#C48B5C"],["sandstone_d","#94653F"]] },
+    { "family": "A4_marble_red", "swatches": [["marble","#EDEBE6"],["marble_shadow","#C9C6C0"],["marble_vein","#A9A6A2"],["red_banner","#C4302B"],["red_banner_d","#8E1F1D"]] },
+    { "family": "A5_gold_crimson", "swatches": [["gold_d","#B8862A"],["gold","#E2B33C"],["gold_l","#F7D96B"],["crimson","#A51C30"],["crimson_d","#6E1020"]] },
+    { "family": "A6_travertine_purple", "swatches": [["travertine","#DCCFB4"],["travertine_d","#B5A688"],["purple","#6B2D7E"],["purple_l","#9447A8"],["purple_d","#43184F"]] },
+    { "family": "metal", "swatches": [["iron_d","#3E4247"],["iron","#5E646B"],["steel","#8C949C"],["steel_l","#C3CAD1"],["bronze_d","#7A4F22"],["bronze","#B07A3A"],["bronze_l","#D9A55E"],["rusty_iron","#6E5040"]] },
+    { "family": "cloth_leather", "swatches": [["cloth_white","#E8E2D2"],["cloth_red","#B8352C"],["cloth_blue","#2F5C9A"],["cloth_green","#3F7A3A"],["cloth_yellow","#D9AE3A"],["leather_d","#4F3020"],["leather","#73472A"],["leather_l","#9A6A42"],["cloth_sack","#B79E78"]] },
+    { "family": "player_fx", "swatches": [["player_cyan","#3FD8F0"],["player_white","#F2FBFF"],["player_gold","#FFD24A"],["player_blue","#3A8BFF"],["glow_cyan","#6FF2FF",1.0],["glow_white","#FFFFFF",1.0],["glow_gold","#FFE07A",1.0]] },
+    { "family": "hazard", "swatches": [["hazard_red","#E8442A"],["hazard_orange","#FF7A1F"],["hazard_yellow","#FFB12E"],["glow_hazard_red","#FF5533",1.0],["glow_hazard_orange","#FF8A2A",1.0],["telegraph","#FF6A2A",0.6],["fire_core","#FFE9A0",1.0],["fire_mid","#FF9A2E",1.0]] },
+    { "family": "pickup", "swatches": [["xp_green","#47E07A",0.8],["xp_cyan","#4FE3D2",0.8],["xp_blue","#4A9BFF",0.8],["gold_coin","#FFD23F",0.5],["heal_red","#FF4D6A",0.5]] },
+    { "family": "enemy_accent", "swatches": [["accent_magenta","#E83A8E"],["accent_lime","#B8F03A"],["accent_white","#FFFFFF"],["affix_armored","#9FB4C8",0.6],["affix_fast","#F0F05C",0.6],["affix_explosive","#FF7A1F",0.7],["affix_cursed","#A04AE8",0.7],["affix_gilded","#FFD23F",0.7],["affix_berserk","#E8203A",0.7]] },
+    { "family": "misc", "swatches": [["blood","#8A1520"],["smoke","#6E6A66"],["ember","#FF6A1A",1.0],["water","#3E7A8C"],["shadow","#1A1410"]] },
+    { "family": "debug", "swatches": [["debug_magenta","#FF00FF"],["grid_a","#6B6B6B"],["grid_b","#7A7A7A"],["grid_line","#9A9A9A"]] }
+  ]
+}

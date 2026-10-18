@@ -59,3 +59,7 @@ __pycache__/
 /Profiling/
 /Screenshots/
 .DS_Store
+
+# Pipeline capture_game_view writes here; Tools/ushot moves captures out
+/Assets/Screenshots/
+/Assets/Screenshots.meta

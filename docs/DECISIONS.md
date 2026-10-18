@@ -9,3 +9,11 @@ One line each: what, and why. Newest at the bottom of each section.
 - **Tests split into `Gladiator.Tests.EditMode` + `Gladiator.Tests.PlayMode`** instead of one `Gladiator.Tests` — the Test Framework decides EditMode vs PlayMode per assembly platform; one asmdef can't cleanly host both.
 - **Git LFS for `.blend` and audio only; FBX/PNG stay in plain git** — procedural low-poly FBX and palette PNGs are a few KB; `.blend` files are binary and grow.
 - **`Profiling/` and `Screenshots/` are git-ignored** — they're regenerable outputs; numbers that matter are copied into PROGRESS/gate reports.
+
+## Art pipeline
+- **FBX export settings (verified M0.2):** `apply_unit_scale` + `FBX_SCALE_UNITS`, `-Z` forward / `Y` up, `bake_space_transform`, face smoothing, mesh+empty only, no leaf bones. A 1×2×1 m box arrives as exactly (1, 2, 1) m, origin at the base, front at +Z, Blender +X (asset's left) at Unity −X (no mirroring), identity rotation/scale on every node, child pivots preserved. Unity side: `useFileScale`, scale 1, `bakeAxisConversion` off.
+- **Asset front = Blender −Y** (what Blender's Front view shows) → Unity +Z.
+- **Single palette source = `Assets/Art/Textures/Palette/palette.json`** → `Tools/build_palette.py` writes `PAL_Master.png` (128², 8 px swatches, 16 rows = families). Blender scripts read the same JSON for swatch UVs. Retune colours globally by editing the JSON and re-running the script.
+- **Palette alpha = 1 − emission** — glowing swatches (XP, fire, VFX, affixes) come from the same texture, so no extra emissive materials are needed.
+- **"One material per palette family" interpreted as: one master palette texture, shared materials split by *shader role*** (opaque lit, hit-flash, unlit VFX, transparent, crowd-instanced, blob shadow). Arena families live as palette rows. This keeps every asset on one material and gives ≤ 8 materials per scene.
+- **Review renders use Workbench** (studio light for shape, then flat black at 64 px for the silhouette), composed into one contact sheet `Screenshots/blender/<name>_review.png`.

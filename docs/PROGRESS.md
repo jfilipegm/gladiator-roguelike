@@ -1,7 +1,7 @@
 # Progress
 
 **Current phase:** Phase 0 — Foundations
-**Current milestone:** M0.2 — MCP smoke tests + Blender → Unity round trip
+**Current milestone:** M0.3 — PlaytestBot + profiling CSV + test scaffolding
 **Last updated:** 2026-10-18
 
 ## Resume checklist (read first after a context reset)
@@ -13,8 +13,6 @@
 ## Done
 - **M0.1** — Project (Unity 6000.6.6f1, URP, Linear, Input System 1.20) + Cinemachine 6.6.0, Test Framework 1.8.0, Pipeline bridge 0.8.0-exp.1. Folder structure, asmdefs (Core / Gameplay / UI / Editor / Tests.EditMode / Tests.PlayMode), `.gitignore` + `.gitattributes` (LFS for .blend/audio), git init, docs scaffolding, `CLAUDE.md`, tooling wrappers in `Tools/`. Model import rules (`ModelImportRules` AssetPostprocessor). Verified: clean compile, assemblies load.
 
-## Next
-- M0.2 smoke tests (Unity: console, scene, cube, play/stop, Game-view capture · Blender: scene info, clear, 1×2×1 box + front marker, viewport shot, FBX → Unity, verify 1×2×1 m facing +Z).
 - M0.3 PlaytestBot + ProfilerRecorder CSV + test scaffolding.
 - M0.4 look-dev scene.
 

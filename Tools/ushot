@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Capture the Game view (what the Game window shows, incl. screen-space UI) to Screenshots/<name>.png.
+# capture_game_view always writes under Assets/, so move it out and drop the asset.
+# Usage: Tools/ushot <name> [width] [height]
+DIR="$(cd "$(dirname "$0")" && pwd)"; ROOT="$(dirname "$DIR")"
+name="$1"; w="${2:-1280}"; h="${3:-720}"
+mkdir -p "$ROOT/Screenshots"
+"$DIR/u" capture_game_view --save_path "Screenshots/$name.png" --width "$w" --height "$h" --include_inline_image false >/dev/null || { echo "capture failed"; exit 1; }
+cp "$ROOT/Assets/Screenshots/$name.png" "$ROOT/Screenshots/$name.png" && \
+"$DIR/ueval" 'UnityEditor.AssetDatabase.DeleteAsset("Assets/Screenshots"); return "ok";' >/dev/null
+rm -rf "$ROOT/Assets/Screenshots" "$ROOT/Assets/Screenshots.meta"
+echo "$ROOT/Screenshots/$name.png"

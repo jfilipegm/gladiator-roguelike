@@ -252,3 +252,5 @@ One line each: what, and why. Newest at the bottom of each section.
 - **Kill heals are capped (6 HP/s)**: with 300 enemies, uncapped heal-on-kill would make him immortal at peak. All other healing is halved so the identity is "lives on kills", not "heals from everything".
 - **Weapon on-hit status is weapon data** (`WeaponDef.onHitStatus`, melee patterns only for now): the greatsword's bleed is content, and later weapons (a net that roots) reuse it.
 
+- **Crowd chatter waits a second before replacing another announcer line** (found while staging the Rite): the HUD shows one line at a time and the last one wins, so in a fight the streak and roar lines replaced "BLOOD RITE!" within a frame. Streak, Roar and CloseCall lines now never cut another kind of line off in its first second. Boss beats, gifts and the goblin's crate lines benefit too.
+- **The knight holds the greatsword low and forward, not over the shoulder**: the animator's swing was made for forward blades (the gladius), so a backward blade would swing wrong. The run cycle keeps the sword arm still (`weaponArmSwingScale` 0.25).

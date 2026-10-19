@@ -45,11 +45,11 @@ A nameless pit fighter with a rusty gladius and a scrap shield. The baseline: 10
 - The crate rattles only within 10 m, breaks, and saves the flag.
 - Once the flag is saved, the goblin appears unlocked on the select screen. A run with it uses its model, stats and the Bomb Satchel.
 
-## The Blood Knight (Phase 5.3, v0.4.0)
+## The Blood Knight (built, Phase 5.3, v0.4.0)
 | | |
 |---|---|
 | **Fantasy** | A fallen knight who fights for the blood, not the crowd. Grim, heavy, and most dangerous when he should already be dead. |
-| **Silhouette** | Tall (1.75 m) and broad: blackened plate with spiked pauldrons, a horned great-helm with a narrow glowing visor, a tattered crimson cape, and a greatsword as long as he is tall carried over the right shoulder. 64 px test against the Nobody, the Goblin, the Brute and Gorm: the horns, the cape and the blade. |
+| **Silhouette** | Tall (1.65 m to the top of the helm, 1.9 m with the horns; the Nobody is 1.6 m) and broad: blackened plate with spiked pauldrons, a horned great-helm with a narrow glowing visor, a tattered crimson cape with a pale cyan sword sigil (the "that's me" mark from the camera behind him), and a 1.4 m greatsword held low and forward. 64 px test against the Nobody, the Goblin, the Brute and Gorm: the horns, the cape and the blade. |
 | **Weapon** | **Crimson Greatsword**, `MeleeArc` data: a slow 220° cleave with 3.4 m reach, 1.5 s cooldown, 28 damage and heavy knockback. Every hit applies a Bleed stack (the new `WeaponDef.onHitStatus`, melee patterns). Levels 2–8: damage, area, attack speed, a second swing, crit, knockback. |
 | **Passive: Bloodthirst** | Kills heal him: 1 HP per kill, 8 per elite, at most 6 HP/s. Every other healing (regen, amphorae, healing cards) is **halved**: he lives on what he kills. |
 | **Passive: Bloodlust** | Stronger at low HP: up to **+60 % damage**, rising as HP falls and full at 20 % HP or less. The HUD shows the bonus beside the Blood meter. |
@@ -61,6 +61,6 @@ A nameless pit fighter with a rusty gladius and a scrap shield. The baseline: 10
 
 **Colours:** his blood effects (the meter, the Rite's burst, the frenzy's specks) use the existing Bleed crimson-pink (`SE_Bleed` colour) with white cores, darker and pinker than the orange-red that means "this hurts you". The visor is the player's cyan: from the camera behind him, the cape and the visor say "that's me".
 
-**How it's built:** `GL_BloodKnight` + traits `TR_Bloodthirst` (`Bloodthirst`), `TR_Bloodlust` (`Bloodlust`), `TR_BloodRite` (`BloodRite`, the meter); `PlayerHealth.HealingMul` (Bloodthirst sets it; its own heals bypass it) and `PlayerHealth.Spend` (HP paid, not damage taken). Setup in `GladiatorSetup`; models `BlenderSrc/characters/ch_bloodknight.py` (the greatsword is part of the model, in the right hand).
+**How it's built:** `GL_BloodKnight` + traits `TR_Bloodthirst` (`Bloodthirst`), `TR_Bloodlust` (`Bloodlust`), `TR_BloodRite` (`BloodRite`, the meter); `PlayerHealth.HealingMul` (Bloodthirst sets it; its own heals bypass it) and `PlayerHealth.Spend` (HP paid, not damage taken). Setup in `GladiatorSetup`; model `BlenderSrc/characters/ch_bloodknight.py` (iteration 2, 980 tris; the greatsword is part of the model, in the right hand).
 
 **Tests:** kill heals and the 6 HP/s cap; other healing halved; the damage bonus at 100 / 50 / 20 % HP; the meter fills, a slide with a full meter pays HP (never kills) and frenzies, and an early slide does nothing; greatsword hits bleed; the unlock condition, and beating Gorm at low HP unlocks the knight while beating him at high HP doesn't.

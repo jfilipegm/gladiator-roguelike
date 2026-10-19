@@ -254,3 +254,11 @@ One line each: what, and why. Newest at the bottom of each section.
 
 - **Crowd chatter waits a second before replacing another announcer line** (found while staging the Rite): the HUD shows one line at a time and the last one wins, so in a fight the streak and roar lines replaced "BLOOD RITE!" within a frame. Streak, Roar and CloseCall lines now never cut another kind of line off in its first second. Boss beats, gifts and the goblin's crate lines benefit too.
 - **The knight holds the greatsword low and forward, not over the shoulder**: the animator's swing was made for forward blades (the gladius), so a backward blade would swing wrong. The run cycle keeps the sword arm still (`weaponArmSwingScale` 0.25).
+
+### Phase 5.4 — Arena 2, the Provincial Pit
+- **Unlocked by beating Gorm once**, not by Renown: the climb reads as "the provinces heard about you". Renown already scales with the arena's tier (×1.5 here), so it still rewards going deeper.
+- **Arena tier, not the arena's index in its run**, drives Renown, `deepestArena` and `ReachArena`: with one arena per run, every run's first (only) arena is index 0, so the index can't tell the Slave Pit from the Provincial Pit. `RunDef.Arena.tier` does.
+- **The menu asks for the arena after the gladiator**, and only when more than one exists, so a new player's first run is still one click.
+- **Spike traps hurt everyone** (enemies more than the player): an arena rule the player can exploit (lure the horde over a grate), not just another thing to avoid. Jumping clears them, like Gorm's sweep.
+- **Barricades break only to the Champion's charge**, not to weapons: they shape the horde's paths for the whole run, and the boss fight visibly opens the arena up.
+- **Arena difficulty is two multipliers on the layout** (`enemyHpMul` 1.25, `enemyDamageMul` 1.15) plus a tougher spawn table, not new enemy assets per arena.

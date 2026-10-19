@@ -20,7 +20,9 @@ if [ $pack_only = 0 ]; then
   [ "$(git branch --show-current)" = main ] || die "not on main"
   git fetch -q origin main
   [ "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" ] || die "main is not in sync with origin/main"
-  [ -z "$(git status --porcelain -- . ':!ProjectSettings/ProjectSettings.asset')" ] || die "working tree not clean"
+  # tracked changes block a release; untracked files only when they'd end up in the build (under Assets/)
+  [ -z "$(git status --porcelain --untracked-files=no -- . ':!ProjectSettings/ProjectSettings.asset')" ] || die "working tree not clean"
+  [ -z "$(git status --porcelain -- Assets)" ] || die "untracked files under Assets/ would ship in the build"
   ! git rev-parse -q --verify "refs/tags/$tag" >/dev/null || die "tag $tag already exists"
 fi
 
@@ -31,12 +33,12 @@ echo "== build (release + dev)"
 log="Logs/Editor.log"
 mark=$(wc -l < "$log")
 Tools/ueval 'Gladiator.EditorTools.BuildScripts.BuildReleaseSet(); return "ok";' 10 >/dev/null 2>&1 || true  # the bridge times out; the build runs on
-for _ in $(seq 1 180); do
+for _ in $(seq 1 540); do  # up to 45 min: a platform's first build compiles every shader variant
   line=$(tail -n +"$((mark + 1))" "$log" | grep -a "\[Build\] release set" | tail -1 || true)
   [ -n "$line" ] && break
   sleep 5
 done
-[ -n "${line:-}" ] || die "no build result after 15 min (see $log)"
+[ -n "${line:-}" ] || die "no build result after 45 min (see $log)"
 tail -n +"$((mark + 1))" "$log" | grep -a "^\[Build\]" | sed 's/^/   /'
 case "$line" in *"release set OK"*) ;; *) die "build failed" ;; esac
 

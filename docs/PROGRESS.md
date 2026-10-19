@@ -76,6 +76,17 @@
 
 - **v0.4.0 released 2026-10-19** (PR #5): https://github.com/jfilipegm/gladiator-roguelike/releases/tag/v0.4.0. Linux 39 MB, Linux dev 69 MB, Windows 41 MB, macOS 48 MB. Smoke runs of the downloaded archives (`-bot -timed -botSeconds 40`): Linux as the Nobody and as the knight (65 kills, 46 HP kill-healed), Windows under Wine; all v0.4.0, clock ran, 0 exceptions. macOS not run.
 
+## In progress — Playtest fixes (branch `phase5-playtest-fixes`, from `phase5-arena2`)
+- **Waiting on the producer:** PR #6 (https://github.com/jfilipegm/gladiator-roguelike/pull/6, `phase5-arena2` → `main`, v0.5.0) is open and bound. Do NOT merge without the producer's OK. After the OK: step 2 of "Next (in order)" in the Phase 5.4 section below (merge, `Tools/release 0.5.0`, smoke runs).
+- **Producer's playtest list (2026-10-19), to fix first:**
+  1. The main sound sounds like a choo-choo train.
+  2. The Pit Goblin shows as unlocked without the rattling crate being found, and can't be picked anyway.
+  3. Upgrade cards need animated 8-bit icons (e.g. a rusty gladius) with a rarity aura (grey common, blue rare, …).
+  4. The weapon/boon slots under the HP bar show letters: show the icons.
+  5. The Slave Pit: twice as wide so the player can't fall off; a rough irregular oval enclosure, not a wooden bowl: timber palisades, repaired fencing, dirt embankments, crude platforms; a place where people work and train. (The "reference images" the producer mentions are the six Megabonk screenshots from the first message; none shows a slave pit, so build from the written description.)
+  6. The arena must not float: non-playable scenery around it.
+  7. Replace the train noise with crowd ambience that swells on multi-kills and calms when the player isn't fighting.
+
 ## In progress — Phase 5.4 Arena 2, the Provincial Pit (branch `phase5-arena2`, version 0.5.0 not bumped yet)
 - **Spec:** `docs/ARENAS.md` (layout, rules, Shield Archer + Assassin), `docs/BOSSES.md` (the Provincial Champion, 10 points), DECISIONS "Phase 5.4".
 - **Built and tested (PlayMode `ProvincialPitTests` 3/3, `EnemyRosterTests` archer + assassin 2/2):**

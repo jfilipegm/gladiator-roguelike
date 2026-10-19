@@ -63,5 +63,6 @@ The 10-minute bot run in the Provincial Pit logged 1,113 hit-stops totalling 45.
 
 ## C15 — The bigger Slave Pit may thin the pressure (NEW, playtest fixes)
 The Slave Pit is now 84 × 70 m (was a 42 m circle) with the same spawn curve and the same 300 cap. Enemies spawn on the oval's edge away from the player, so they walk further to reach you, and the horde is spread over ~3.5× the floor area. The bot run measures frame time, not how crowded it feels.
+**Data (bot run 3, 2026-10-20):** alive enemies per minute 53 / 78 / 145 / 220 / 254 / 264 / 283 / 299, 300 reached at 5:24 (the §8 target is 300 by minute 5); the bot's kills and level match the old pit's runs once it fights instead of kiting. So the totals hold; what the bot can't tell is whether the first two minutes (under 80 enemies on 3.5× the floor) feel empty.
 **Proposal:** judge in the playtest. If the first minutes feel empty, raise the early budget in `DirectorConfig` (or the Slave Pit's `maxAlive`) or lower `DirectorConfig.ringInset`'s distance from the player (`minPlayerDistance`) so spawns land closer, before shrinking the arena again.
 

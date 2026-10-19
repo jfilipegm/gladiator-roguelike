@@ -22,6 +22,8 @@ namespace Gladiator.Gameplay
         public string GladiatorId;
         /// <summary>BossDef.id of the boss beaten this run (null = none).</summary>
         public string BossDefeated;
+        /// <summary>The player's HP fraction when that boss fell (0 = a summary built without it counts as full HP).</summary>
+        public float BossDefeatedHp01;
         public WeaponKills[] Weapons;
     }
 
@@ -114,7 +116,12 @@ namespace Gladiator.Gameplay
             data.lifetimeKills += Mathf.Max(0, run.Kills);
             data.lifetimeGold += Mathf.Max(0, run.GoldEarned);
             if (run.ArenaIndex > data.deepestArena) data.deepestArena = run.ArenaIndex;
-            if (!string.IsNullOrEmpty(run.BossDefeated)) SaveData.Add(data.bossKills, run.BossDefeated, 1);
+            if (!string.IsNullOrEmpty(run.BossDefeated))
+            {
+                SaveData.Add(data.bossKills, run.BossDefeated, 1);
+                float hp01 = run.BossDefeatedHp01 > 0f ? run.BossDefeatedHp01 : 1f;
+                data.RecordBossKillHp(run.BossDefeated, Mathf.RoundToInt(hp01 * 1000f));
+            }
             if (won) SaveData.Add(data.gladiatorWins, run.GladiatorId, 1);
             if (run.Weapons != null)
                 foreach (var w in run.Weapons) SaveData.Add(data.weaponKills, w.Id, w.Kills);
@@ -147,6 +154,8 @@ namespace Gladiator.Gameplay
             switch (c.kind)
             {
                 case UnlockConditionKind.DefeatBoss: return SaveData.Count(d.bossKills, c.id) >= times;
+                case UnlockConditionKind.DefeatBossBelowHp:
+                    return d.TryBossKillHp(c.id, out int permille) && permille < Mathf.RoundToInt(c.amount * 1000f);
                 case UnlockConditionKind.ReachArena: return d.deepestArena >= c.amount;
                 case UnlockConditionKind.SurviveSeconds: return d.bestTime >= c.amount;
                 case UnlockConditionKind.WinWithGladiator: return SaveData.Count(d.gladiatorWins, c.id) >= times;

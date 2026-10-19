@@ -38,6 +38,13 @@ namespace Gladiator.Gameplay
         public float critMultiplier = 2f;
         public float knockback = 6f;
 
+        [Header("On hit (MeleeArc / Thrust)")]
+        [Tooltip("Status every hit applies (the Crimson Greatsword's Bleed). Empty = none.")]
+        public StatusDef onHitStatus;
+        [Tooltip("Damage per second per stack, as a fraction of the hit's damage (0 for pure debuffs).")]
+        public float onHitStatusPower = 0.1f;
+        [Min(1)] public int onHitStacks = 1;
+
         [Header("Timing")]
         [Tooltip("Seconds between attacks (before attack-speed bonuses).")]
         public float cooldown = 0.8f;

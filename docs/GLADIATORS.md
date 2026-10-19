@@ -44,3 +44,23 @@ A nameless pit fighter with a rusty gladius and a scrap shield. The baseline: 10
 - Scavenger lends a weapon on its timer.
 - The crate rattles only within 10 m, breaks, and saves the flag.
 - Once the flag is saved, the goblin appears unlocked on the select screen. A run with it uses its model, stats and the Bomb Satchel.
+
+## The Blood Knight (Phase 5.3, v0.4.0)
+| | |
+|---|---|
+| **Fantasy** | A fallen knight who fights for the blood, not the crowd. Grim, heavy, and most dangerous when he should already be dead. |
+| **Silhouette** | Tall (1.75 m) and broad: blackened plate with spiked pauldrons, a horned great-helm with a narrow glowing visor, a tattered crimson cape, and a greatsword as long as he is tall carried over the right shoulder. 64 px test against the Nobody, the Goblin, the Brute and Gorm: the horns, the cape and the blade. |
+| **Weapon** | **Crimson Greatsword**, `MeleeArc` data: a slow 220° cleave with 3.4 m reach, 1.5 s cooldown, 28 damage and heavy knockback. Every hit applies a Bleed stack (the new `WeaponDef.onHitStatus`, melee patterns). Levels 2–8: damage, area, attack speed, a second swing, crit, knockback. |
+| **Passive: Bloodthirst** | Kills heal him: 1 HP per kill, 8 per elite, at most 6 HP/s. Every other healing (regen, amphorae, healing cards) is **halved**: he lives on what he kills. |
+| **Passive: Bloodlust** | Stronger at low HP: up to **+60 % damage**, rising as HP falls and full at 20 % HP or less. The HUD shows the bonus beside the Blood meter. |
+| **Ability: Blood Rite** | A **Blood meter** (0–100, crimson, under the HP bar) fills from kills (+0.6, elites +8) and from damage taken (+0.5 per HP). When it's full, the next **slide** performs the Rite: he pays 12 % of max HP (never below 1 HP, and it isn't a hit: no hurt flash, no Favor close call), the meter empties, and for 8 s he is **frenzied**: +40 % damage, +25 % attack speed, kill heals doubled. "BLOOD RITE!" and a crimson burst. The meter doesn't fill during the frenzy. |
+| **Strength** | Sustain through kills, a huge arc, and enormous damage at low HP. The Rite turns HP into a burst exactly when the horde is thickest. |
+| **Weakness** | Slow (92 % move speed). Other healing is halved. The big slow swing misses fast Pit Curs early. |
+| **Personality** | Says nothing. The cape trails, the blade rests on his shoulder between swings, and the visor is the only light on him. |
+| **Unlock (interim): a bloodied victory** | §6.7 says "Reach Arena 3", which can't happen while the game has one arena. Until it does: **defeat Gorm with less than 30 % HP left**. It's a new condition kind, `DefeatBossBelowHp` (the save keeps the lowest HP each boss was beaten at), so the asset can switch to `ReachArena 2` later without code. Codex hint: *"Gorm must fall to someone already bleeding out (below 30 % HP)."* The unlock also adds the Crimson Greatsword to everyone's level-up pool. |
+
+**Colours:** his blood effects (the meter, the Rite's burst, the frenzy's specks) use the existing Bleed crimson-pink (`SE_Bleed` colour) with white cores, darker and pinker than the orange-red that means "this hurts you". The visor is the player's cyan: from the camera behind him, the cape and the visor say "that's me".
+
+**How it's built:** `GL_BloodKnight` + traits `TR_Bloodthirst` (`Bloodthirst`), `TR_Bloodlust` (`Bloodlust`), `TR_BloodRite` (`BloodRite`, the meter); `PlayerHealth.HealingMul` (Bloodthirst sets it; its own heals bypass it) and `PlayerHealth.Spend` (HP paid, not damage taken). Setup in `GladiatorSetup`; models `BlenderSrc/characters/ch_bloodknight.py` (the greatsword is part of the model, in the right hand).
+
+**Tests:** kill heals and the 6 HP/s cap; other healing halved; the damage bonus at 100 / 50 / 20 % HP; the meter fills, a slide with a full meter pays HP (never kills) and frenzies, and an early slide does nothing; greatsword hits bleed; the unlock condition, and beating Gorm at low HP unlocks the knight while beating him at high HP doesn't.

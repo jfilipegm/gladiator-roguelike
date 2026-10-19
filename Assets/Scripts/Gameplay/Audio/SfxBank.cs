@@ -11,6 +11,7 @@ namespace Gladiator.Gameplay
         Explosion, Slam, Spark, FirePot, BossRoar, Horn, Gate, Announce, Fight, Victory, Death, Cheer,
         GiftThrow, GiftLand, Boo,
         Cackle, Snare, Rattle, Bomb,
+        BloodRite,
     }
 
     [Serializable]

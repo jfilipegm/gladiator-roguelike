@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Gladiator.Gameplay
 {
@@ -33,6 +34,9 @@ namespace Gladiator.Gameplay
         public List<IdCount> bossKills = new List<IdCount>();
         public List<IdCount> gladiatorWins = new List<IdCount>();
         public List<IdCount> weaponKills = new List<IdCount>();
+        /// <summary>Per boss: the lowest HP the player had when it fell, in ‰ (0–1000). Added in 0.4.0 (a missing
+        /// list in an older file is filled by Migrate; no version bump needed).</summary>
+        public List<IdCount> bossKillLowestHp = new List<IdCount>();
         public List<string> unlocked = new List<string>();
         public List<string> flags = new List<string>();
 
@@ -51,6 +55,30 @@ namespace Gladiator.Gameplay
             list.Add(new IdCount { id = id, count = n });
         }
 
+        /// <summary>Keeps the lowest ‰ HP `bossId` was beaten at.</summary>
+        public void RecordBossKillHp(string bossId, int permille)
+        {
+            if (string.IsNullOrEmpty(bossId)) return;
+            bossKillLowestHp ??= new List<IdCount>();
+            permille = Mathf.Clamp(permille, 0, 1000);
+            for (int i = 0; i < bossKillLowestHp.Count; i++)
+                if (bossKillLowestHp[i].id == bossId)
+                {
+                    if (permille < bossKillLowestHp[i].count) bossKillLowestHp[i] = new IdCount { id = bossId, count = permille };
+                    return;
+                }
+            bossKillLowestHp.Add(new IdCount { id = bossId, count = permille });
+        }
+
+        public bool TryBossKillHp(string bossId, out int permille)
+        {
+            permille = 1000;
+            if (bossKillLowestHp == null || string.IsNullOrEmpty(bossId)) return false;
+            for (int i = 0; i < bossKillLowestHp.Count; i++)
+                if (bossKillLowestHp[i].id == bossId) { permille = (int)bossKillLowestHp[i].count; return true; }
+            return false;
+        }
+
         public bool IsUnlocked(string id) => !string.IsNullOrEmpty(id) && unlocked.Contains(id);
         public bool HasFlag(string id) => !string.IsNullOrEmpty(id) && flags.Contains(id);
 
@@ -60,6 +88,7 @@ namespace Gladiator.Gameplay
             bossKills ??= new List<IdCount>();
             gladiatorWins ??= new List<IdCount>();
             weaponKills ??= new List<IdCount>();
+            bossKillLowestHp ??= new List<IdCount>();
             unlocked ??= new List<string>();
             flags ??= new List<string>();
             if (renown < 0) renown = 0;

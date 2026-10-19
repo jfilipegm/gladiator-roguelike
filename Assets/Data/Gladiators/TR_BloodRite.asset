@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cef3bd9c2d8ecd96a89cb7d58ac91f21, type: 3}
+  m_Name: TR_BloodRite
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.BloodRiteTrait
+  id: blood_rite
+  displayName: Blood Rite
+  description: 'Kills and wounds fill the Blood meter. Slide with it full: pay 12 % of max HP for 8 s of frenzy (+40 % damage, +25 % attack speed, double kill heals).'
+  meterMax: 100
+  perKill: 0.6
+  perElite: 8
+  perHpLost: 0.5
+  hpCost: 0.12
+  frenzySeconds: 8
+  frenzyDamage: 1.4
+  frenzyAttackSpeed: 1.25
+  frenzyHealMul: 2
+  blood: {r: 0.9, g: 0.16, b: 0.36, a: 1}
+  core: {r: 1, g: 0.9, b: 0.92, a: 1}
+  announce: BLOOD RITE!

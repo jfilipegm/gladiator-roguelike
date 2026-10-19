@@ -56,7 +56,7 @@ namespace Gladiator.Gameplay
         {
             if (d.kind == UpgradeKind.Consumable) return 0;
             float scale = config.Magnitude(rarity);
-            if (stats != null)
+            if (stats != null && d.perLevel != null) // weapon cards carry their levels on the WeaponDef instead
                 for (int m = 0; m < d.perLevel.Length; m++) stats.Add(d.perLevel[m], scale);
             Version++;
             for (int i = 0; i < _owned.Count; i++)

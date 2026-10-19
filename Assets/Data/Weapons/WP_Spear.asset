@@ -31,7 +31,7 @@ MonoBehaviour:
   speed: 16
   pierce: 0
   mesh: {fileID: -1841664278493697429, guid: a6b0a307de6a8d19eaba16dd0d7bd5db, type: 3}
-  meshScale: 1
+  meshScale: 1.25
   levels:
   - mods:
     - stat: 4

@@ -128,5 +128,15 @@ One line each: what, and why. Newest at the bottom of each section.
 - **Max-HP raises heal by the same amount; armor is % damage reduction capped at 75 %**; regen ticks every frame.
 - **XP Gain is applied where XP is awarded (gem pickup), not inside `RunState.AddXp`**, so the admin "level up" button stays exact.
 - **Behaviour hooks (on-hit, on-slide…) wait for M2.6**, where the first behavioural Boons need them; M2.4's Boons are pure stat data.
-- **Level-up UI avoids every known allocation source:** no `Button` (colour-tint tweens), `UiHit` pointer forwarding + own highlight, shown by toggling the Canvas (no `SetActive`), text from char buffers / non-allocating `SetText`, first show done hidden at load. Skip is X on keyboard (S is movement) and Select on gamepad (East is slide).
+- **Level-up UI avoids every known allocation source:** no `Button` (colour-tint tweens), `UiHit` pointer forwarding + own highlight, shown and hidden with a `CanvasGroup` (never `SetActive` or `Canvas.enabled`: re-enabling a canvas rebuilds its graphic registry, ~8 KB per show), text from char buffers / non-allocating `SetText`, first show done hidden at load. Skip is X on keyboard (S is movement) and Select on gamepad (East is slide).
 - **`GladiatorDef` exists now with base stats only**; starting weapon, signature behaviour and unlock join in M3.5.
+
+### M2.5 — four weapons, weapon levels
+- **One timeline for every pattern** (acquire → wind-up → impact → cooldown); patterns differ only in what `Impact` does. Gladius = arc around the aim, Spear = line hit (length = range × area, width × √area), Javelins = a volley at the nearest distinct enemies (extras fan out 12°), Chakram = thrown out, decelerates to a stop at its range, flies back to the hand, hitting each enemy once per leg.
+- **Amount means "more of the attack" per pattern**: extra swings/thrusts right after the first for melee, extra javelins/chakrams per throw for projectiles. Player-wide Amount and Pierce stack with the weapon's own.
+- **Weapon levels 2–8 are weapon-local `StatMod`s** in a `levels[]` table on the `WeaponDef`, kept in that weapon's own `StatBlock` and multiplied with the player's stats. A weapon card's rarity scales its step like a Boon's (whole numbers never scale). So "+20 % spear damage" stays on the spear.
+- **Every weapon has a card (`UP_W_*`, kind Weapon)**: the first take equips it, later takes level it. 4 weapon slots; a full set only offers levels. The starting gladius is registered as owned at run start so its card shows as a level-up, not "NEW".
+- **Player projectiles hit through the enemy spatial hash, not physics**, and stop at the baked obstacle list and the height grid (javelins thrown into a mound stop there). Hit memory is 16 enemies per projectile per leg.
+- **Hits happen at the mesh tip** (`bounds.max.z`, read when the mesh is registered), so a javelin visibly touches what it hits and the spear tip reaches exactly its hit length.
+- **Javelins and spear thrusts get a white→cyan additive streak** (crossed ribbons, drawn instanced with the slash material and a fixed property block — no new material, scene stays at 8). A brown stick 1–2 px wide didn't read at gameplay distance. Mesh scales: spear 1.25, javelin 1.6, chakram 1.3.
+- **Weapon cards weigh 8 vs Boons 10** for now (first guesses, C7).

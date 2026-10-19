@@ -76,6 +76,7 @@ namespace Gladiator.EditorTools
             telegraph.SetFloat("_Intensity", 1.1f);
             EditorUtility.SetDirty(telegraph);
             var slash = MakeMat(SlashMat, "Gladiator/FxSlash");
+            slash.enableInstancing = true; // also drawn instanced as javelin/spear streaks (PlayerProjectiles)
             var blob = MakeMat(BlobMat, "Gladiator/BlobShadow");
             blob.enableInstancing = true;
             var particles = MakeMat(ParticleMat, "Universal Render Pipeline/Particles/Unlit");

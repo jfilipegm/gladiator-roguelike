@@ -17,6 +17,20 @@ namespace Gladiator.Gameplay
         public int BurstLeft;
         public int Mesh = -2; // -2 = not registered yet
         public Vector3 AimDir = Vector3.forward;
+
+        /// <summary>Reuses this slot object for `def` at level 1 (slots are allocated once, so equipping is GC-free).</summary>
+        internal void Init(WeaponDef def)
+        {
+            Def = def;
+            Level = 1;
+            Local.Reset();
+            Cooldown = 0.3f;
+            SwingT = -1f;
+            Impacted = false;
+            BurstLeft = 0;
+            Mesh = -2;
+            AimDir = Vector3.forward;
+        }
     }
 
     /// <summary>
@@ -48,6 +62,7 @@ namespace Gladiator.Gameplay
         float PlayerStat(StatId s, float fallback) => _stats != null ? _stats.Get(s) : fallback;
 
         readonly List<WeaponInstance> _weapons = new List<WeaponInstance>(MaxSlots);
+        readonly WeaponInstance[] _slots = { new WeaponInstance(), new WeaponInstance(), new WeaponInstance(), new WeaponInstance() };
         readonly int[] _hits = new int[256];
         readonly int[] _targets = new int[16];
 
@@ -69,10 +84,16 @@ namespace Gladiator.Gameplay
         public WeaponInstance Equip(WeaponDef def)
         {
             if (def == null || _weapons.Count >= MaxSlots || Find(def) != null) return null;
-            var inst = new WeaponInstance { Def = def, Cooldown = 0.3f };
+            WeaponInstance inst = null;
+            for (int s = 0; s < _slots.Length && inst == null; s++)
+                if (!_weapons.Contains(_slots[s])) inst = _slots[s];
+            inst.Init(def);
             _weapons.Add(inst);
             return inst;
         }
+
+        /// <summary>Drops every weapon (tests, dev showcase, a future gladiator swap).</summary>
+        public void RemoveAll() => _weapons.Clear();
 
         public WeaponInstance Find(WeaponDef def)
         {
@@ -166,7 +187,6 @@ namespace Gladiator.Gameplay
             {
                 var pp = PlayerProjectiles.Instance;
                 if (pp != null) pp.Thrust(w.AimDir, d.range * area, d.swingDuration, MeshOf(w, pp), d.meshScale * Mathf.Sqrt(area));
-                if (slashFx != null) slashFx.Play(origin + Vector3.up * 0.9f, w.AimDir, d.range * area, 10f, d.swingDuration * 0.8f);
             }
             return true;
         }

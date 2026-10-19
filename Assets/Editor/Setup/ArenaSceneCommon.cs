@@ -120,6 +120,7 @@ namespace Gladiator.EditorTools
             var shots = new GameObject("PlayerProjectiles").AddComponent<PlayerProjectiles>();
             shots.transform.SetParent(systems, false);
             shots.material = em.bodyMaterial;
+            shots.streakMaterial = AssetDatabase.LoadAssetAtPath<Material>(CombatSetup.SlashMat);
 
             var zones = new GameObject("HazardZones").AddComponent<HazardZones>();
             zones.transform.SetParent(systems, false);

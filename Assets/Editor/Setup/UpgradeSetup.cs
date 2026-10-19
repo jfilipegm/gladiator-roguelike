@@ -81,7 +81,7 @@ namespace Gladiator.EditorTools
             var spear = Weapon("WP_Spear", "spear", "Pit Spear", "Thrusts through every enemy in a line. Long reach.", WeaponPattern.Thrust, w =>
             {
                 w.damage = 15f; w.critChance = 0.10f; w.knockback = 7f; w.cooldown = 1.1f; w.swingDuration = 0.24f; w.windup = 0.08f;
-                w.range = 4.4f; w.width = 0.7f; w.acquireRange = 4.8f; w.mesh = Mesh("WP_Spear"); w.meshScale = 1f;
+                w.range = 4.4f; w.width = 0.7f; w.acquireRange = 4.8f; w.mesh = Mesh("WP_Spear"); w.meshScale = 1.25f;
                 w.levels = new[]
                 {
                     L(Pct(StatId.Damage, 0.2f)), L(Pct(StatId.Area, 0.2f)), L(Add(StatId.Amount, 1f)), L(Pct(StatId.AttackSpeed, 0.15f)),
@@ -92,7 +92,7 @@ namespace Gladiator.EditorTools
             {
                 w.damage = 11f; w.critChance = 0.08f; w.knockback = 4f; w.cooldown = 1.4f; w.swingDuration = 0.25f; w.windup = 0.1f;
                 w.range = 16f; w.width = 0.35f; w.acquireRange = 14f; w.amount = 2; w.speed = 20f; w.pierce = 1;
-                w.mesh = Mesh("WP_Javelin"); w.meshScale = 1.3f;
+                w.mesh = Mesh("WP_Javelin"); w.meshScale = 1.6f;
                 w.levels = new[]
                 {
                     L(Add(StatId.Amount, 1f)), L(Pct(StatId.Damage, 0.2f)), L(Add(StatId.Pierce, 1f)), L(Pct(StatId.AttackSpeed, 0.15f)),

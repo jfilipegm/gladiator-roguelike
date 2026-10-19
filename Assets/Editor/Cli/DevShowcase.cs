@@ -57,6 +57,26 @@ namespace Gladiator.EditorTools
             return "alive " + em.AliveCount;
         }
 
+        /// <summary>Only `weaponAsset` (e.g. "WP_Spear") equipped, a column of brutes ahead-right, slow motion.</summary>
+        public static string Weapon(string weaponAsset, float speed = 0.25f)
+        {
+            Quiet(out var p, out var fwd, out var right, weapon: true);
+            if (Director.Instance != null) Director.Instance.enabled = false;
+            var lvl = Object.FindAnyObjectByType<LevelUpController>();
+            if (lvl != null) lvl.enabled = false;
+            var def = UnityEditor.AssetDatabase.LoadAssetAtPath<WeaponDef>("Assets/Data/Weapons/" + weaponAsset + ".asset");
+            if (def == null) return "no weapon " + weaponAsset;
+            var ws = Player.Main.GetComponent<WeaponSystem>();
+            ws.RemoveAll();
+            ws.Equip(def);
+            var em = EnemyManager.Instance;
+            // a column off to the right so the camera sees thrusts and volleys side-on
+            for (int k = 0; k < 4; k++) em.Spawn(Def("brute"), p + fwd * 4f + right * (2.5f + k * 2.2f));
+            em.Spawn(Def("brute"), p + fwd * 7f + right * 3f);
+            TimeController.GameSpeed = speed;
+            return "alive " + em.AliveCount;
+        }
+
         public static string Pause() { TimeController.PushPause(); return "paused"; }
         public static string Resume() { TimeController.PopPause(); return "resumed"; }
     }

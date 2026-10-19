@@ -56,20 +56,34 @@ namespace Gladiator.Tests
             yield return Boot();
             yield return OpenCards();
             Assert.AreEqual(_build.config.cards, _lvl.ChoiceCount, "3 cards without Luck");
+            int boon = -1;
             for (int i = 0; i < _lvl.ChoiceCount; i++)
             {
                 var o = _lvl.Offers[i];
                 Assert.IsNotNull(o.Def);
-                Assert.AreEqual(UpgradeKind.Boon, o.Def.kind);
-                Assert.AreEqual(1, o.Level, "nothing owned yet: every card is NEW");
                 Assert.AreEqual(o.Def.displayName, _panel.CardTitle(i));
                 Assert.AreEqual(CardText.RarityName(o.Rarity), _panel.CardRarity(i));
-                StringAssert.Contains(StatInfo.Name(o.Def.perLevel[0].stat), _panel.CardDescription(i));
+                Assert.AreEqual(_build.State.LevelOf(o.Def) + 1, o.Level, "a card offers the next level");
+                if (o.Def.kind == UpgradeKind.Boon)
+                {
+                    Assert.AreEqual(1, o.Level, "no Boons owned yet: every Boon card is NEW");
+                    StringAssert.Contains(StatInfo.Name(o.Def.perLevel[0].stat), _panel.CardDescription(i));
+                    if (boon < 0) boon = i;
+                }
+                else if (o.Def.kind == UpgradeKind.Weapon && o.Level == 1)
+                    Assert.AreEqual(o.Def.weapon.description, _panel.CardDescription(i), "a new weapon shows its description");
             }
-            var pick = _lvl.Offers[0];
+            if (boon < 0) // all weapon cards (~1 %): reroll for a Boon
+            {
+                _lvl.Reroll();
+                yield return null;
+                for (int i = 0; i < _lvl.ChoiceCount && boon < 0; i++) if (_lvl.Offers[i].Def.kind == UpgradeKind.Boon) boon = i;
+            }
+            Assert.GreaterOrEqual(boon, 0, "a Boon was offered");
+            var pick = _lvl.Offers[boon];
             var mod = pick.Def.perLevel[0];
             float before = _stats.Block[mod.stat];
-            _lvl.Choose(0);
+            _lvl.Choose(boon);
             yield return null;
             Assert.IsFalse(_lvl.IsOpen);
             Assert.AreEqual(1f, Time.timeScale, "game resumes");
@@ -127,12 +141,13 @@ namespace Gladiator.Tests
             yield return OpenCards();
             int version = _stats.Block.Version;
             int pending = _run.PendingLevelUps;
+            int owned = _build.State.OwnedCount; // the starting gladius
             _lvl.Skip();
             yield return null;
             Assert.IsFalse(_lvl.IsOpen);
             Assert.AreEqual(pending - 1, _run.PendingLevelUps);
             Assert.AreEqual(version, _stats.Block.Version, "no stats changed");
-            Assert.AreEqual(0, _build.State.OwnedCount);
+            Assert.AreEqual(owned, _build.State.OwnedCount);
             Assert.AreEqual(1f, Time.timeScale);
         }
 
@@ -152,6 +167,7 @@ namespace Gladiator.Tests
             Assert.IsNotNull(thick);
             Assert.IsNotNull(brute);
             health.TakeDamage(new DamageInfo { Amount = 30f });
+            int owned = _build.State.OwnedCount; // the starting gladius
             float hp0 = health.Hp, max0 = health.MaxHp;
             _build.Take(new CardOffer { Def = thick, Rarity = Rarity.Common, Level = 1 });
             Assert.AreEqual(max0 + 20f, health.MaxHp, 1e-3f);
@@ -159,7 +175,7 @@ namespace Gladiator.Tests
             float dmg0 = weapons.DamageMul;
             _build.Take(new CardOffer { Def = brute, Rarity = Rarity.Legendary, Level = 1 });
             Assert.AreEqual(dmg0 * (1f + 0.12f * _build.config.Magnitude(Rarity.Legendary)), weapons.DamageMul, 1e-4f, "weapons read the pipeline");
-            Assert.AreEqual(2, _build.State.OwnedCount);
+            Assert.AreEqual(owned + 2, _build.State.OwnedCount);
             yield return null;
         }
     }

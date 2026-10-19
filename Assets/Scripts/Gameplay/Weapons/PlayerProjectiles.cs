@@ -15,7 +15,10 @@ namespace Gladiator.Gameplay
     /// the enemy spatial hash, no physics). Straight = javelin (pierces N enemies; stopped by walls, mounds and its
     /// range). Returning = chakram (decelerates out to its range, then flies back to the player, hitting each enemy once
     /// per leg). Thrust = the spear's visual (follows the player, no hits — WeaponSystem resolves the line hit).
-    /// Struct-of-arrays, fixed capacity, instanced draw with the palette material. Zero allocation in steady state.
+    /// Struct-of-arrays, fixed capacity, instanced draw with the palette material. Javelins and thrusts also get a
+    /// white→cyan streak (player VFX language, §5) drawn with the slash material so they read at gameplay distance.
+    /// Meshes point along +Z from their pivot; the tip (bounds max Z) is where hits happen. Zero allocation in steady
+    /// state.
     /// </summary>
     public sealed class PlayerProjectiles : MonoBehaviour, ITickable
     {
@@ -33,8 +36,12 @@ namespace Gladiator.Gameplay
         public float returnSpeedMul = 1.3f;
         [Tooltip("Spear thrust: fraction of the visual spent extending (the rest retracts).")]
         public float thrustExtendFraction = 0.35f;
-        [Tooltip("Spear mesh: distance from its pivot (grip) to the tip (m, before scale).")]
-        public float spearTipOffset = 1.6f;
+        [Tooltip("Additive streak material (M_FxSlash); none = no streaks.")]
+        public Material streakMaterial;
+        [Tooltip("Javelin streak: length behind the tip (m) and width (m).")]
+        public float streakLength = 2.6f, streakWidth = 0.32f;
+        [Tooltip("Spear thrust streak width (m).")]
+        public float thrustStreakWidth = 0.45f;
 
         const int MaxMeshes = 8;
 
@@ -46,7 +53,12 @@ namespace Gladiator.Gameplay
         int _high, _count;
 
         readonly Mesh[] _meshes = new Mesh[MaxMeshes];
+        readonly float[] _tip = new float[MaxMeshes];
         int _meshCount;
+        Mesh _streakMesh;
+        Matrix4x4[] _streaks;
+        int _streakBatch, _lastStreakBatch;
+        RenderParams _streakRp;
         Matrix4x4[][] _matrices;
         int[] _batch, _lastBatch;
         RenderParams _rp;
@@ -77,6 +89,50 @@ namespace Gladiator.Gameplay
                 receiveShadows = true,
                 worldBounds = new Bounds(Vector3.zero, Vector3.one * 400f),
             };
+            if (streakMaterial != null)
+            {
+                _streakMesh = BuildStreakMesh();
+                _streaks = new Matrix4x4[capacity];
+                // FxSlash with a fixed sweep: arc = the whole ribbon, the head sits at the streak's front edge
+                var props = new MaterialPropertyBlock();
+                props.SetFloat("_Progress", 0.55f);
+                props.SetFloat("_ArcFrac", 1f);
+                _streakRp = new RenderParams(streakMaterial)
+                {
+                    shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off,
+                    receiveShadows = false,
+                    worldBounds = _rp.worldBounds,
+                    matProps = props,
+                };
+            }
+        }
+
+        /// <summary>Two crossed ribbons, z from -1 (tail) to 0 (head), uv laid out for FxSlash at _Progress 0.55.</summary>
+        static Mesh BuildStreakMesh()
+        {
+            var v = new Vector3[12];
+            var uv = new Vector2[12];
+            var tris = new int[24];
+            for (int q = 0; q < 2; q++)
+            {
+                for (int c = 0; c < 3; c++)
+                {
+                    float off = (c - 1) * 0.5f;
+                    var side = q == 0 ? new Vector3(off, 0f, 0f) : new Vector3(0f, off, 0f);
+                    float across = c == 1 ? 0.68f : 0f; // soft edges, full brightness down the middle
+                    v[q * 6 + c] = side + new Vector3(0f, 0f, -1f); uv[q * 6 + c] = new Vector2(0.29f, across);
+                    v[q * 6 + 3 + c] = side; uv[q * 6 + 3 + c] = new Vector2(0.74f, across);
+                }
+                for (int c = 0; c < 2; c++)
+                {
+                    int b = q * 6 + c, t = (q * 2 + c) * 6;
+                    tris[t] = b; tris[t + 1] = b + 3; tris[t + 2] = b + 1;
+                    tris[t + 3] = b + 1; tris[t + 4] = b + 3; tris[t + 5] = b + 4;
+                }
+            }
+            var m = new Mesh { name = "FX_Streak", vertices = v, uv = uv, triangles = tris };
+            m.bounds = new Bounds(new Vector3(0f, 0f, -0.5f), new Vector3(1f, 1f, 1f));
+            return m;
         }
 
         void OnEnable() => GameLoop.Register(this, TickGroup.Projectiles, 10);
@@ -94,6 +150,7 @@ namespace Gladiator.Gameplay
             for (int i = 0; i < _meshCount; i++) if (_meshes[i] == m) return i;
             if (_meshCount >= MaxMeshes) return -1;
             _meshes[_meshCount] = m;
+            _tip[_meshCount] = m.bounds.max.z;
             return _meshCount++;
         }
 
@@ -172,6 +229,7 @@ namespace Gladiator.Gameplay
             var em = EnemyManager.Instance;
             Vector3 hand = _player != null ? _player.position + Vector3.up * flightHeight : Vector3.zero;
             for (int k = 0; k < MaxMeshes; k++) _batch[k] = 0;
+            _streakBatch = 0;
 
             for (int i = 0; i < _high; i++)
             {
@@ -233,8 +291,12 @@ namespace Gladiator.Gameplay
             if (u >= 1f) return false;
             float f = thrustExtendFraction;
             float ext = u < f ? 1f - (1f - u / f) * (1f - u / f) : 1f - (u - f) / (1f - f);
-            float tipReach = spearTipOffset * _scale[i];
-            _pos[i] = hand + _dir[i] * (Mathf.Lerp(0.2f, _range[i], ext) - tipReach);
+            float tip = TipOf(i);
+            float reach = Mathf.Lerp(tip * 0.55f, _range[i], ext); // starts held (grip just behind the hand)
+            _pos[i] = hand + _dir[i] * (reach - tip);
+            if (_streaks != null && u < f * 1.6f) // the lunge: a streak from the hand to the tip while it extends
+                _streaks[_streakBatch++] = Matrix4x4.TRS(hand + _dir[i] * reach, Quaternion.LookRotation(_dir[i], Vector3.up),
+                    new Vector3(thrustStreakWidth * _scale[i], thrustStreakWidth * _scale[i], reach * 0.9f));
             return true;
         }
 
@@ -290,14 +352,27 @@ namespace Gladiator.Gameplay
             _hitCount[i]++;
         }
 
+        float TipOf(int i) => _mesh[i] >= 0 && _mesh[i] < _meshCount ? _tip[_mesh[i]] * _scale[i] : 0f;
+
         void AddMatrix(int i)
         {
             int m = _mesh[i];
+            if (_kind[i] == Kind.Straight && _streaks != null) // streak behind the tip, growing over the first metres
+            {
+                float len = Mathf.Min(streakLength, _travel[i] + 0.5f);
+                _streaks[_streakBatch++] = Matrix4x4.TRS(_pos[i], Quaternion.LookRotation(_dir[i], Vector3.up),
+                    new Vector3(streakWidth, streakWidth, len));
+            }
             if (m < 0 || m >= _meshCount) return;
-            Quaternion rot = _kind[i] == Kind.Returning
-                ? Quaternion.Euler(0f, _spin[i], 0f)
-                : Quaternion.LookRotation(_dir[i], Vector3.up);
-            _matrices[m][_batch[m]++] = Matrix4x4.TRS(_pos[i], rot, Vector3.one * _scale[i]);
+            if (_kind[i] == Kind.Returning)
+            {
+                _matrices[m][_batch[m]++] = Matrix4x4.TRS(_pos[i], Quaternion.Euler(0f, _spin[i], 0f), Vector3.one * _scale[i]);
+                return;
+            }
+            var rot = Quaternion.LookRotation(_dir[i], Vector3.up);
+            // javelins: the tip is the hit point (the thrust already placed its pivot)
+            var at = _kind[i] == Kind.Straight ? _pos[i] - _dir[i] * TipOf(i) : _pos[i];
+            _matrices[m][_batch[m]++] = Matrix4x4.TRS(at, rot, Vector3.one * _scale[i]);
         }
 
         void Draw(bool paused)
@@ -308,6 +383,10 @@ namespace Gladiator.Gameplay
                 if (!paused) _lastBatch[m] = n;
                 if (n > 0) Graphics.RenderMeshInstanced(_rp, _meshes[m], 0, _matrices[m], n);
             }
+            if (_streaks == null) return;
+            int sn = paused ? _lastStreakBatch : _streakBatch;
+            if (!paused) _lastStreakBatch = sn;
+            if (sn > 0) Graphics.RenderMeshInstanced(_streakRp, _streakMesh, 0, _streaks, sn);
         }
     }
 }

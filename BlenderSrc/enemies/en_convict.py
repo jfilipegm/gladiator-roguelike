@@ -31,8 +31,11 @@ def build():
         arm = K.box("Arm" + side, size=(0.10, 0.10, 0.40), location=(x, 0, 0.40), pivot=(0, 0, 1),
                     swatch="skin_undead", parent=body)
         arm.rotation_euler = (-0.5, 0, 0)  # reaching forward
-        K.box("Shackle" + side, size=(0.14, 0.14, 0.07), location=(0, 0, -0.30), pivot=(0, 0, 0), swatch="iron",
-              parent=arm)
+        shackle = K.box("Shackle" + side, size=(0.14, 0.14, 0.07), location=(0, 0, -0.30), pivot=(0, 0, 0),
+                        swatch="iron", parent=arm)
+        for k in range(2):  # M3.3: a broken chain dangling from each shackle (an escaped convict)
+            K.box("Link%s%d" % (side, k), size=(0.035, 0.07, 0.08), location=(0, 0.03, -0.07 - k * 0.075),
+                  pivot=(0, 0, 0), swatch="iron_d", parent=shackle)
         leg = K.box("Leg" + side, size=(0.12, 0.13, 0.34), location=(x * 0.45, 0, HIP_Z), pivot=(0, 0, 1),
                     swatch="skin_undead", parent=root)
         K.box("Foot" + side, size=(0.13, 0.20, 0.06), location=(0, -0.03, -0.36), pivot=(0, 0, -1), swatch="skin_tan",

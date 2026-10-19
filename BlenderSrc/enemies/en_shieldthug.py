@@ -15,7 +15,7 @@ def build():
     K.clear_scene()
     root = K.empty("EN_ShieldThug")
     body = K.box("Body", size=(0.56, 0.38, 0.52), location=(0, 0, HIP_Z), pivot=(0, 0, -1), taper=(1.12, 1.0),
-                 swatch="leather", parent=root)
+                 swatch="leather_d", parent=root)  # M3.3: darker body so the light shield stands out
     K.box("Belt", size=(0.58, 0.40, 0.08), location=(0, 0, 0.03), pivot=(0, 0, -1), swatch="leather_d", parent=body)
     head = K.box("Head", size=(0.40, 0.38, 0.36), location=(0, -0.02, 0.52), pivot=(0, 0, -1), swatch="skin_mid",
                  parent=body)
@@ -35,7 +35,7 @@ def build():
                   parent=body)
     arm_l.rotation_euler = (-0.7, 0, 0)
     shield = K.box("Shield", size=(0.64, 0.08, 0.78), location=(-0.30, -0.12, -0.34), pivot=(0, 0, 0),
-                   swatch="wood", parent=arm_l)
+                   swatch="wood_light", parent=arm_l)
     shield.rotation_euler = (0.7, 0, 0)
     K.box("ShieldRimT", size=(0.66, 0.10, 0.06), location=(0, 0, 0.37), pivot=(0, 0, 0), swatch="iron", parent=shield)
     K.box("ShieldRimB", size=(0.66, 0.10, 0.06), location=(0, 0, -0.37), pivot=(0, 0, 0), swatch="iron", parent=shield)

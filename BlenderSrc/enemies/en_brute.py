@@ -23,8 +23,8 @@ def build():
     K.box("Belt", size=(0.74, 0.60, 0.08), location=(0, 0.0, 0.06), pivot=(0, 0, -1), swatch="leather_d", parent=body)
     K.box("Strap", size=(0.14, 0.64, 0.10), location=(0.30, 0.0, 0.56), pivot=(0, 0, -1), swatch="leather_d",
           parent=body)
-    head = K.box("Head", size=(0.38, 0.38, 0.36), location=(0, -0.14, 0.64), pivot=(0, 0, -1), swatch="skin_tan",
-                 parent=body)
+    head = K.box("Head", size=(0.38, 0.38, 0.36), location=(0, -0.16, 0.56), pivot=(0, 0, -1), swatch="skin_tan",
+                 parent=body)  # M3.3: sunk lower between the pauldrons
     K.box("Brow", size=(0.38, 0.10, 0.07), location=(0, -0.16, 0.20), pivot=(0, 0, -1), swatch="skin_dark", parent=head)
     for side, x in (("L", 0.08), ("R", -0.08)):
         K.box("Eye" + side, size=(0.07, 0.03, 0.04), location=(x, -0.185, 0.15), pivot=(0, 0, -1),
@@ -37,6 +37,14 @@ def build():
     for side, x, sgn in (("L", 0.56, 1), ("R", -0.56, -1)):
         K.box("Shoulder" + side, size=(0.36, 0.42, 0.30), location=(x * 0.88, 0.02, 0.50), pivot=(0, 0, -1),
               taper=(0.75, 0.8), swatch="skin_tan", parent=body)
+        # M3.3: spiked iron pauldron, the Brute's signature shoulder line (reads at 64 px, unlike plain bulk)
+        pad = K.box("Pauldron" + side, size=(0.46, 0.50, 0.16), location=(x * 0.92, 0.02, 0.74), pivot=(0, 0, -1),
+                    taper=(0.7, 0.75), bevel=0.02, swatch="iron_d", parent=body)
+        pad.rotation_euler = (0, sgn * 0.35, 0)
+        for k, dy in enumerate((-0.12, 0.12)):
+            spike = K.cone("Spike%s%d" % (side, k), radius=0.06, depth=0.26, verts=4, location=(sgn * 0.06, dy, 0.13),
+                           pivot=(0, 0, -1), swatch="steel_l", parent=pad)
+            spike.rotation_euler = (0, sgn * 0.45, 0)
         arm = K.box("Arm" + side, size=(0.26, 0.26, 0.80), location=(x, 0.02, 0.70), pivot=(0, 0, 1),
                     taper=(1.25, 1.2), swatch="skin_tan", parent=body)
         arm.rotation_euler = (-0.15, 0, sgn * 0.12)

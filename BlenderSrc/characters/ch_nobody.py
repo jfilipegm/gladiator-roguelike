@@ -62,7 +62,8 @@ def build():
                     taper=(1.1, 1.1), bevel=0.02, swatch="skin_light", parent=body)
         K.box("Wrap" + side, size=(0.16, 0.17, 0.10), location=(0, 0, -0.26), pivot=(0, 0, 0), swatch="leather",
               parent=arm)
-        K.ico("Hand" + side, radius=0.085, subdiv=1, location=(0, 0, -0.38), swatch="skin_light", parent=arm)
+        K.box("Hand" + side, size=(0.15, 0.15, 0.13), location=(0, 0, -0.38), pivot=(0, 0, 0), bevel=0.02,
+              swatch="skin_light", parent=arm)  # M3.3: chunky block fists match the rest (were faceted spheres)
         arms[side] = arm
 
     # --- shield (left hand), facing outwards (+X) and slightly forward

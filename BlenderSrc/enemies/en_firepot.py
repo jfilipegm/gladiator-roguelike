@@ -24,7 +24,7 @@ def build():
     K.clear_scene()
     root = K.empty("EN_FirePot")
     body = K.box("Body", size=(0.36, 0.28, 0.44), location=(0, 0.02, HIP_Z), pivot=(0, 0, -1), taper=(1.1, 1.0),
-                 swatch="rust", parent=root)
+                 swatch="charcoal", parent=root)  # M3.3: soot-black, not another brown in a brown pit
     body.rotation_euler = (0.22, 0, 0)  # hunched under the load
     K.box("Sash", size=(0.40, 0.31, 0.08), location=(0, 0, 0.12), pivot=(0, 0, -1), swatch="accent_magenta",
           parent=body)
@@ -41,7 +41,7 @@ def build():
     K.box("Mask", size=(0.36, 0.34, 0.12), location=(0, 0, 0.01), pivot=(0, 0, -1), swatch="cloth_white",
           parent=head)  # rag over nose and mouth against the smoke
     K.box("Cap", size=(0.37, 0.35, 0.10), location=(0, 0.01, 0.25), pivot=(0, 0, -1), taper=(0.8, 0.8),
-          swatch="rust_light", parent=head)
+          swatch="ash", parent=head)
     for side, x in (("L", 0.075), ("R", -0.075)):
         K.box("Eye" + side, size=(0.06, 0.03, 0.04), location=(x, -0.165, 0.17), pivot=(0, 0, -1),
               swatch="hazard_yellow", parent=head)
@@ -59,7 +59,7 @@ def build():
            parent=hand_pot)
 
     for side, x in (("L", 0.09), ("R", -0.09)):
-        leg = K.box("Leg" + side, size=(0.12, 0.13, 0.34), location=(x, 0, HIP_Z), pivot=(0, 0, 1), swatch="rust_light",
+        leg = K.box("Leg" + side, size=(0.12, 0.13, 0.34), location=(x, 0, HIP_Z), pivot=(0, 0, 1), swatch="slate",
                     parent=root)
         K.box("Foot" + side, size=(0.13, 0.20, 0.06), location=(0, -0.03, -0.36), pivot=(0, 0, -1),
               swatch="leather_d", parent=leg)

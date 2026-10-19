@@ -112,7 +112,7 @@ namespace Gladiator.Gameplay
                 }
                 float life01 = _life[i] / _maxLife[i];
                 // grow in over the first 0.15 s, shrink over the last 20 %
-                float age = _maxLife[i] - _life[i];
+                float age = _permanent[i] ? 1f : _maxLife[i] - _life[i]; // permanent zones are fully grown
                 float r = _radius[i] * Mathf.Min(1f, age / 0.15f) * Mathf.Min(1f, life01 / 0.2f + 0.3f);
                 if (tele != null) tele.Circle(_pos[i], r, life01, fireColor, TelegraphRenderer.Style.Fire, 0.07f, _seed[i]);
 

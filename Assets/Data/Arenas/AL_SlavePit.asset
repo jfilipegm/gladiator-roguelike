@@ -20,6 +20,8 @@ MonoBehaviour:
   playerYaw: 0
   maxAlive: 300
   sunEuler: {x: 36, y: -40, z: 0}
+  boss: {fileID: 11400000, guid: a371ea03d5b6dfdc58859b5691e51df4, type: 2}
+  bossGate: 0
   pieces:
   - model: Environment/SM_PitFloor
     role: 0

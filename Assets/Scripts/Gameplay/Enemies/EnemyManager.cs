@@ -79,7 +79,7 @@ namespace Gladiator.Gameplay
         AiState[] _state;
         float[] _stateT, _stateDur, _attackCd, _strafe, _dmgTakenMul, _knockMul, _atkTimeMul, _scale;
         Vector3[] _aim;
-        bool[] _attackHit;
+        bool[] _attackHit, _invuln, _scriptedWindup;
         AffixDef[] _affix;
 
         struct Blast { public Vector3 Pos; public float T, Fuse, Radius, ToPlayer, ToEnemies; }
@@ -134,6 +134,8 @@ namespace Gladiator.Gameplay
             _aim = new Vector3[capacity]; _attackHit = new bool[capacity]; _affix = new AffixDef[capacity];
             _view = new EnemyView[capacity];
             _free = new int[capacity];
+            _invuln = new bool[capacity];
+            _scriptedWindup = new bool[capacity];
             AllocStatus();
             for (int i = capacity - 1; i >= 0; i--) _free[_freeCount++] = i;
             _grid = new SpatialHashGrid(boundsMin, boundsMax, gridCellSize, capacity);
@@ -269,6 +271,7 @@ namespace Gladiator.Gameplay
             _aim[i] = Vector3.forward;
             _flash[i] = 0f; _contactCd[i] = 0.5f; _phase[i] = GameRandom.Range(0f, 6.28f); _recoil[i] = 0f; _dying[i] = 0f;
             _uid[i] = _nextUid++;
+            _invuln[i] = _scriptedWindup[i] = false;
             ClearStatus(i);
             Vector3 toPlayer = _player != null ? _player.position - position : Vector3.forward;
             _yaw[i] = Mathf.Atan2(toPlayer.x, toPlayer.z) * Mathf.Rad2Deg;
@@ -295,6 +298,22 @@ namespace Gladiator.Gameplay
         }
 
         /// <summary>Kills everything at once (run end, tests). No explosions: pending blasts are dropped too.</summary>
+        /// <summary>Removes every enemy quietly: no kill events (no XP, gold, bursts), just a quick pop (boss entrance).</summary>
+        public void DespawnAll()
+        {
+            for (int i = 0; i < _high; i++)
+            {
+                if (!_active[i]) continue;
+                _active[i] = false;
+                _dying[i] = feedback != null ? feedback.deathPopTime : 0.1f;
+                AliveCount--;
+                var def = _view[i].Def;
+                _aliveByDef[def] = AliveOf(def) - 1;
+            }
+            DevCounters.Enemies = AliveCount;
+            _blastCount = 0;
+        }
+
         public void KillAll()
         {
             for (int i = 0; i < _high; i++)
@@ -382,7 +401,7 @@ namespace Gladiator.Gameplay
 
         public void ApplyDamage(int i, in DamageInfo info)
         {
-            if (!IsAlive(i)) return;
+            if (!IsAlive(i) || _invuln[i]) return;
             var def = _view[i].Def;
             bool statusTick = (info.Flags & DamageFlags.Status) != 0;
             bool blocked = !statusTick && IsBlocking(i, info.Direction);
@@ -547,6 +566,7 @@ namespace Gladiator.Gameplay
                 if (_stMask[i] != 0 && !TickStatus(i, dt)) continue; // burned/bled to death this tick
 
                 var def = v.Def;
+                if (def.behaviour == EnemyBehaviour.Scripted) { TickScripted(i, v, dt); continue; }
                 Vector3 p = _pos[i];
                 Vector3 to = player - p;
                 to.y = 0f;
@@ -644,6 +664,32 @@ namespace Gladiator.Gameplay
                 if (ex * ex + ez * ez < animD2 && v.Rig.IsValid) Animate(i, v, dt, recoilTime, recoilAngle);
             }
         }
+
+        /// <summary>A scripted enemy (boss): only flash, threat and transform here; its controller does the rest.</summary>
+        void TickScripted(int i, EnemyView v, float dt)
+        {
+            _knock[i] = Vector3.zero;
+            if (_flash[i] > 0f) { _flash[i] -= dt; if (_flash[i] <= 0f && v.Flashing) SetMaterial(v, bodyMaterial); }
+            if (_recoil[i] > 0f) _recoil[i] -= dt;
+            if (_threatCount < _threats.Length)
+                _threats[_threatCount++] = new EnemyThreat { Position = _pos[i], Color = telegraphColor, Windup = _scriptedWindup[i] };
+            v.Root.SetPositionAndRotation(_pos[i], Quaternion.Euler(0f, _yaw[i], 0f));
+        }
+
+        /// <summary>Moves a scripted enemy (its controller owns movement). `windup` marks it as a threat for the bot and arrows.</summary>
+        public void SetScripted(int i, Vector3 position, float yaw, bool windup)
+        {
+            if (!IsAlive(i)) return;
+            _pos[i] = position;
+            _yaw[i] = yaw;
+            _scriptedWindup[i] = windup;
+        }
+
+        /// <summary>Takes no damage while on (boss entrance / phase change).</summary>
+        public void SetInvulnerable(int i, bool on) { if (i >= 0 && i < capacity) _invuln[i] = on; }
+
+        public PartRig GetRig(int i) => _view[i] != null ? _view[i].Rig : null;
+        public Transform GetViewRoot(int i) => _view[i] != null ? _view[i].Root : null;
 
         void SetState(int i, AiState state, float duration)
         {

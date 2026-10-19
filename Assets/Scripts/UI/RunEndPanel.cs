@@ -87,10 +87,13 @@ namespace Gladiator.UI
             _shownAt = Time.unscaledTime;
             var run = c.run;
             bool died = c.Outcome == RunOutcome.Died;
-            _title.text = died ? "YOU DIED" : "SURVIVED!";
+            bool bossDown = !died && BossController.Active != null && BossController.Active.Defeated;
+            _title.text = died ? "YOU DIED" : bossDown ? "VICTORY!" : "SURVIVED!";
             _title.color = died ? Hurt : Gold;
-            _subtitle.text = died ? "The crowd wanted more." : "The pit falls silent. Somewhere above, the Pit Master stands up.";
-            _note.text = died ? "Admin menu: F1 (God mode, buffs, spawns)" : "Slice note: Gorm, the boss, will appear at 0:00 once he's built; this screen moves to after the fight.";
+            _subtitle.text = died
+                ? (RunState.Current != null && RunState.Current.TimerDone ? "Gorm drags you off by the chain." : "The crowd wanted more.")
+                : bossDown ? "The Pit Master lies in the dirt. The crowd chants a name: yours." : "The pit falls silent.";
+            _note.text = "Admin menu: F1 (God mode, buffs, spawns, \"Timer to 0:10\" for the boss)";
             float t = run != null ? run.Elapsed : 0f;
             _time.SetText("{0}:{1:00}", Mathf.Floor(t / 60f), Mathf.Floor(t % 60f));
             _level.SetText("{0}", run != null ? run.Level : 0);

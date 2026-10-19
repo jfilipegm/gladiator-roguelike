@@ -325,6 +325,12 @@ namespace Gladiator.UI
                     _title.color = NewGold;
                     _sub.text = "choose one: uncommon or better";
                 }
+                else if (c.Source == PickSource.Boss)
+                {
+                    _title.text = "THE PIT MASTER'S HOARD";
+                    _title.color = NewGold;
+                    _sub.text = "take one: rare or better";
+                }
                 else if (c.Source == PickSource.Altar)
                 {
                     _title.text = "BLOOD ALTAR";

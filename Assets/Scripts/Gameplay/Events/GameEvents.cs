@@ -20,6 +20,8 @@ namespace Gladiator.Gameplay
     public struct LevelUpEvent { public int NewLevel; }
     public struct RunEndEvent { public RunOutcome Outcome; public float Elapsed; }
     public enum DirectorEventKind { Swarm, Elite }
+    /// <summary>A line for the HUD announcer (boss beats now; crowd lines in Phase 4). Text must be a constant string.</summary>
+    public struct AnnounceEvent { public string Text; public Color Color; public float Seconds; }
     /// <summary>The Director started a swarm or sent an elite (HUD announcer, crowd excitement later).</summary>
     public struct DirectorEvent { public DirectorEventKind Kind; public Vector3 Position; public Color Color; }
 
@@ -41,12 +43,13 @@ namespace Gladiator.Gameplay
         /// <summary>The run is over (death or timer). Raised once, at the moment it happens (before the end screen).</summary>
         public static readonly EventChannel<RunEndEvent> OnRunEnd = new EventChannel<RunEndEvent>();
         public static readonly EventChannel<DirectorEvent> OnDirector = new EventChannel<DirectorEvent>();
+        public static readonly EventChannel<AnnounceEvent> OnAnnounce = new EventChannel<AnnounceEvent>();
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         public static void ClearAll()
         {
             OnHit.Clear(); OnCrit.Clear(); OnKill.Clear(); OnDamaged.Clear(); OnLevelUp.Clear();
-            OnJump.Clear(); OnSlide.Clear(); OnLand.Clear(); OnPickup.Clear(); OnRunEnd.Clear(); OnDirector.Clear();
+            OnJump.Clear(); OnSlide.Clear(); OnLand.Clear(); OnPickup.Clear(); OnRunEnd.Clear(); OnDirector.Clear(); OnAnnounce.Clear();
         }
     }
 }

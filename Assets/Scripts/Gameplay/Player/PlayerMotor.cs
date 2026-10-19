@@ -61,6 +61,16 @@ namespace Gladiator.Gameplay
         /// alone on purpose.
         /// </summary>
         public float SpeedMultiplier { get; set; } = 1f;
+        float _slowMul = 1f, _slowUntil;
+
+        /// <summary>A timed slow from an enemy attack (Gorm's whip): the strongest active one applies.</summary>
+        public void Slow(float multiplier, float seconds)
+        {
+            if (Time.time >= _slowUntil || multiplier < _slowMul) _slowMul = Mathf.Clamp(multiplier, 0.1f, 1f);
+            _slowUntil = Mathf.Max(_slowUntil, Time.time + seconds);
+        }
+
+        float SlowMul => Time.time < _slowUntil ? _slowMul : 1f;
         float MoveStat => _stats != null ? _stats.MoveSpeed : DevSettings.MoveSpeedMul;
         int BonusAirJumps => _stats != null ? (int)_stats.Get(StatId.ExtraJumps) : 0;
         public MotorTelemetry Telemetry;
@@ -245,7 +255,7 @@ namespace Gladiator.Gameplay
                 return;
             }
 
-            float maxSpeed = c.maxSpeed * SpeedMultiplier * MoveStat;
+            float maxSpeed = c.maxSpeed * SpeedMultiplier * SlowMul * MoveStat;
             if (speed > maxSpeed + 0.01f && wishMag > 0.01f)
             {
                 // Above run speed (after a slide / slide-jump): keep momentum, steer, bleed off slowly.
@@ -322,7 +332,7 @@ namespace Gladiator.Gameplay
             {
                 // Quake-style: accelerate along the wish direction up to airMaxSpeed; never brakes existing momentum.
                 float along = Vector3.Dot(_hv, wishDir);
-                float airMax = c.airMaxSpeed * SpeedMultiplier * MoveStat;
+                float airMax = c.airMaxSpeed * SpeedMultiplier * SlowMul * MoveStat;
                 float add = airMax * wishMag - along;
                 if (add > 0f) _hv += wishDir * Mathf.Min(c.airAccel * dt, add);
                 speed = _hv.magnitude;

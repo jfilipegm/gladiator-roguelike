@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d4c6ea183ef480c5acde212f0835f1d, type: 3}
+  m_Name: BD_Gorm
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.BossDef
+  id: gorm
+  displayName: GORM
+  title: THE PIT MASTER
+  enemy: {fileID: 11400000, guid: 7fa2501fb2c6dc3b3bd5b5513e6d7b2b, type: 2}
+  moveSpeed: 3
+  enragedMoveSpeed: 3.7
+  turnRate: 220
+  contactDamage: 12
+  contactInterval: 0.8
+  recover: 0.7
+  sweepRadius: 5.5
+  sweepWindup: 1.1
+  sweepDamage: 28
+  sweepKnockback: 9
+  sweepJumpClear: 0.7
+  whipLength: 12
+  whipWidth: 1.2
+  whipWindup: 0.7
+  whipDamage: 18
+  whipSlow: 0.55
+  whipSlowSeconds: 2
+  slamRadius: 2.6
+  slamWindup: 1
+  slamDamage: 30
+  slamTrack: 0.6
+  slamFire: {x: 2.2, y: 4, z: 10}
+  chargeWindup: 0.9
+  chargeSpeed: 16
+  chargeLength: 14
+  chargeDamage: 24
+  chargeKnockback: 12
+  chargeStun: 1
+  guardsEvery: 22
+  guards:
+  - {fileID: 11400000, guid: 729da0abfb08161378f0ed030335efd6, type: 2}
+  - {fileID: 11400000, guid: 824754529e64539a08f93ce5ea6b9028, type: 2}
+  - {fileID: 11400000, guid: 824754529e64539a08f93ce5ea6b9028, type: 2}
+  guardCount: {x: 6, y: 10}
+  phase2At: 0.55
+  enrageSpeed: 1.3
+  enrageRoar: 1.5
+  fireRingRadius: 19.3
+  fireRingSpacing: 2.4
+  fireRingPatch: 1.5
+  fireRingDps: 12
+  rewardFloor: 2

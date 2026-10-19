@@ -24,6 +24,10 @@ namespace Gladiator.Gameplay
         public int PendingLevelUps { get; set; }
         public RunOutcome Outcome { get; private set; }
         public bool Ended => Outcome != RunOutcome.None;
+        [Tooltip("When the timer runs out, wait for the boss fight instead of ending the run (set by BossFight).")]
+        public bool holdForBoss;
+        /// <summary>The run timer reached zero (boss time).</summary>
+        public bool TimerDone { get; private set; }
 
         void Awake() => Current = this;
 
@@ -49,7 +53,11 @@ namespace Gladiator.Gameplay
         {
             if (Ended || DevSettings.Timeless) return;
             Elapsed += dt;
-            if (Elapsed >= config.runDuration) End(RunOutcome.Survived);
+            if (Elapsed >= config.runDuration)
+            {
+                if (holdForBoss) TimerDone = true; // the boss fight decides the run (BossFight)
+                else End(RunOutcome.Survived);
+            }
         }
 
         /// <summary>Ends the run once (later calls are ignored) and raises OnRunEnd.</summary>

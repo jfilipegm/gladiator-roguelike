@@ -22,7 +22,15 @@ namespace Gladiator.UI
         TextMeshProUGUI _timer, _level, _hpText, _gold, _kills, _toast, _announce, _pause, _debug, _tags;
         readonly char[] _timeBuf = new char[8];
         int _lastSecond = -1, _lastLevel = -1, _lastGold = -1, _lastKills = -1, _lastHp = -1, _lastMaxHp = -1;
-        float _toastT = 10f, _announceT = 10f, _debugT;
+        float _toastT = 10f, _announceT = 10f, _announceLen = 2f, _debugT;
+
+        // boss (M3.4): name + HP bar under the timer, phase-2 notch; the timer reads BOSS
+        CanvasGroup _bossGroup;
+        Image _bossFill;
+        TextMeshProUGUI _bossName;
+        BossController _bossShown;
+        bool _timerBoss;
+        static readonly Color BossRed = new Color(0.86f, 0.16f, 0.12f);
         int _frames;
         int _lastTags = -1;
         float _lastSpeed = 1f;
@@ -114,6 +122,17 @@ namespace Gladiator.UI
             // Director announcer (swarm / elite). Constant strings, so swapping them never allocates.
             _announce = UiFactory.Text("Announce", canvas, "THE PACK IS LOOSE!", 56, Color.white, TextAlignmentOptions.Center, top, top, new Vector2(0, -280), new Vector2(1100, 80), font, fontMaterial);
             _announce.alpha = 0f;
+
+            var bossRoot = new GameObject("BossHud", typeof(RectTransform), typeof(CanvasGroup));
+            bossRoot.transform.SetParent(canvas, false);
+            var brt = (RectTransform)bossRoot.transform;
+            brt.anchorMin = Vector2.zero; brt.anchorMax = Vector2.one; brt.offsetMin = brt.offsetMax = Vector2.zero;
+            _bossGroup = bossRoot.GetComponent<CanvasGroup>();
+            _bossGroup.alpha = 0f;
+            _bossGroup.blocksRaycasts = _bossGroup.interactable = false;
+            _bossName = UiFactory.Text("BossName", bossRoot.transform, "", 30, new Color(1f, 0.9f, 0.8f), TextAlignmentOptions.Center, top, top, new Vector2(0, -112), new Vector2(900, 36), font, fontMaterial);
+            PreSize(_bossName, "GORM, THE PIT MASTER OF THE SLAVE PITS");
+            _bossFill = UiFactory.Bar("BossBar", bossRoot.transform, new Color(0.08f, 0.05f, 0.06f, 0.85f), BossRed, top, top, new Vector2(0, -150), new Vector2(760, 26));
             _pause = UiFactory.Text("Pause", canvas, "PAUSED\n<size=36>click to resume</size>", 90, Color.white, TextAlignmentOptions.Center, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(900, 260), font, fontMaterial);
             _pause.textWrappingMode = TextWrappingModes.Normal;
             _pause.alpha = 0f;
@@ -129,6 +148,7 @@ namespace Gladiator.UI
             PreSize(_level, "LV 8888");
             PreSize(_announce, SwarmText);
             PreSize(_announce, EliteText);
+            PreSize(_announce, "GORM CALLS HIS GUARDS!");
         }
 
         static void PreSize(TMP_Text t, string longest)
@@ -144,6 +164,7 @@ namespace Gladiator.UI
             GameLoop.Register(this, TickGroup.Late, 50);
             GameEvents.OnLevelUp.Subscribe(OnLevelUp);
             GameEvents.OnDirector.Subscribe(OnDirector);
+            GameEvents.OnAnnounce.Subscribe(OnAnnounce);
         }
 
         void OnDisable()
@@ -151,15 +172,44 @@ namespace Gladiator.UI
             GameLoop.Unregister(this);
             GameEvents.OnLevelUp.Unsubscribe(OnLevelUp);
             GameEvents.OnDirector.Unsubscribe(OnDirector);
+            GameEvents.OnAnnounce.Unsubscribe(OnAnnounce);
         }
 
         void OnLevelUp(in LevelUpEvent e) => _toastT = 0f;
+
+        void OnAnnounce(in AnnounceEvent e)
+        {
+            _announce.text = e.Text; // constant strings only: no allocation
+            var c = e.Color;
+            c.a = 1f;
+            _announce.color = c;
+            _announceLen = Mathf.Max(0.5f, e.Seconds);
+            _announceT = 0f;
+        }
+
+        void DrawBoss(RunState run)
+        {
+            if (run != null && run.TimerDone && !_timerBoss) { _timerBoss = true; _timer.text = "BOSS"; _timer.color = BossRed; }
+            var b = BossController.Active;
+            bool show = b != null && b.Alive && b.def != null;
+            if (show && _bossShown != b)
+            {
+                _bossShown = b;
+                _bossName.text = b.def.displayName + ", " + b.def.title; // once per boss
+                var notch = UiFactory.Image("Phase2", _bossFill.transform.parent, new Color(1f, 0.85f, 0.4f, 0.9f), new Vector2(0f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(760f * b.def.phase2At, 0f), new Vector2(3f, 30f), PixelIcons.White);
+                notch.raycastTarget = false;
+            }
+            float a = show ? 1f : 0f;
+            if (!Mathf.Approximately(_bossGroup.alpha, a)) _bossGroup.alpha = a;
+            if (show) _bossFill.fillAmount = Mathf.MoveTowards(_bossFill.fillAmount, b.Hp01, Time.unscaledDeltaTime * 1.5f);
+        }
 
         const string SwarmText = "SWARM INCOMING!";
         const string EliteText = "AN ELITE ENTERS!";
 
         void OnDirector(in DirectorEvent e)
         {
+            _announceLen = 2f;
             _announce.text = e.Kind == DirectorEventKind.Swarm ? SwarmText : EliteText;
             var c = e.Color;
             c.a = 1f;
@@ -175,7 +225,7 @@ namespace Gladiator.UI
             {
                 _xpFill.fillAmount = run.Xp01;
                 int sec = Mathf.CeilToInt(run.TimeRemaining);
-                if (sec != _lastSecond) { _lastSecond = sec; WriteTime(sec); }
+                if (sec != _lastSecond && !run.TimerDone) { _lastSecond = sec; WriteTime(sec); }
                 if (run.Level != _lastLevel) { _lastLevel = run.Level; _level.SetText("LV {0}", run.Level); }
                 if (run.Gold != _lastGold) { _lastGold = run.Gold; _gold.SetText("{0}", run.Gold); }
                 if (run.Kills != _lastKills) { _lastKills = run.Kills; _kills.SetText("{0}", run.Kills); }
@@ -195,6 +245,7 @@ namespace Gladiator.UI
             }
 
             DrawInteractables(run);
+            DrawBoss(run);
 
             // Dev switches in effect (so a test never silently runs with God mode on). Rebuilt only when they change.
             int tags = (DevSettings.GodMode ? 1 : 0) | (DevSettings.Timeless ? 2 : 0) | (DevSettings.AnyBuff ? 4 : 0) |
@@ -221,14 +272,15 @@ namespace Gladiator.UI
 
             // announcer: slide in, hold, fade (game time, so it waits during level-ups)
             _announceT += dt;
-            if (_announceT < 2f)
+            if (_announceT < _announceLen)
             {
-                float t = _announceT / 2f;
+                float t = _announceT / _announceLen;
                 _announce.alpha = t < 0.8f ? 1f : 1f - (t - 0.8f) / 0.2f;
                 float s = t < 0.08f ? Mathf.Lerp(1.4f, 1f, t / 0.08f) : 1f;
                 _announce.rectTransform.localScale = new Vector3(s, s, 1f);
             }
             else if (_announce.alpha > 0f) _announce.alpha = 0f;
+            if (run != null && run.Ended && _announce.alpha > 0f) { _announce.alpha = 0f; _announceT = _announceLen; } // the end screen owns the centre
 
             if (Keyboard.current != null && Keyboard.current.f3Key.wasPressedThisFrame) showDebug = !showDebug;
             _frames++;

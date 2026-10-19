@@ -76,6 +76,10 @@ namespace Gladiator.Gameplay
         [Tooltip("Director cap on enemies alive in this arena (0 = DirectorConfig.hardCap).")]
         public int maxAlive;
         public Vector3 sunEuler = new Vector3(38f, -32f, 0f);
+        [Tooltip("Who comes through the gate when the timer runs out (none = the run just ends).")]
+        public BossDef boss;
+        [Tooltip("Which gate (index into gates) the boss enters through.")]
+        public int bossGate;
 
         [Header("Content")]
         public Piece[] pieces = Array.Empty<Piece>();

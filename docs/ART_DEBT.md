@@ -7,3 +7,5 @@ Assets that hit the 3-iteration time-box and shipped as "simplest acceptable". E
 - ~~Look-dev mud patch~~ — replaced by `PR_MudPatch` (M3.1/M3.2).
 - **M2.2 enemies (Pit Cur 240, Shield Thug 260, Slinger 272, Brute 440, Fire-Pot Thrower 276 tris; PR_SlingStone, PR_FirePot)** — first-pass quality, silhouettes pass at 64 px. M3.3: Brute (iteration 3) has spiked iron pauldrons and a sunk head, a shoulder line nothing else has; Fire-Pot Thrower recoloured only (it was at its 3-iteration cap) to soot black/ash so it separates from the pit's browns; Shield Thug has a lighter shield over a darker body. Lineup at 64 px: `Screenshots/blender/lineup_sil64.png`.
 - **Slave Pit kit (M3.1, iteration 1–2)** — terraces and ramps are very low-poly (22 / 8 tris) and read as clean slabs rather than packed earth; fine for readability, a jitter/erosion pass could add character later. Fire pit flames are static cones (no flicker).
+- **EN_Gorm (iteration 2)** — reads by size and the flail ball; the whip is small from the front and the beard/head merge with the hunch at a distance. A third pass could enlarge the whip coil and add a lighter skin tone to the head.
+

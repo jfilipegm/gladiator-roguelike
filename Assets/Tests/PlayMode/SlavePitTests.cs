@@ -96,7 +96,7 @@ namespace Gladiator.Tests
             Vector3 fire = default;
             foreach (var z in _layout.zones) if (z.kind == ArenaLayoutDef.ZoneKind.Fire) { fire = z.position; break; }
             float hp = health.Hp;
-            _motor.Teleport(fire + Vector3.up * 0.1f);
+            _motor.Teleport(fire + new Vector3(0.6f, 0.1f, 0f)); // off-centre: the whole pit burns, not just its middle
             yield return new WaitForSeconds(1.2f);
             Assert.IsTrue(HazardZones.Instance.PlayerInside);
             Assert.Less(health.Hp, hp, "standing in the fire pit hurts");

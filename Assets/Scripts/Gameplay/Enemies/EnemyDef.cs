@@ -17,6 +17,9 @@ namespace Gladiator.Gameplay
         Slammer,
         /// <summary>Keeps its distance, lobs onto a marked spot that burns for a while (Fire-Pot Thrower).</summary>
         Lobber,
+        /// <summary>Driven from outside (bosses, BossController): EnemyManager keeps its HP, hits, statuses and death but
+        /// never moves, animates or attacks it.</summary>
+        Scripted,
     }
 
     /// <summary>An enemy type as data (CLAUDE.md §2.4). New enemies = new assets; new behaviours = new code.</summary>

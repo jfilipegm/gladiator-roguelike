@@ -20,14 +20,22 @@ namespace Gladiator.EditorTools
         const string FireModel = "Environment/PR_FirePit";
 
         [MenuItem("Gladiator/Arenas/Build Slave Pit")]
-        public static string BuildSlavePit() => Build(SlavePitLayout.Ensure(), SlavePitScene);
+        public static string BuildSlavePit()
+        {
+            var layout = SlavePitLayout.Ensure();
+            if (layout.boss == null) { layout.boss = BossSetup.EnsureGorm(); EditorUtility.SetDirty(layout); AssetDatabase.SaveAssetIfDirty(layout); }
+            return Build(layout, SlavePitScene);
+        }
 
         public static string Build(ArenaLayoutDef layout, string scenePath)
         {
             LookSetup.CreateOrUpdateAll();
             PlayerSetup.BuildPrefab();
             if (!AssetDatabase.IsValidFolder("Assets/Scenes/Arenas")) AssetDatabase.CreateFolder("Assets/Scenes", "Arenas");
+            string layoutPath = AssetDatabase.GetAssetPath(layout);
             var scene = SceneSetupUtil.NewEmptyScene();
+            // the new scene unloads unused assets: assets the layout points at (its boss) die in memory, so reload it
+            if (!string.IsNullOrEmpty(layoutPath)) layout = AssetDatabase.LoadAssetAtPath<ArenaLayoutDef>(layoutPath);
             ArenaSceneCommon.AddLook(layout.sunEuler);
             ArenaSceneCommon.AddGameLoop();
 
@@ -84,6 +92,19 @@ namespace Gladiator.EditorTools
             crowd.material = EnsureCrowdMaterial();
             crowd.spots = CrowdSpots(layout);
             new GameObject("CrowdExcitement").AddComponent<CrowdExcitement>().transform.SetParent(arena, false);
+
+            if (layout.boss != null)
+            {
+                var fight = new GameObject("BossFight").AddComponent<BossFight>();
+                fight.transform.SetParent(arena, false);
+                fight.boss = layout.boss;
+                fight.gate = layout.bossGate;
+                fight.controller = new GameObject("BossController").AddComponent<BossController>();
+                fight.controller.transform.SetParent(fight.transform, false);
+                fight.controller.def = layout.boss;
+                var hazards = Object.FindAnyObjectByType<HazardZones>();
+                if (hazards != null) hazards.capacity = Mathf.Max(hazards.capacity, 160); // + the phase-2 fire ring
+            }
 
             var director = Object.FindAnyObjectByType<Director>();
             if (director != null) director.maxAliveOverride = layout.maxAlive;

@@ -4,7 +4,7 @@ using UnityEngine;
 namespace Gladiator.Gameplay
 {
     /// <summary>Why the cards are open: the panel's title and the rarity floor.</summary>
-    public enum PickSource : byte { LevelUp, Chest, Altar }
+    public enum PickSource : byte { LevelUp, Chest, Altar, Boss }
 
     /// <summary>
     /// Level-up flow (CLAUDE.md §6.5): XP threshold → short burst beat → pause → 3 cards (4 with Luck) rolled from the
@@ -57,6 +57,7 @@ namespace Gladiator.Gameplay
 
         void OnEnable()
         {
+            Instance = this; // also after a disable/enable (tests and staged shots switch it off)
             GameLoop.Register(this, TickGroup.Late, 10);
             GameEvents.OnRunEnd.Subscribe(OnRunEnd);
             RunBotSensor.PendingCards = BotPending;

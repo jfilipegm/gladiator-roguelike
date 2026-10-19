@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 664674991ec87df7291301f37fcc64ac, type: 3}
+  m_Name: EN_Gorm
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.EnemyDef
+  id: gorm
+  displayName: Gorm, the Pit Master
+  model: {fileID: 919132149155446097, guid: 9bcf0f5322d07b885817466c968d7829, type: 3}
+  anim: {fileID: 0}
+  scale: 1
+  maxHp: 9000
+  moveSpeed: 0
+  speedJitter: 0.15
+  acceleration: 14
+  radius: 1.05
+  knockbackTaken: 0
+  contactDamage: 0
+  contactInterval: 0.9
+  behaviour: 6
+  windup: 0.6
+  attackCooldown: 2.5
+  attackRange: 3
+  attackDamage: 10
+  attackRadius: 2.5
+  recover: 0.4
+  turnRate: 540
+  lungeSpeed: 13
+  lungeTime: 0.28
+  blockArc: 120
+  blockReduction: 0.85
+  keepDistance: {x: 6, y: 10}
+  projectileSpeed: 13
+  lobTime: 0.95
+  projectileRadius: 0.25
+  zoneDuration: 3.5
+  zoneDps: 10
+  xp: 0
+  goldChance: 0
+  prewarm: 1

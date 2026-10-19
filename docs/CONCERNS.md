@@ -44,3 +44,7 @@ Every sound is synthesised and its volume, pitch jitter and repeat limit are fir
 The kill-streak ladder (40 / 80 / 140 / 220 kills in 4 s) was set against the bot's kill rates (~15–25 kills/s late in a run). A weaker build hears few lines; a monster build hears one every ~6–20 s.
 **Proposal:** judge in the playtest; everything is in `Assets/Data/Config/AnnouncerConfig.asset` (thresholds, window, minimum gap, ladder reset).
 
+
+## C11 — Gorm's fight length swings with the build (NEW at Gate 2)
+Three bot runs against the same 9,000 HP Gorm: a level-47 build did 21 % in 20 s (M3.4), a level-40 build left him at 63 % after ~2 minutes (M3.6), and the final level-28 build (Phase 4) killed him ~40 s after the 8:00 mark, entrance and reward included, before his first guard wave. A strong human build could skip half his moves; a weak one faces a long slog.
+**Proposal:** judge in the Gate 2 playtest. If he melts, raise `EN_Gorm.maxHp` to ~15,000 and bring the first guard wave forward. If the swing is still wide, cap the damage he takes per second (e.g. 4 % HP/s) so every fight shows both phases and the guards.

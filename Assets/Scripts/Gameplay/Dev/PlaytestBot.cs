@@ -131,6 +131,7 @@ namespace Gladiator.Gameplay
             if (boss != null)
                 sb.Append(" | boss ").Append(boss.Defeated ? "DEFEATED" : "alive").Append(" hp ").Append((boss.Hp01 * 100f).ToString("0")).Append("% phase ")
                   .Append(boss.Phase).Append(" attacks ").Append(boss.AttacksDone).Append(" guardWaves ").Append(boss.GuardWaves);
+            sb.Append(" | hitstops ").Append(TimeController.HitStopCount).Append(" (").Append(TimeController.HitStopSeconds.ToString("0.0")).Append(" s)");
             if (run != null) sb.Append(" | outcome ").Append(run.Outcome).Append(" at ").Append(run.Elapsed.ToString("0"));
             Debug.Log(sb.ToString());
         }

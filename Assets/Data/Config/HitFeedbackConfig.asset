@@ -18,7 +18,7 @@ MonoBehaviour:
   hitRecoilTime: 0.18
   hitStopOnCrit: 0.035
   hitStopOnElite: 0.06
-  eliteHitStopInterval: 0.35
+  hitStopInterval: 0.8
   hitStopOnPlayerHit: 0.05
   deathPopTime: 0.12
   deathPopParticles: 9

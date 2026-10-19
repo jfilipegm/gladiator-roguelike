@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Gladiator.Gameplay
 {
@@ -17,8 +18,8 @@ namespace Gladiator.Gameplay
         [Header("Hit-stop (only crit / elite / boss — keep it tiny)")]
         public float hitStopOnCrit = 0.035f;
         public float hitStopOnElite = 0.06f;
-        [Tooltip("Min seconds between elite-hit hit-stops (fast weapons would otherwise stutter constantly).")]
-        public float eliteHitStopInterval = 0.35f;
+        [Tooltip("Min real seconds between crit / elite-hit hit-stops, shared. Crit builds on fast weapons would otherwise spend a quarter of the run frozen.")]
+        [FormerlySerializedAs("eliteHitStopInterval")] public float hitStopInterval = 0.8f;
         public float hitStopOnPlayerHit = 0.05f;
 
         [Header("Death pop")]

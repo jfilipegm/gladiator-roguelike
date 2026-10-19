@@ -88,7 +88,7 @@ namespace Gladiator.Gameplay
         readonly int[] _blastQuery = new int[512];
         readonly EnemyThreat[] _threats = new EnemyThreat[64];
         int _threatCount;
-        float _nextEliteStop;
+        float _nextHitStop;   // crit and elite-hit stops share one cooldown (unscaled)
         PlayerMotor _playerMotor;
         int[] _free;
         int _freeCount, _high, _nextUid = 1;
@@ -428,11 +428,19 @@ namespace Gladiator.Gameplay
             if (hit.Crit)
             {
                 GameEvents.OnCrit.Raise(hit);
-                if (feedback != null) { TimeController.HitStop(feedback.hitStopOnCrit); ScreenShake.Add(feedback.shakeOnCrit); }
+                if (feedback != null)
+                {
+                    ScreenShake.Add(feedback.shakeOnCrit);
+                    if (Time.unscaledTime >= _nextHitStop)
+                    {
+                        _nextHitStop = Time.unscaledTime + feedback.hitStopInterval;
+                        TimeController.HitStop(feedback.hitStopOnCrit);
+                    }
+                }
             }
-            else if (elite && feedback != null && !statusTick && Time.unscaledTime >= _nextEliteStop)
+            else if (elite && feedback != null && !statusTick && Time.unscaledTime >= _nextHitStop)
             {
-                _nextEliteStop = Time.unscaledTime + feedback.eliteHitStopInterval;
+                _nextHitStop = Time.unscaledTime + feedback.hitStopInterval;
                 TimeController.HitStop(feedback.hitStopOnElite);
             }
             if (_hp[i] <= 0f) Kill(i, info, allowBlast: true);

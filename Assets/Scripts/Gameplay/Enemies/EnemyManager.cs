@@ -587,7 +587,12 @@ namespace Gladiator.Gameplay
                 // behaviour: desired velocity + where to face
                 bool facePlayer;
                 Vector3 desired = Think(i, def, p, player, dirTo, dist, dt, tele, out facePlayer);
-                if (_stMask[i] != 0) desired *= StatusSpeedMul(i);
+                if (_stMask[i] != 0)
+                {
+                    float sm = StatusSpeedMul(i);
+                    desired *= sm;
+                    if (sm <= 0f) _vel[i] = Vector3.zero; // rooted: stops dead, no sliding out of the snare
+                }
                 if (_mud != null) desired *= _mud.SpeedAt(p);
 
                 // separation (bounded neighbour checks)

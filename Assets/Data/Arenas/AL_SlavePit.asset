@@ -437,3 +437,7 @@ MonoBehaviour:
   altarAnchors:
   - {x: -12.5, y: 1.3, z: 6}
   - {x: 12.5, y: 1.3, z: -7}
+  secretSpots:
+  - {x: 1.2, y: 0, z: 18.4}
+  - {x: -10, y: 0, z: -15.6}
+  - {x: 16.4, y: 0, z: 6.6}

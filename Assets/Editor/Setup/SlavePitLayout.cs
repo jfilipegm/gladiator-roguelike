@@ -131,6 +131,8 @@ namespace Gladiator.EditorTools
                 new Vector3(-9.5f, 0f, -12f), new Vector3(1f, 0f, -12f),
             };
             l.altarAnchors = new[] { new Vector3(-12.5f, 1.3f, 6f), new Vector3(12.5f, 1.3f, -7f) }; // up on a terrace
+            // the rattling crate (Phase 5.2): beside the other crates and a cage, so it blends in until it rattles
+            l.secretSpots = new[] { new Vector3(1.2f, 0f, 18.4f), new Vector3(-10f, 0f, -15.6f), new Vector3(16.4f, 0f, 6.6f) };
 
             if (existing == null) AssetDatabase.CreateAsset(l, Path);
             EditorUtility.SetDirty(l);

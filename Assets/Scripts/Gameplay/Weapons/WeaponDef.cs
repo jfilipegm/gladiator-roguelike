@@ -4,14 +4,16 @@ using UnityEngine;
 
 namespace Gladiator.Gameplay
 {
-    /// <summary>Attack patterns that weapon data composes (CLAUDE.md §6.8). Implemented: MeleeArc, Thrust, Projectile, Returning, Orbit.</summary>
-    public enum WeaponPattern { MeleeArc, Thrust, MultiHit, GroundSlam, Projectile, Returning, Orbit, Chain, Summon }
+    /// <summary>Attack patterns that weapon data composes (CLAUDE.md §6.8). Implemented: MeleeArc, Thrust, Projectile, Returning, Orbit, Lob.
+    /// Append new patterns at the end (assets serialize the index).</summary>
+    public enum WeaponPattern { MeleeArc, Thrust, MultiHit, GroundSlam, Projectile, Returning, Orbit, Chain, Summon, Lob }
 
     /// <summary>
     /// A weapon as data. Its numbers are the level-1 base; each level 2-8 adds `levels[level-2].mods` to that weapon only
     /// (scaled by the card's rarity, like Boons), and the player's stats multiply everything on top.
     /// Implemented patterns: MeleeArc (Gladius), Thrust (Spear), Projectile (Javelins), Returning (Chakram), Orbit (Gorm's
-    /// Flail: range = orbit radius, width = ball radius, speed = m/s along the circle, cooldown = re-hit interval per enemy).
+    /// Flail: range = orbit radius, width = ball radius, speed = m/s along the circle, cooldown = re-hit interval per enemy),
+    /// Lob (Bomb Satchel: acquireRange = throw range, width = blast radius, flightTime/fuse shortened by Projectile Speed).
     /// </summary>
     [CreateAssetMenu(menuName = "Gladiator/Weapon", fileName = "WP_")]
     public sealed class WeaponDef : ScriptableObject
@@ -63,6 +65,14 @@ namespace Gladiator.Gameplay
         [Tooltip("Mesh drawn for the spear / projectile (instanced, palette material). Gladius: none (it's in the hand).")]
         public Mesh mesh;
         public float meshScale = 1f;
+
+        [Header("Lob (bombs)")]
+        [Tooltip("Lob: seconds in the air (divided by Projectile Speed).")]
+        public float flightTime = 0.6f;
+        [Tooltip("Lob: fuse after landing, s (divided by Projectile Speed).")]
+        public float fuse = 0.4f;
+        [Tooltip("Lob: height of the arc's apex (m).")]
+        public float arcHeight = 2.2f;
 
         [Header("Levels 2-8")]
         public Level[] levels = Array.Empty<Level>();

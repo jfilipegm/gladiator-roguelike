@@ -19,3 +19,4 @@ MonoBehaviour:
   deeperArenaBonus: 0.5
   unlocks:
   - {fileID: 11400000, guid: 9e5f9aa05ad8cf94eb4fe91cde0346e7, type: 2}
+  - {fileID: 11400000, guid: 062cde42a02861921afcb4e11cd6dbb6, type: 2}

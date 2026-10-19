@@ -186,5 +186,30 @@ namespace Gladiator.Tests
             Assert.IsTrue(build.IsLocked(_card), "a new run's Clear keeps the meta locks");
             Object.DestroyImmediate(config);
         }
+
+        [Test]
+        public void LockedButOwned_StillLevels()
+        {
+            // a gladiator that starts with a locked weapon (the goblin's Bomb Satchel before its unlock) can still level it
+            var config = ScriptableObject.CreateInstance<UpgradeConfig>();
+            var build = new BuildState();
+            _card.maxLevel = 8;
+            build.Lock(_card);
+            build.Take(_card, Rarity.Common, null, config);
+            Assert.IsTrue(UpgradeRoller.IsEligible(_card, build, config), "held: its level-ups come up");
+            Object.DestroyImmediate(config);
+        }
+
+        [Test]
+        public void FlagUnlock_WaitsForTheDiscovery()
+        {
+            var d = new SaveData();
+            _flail.conditions = new[] { new UnlockCondition { kind = UnlockConditionKind.Flag, id = "rattling_crate" } };
+            Assert.IsFalse(MetaProgress.AllMet(_flail, d));
+            d.flags.Add("rattling_crate");
+            Assert.IsTrue(MetaProgress.AllMet(_flail, d));
+            var r = MetaProgress.Apply(new RunSummary { Outcome = RunOutcome.Died, Elapsed = 30f }, _meta, d);
+            CollectionAssert.Contains(r.NewUnlocks, _flail, "a lost run still grants it");
+        }
     }
 }

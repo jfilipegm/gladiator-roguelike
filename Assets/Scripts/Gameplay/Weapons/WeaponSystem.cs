@@ -44,8 +44,9 @@ namespace Gladiator.Gameplay
     /// enemy spatial hash (never Physics.Overlap), damage through EnemyManager.ApplyDamage. Up to 4 slots.
     /// Every weapon runs the same timeline (acquire → wind-up → impact → cooldown); the impact is the pattern:
     /// MeleeArc (arc hit around the aim), Thrust (line hit + spear visual), Projectile (javelin volley at the nearest
-    /// enemies), Returning (chakram out and back). Orbit (Gorm's Flail) has no timeline: its balls always circle the
-    /// player and hit whatever they pass, each enemy at most once per cooldown. Numbers = weapon base × its level modifiers × player stats.
+    /// enemies), Returning (chakram out and back), Lob (bombs at the densest groups in reach, exploding after a fuse).
+    /// Orbit (Gorm's Flail) has no timeline: its balls always circle the player and hit whatever they pass, each enemy at
+    /// most once per cooldown. Numbers = weapon base × its level modifiers × player stats.
     /// </summary>
     public sealed class WeaponSystem : MonoBehaviour, ITickable
     {
@@ -78,6 +79,10 @@ namespace Gladiator.Gameplay
         readonly WeaponInstance _loan = new WeaponInstance();
         readonly int[] _hits = new int[256];
         readonly int[] _targets = new int[16];
+        readonly int[] _lobQuery = new int[256];
+        readonly int[] _lobPick = new int[8];
+        [Tooltip("Lob: nearest enemies considered as bomb targets (the one whose blast would catch the most wins).")]
+        public int lobCandidates = 8;
 
         public IReadOnlyList<WeaponInstance> Weapons => _weapons;
         public int Swings { get; private set; }
@@ -251,6 +256,7 @@ namespace Gladiator.Gameplay
                 case WeaponPattern.Thrust: ThrustHit(w, em); break;
                 case WeaponPattern.Projectile: Volley(w, em, returning: false); break;
                 case WeaponPattern.Returning: Volley(w, em, returning: true); break;
+                case WeaponPattern.Lob: Lob(w, em); break;
             }
         }
 
@@ -354,6 +360,71 @@ namespace Gladiator.Gameplay
                 }
                 if (returning) pp.FireReturning(from, dir, shot);
                 else pp.FireStraight(from, dir, shot);
+            }
+        }
+
+        /// <summary>
+        /// AmountOf(w) bombs at the densest groups in reach: of the nearest `lobCandidates` enemies, the one whose blast
+        /// (width × area) would catch the most comes first, then the best ones outside the blasts already chosen; extra
+        /// bombs land around the best spot. Flight and fuse shrink with Projectile Speed. Bombs never hurt the player.
+        /// </summary>
+        void Lob(WeaponInstance w, EnemyManager em)
+        {
+            var pp = PlayerProjectiles.Instance;
+            if (pp == null) return;
+            var d = w.Def;
+            Vector3 origin = transform.position;
+            float blast = d.width * AreaOf(w);
+            int amount = Mathf.Min(AmountOf(w), _lobPick.Length);
+            int found = NearestTargets(em, origin, Acquire(w), Mathf.Clamp(lobCandidates, 1, _targets.Length));
+            if (found == 0) return;
+            int picked = 0;
+            for (int b = 0; b < amount && picked < found; b++)
+            {
+                int best = -1, bestScore = -1;
+                for (int c = 0; c < found; c++)
+                {
+                    Vector3 at = em.GetPosition(_targets[c]);
+                    bool covered = false;
+                    for (int p = 0; p < picked && !covered; p++)
+                    {
+                        Vector3 o = em.GetPosition(_lobPick[p]);
+                        covered = (o.x - at.x) * (o.x - at.x) + (o.z - at.z) * (o.z - at.z) < blast * blast;
+                    }
+                    if (covered) continue;
+                    int score = em.QueryAlive(at, blast, _lobQuery);
+                    if (score > bestScore) { bestScore = score; best = _targets[c]; }
+                }
+                if (best < 0) break;
+                _lobPick[picked++] = best;
+            }
+            float ps = Mathf.Max(0.1f, w.Local[StatId.ProjectileSpeed] * PlayerStat(StatId.ProjectileSpeed, 1f));
+            var shot = new ShotParams
+            {
+                Radius = blast,
+                Damage = Damage(w),
+                CritChance = Crit(w),
+                CritMultiplier = CritMul(w),
+                Knockback = Knock(w),
+                Scale = d.meshScale,
+                SourceId = d.RuntimeId,
+                Mesh = MeshOf(w, pp),
+                Flight = d.flightTime / ps,
+                Fuse = d.fuse / ps,
+                Arc = d.arcHeight,
+            };
+            Vector3 from = origin + Vector3.up * pp.flightHeight;
+            SfxPlayer.Play(SfxId.Throw, origin);
+            for (int k = 0; k < amount; k++)
+            {
+                Vector3 to = em.GetPosition(_lobPick[k % picked]);
+                if (k >= picked) // more bombs than groups: scatter around the best spot
+                {
+                    float a = k * 2.39996f; // golden angle
+                    to += new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * (blast * 0.8f);
+                    if (em.Height != null) to.y = em.Height.Sample(to.x, to.z);
+                }
+                pp.FireLob(from, to, shot);
             }
         }
 

@@ -67,6 +67,32 @@ namespace Gladiator.Gameplay
 
         public static bool IsLocked(UpgradeDef upgrade, MetaConfig meta) => IsLocked(upgrade, meta, Data);
 
+        /// <summary>A discovery (the rattling crate…): into the save at once, so it's kept even if the run is lost or
+        /// quit. Unlocks waiting on it are granted when the run ends (or by CheckUnlocks). False if already set.</summary>
+        public static bool SetFlag(string id)
+        {
+            if (string.IsNullOrEmpty(id) || Data.HasFlag(id)) return false;
+            Data.flags.Add(id);
+            SaveSystem.Save(Data);
+            Debug.Log("[Meta] flag set: " + id);
+            return true;
+        }
+
+        /// <summary>Grants every unlock whose conditions already hold (the menu calls it, for runs that never ended).</summary>
+        public static int CheckUnlocks(MetaConfig meta)
+        {
+            if (meta == null || meta.unlocks == null) return 0;
+            int n = 0;
+            foreach (var u in meta.unlocks)
+            {
+                if (u == null || Data.IsUnlocked(u.id) || !AllMet(u, Data)) continue;
+                Data.unlocked.Add(u.id);
+                n++;
+            }
+            if (n > 0) SaveSystem.Save(Data);
+            return n;
+        }
+
         /// <summary>Records the run, saves, and returns what it earned (also kept in Last).</summary>
         public static RunRewards CommitRun(in RunSummary run, MetaConfig meta)
         {

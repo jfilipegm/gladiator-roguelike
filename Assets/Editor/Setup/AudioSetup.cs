@@ -119,6 +119,10 @@ namespace Gladiator.EditorTools
                 case SfxId.GiftThrow: return E(id, 0.55f, 0.05f, 0.2f, 2, true, 6);
                 case SfxId.GiftLand: return E(id, 0.6f, 0.05f, 0.2f, 2, true, 6);
                 case SfxId.Boo: return E(id, 0.6f, 0.05f, 1f, 1, false, 7, crowd: true);
+                case SfxId.Cackle: return E(id, 0.7f, 0.06f, 0.5f, 1, false, 8);
+                case SfxId.Snare: return E(id, 0.6f, 0.08f, 0.05f, 3, true, 5);
+                case SfxId.Rattle: return E(id, 0.65f, 0.1f, 0.15f, 1, true, 6);
+                case SfxId.Bomb: return E(id, 0.55f, 0.12f, 0.05f, 4, true, 4);
                 default: return E(id, 0.5f, 0f, 0.1f, 2, true, 1);
             }
         }

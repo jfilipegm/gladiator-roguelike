@@ -10,7 +10,7 @@ namespace Gladiator.Gameplay
     /// </summary>
     public sealed partial class EnemyManager
     {
-        public const int StatusSlots = 4;
+        public const int StatusSlots = 5;
 
         [Header("Status effects")]
         [Tooltip("Seconds between damage-over-time ticks (and status puffs) on one enemy.")]
@@ -82,7 +82,7 @@ namespace Gladiator.Gameplay
             return mul;
         }
 
-        /// <summary>Slow: the strongest speed multiplier among the target's statuses.</summary>
+        /// <summary>Slow / Root: the strongest speed multiplier among the target's statuses.</summary>
         float StatusSpeedMul(int i)
         {
             float mul = 1f;

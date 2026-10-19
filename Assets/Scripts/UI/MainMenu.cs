@@ -10,9 +10,11 @@ namespace Gladiator.UI
 {
     /// <summary>
     /// Main menu → gladiator select → the run (M3.5), and the Codex (M3.6: records, unlocks, gladiators; CodexPanel).
-    /// Built in code over the menu diorama. The slice has one gladiator; locked ones show as dark silhouettes with a
-    /// cryptic hint. Renown from the save shows in the corner.
-    /// Mouse, keyboard (Enter / Esc / arrows) and gamepad (South / East / d-pad). Under -bot the run starts at once.
+    /// Built in code over the menu diorama. Every GladiatorDef gets a card: earned ones can be picked (click, or
+    /// left/right), locked ones show as a dark silhouette with their unlock's hint; `locked` lists gladiators that don't
+    /// exist as data yet. Renown from the save shows in the corner.
+    /// Mouse, keyboard (Enter / Esc / arrows) and gamepad (South / East / d-pad). Under -bot the run starts at once
+    /// (`-gladiator &lt;id&gt;` picks who, earned or not).
     /// </summary>
     public sealed class MainMenu : MonoBehaviour
     {
@@ -41,11 +43,21 @@ namespace Gladiator.UI
         CanvasGroup _menu, _select, _codex;
         Button[] _menuButtons;
         int _focus;
+        GladiatorDef[] _available = Array.Empty<GladiatorDef>();
+        Image[] _cardBorders = Array.Empty<Image>();
+        int _pick;
+
+        /// <summary>Earned: no unlock, or its unlock is in the save.</summary>
+        public static bool IsAvailable(GladiatorDef g) => g != null && (g.unlock == null || MetaProgress.IsUnlocked(g.unlock));
+
+        /// <summary>The gladiator FIGHT! starts with.</summary>
+        public GladiatorDef Selected => _available.Length > 0 ? _available[Mathf.Clamp(_pick, 0, _available.Length - 1)] : null;
         Screen _screen;
         Image[] _menuFrames;
 
         void Awake()
         {
+            MetaProgress.CheckUnlocks(meta); // a discovery from a run that was quit, not finished
             var canvas = UiFactory.Canvas("MenuCanvas", transform, UiSortOrder.Menus).transform;
             _menu = Group("Menu", canvas);
             _select = Group("Select", canvas);
@@ -112,49 +124,83 @@ namespace Gladiator.UI
         {
             var mid = new Vector2(0.5f, 0.5f);
             UiFactory.Text("Header", root, "CHOOSE YOUR GLADIATOR", 64, Gold, TextAlignmentOptions.Center, mid, mid, new Vector2(0, 360), new Vector2(1400, 90), font, fontMaterial);
-            int n = gladiators.Length + locked.Length;
+            int open = 0, n = locked.Length;
+            foreach (var g in gladiators) if (g != null) { n++; if (IsAvailable(g)) open++; }
+            _available = new GladiatorDef[open];
+            _cardBorders = new Image[open];
             float w = 330f, gap = 30f, x0 = -(n - 1) * (w + gap) * 0.5f;
-            int k = 0;
+            int k = 0, a = 0;
             foreach (var g in gladiators)
             {
                 if (g == null) continue;
-                var card = Card(root, x0 + k++ * (w + gap), w, true);
+                float x = x0 + k++ * (w + gap);
+                if (!IsAvailable(g)) { LockedCard(root, x, w, g.unlock != null ? g.unlock.hint : "???"); continue; }
+                int index = a;
+                var card = Card(root, x, w, true, out var border);
+                var hit = border.gameObject.AddComponent<Button>();
+                hit.transition = Selectable.Transition.None;
+                hit.onClick.AddListener(() => Choose(index));
+                _available[a] = g;
+                _cardBorders[a++] = border;
                 Line(card, g.displayName.ToUpperInvariant(), 36, Gold, 205);
-                var d = Line(card, g.description, 26, Soft, 95, 150f);
-                d.fontStyle = FontStyles.Normal;
-                Line(card, StatsLine(g), 24, new Color(0.6f, 0.95f, 1f), -35, 80f);
-                Line(card, "Starts with a Rusty Gladius", 22, Soft, -125, 60f).fontStyle = FontStyles.Normal;
+                Line(card, g.description, 25, Soft, 105, 150f).fontStyle = FontStyles.Normal;
+                Line(card, StatsLine(g), 24, new Color(0.6f, 0.95f, 1f), -15, 60f);
+                if (!string.IsNullOrEmpty(g.tradeoff)) Line(card, g.tradeoff, 21, Soft, -85, 70f).fontStyle = FontStyles.Italic;
+                Line(card, g.SelectLine, 22, Soft, -170, 60f).fontStyle = FontStyles.Normal;
             }
-            foreach (var l in locked)
-            {
-                var card = Card(root, x0 + k++ * (w + gap), w, false);
-                var sil = UiFactory.Image("Silhouette", card, new Color(0f, 0f, 0f, 0.85f), mid, mid, new Vector2(0, 70), new Vector2(150, 230), PixelIcons.White);
-                sil.raycastTarget = false;
-                Line(card, "???", 44, new Color(1f, 1f, 1f, 0.5f), 70);
-                Line(card, l.name, 26, new Color(1f, 1f, 1f, 0.55f), -90);
-                var h = Line(card, l.hint, 22, new Color(1f, 0.84f, 0.3f, 0.65f), -160, 70f);
-                h.fontStyle = FontStyles.Italic;
-            }
+            foreach (var l in locked) LockedCard(root, x0 + k++ * (w + gap), w, l.hint);
+            // the last gladiator played this session stays picked
+            _pick = 0;
+            for (int i = 0; i < _available.Length; i++) if (_available[i] == GameSession.Gladiator) _pick = i;
+            RefreshPick();
             UiFactory.Button("Fight", root, "FIGHT!", mid, mid, new Vector2(140, -380), new Vector2(300, 80), font, fontMaterial, StartRun, 44f);
             UiFactory.Button("Back", root, "BACK", mid, mid, new Vector2(-200, -380), new Vector2(220, 80), font, fontMaterial, CloseSelect, 34f);
         }
 
+        void LockedCard(Transform root, float x, float w, string hint)
+        {
+            var mid = new Vector2(0.5f, 0.5f);
+            var card = Card(root, x, w, false, out _);
+            var sil = UiFactory.Image("Silhouette", card, new Color(0f, 0f, 0f, 0.85f), mid, mid, new Vector2(0, 70), new Vector2(150, 230), PixelIcons.White);
+            sil.raycastTarget = false;
+            Line(card, "???", 44, new Color(1f, 1f, 1f, 0.5f), 70);
+            Line(card, hint, 22, new Color(1f, 0.84f, 0.3f, 0.65f), -150, 90f).fontStyle = FontStyles.Italic;
+        }
+
+        /// <summary>Picks `g` if it's earned (tests, and later a gamepad cursor). False if it's locked or unknown.</summary>
+        public bool Pick(GladiatorDef g)
+        {
+            for (int i = 0; i < _available.Length; i++)
+                if (_available[i] == g) { _pick = i; RefreshPick(); return true; }
+            return false;
+        }
+
+        void Choose(int index)
+        {
+            if (index == _pick) { StartRun(); return; } // a second click on the picked card fights
+            _pick = index;
+            SfxPlayer.Play2D(SfxId.Card);
+            RefreshPick();
+        }
+
+        void RefreshPick()
+        {
+            for (int i = 0; i < _cardBorders.Length; i++)
+                _cardBorders[i].color = i == _pick ? Gold : new Color(0.55f, 0.48f, 0.3f, 0.9f);
+        }
+
         static string StatsLine(GladiatorDef g)
         {
-            float hp = 100f, move = 1f;
-            foreach (var b in g.baseStats)
-            {
-                if (b.stat == StatId.MaxHp) hp = b.value;
-                if (b.stat == StatId.MoveSpeed) move = b.value;
-            }
+            float hp = g.BaseValue(StatId.MaxHp, 100f), move = g.BaseValue(StatId.MoveSpeed, 1f);
             return Mathf.RoundToInt(hp) + " HP  ·  " + Mathf.RoundToInt(move * 100f) + "% speed";
         }
 
-        Transform Card(Transform root, float x, float w, bool open)
+        Transform Card(Transform root, float x, float w, bool open, out Image border)
         {
             var mid = new Vector2(0.5f, 0.5f);
-            var border = UiFactory.Image("Card", root, open ? Gold : new Color(0.3f, 0.3f, 0.34f, 0.9f), mid, mid, new Vector2(x, 20), new Vector2(w, 520), PixelIcons.White);
+            border = UiFactory.Image("Card", root, open ? Gold : new Color(0.3f, 0.3f, 0.34f, 0.9f), mid, mid, new Vector2(x, 20), new Vector2(w, 520), PixelIcons.White);
             var inner = UiFactory.Image("Inner", border.transform, CardColor, mid, mid, Vector2.zero, new Vector2(w - 10, 510), PixelIcons.White);
+            inner.raycastTarget = false; // clicks reach the border's button
             return inner.transform;
         }
 
@@ -189,7 +235,11 @@ namespace Gladiator.UI
         void StartRun()
         {
             SfxPlayer.Play2D(SfxId.Pick);
-            GameSession.StartRun(gladiators.Length > 0 ? gladiators[0] : null, run);
+            var g = Selected;
+            string wanted = CommandLine.Get("-gladiator");
+            if (!string.IsNullOrEmpty(wanted)) // bot / perf runs: anyone, earned or not
+                foreach (var d in gladiators) if (d != null && d.id == wanted) g = d;
+            GameSession.StartRun(g, run);
         }
 
         void Quit()
@@ -212,6 +262,14 @@ namespace Gladiator.UI
             bool down = (kb != null && (kb.downArrowKey.wasPressedThisFrame || kb.sKey.wasPressedThisFrame)) || (pad != null && pad.dpad.down.wasPressedThisFrame);
             if (_screen == Screen.Select)
             {
+                bool left = (kb != null && (kb.leftArrowKey.wasPressedThisFrame || kb.aKey.wasPressedThisFrame)) || (pad != null && pad.dpad.left.wasPressedThisFrame);
+                bool right = (kb != null && (kb.rightArrowKey.wasPressedThisFrame || kb.dKey.wasPressedThisFrame)) || (pad != null && pad.dpad.right.wasPressedThisFrame);
+                if (_available.Length > 1 && (left || right))
+                {
+                    _pick = (_pick + (right ? 1 : _available.Length - 1)) % _available.Length;
+                    SfxPlayer.Play2D(SfxId.Card);
+                    RefreshPick();
+                }
                 if (confirm) StartRun();
                 else if (back) CloseSelect();
                 return;

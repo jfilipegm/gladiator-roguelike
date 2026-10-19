@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0ea0c2151f44fc41b534863b8707d7a, type: 3}
+  m_Name: UL_PitGoblin
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.UnlockDef
+  id: pit_goblin
+  displayName: The Pit Goblin
+  description: The thing in the crate wants a turn. The Pit Goblin can be chosen, and its Bomb Satchel joins the level-up pool.
+  hint: "Something rattles in the Slave Pit\u2026"
+  conditions:
+  - kind: 8
+    id: rattling_crate
+    amount: 1
+  addsToPool:
+  - {fileID: 11400000, guid: 5dfe23ca5341be3a987d126ca0ebe74f, type: 2}

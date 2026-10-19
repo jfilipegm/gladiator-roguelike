@@ -113,6 +113,18 @@ namespace Gladiator.EditorTools
             if (director != null) director.maxAliveOverride = layout.maxAlive;
             var props = Object.FindAnyObjectByType<Interactables>();
             if (props != null) { props.chestAnchors = layout.chestAnchors; props.altarAnchors = layout.altarAnchors; }
+            if (layout.secretSpots != null && layout.secretSpots.Length > 0)
+            {
+                var crate = new GameObject("RattlingCrate").AddComponent<RattlingCrate>(); // the Pit Goblin's discovery
+                crate.transform.SetParent(arena, false);
+                crate.spots = layout.secretSpots;
+                crate.arenaCenter = layout.center;
+                crate.flag = GladiatorSetup.Flag;
+                crate.crateModel = AssetDatabase.LoadAssetAtPath<GameObject>(GladiatorSetup.CrateModel);
+                crate.goblinModel = AssetDatabase.LoadAssetAtPath<GameObject>(GladiatorSetup.GoblinModel);
+                crate.envMaterial = AssetDatabase.LoadAssetAtPath<Material>(LookSetup.EnvMat);
+                crate.charMaterial = AssetDatabase.LoadAssetAtPath<Material>(LookSetup.CharMat);
+            }
 
             var bot = new GameObject("[PlaytestBot]").AddComponent<PlaytestBot>();
             bot.arenaCenter = layout.center;

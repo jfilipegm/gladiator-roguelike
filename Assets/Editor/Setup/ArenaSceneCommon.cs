@@ -121,6 +121,7 @@ namespace Gladiator.EditorTools
             shots.transform.SetParent(systems, false);
             shots.material = em.bodyMaterial;
             shots.streakMaterial = AssetDatabase.LoadAssetAtPath<Material>(CombatSetup.SlashMat);
+            shots.burst = pop;
 
             var props = new GameObject("Interactables").AddComponent<Interactables>();
             props.transform.SetParent(systems, false);

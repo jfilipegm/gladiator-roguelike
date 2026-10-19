@@ -1,7 +1,7 @@
 # Progress
 
 **Current phase:** Phase 5 — expansion
-**Current milestone:** Phase 5.3 Blood Knight (branch `phase5-bloodknight`, v0.4.0): built and tested, PR + release next. v0.3.0 (the Pit Goblin) released. Gate 2 report delivered, producer: "push and continue".
+**Current milestone:** Phase 5.4 Arena 2, the Provincial Pit (branch `phase5-arena2`, v0.5.0). v0.4.0 (the Blood Knight) released. Gate 2 report delivered, producer: "push and continue".
 **Last updated:** 2026-10-19
 
 **Repository:** https://github.com/jfilipegm/gladiator-roguelike (public, branch `main`, remote `origin`, `.blend` files via Git LFS). Work on a branch per milestone, push as you go, merge through a PR; release every playable build (`Tools/release`).
@@ -72,21 +72,12 @@
 
 - **v0.3.0 released 2026-10-19** (PR #4): https://github.com/jfilipegm/gladiator-roguelike/releases/tag/v0.3.0. Linux 39 MB, Linux dev 69 MB, Windows 41 MB, macOS 48 MB. Smoke runs of the downloaded archives (`-bot -timed -botSeconds 40`): Linux as the Nobody and as the goblin (`-gladiator pit_goblin`: 23 bombs, 2 scavenged, snares 6/8, 61 kills), Windows under Wine as the Nobody; all v0.3.0, clock ran to 38 s, 0 exceptions. macOS not run. The build log's `errors=1` on the first build is the bridge's "Main thread operation timed out" (noise).
 
-## In progress — Phase 5.3 Blood Knight (branch `phase5-bloodknight`, version 0.4.0, PR next)
-- **Built:**
-  - Spec in `docs/GLADIATORS.md`; decisions in DECISIONS "Phase 5.3"; concern C12 (kill heals).
-  - `GL_BloodKnight` (120 HP, 92 % speed, capsule 1.65, camera 1.35): **Crimson Greatsword** (`MeleeArc` data: 220°, 3.4 m, 1.5 s, 28 dmg, Bleed on every hit via the new `WeaponDef.onHitStatus`).
-  - Traits: `TR_Bloodthirst` (`Bloodthirst`: kill heals capped 6 HP/s, elites 8, `PlayerHealth.HealingMul` 0.5 for other healing), `TR_Bloodlust` (`Bloodlust`: ×1 → ×1.6 damage as HP falls to 20 %), `TR_BloodRite` (`BloodRite`: Blood meter from kills and wounds; slide when full → pay 12 % max HP via `PlayerHealth.Spend`, 8 s frenzy ×1.4 damage ×1.25 attack speed, kill heals ×2).
-  - HUD: Blood meter under the HP bar, "+N% DMG" / "SLIDE!" / "FRENZY" beside it. Crowd chatter (Streak/Roar/CloseCall) no longer cuts other announcer lines in their first second.
-  - Unlock `UL_BloodKnight`: new `UnlockConditionKind.DefeatBossBelowHp` (gorm, 0.3); `RunState.BossDefeatedHp01`, `RunSummary.BossDefeatedHp01`, `SaveData.bossKillLowestHp` (‰). Adds the greatsword to the pool.
-  - Model `CH_BloodKnight` (iteration 2, 980 tris), SFX `BloodRite`, bot log `rites N (paid H HP) kill-healed H HP`. Hard-coded locked Blood Knight removed from the menu.
-- **Verified:**
-  - EditMode 66/66 (+4 `KnightTests`), PlayMode 89/89 (+6 `KnightPlayTests`).
-  - Screenshots `Screenshots/p53_knight_fight.png`, `p53_blood_rite.png`, `p53_select.png`; Blender review `Screenshots/blender/ch_bloodknight_review.png`.
-  - **10-min timed bot run as the knight (dev build):** 456 fps avg (2.19 ms, p95 4.48); ≥250 enemies 239 fps (4.19 ms, p95 6.04), gameplay 1.30 / 1.73 ms; max 301 alive; 0 exceptions; level 34, 9,018 kills, 27 Rites (254 HP paid), 3,900 HP kill-healed; hit-stops 855 (35 s). **Gorm reached phase 2 and 10 % HP** when the 600 s recording ended (run clock 553 s): not beaten in this run.
-  - GC: 38 KB over 597 s, all one-offs: the first level-up / first flail (~4 KB), and 20 KB in one frame when the bot broke the rattling crate (the flag's save write).
-- **Next:** open the PR, **ask the producer before merging**, then `git switch main && git pull`, `Tools/release 0.4.0`, smoke-run the archives (also `-gladiator blood_knight`), PROGRESS Done entry, delete the smoke Profiling files.
-- **Then:** Arena 2, the Provincial Pit (v0.5.0).
+- **Phase 5.3 — the Blood Knight (branch `phase5-bloodknight`, PR #5 merged with the producer's OK, release v0.4.0)** — `GL_BloodKnight` (`CH_BloodKnight` 980 tris, 120 HP, 92 % speed): **Crimson Greatsword** (`MeleeArc` data, 220°, 3.4 m, Bleed on every hit via `WeaponDef.onHitStatus`), **Bloodthirst** (kill heals capped 6 HP/s, elites 8; `PlayerHealth.HealingMul` 0.5 for other healing), **Bloodlust** (×1 → ×1.6 damage as HP falls to 20 %), **Blood Rite** (Blood meter from kills and wounds; slide when full → `PlayerHealth.Spend` 12 % max HP, 8 s frenzy ×1.4 damage ×1.25 attack speed, kill heals ×2). HUD Blood meter + "+N% DMG / SLIDE! / FRENZY". **Unlock (interim):** `DefeatBossBelowHp` gorm 0.3 (`RunState/RunSummary.BossDefeatedHp01`, `SaveData.bossKillLowestHp`). Crowd chatter no longer cuts other announcer lines in their first second. **Verified:** EditMode 66/66, PlayMode 89/89 (+4/+6); screenshots `p53_*`; 10-min timed bot run as the knight: 456 fps avg, ≥250 enemies 239 fps (4.19 ms), gameplay 1.30 / 1.73 ms, max 301 alive, 0 exceptions, 27 Rites, 3,900 HP kill-healed (C12), Gorm at 10 % when the recording ended.
+
+- **v0.4.0 released 2026-10-19** (PR #5): https://github.com/jfilipegm/gladiator-roguelike/releases/tag/v0.4.0. Linux 39 MB, Linux dev 69 MB, Windows 41 MB, macOS 48 MB. Smoke runs of the downloaded archives (`-bot -timed -botSeconds 40`): Linux as the Nobody and as the knight (65 kills, 46 HP kill-healed), Windows under Wine; all v0.4.0, clock ran, 0 exceptions. macOS not run.
+
+## In progress — Phase 5.4 Arena 2, the Provincial Pit (branch `phase5-arena2`, version 0.5.0)
+- **Next:** spec it (`docs/ARENAS.md`: layout, kit pieces, rules, enemies, how the player gets there with one arena per run) and the Provincial Champion (`docs/BOSSES.md`, 10 lines first), then build in increments: arena select + unlock, kit + layout, hazards, enemies, boss. PR, ask before merging, `Tools/release 0.5.0`.
 
 ## Known issues
 - **Residual GC (target 0 B/frame, met in steady state):** the first level-up allocates ~7.5 KB once (paused; a hidden pre-draw of the cards didn't remove it; BACKLOG), the boss entrance 1.8 KB, the victory screen + save write ~238 KB (game over). Small first-occurrence allocations (≤ 1.2 KB) in the first minutes.

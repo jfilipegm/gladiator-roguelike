@@ -61,7 +61,7 @@ namespace Gladiator.Tests
     public static class SmokeTestSettings
     {
         /// <summary>Phase 0: bot sandbox. Phase 1: test arena. Phase 3+: Arena 1 (Slave Pit).</summary>
-        public const string ScenePath = "Assets/Scenes/Dev/TestArena.unity";
+        public const string ScenePath = "Assets/Scenes/Arenas/SlavePit.unity";
 
         public static float Seconds
         {

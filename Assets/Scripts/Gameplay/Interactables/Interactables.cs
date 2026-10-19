@@ -26,6 +26,9 @@ namespace Gladiator.Gameplay
         public DeathPopFx burst;
         public Color chestRing = new Color(1f, 0.84f, 0.3f, 0.85f);
         public Color altarRing = new Color(0.9f, 0.16f, 0.36f, 0.85f);
+        [Tooltip("Spots from the arena layout (empty = random clear ground).")]
+        public Vector3[] chestAnchors = System.Array.Empty<Vector3>();
+        public Vector3[] altarAnchors = System.Array.Empty<Vector3>();
         [Tooltip("Seconds the opened chest stays before it sinks away.")]
         public float openLinger = 1.6f;
 
@@ -102,6 +105,37 @@ namespace Gladiator.Gameplay
             return (_rng & 0xFFFFFF) / (float)0x1000000;
         }
 
+        bool FarEnough(Vector3 p, Vector3 player)
+        {
+            var c = config;
+            if ((new Vector2(p.x - player.x, p.z - player.z)).sqrMagnitude < c.minPlayerDistance * c.minPlayerDistance) return false;
+            for (int i = 0; i < _slots.Length; i++)
+            {
+                if (_slots[i].State == State.Free) continue;
+                var o = _slots[i].Pos;
+                if ((new Vector2(p.x - o.x, p.z - o.z)).sqrMagnitude < c.minSpacing * c.minSpacing) return false;
+            }
+            return true;
+        }
+
+        /// <summary>A layout anchor for this kind that is far enough from the player and the others (random order).</summary>
+        bool TryAnchor(Vector3[] anchors, EnemyManager em, Vector3 player, out Vector3 spot)
+        {
+            spot = default;
+            int n = anchors != null ? anchors.Length : 0;
+            if (n == 0) return false;
+            int start = (int)(Rand01() * n);
+            for (int k = 0; k < n; k++)
+            {
+                var p = anchors[(start + k) % n];
+                if (!FarEnough(p, player)) continue;
+                if (em.Height != null) p.y = em.Height.Sample(p.x, p.z);
+                spot = p;
+                return true;
+            }
+            return false;
+        }
+
         /// <summary>A clear, flat spot inside the arena, away from the player and the other interactables.</summary>
         bool TryFindSpot(EnemyManager em, Vector3 player, out Vector3 spot)
         {
@@ -136,7 +170,10 @@ namespace Gladiator.Gameplay
 
         bool Place(int i, EnemyManager em, Vector3 player)
         {
-            if (!TryFindSpot(em, player, out var p)) return false;
+            var anchors = _slots[i].Kind == Kind.Chest ? chestAnchors : altarAnchors;
+            Vector3 p;
+            if (anchors != null && anchors.Length > 0) { if (!TryAnchor(anchors, em, player, out p)) return false; }
+            else if (!TryFindSpot(em, player, out p)) return false;
             ref var s = ref _slots[i];
             s.State = State.Ready;
             s.Pos = p;

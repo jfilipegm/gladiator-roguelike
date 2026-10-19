@@ -161,3 +161,13 @@ One line each: what, and why. Newest at the bottom of each section.
 - **Reward picks open after a 0.3 s beat** (the lid pops and the gold burst plays), then pause like a level-up; queued rewards open before queued level-ups.
 - **The altar is crimson (it hurts you, by your choice); chests are gold.** Neither uses the orange-red danger colour.
 - **The bot buys chests it can afford within 30 m** and logs chests opened in its end-of-run summary, so perf runs exercise the flow.
+
+### M3.1–M3.2 — Slave Pit kit and arena
+- **The Slave Pit is a pit dug into the ground**: earthen walls held by planks (2.4 m) ring a 42 m dirt floor; the locals stand on the rim and on rough stands above the wall, looking down. Playable radius 20.4 m (CONCERNS C1: the larger floor), walls at 22 m.
+- **Arenas are `ArenaLayoutDef` assets built by `ArenaBuilder`** (Gladiator/Arenas/Build Slave Pit): pieces by role (walkable feeds the height grid; solid and props become baked obstacles; decor has no collider), gates, mud/fire zones, crowd zones, chest/altar anchors, player spawn, a per-arena enemy cap. `SlavePitLayout` writes the first version once; after that the asset is the designer's (a separate "Regenerate (overwrites)" item exists).
+- **Two gates (north, south-west): swarms and elites enter through them**, doors swinging in, so the big moments have a direction you can see coming; the steady trickle still drops in along the wall foot (ring spawns). Doors are visual only; an invisible wall behind each gate keeps the player in.
+- **Mud slows the grounded player to 62 % and enemies to 70 %; sliding keeps its momentum**, so a slide is how you cross mud (movement skill pays off). Decals sit 6 cm up so the floor's height noise never pokes through.
+- **Fire pits are permanent burn zones** (10 dps, grounded only — jump over them), orange-red like every hazard.
+- **Vertical variety = three 1.3 m earth terraces, each with a ramp down toward the centre**, plus mounds. The altar sits on a terrace top: the risky reward is up where the horde funnels.
+- **Crowd: 40 locals, one instanced draw, a 9th material (`M_Crowd`).** Tunic colour and bob phase are hashed from each spot's position in the shader; `_CrowdExcitement` (kills, elite kills, near-death) makes them cheer. Over the "≈ 8 materials" budget by one; the alternative (palette material, no animation) loses the crowd as a feedback channel.
+- **Per-arena enemy cap 300 in the Slave Pit** (DirectorConfig still ramps to 460 elsewhere). C1 suggested 200–250 for readability; the perf budget holds at 300+, so I kept the §8 target and flag it for the Gate 2 playtest.

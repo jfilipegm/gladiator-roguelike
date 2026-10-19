@@ -27,8 +27,9 @@ namespace Gladiator.EditorTools
             PlayerSettings.SetScriptingBackend(UnityEditor.Build.NamedBuildTarget.Standalone, ScriptingImplementation.Mono2x);
         }
 
-        [MenuItem("Gladiator/Build/Linux Development Build (Test Arena)")]
-        public static string BuildLinuxDev() => Build(new[] { TestArenaScene.ScenePath }, DevOutput, BuildOptions.Development);
+        /// <summary>Arena 1 first (what perf runs and the bot load), the test arena second (dev).</summary>
+        [MenuItem("Gladiator/Build/Linux Development Build (Slave Pit)")]
+        public static string BuildLinuxDev() => Build(new[] { ArenaBuilder.SlavePitScene, TestArenaScene.ScenePath }, DevOutput, BuildOptions.Development);
 
         public static string Build(string[] scenes, string output, BuildOptions options)
         {

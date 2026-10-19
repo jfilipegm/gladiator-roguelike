@@ -193,6 +193,32 @@ def mound(name, radius, height, seed):
     return obj
 
 
+def pit_rim(name, inner=22.3, outer=50.0, height=2.4, segments=40, seed=13):
+    """The ground around the pit at wall-top height (stands and locals stand on it). Annulus, origin at the pit centre
+    on the pit floor (so it places at 0,0,0); patchy dry grass and dirt, sinking slightly toward the horizon."""
+    rng = random.Random(seed)
+    radii = (inner, inner + 3.5, inner + 9.0, inner + 17.0, outer)
+    bm = bmesh.new()
+    rings = []
+    for k, r in enumerate(radii):
+        ring = []
+        for i in range(segments):
+            a = i / segments * 2 * math.pi
+            rr = r + (rng.uniform(-0.6, 0.6) if 0 < k < len(radii) - 1 else 0.0)
+            z = height + (rng.uniform(-0.12, 0.18) if k > 0 else 0.0) - 0.04 * max(0.0, r - inner - 10.0)
+            ring.append(bm.verts.new((math.cos(a) * rr, math.sin(a) * rr, z)))
+        rings.append(ring)
+    for k in range(len(radii) - 1):
+        for i in range(segments):
+            j = (i + 1) % segments
+            bm.faces.new((rings[k][i], rings[k + 1][i], rings[k + 1][j], rings[k][j]))  # counter-clockwise from above: faces up
+    # low contrast: it frames the pit, it must never compete with what's in it
+    obj = K.object_from_bmesh(name, bm, swatch="dirt_floor")
+    K.set_swatch_where(obj, "dirt_floor_d", lambda c, nn: rng.random() < 0.3)
+    K.set_swatch_where(obj, "grass_dry_d", lambda c, nn: c.length > inner + 8.0 and rng.random() < 0.3)
+    return obj
+
+
 def mud_patch(name, radius=1.0, seed=9):
     """Flat dark-mud decal (scaled per placement); the slowing zone's visual. 2 cm above the floor."""
     rng = random.Random(seed)
@@ -206,8 +232,7 @@ def mud_patch(name, radius=1.0, seed=9):
         ring.append(bm.verts.new((math.cos(a) * r, math.sin(a) * r, 0.02)))
     for i in range(n):
         bm.faces.new((centre, ring[i], ring[(i + 1) % n]))
-    obj = K.object_from_bmesh(name, bm, swatch="mud_dark")
-    K.set_swatch_where(obj, "mud", lambda c, nn: rng.random() < 0.35)
+    obj = K.object_from_bmesh(name, bm, swatch="mud")  # wet brown, not a black hole
     return obj
 
 
@@ -305,6 +330,7 @@ elif PART == "terrain":
         "SM_DirtRamp": dirt_ramp("SM_DirtRamp"),
         "SM_Mound_B": mound("SM_Mound_B", 3.4, 0.85, 31),
         "PR_MudPatch": mud_patch("PR_MudPatch"),
+        "SM_PitRim": pit_rim("SM_PitRim"),
     }
 else:
     items = {

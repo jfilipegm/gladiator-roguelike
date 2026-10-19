@@ -23,7 +23,7 @@ namespace Gladiator.Gameplay
 
         Vector3[] _pos;
         float[] _radius, _life, _maxLife, _dps, _tick, _seed;
-        bool[] _used;
+        bool[] _used, _permanent;
         int _high, _count;
         Transform _player;
         PlayerHealth _health;
@@ -40,6 +40,7 @@ namespace Gladiator.Gameplay
             _radius = new float[capacity]; _life = new float[capacity]; _maxLife = new float[capacity];
             _dps = new float[capacity]; _tick = new float[capacity]; _seed = new float[capacity];
             _used = new bool[capacity];
+            _permanent = new bool[capacity];
         }
 
         void OnEnable() => GameLoop.Register(this, TickGroup.Projectiles, 50);
@@ -51,6 +52,14 @@ namespace Gladiator.Gameplay
         }
 
         /// <summary>Adds a burning patch on the ground at `center` (y = ground height). Returns the slot or -1.</summary>
+        /// <summary>A zone that never burns out (arena fire pits). Cleared only by Clear().</summary>
+        public int AddPermanent(Vector3 center, float radius, float dps)
+        {
+            int i = Add(center, radius, 1f, dps);
+            if (i >= 0) _permanent[i] = true;
+            return i;
+        }
+
         public int Add(Vector3 center, float radius, float duration, float dps)
         {
             for (int i = 0; i < capacity; i++)
@@ -62,6 +71,7 @@ namespace Gladiator.Gameplay
                 _life[i] = _maxLife[i] = duration;
                 _dps[i] = dps;
                 _tick[i] = 0f;
+                _permanent[i] = false;
                 _seed[i] = GameRandom.Value;
                 if (i >= _high) _high = i + 1;
                 _count++;
@@ -93,7 +103,7 @@ namespace Gladiator.Gameplay
             for (int i = 0; i < _high; i++)
             {
                 if (!_used[i]) continue;
-                _life[i] -= dt;
+                if (!_permanent[i]) _life[i] -= dt;
                 if (_life[i] <= 0f)
                 {
                     _used[i] = false;

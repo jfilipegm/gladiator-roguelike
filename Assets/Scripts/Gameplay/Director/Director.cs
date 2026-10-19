@@ -24,14 +24,19 @@ namespace Gladiator.Gameplay
         float _spawnAcc, _nextSwarm, _nextElite;
         int _swarmLeft, _prewarmIndex;
         float _swarmAcc, _swarmAngle, _swarmRate;
-        int _swarmEntry = -1;
+        int _swarmEntry = -1, _swarmGate = -1;
+        ArenaGates _gates;
         int[] _poolTargets;
         Transform _cam;
 
         public int SwarmsStarted { get; private set; }
         public int ElitesSent { get; private set; }
         public float Clock => RunState.Current != null ? RunState.Current.Elapsed : Time.timeSinceLevelLoad;
-        public int TargetAlive => config == null ? 0 : Mathf.Min(config.hardCap, Mathf.RoundToInt(config.targetAlive.Evaluate(Clock) * densityMultiplier));
+        [Tooltip("This arena's cap on enemies alive (0 = DirectorConfig.hardCap). Set from the arena layout.")]
+        public int maxAliveOverride;
+        int HardCap => maxAliveOverride > 0 ? Mathf.Min(config.hardCap, maxAliveOverride) : config.hardCap;
+
+        public int TargetAlive => config == null ? 0 : Mathf.Min(HardCap, Mathf.RoundToInt(config.targetAlive.Evaluate(Clock) * densityMultiplier));
         public float NextSwarmAt => _nextSwarm;
         public float NextEliteAt => _nextElite;
 
@@ -57,7 +62,7 @@ namespace Gladiator.Gameplay
             var open = new bool[n];
             for (float t = 0f; t <= runLength + 0.01f; t += 5f)
             {
-                float total = Mathf.Min(config.hardCap, config.targetAlive.Evaluate(t) * densityMultiplier);
+                float total = Mathf.Min(HardCap, config.targetAlive.Evaluate(t) * densityMultiplier);
                 for (int i = 0; i < n; i++)
                 {
                     share[i] = 0f;
@@ -169,8 +174,10 @@ namespace Gladiator.Gameplay
                     _swarmRate = _swarmLeft / Mathf.Max(0.1f, config.swarmDuration);
                     _swarmAcc = 1f; // first one right away
                     _swarmAngle = RandomAngle();
+                    _swarmGate = PickGate(em);
                     SwarmsStarted++;
-                    Vector3 at = RingPoint(em, _swarmAngle);
+                    Vector3 at = _swarmGate >= 0 ? _gates.Position(_swarmGate) : RingPoint(em, _swarmAngle);
+                    if (_swarmGate >= 0) _gates.Open(_swarmGate, config.swarmDuration + 1.2f);
                     GameEvents.OnDirector.Raise(new DirectorEvent { Kind = DirectorEventKind.Swarm, Position = at, Color = em.telegraphColor });
                 }
             }
@@ -179,13 +186,14 @@ namespace Gladiator.Gameplay
                 _swarmAcc += dt * _swarmRate;
                 float halfArc = config.swarmArc * 0.5f * Mathf.Deg2Rad;
                 var def = table.entries[_swarmEntry].enemy;
-                while (_swarmAcc >= 1f && _swarmLeft > 0 && em.AliveCount < config.hardCap)
+                while (_swarmAcc >= 1f && _swarmLeft > 0 && em.AliveCount < HardCap)
                 {
                     _swarmAcc -= 1f;
                     _swarmLeft--;
-                    SpawnAt(em, def, _swarmAngle + GameRandom.Range(-halfArc, halfArc), null, skipOffscreenTest: true);
+                    if (_swarmGate >= 0) em.Spawn(def, _gates.SpawnPoint(_swarmGate));
+                    else SpawnAt(em, def, _swarmAngle + GameRandom.Range(-halfArc, halfArc), null, skipOffscreenTest: true);
                 }
-                if (em.AliveCount >= config.hardCap) _swarmLeft = 0;
+                if (em.AliveCount >= HardCap) _swarmLeft = 0;
             }
 
             // elite cadence
@@ -196,7 +204,10 @@ namespace Gladiator.Gameplay
                 if (k >= 0 && table.affixes.Length > 0)
                 {
                     var affix = table.affixes[GameRandom.Range(0, table.affixes.Length)];
-                    int slot = SpawnAt(em, table.entries[k].enemy, RandomAngle(), affix);
+                    int gate = PickGate(em);
+                    int slot;
+                    if (gate >= 0) { slot = em.Spawn(table.entries[k].enemy, _gates.SpawnPoint(gate), affix); _gates.Open(gate, 2.5f); }
+                    else slot = SpawnAt(em, table.entries[k].enemy, RandomAngle(), affix);
                     if (slot >= 0)
                     {
                         ElitesSent++;
@@ -240,6 +251,15 @@ namespace Gladiator.Gameplay
         }
 
         static float RandomAngle() => GameRandom.Range(0f, Mathf.PI * 2f);
+
+        /// <summary>A gate away from the player for a swarm or an elite (-1 = no gates: use the ring).</summary>
+        int PickGate(EnemyManager em)
+        {
+            if (_gates == null) _gates = ArenaGates.Instance;
+            if (_gates == null || _gates.Count == 0) return -1;
+            Vector3 player = Player.Main != null ? Player.Main.transform.position : em.arenaCenter;
+            return _gates.Pick(player, config.minPlayerDistance);
+        }
 
         Vector3 RingPoint(EnemyManager em, float angle)
         {

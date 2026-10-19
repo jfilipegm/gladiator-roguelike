@@ -103,6 +103,7 @@ namespace Gladiator.Gameplay
         Transform _poolRoot;
         Transform _player;
         PlayerHealth _playerHealth;
+        MudZones _mud;
         float _maxRadius = 0.5f;
 
         public int AliveCount { get; private set; }
@@ -525,6 +526,7 @@ namespace Gladiator.Gameplay
             float recoilTime = feedback != null ? feedback.hitRecoilTime : 0.15f;
             float recoilAngle = feedback != null ? feedback.hitRecoilAngle : 20f;
             var tele = TelegraphRenderer.Instance;
+            _mud = MudZones.Instance;
 
             for (int i = 0; i < _high; i++)
             {
@@ -555,6 +557,7 @@ namespace Gladiator.Gameplay
                 bool facePlayer;
                 Vector3 desired = Think(i, def, p, player, dirTo, dist, dt, tele, out facePlayer);
                 if (_stMask[i] != 0) desired *= StatusSpeedMul(i);
+                if (_mud != null) desired *= _mud.SpeedAt(p);
 
                 // separation (bounded neighbour checks)
                 Vector3 sep = Vector3.zero;

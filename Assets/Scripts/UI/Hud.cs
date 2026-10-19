@@ -23,6 +23,9 @@ namespace Gladiator.UI
         readonly char[] _timeBuf = new char[8];
         int _lastSecond = -1, _lastLevel = -1, _lastGold = -1, _lastKills = -1, _lastHp = -1, _lastMaxHp = -1;
         float _toastT = 10f, _announceT = 10f, _announceLen = 2f, _debugT;
+        AnnounceKind _announceKind = AnnounceKind.Line;
+        const float ChatterHoldOff = 1f;
+        static bool Chatter(AnnounceKind k) => k == AnnounceKind.Streak || k == AnnounceKind.Roar || k == AnnounceKind.CloseCall;
 
         // boss (M3.4): name + HP bar under the timer, phase-2 notch; the timer reads BOSS
         CanvasGroup _bossGroup;
@@ -246,6 +249,10 @@ namespace Gladiator.UI
 
         void OnAnnounce(in AnnounceEvent e)
         {
+            // Crowd chatter (streaks, roars, close calls) comes constantly in a big fight: it never cuts another line
+            // (a Rite, a boss beat, a gift) off in its first second, or the player never reads it.
+            if (Chatter(e.Kind) && !Chatter(_announceKind) && _announceT < ChatterHoldOff && _announce.alpha > 0f) return;
+            _announceKind = e.Kind;
             _announce.text = e.Text; // constant strings only: no allocation
             var c = e.Color;
             c.a = 1f;
@@ -310,6 +317,7 @@ namespace Gladiator.UI
         void OnDirector(in DirectorEvent e)
         {
             _announceLen = 2f;
+            _announceKind = AnnounceKind.Line;
             _announce.text = e.Kind == DirectorEventKind.Swarm ? SwarmText : EliteText;
             var c = e.Color;
             c.a = 1f;

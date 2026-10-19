@@ -1,7 +1,7 @@
 # Progress
 
 **Current phase:** Phase 5 — expansion
-**Current milestone:** Phase 5.1 Favor done (release v0.2.0); next Phase 5.2 Pit Goblin (branch `phase5-goblin`, v0.3.0). Gate 2 report delivered, producer: "push and continue".
+**Current milestone:** Phase 5.1 Favor done (release v0.2.0); now Phase 5.2 Pit Goblin (branch `phase5-goblin`, v0.3.0). Gate 2 report delivered, producer: "push and continue".
 **Last updated:** 2026-10-19
 
 **Repository:** https://github.com/jfilipegm/gladiator-roguelike (public, branch `main`, remote `origin`, `.blend` files via Git LFS). Work on a branch per milestone, push as you go, merge through a PR; release every playable build (`Tools/release`).
@@ -66,7 +66,9 @@
 
 - **Phase 5.1 — Favor (branch `phase5-favor`, release v0.2.0)** — `FavorConfig`/`Favor`/`CrowdGifts`/`ArenaMaster` (Gameplay/Crowd): Favor meter fed by announced streaks, elite kills, variety, style kills (slide/air, capped 3/s), close calls, no-hit stretches, boss entrance/phase; gifts thrown 3–6 m away (healing amphora, gold shower, laurel XP, weapon in the sand = a level-4 loan beside the 4 slots for 30 s, `WeaponSystem.GrantTemporary`); Arena Master whims when play is dull (gate swarm via `Director.StartSwarmThrough`, or a champion challenge with a bounty). `AnnounceEvent.Kind/Tier`, `GameEvents.OnFavor`, HUD Favor bar + loan tile, admin Favor +50 / Gift now / Whim now, SFX GiftThrow/GiftLand/Boo, models PR_GiftAmphora/Pouch/Laurel/Weapon (`BlenderSrc/props/gifts.py`), bot walks to gifts and logs Favor + hit-stops. **Fixes:** `Director.Instance` restored in OnEnable (admin swarm/elite after a Director toggle); **crit hit-stop capped** (crits and elite hits share `hitStopInterval` 0.8 s): a crit build had spent 144 s of a 10-min run frozen, so the clock reached 7:35 and Gorm never came. **Verified:** EditMode 58/58 (+8 FavorTests), PlayMode 77/77 (+6 FavorPlayTests, +1 crit hit-stop cap); screenshots `p51_gifts_landed.png`, `p51_loan.png`. **10-min timed bot run (dev build, after the fix):** 630 fps avg (1.59 ms, p95 2.38, worst 9.84), gameplay 0.35 / 0.67 ms, max 176 alive (a fire build killed fast; the run before the fix held 300 alive at 241 fps, gameplay 1.18 / 1.59 ms); hit-stops 387 (16 s); level 28, 9,516 kills, gifts 3 collected / 4 thrown, whims 0; **Gorm arrived and fell, outcome Survived at 544 s**. GC: only the known boss entrance (1.8 KB) and victory screen + save (~230 KB, game over).
 
-## Next — Phase 5.2 Pit Goblin + rattling crate (branch `phase5-goblin`, release v0.3.0)
+- **v0.2.0 released 2026-10-19** (PR #3 merged with the producer's OK; self-merge is blocked by the permission check, so ask for each PR): https://github.com/jfilipegm/gladiator-roguelike/releases/tag/v0.2.0. Linux 38 MB, Linux dev 68 MB, Windows 40 MB, macOS 47 MB. Smoke runs of the exact archives: Linux (gamescope headless, `-bot -timed -botSeconds 40`) and Windows under Wine (Direct3D 11): both v0.2.0, 40 s, clock ran, 0 exceptions. macOS not run.
+
+## In progress — Phase 5.2 Pit Goblin + rattling crate (branch `phase5-goblin`, release v0.3.0)
 - Spec in `docs/GLADIATORS.md`. Then Blood Knight (v0.4.0), Arena 2 (v0.5.0).
 
 ## Known issues

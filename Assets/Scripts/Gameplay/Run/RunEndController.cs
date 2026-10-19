@@ -98,21 +98,9 @@ namespace Gladiator.Gameplay
         }
 
         /// <summary>Restart the same arena with a fresh run (dev settings like God mode are kept).</summary>
-        public void Retry()
-        {
-            TimeController.ResetForNewRun();
-            var scene = SceneManager.GetActiveScene();
-            if (scene.buildIndex >= 0) SceneManager.LoadScene(scene.buildIndex);
-            else SceneManager.LoadScene(scene.path);
-        }
+        public void Retry() => GameSession.Retry();
 
-        public void Quit()
-        {
-#if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false;
-#else
-            Application.Quit();
-#endif
-        }
+        /// <summary>Back to the main menu (quits a bare arena build that has no menu).</summary>
+        public void Quit() => GameSession.ToMenu();
     }
 }

@@ -31,6 +31,12 @@ namespace Gladiator.UI
         BossController _bossShown;
         bool _timerBoss;
         static readonly Color BossRed = new Color(0.86f, 0.16f, 0.12f);
+
+        // arena intro (M3.5): name + tagline over a dim screen while the pools fill, then FIGHT!
+        CanvasGroup _introGroup;
+        Image _introDim;
+        TextMeshProUGUI _introName, _introTag, _introFight;
+        RunIntro _introShown;
         int _frames;
         int _lastTags = -1;
         float _lastSpeed = 1f;
@@ -123,6 +129,22 @@ namespace Gladiator.UI
             _announce = UiFactory.Text("Announce", canvas, "THE PACK IS LOOSE!", 56, Color.white, TextAlignmentOptions.Center, top, top, new Vector2(0, -280), new Vector2(1100, 80), font, fontMaterial);
             _announce.alpha = 0f;
 
+            var introRoot = new GameObject("Intro", typeof(RectTransform), typeof(CanvasGroup));
+            introRoot.transform.SetParent(canvas, false);
+            var irt = (RectTransform)introRoot.transform;
+            irt.anchorMin = Vector2.zero; irt.anchorMax = Vector2.one; irt.offsetMin = irt.offsetMax = Vector2.zero;
+            _introGroup = introRoot.GetComponent<CanvasGroup>();
+            _introGroup.alpha = 0f;
+            _introGroup.blocksRaycasts = _introGroup.interactable = false;
+            var centre = new Vector2(0.5f, 0.5f);
+            _introDim = UiFactory.Image("Dim", introRoot.transform, new Color(0.03f, 0.02f, 0.02f, 0.86f), centre, centre, Vector2.zero, Vector2.zero, PixelIcons.White);
+            UiFactory.Stretch(_introDim.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            _introName = UiFactory.Text("ArenaName", introRoot.transform, "", 96, Gold, TextAlignmentOptions.Center, centre, centre, new Vector2(0, 70), new Vector2(1600, 120), font, fontMaterial);
+            _introTag = UiFactory.Text("Tagline", introRoot.transform, "", 34, new Color(1f, 1f, 1f, 0.8f), TextAlignmentOptions.Center, centre, centre, new Vector2(0, -20), new Vector2(1600, 50), font, fontMaterial);
+            _introTag.fontStyle = FontStyles.Italic;
+            _introFight = UiFactory.Text("Fight", introRoot.transform, "FIGHT!", 150, new Color(1f, 0.35f, 0.2f), TextAlignmentOptions.Center, centre, centre, new Vector2(0, 20), new Vector2(1600, 180), font, fontMaterial);
+            _introFight.alpha = 0f;
+
             var bossRoot = new GameObject("BossHud", typeof(RectTransform), typeof(CanvasGroup));
             bossRoot.transform.SetParent(canvas, false);
             var brt = (RectTransform)bossRoot.transform;
@@ -133,7 +155,7 @@ namespace Gladiator.UI
             _bossName = UiFactory.Text("BossName", bossRoot.transform, "", 30, new Color(1f, 0.9f, 0.8f), TextAlignmentOptions.Center, top, top, new Vector2(0, -112), new Vector2(900, 36), font, fontMaterial);
             PreSize(_bossName, "GORM, THE PIT MASTER OF THE SLAVE PITS");
             _bossFill = UiFactory.Bar("BossBar", bossRoot.transform, new Color(0.08f, 0.05f, 0.06f, 0.85f), BossRed, top, top, new Vector2(0, -150), new Vector2(760, 26));
-            _pause = UiFactory.Text("Pause", canvas, "PAUSED\n<size=36>click to resume</size>", 90, Color.white, TextAlignmentOptions.Center, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(900, 260), font, fontMaterial);
+            _pause = UiFactory.Text("Pause", canvas, "PAUSED\n<size=36>click to resume  ·  Q: main menu</size>", 90, Color.white, TextAlignmentOptions.Center, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(900, 260), font, fontMaterial);
             _pause.textWrappingMode = TextWrappingModes.Normal;
             _pause.alpha = 0f;
             _debug = UiFactory.Text("Debug", canvas, "", 20, new Color(1f, 1f, 1f, 0.75f), TextAlignmentOptions.BottomLeft, Vector2.zero, Vector2.zero, new Vector2(16, 12), new Vector2(900, 30), font, fontMaterial);
@@ -185,6 +207,39 @@ namespace Gladiator.UI
             _announce.color = c;
             _announceLen = Mathf.Max(0.5f, e.Seconds);
             _announceT = 0f;
+        }
+
+        void DrawIntro(float unscaledDt)
+        {
+            var intro = RunIntro.Instance;
+            if (intro == null || intro.Done)
+            {
+                if (_introGroup.alpha > 0f) _introGroup.alpha = 0f;
+                return;
+            }
+            if (_introShown != intro)
+            {
+                _introShown = intro;
+                _introName.text = intro.ArenaName; // once per arena
+                _introTag.text = intro.tagline;
+            }
+            _introGroup.alpha = 1f;
+            if (intro.Current == RunIntro.Stage.Holding)
+            {
+                _introDim.color = new Color(0.03f, 0.02f, 0.02f, 0.86f);
+                _introName.alpha = Mathf.Clamp01(intro.T * 3f);
+                _introTag.alpha = Mathf.Clamp01(intro.T * 2f - 0.6f) * 0.8f;
+                _introFight.alpha = 0f;
+            }
+            else
+            {
+                float k = Mathf.Clamp01(intro.T / Mathf.Max(0.1f, intro.fightBanner));
+                _introDim.color = new Color(0.03f, 0.02f, 0.02f, 0.86f * (1f - k));
+                _introName.alpha = _introTag.alpha = 0f;
+                _introFight.alpha = 1f - k * k;
+                float sc = 1.6f - 0.6f * Mathf.Min(1f, k * 5f);
+                _introFight.rectTransform.localScale = new Vector3(sc, sc, 1f);
+            }
         }
 
         void DrawBoss(RunState run)
@@ -246,6 +301,9 @@ namespace Gladiator.UI
 
             DrawInteractables(run);
             DrawBoss(run);
+            DrawIntro(unscaledDt);
+            if (player != null && player.IsPaused && Keyboard.current != null && Keyboard.current.qKey.wasPressedThisFrame)
+                GameSession.ToMenu();
 
             // Dev switches in effect (so a test never silently runs with God mode on). Rebuilt only when they change.
             int tags = (DevSettings.GodMode ? 1 : 0) | (DevSettings.Timeless ? 2 : 0) | (DevSettings.AnyBuff ? 4 : 0) |

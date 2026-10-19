@@ -3,9 +3,20 @@ using UnityEngine;
 
 namespace Gladiator.Gameplay
 {
-    /// <summary>Spawns PlaytestBot + FrameStatsRecorder from the command line in any gameplay scene (-mix: all enemy types).</summary>
+    /// <summary>
+    /// Spawns PlaytestBot + FrameStatsRecorder from the command line in the first gameplay scene (-mix: all enemy types).
+    /// From the main menu it waits for the arena (the menu starts the run itself under -bot), so the recording never
+    /// includes the menu or the scene load.
+    /// </summary>
     static class PlaytestBotBootstrap
     {
+        static void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
+        {
+            if (Player.Main == null) return;
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
+            Init();
+        }
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void Init()
         {
@@ -13,6 +24,11 @@ namespace Gladiator.Gameplay
             bool stress = CommandLine.Has("-stress");
             bool profile = CommandLine.Has("-profile") || bot || stress;
             if (!bot && !stress && !profile) return;
+            if (Player.Main == null) // a menu: try again when a gameplay scene loads
+            {
+                UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
+                return;
+            }
             int fps = CommandLine.GetInt("-fps", 0); // cap (e.g. for profiler captures); 0 = uncapped
             if (fps > 0) { QualitySettings.vSyncCount = 0; Application.targetFrameRate = fps; }
 

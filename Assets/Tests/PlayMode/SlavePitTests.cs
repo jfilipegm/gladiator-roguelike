@@ -30,6 +30,7 @@ namespace Gladiator.Tests
             Assert.IsNotNull(op, "Slave Pit not in the build settings");
             while (!op.isDone) yield return null;
             yield return null;
+            while (RunIntro.Instance != null && !RunIntro.Instance.Done) yield return null; // the arena intro holds the game
             _player = Player.Main;
             _motor = _player.GetComponent<PlayerMotor>();
             _em = EnemyManager.Instance;

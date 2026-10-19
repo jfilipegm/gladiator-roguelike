@@ -138,8 +138,9 @@ namespace Gladiator.Gameplay
         {
             var em = EnemyManager.Instance;
             var run = RunState.Current;
-            if (dt <= 0f || em == null || config == null || table == null || table.entries.Length == 0) return;
-            if (!Prewarmed) { PrewarmStep(em); return; } // ~0.4 s at the start of a run: pools first, then the horde
+            if (em == null || config == null || table == null || table.entries.Length == 0) return;
+            if (!Prewarmed) { PrewarmStep(em); return; } // pools first (also while the arena intro holds the game paused)
+            if (dt <= 0f) return;
             if (run != null && run.Ended) { _swarmLeft = 0; return; }
             if (_cam == null && Camera.main != null) _cam = Camera.main.transform;
             float t = Clock;

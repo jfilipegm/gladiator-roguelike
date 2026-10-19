@@ -92,6 +92,9 @@ namespace Gladiator.EditorTools
             crowd.material = EnsureCrowdMaterial();
             crowd.spots = CrowdSpots(layout);
             new GameObject("CrowdExcitement").AddComponent<CrowdExcitement>().transform.SetParent(arena, false);
+            var intro = new GameObject("RunIntro").AddComponent<RunIntro>();
+            intro.transform.SetParent(arena, false);
+            intro.arenaName = layout.displayName.ToUpperInvariant();
 
             if (layout.boss != null)
             {

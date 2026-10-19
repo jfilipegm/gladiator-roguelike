@@ -13,6 +13,8 @@ namespace Gladiator.Gameplay
         public ProgressionConfig config;
         [Tooltip("This arena's tier (0 = the Slave Pit): Renown bonus, deepest arena, ReachArena unlocks. Set by ArenaBuilder.")]
         public int arenaTier;
+        [Tooltip("Damage the player takes here is multiplied by this (an arena's difficulty). Set by ArenaBuilder.")]
+        public float playerDamageTakenMul = 1f;
 
         public float Elapsed { get; private set; }
         public float TimeRemaining => Mathf.Max(0f, config.runDuration - Elapsed);

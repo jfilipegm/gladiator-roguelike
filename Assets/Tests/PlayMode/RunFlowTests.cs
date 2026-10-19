@@ -43,6 +43,11 @@ namespace Gladiator.Tests
             Invoke(menu, "OpenSelect");
             yield return null;
             Invoke(menu, "StartRun");
+            if (menu.AsksForArena) // an earlier test beat Gorm in the sandbox save: the arena screen asks
+            {
+                Assert.IsTrue(menu.PickArena(menu.run));
+                Invoke(menu, "Launch");
+            }
             yield return WaitScene("SlavePit");
         }
 

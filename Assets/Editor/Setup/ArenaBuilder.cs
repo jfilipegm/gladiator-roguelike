@@ -159,10 +159,13 @@ namespace Gladiator.EditorTools
             }
             // the arena's tier and difficulty (Phase 5.4)
             var runState = Object.FindAnyObjectByType<RunState>();
-            if (runState != null) runState.arenaTier = layout.tier;
+            if (runState != null)
+            {
+                runState.arenaTier = layout.tier;
+                // on the run, not the player: the player is a prefab instance, and a field set on it here isn't saved
+                runState.playerDamageTakenMul = layout.playerDamageTakenMul > 0f ? layout.playerDamageTakenMul : 1f;
+            }
             enemies.hpMul = layout.enemyHpMul > 0f ? layout.enemyHpMul : 1f;
-            var health = player.GetComponent<PlayerHealth>();
-            if (health != null) health.incomingMul = layout.playerDamageTakenMul > 0f ? layout.playerDamageTakenMul : 1f;
             var props = Object.FindAnyObjectByType<Interactables>();
             if (props != null) { props.chestAnchors = layout.chestAnchors; props.altarAnchors = layout.altarAnchors; }
             if (layout.secretSpots != null && layout.secretSpots.Length > 0)

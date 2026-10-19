@@ -193,7 +193,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.PlayerHealth
   invulnerableTime: 0.4
   maxArmor: 0.75
-  incomingMul: 1
   feedback: {fileID: 11400000, guid: 0327740b5aa030136919a4b2d5feb6a6, type: 2}
 --- !u!114 &2791122852982351566
 MonoBehaviour:

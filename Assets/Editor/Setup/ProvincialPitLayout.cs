@@ -105,7 +105,7 @@ namespace Gladiator.EditorTools
             Add("SM_ProvDais", PieceRole.Walkable, Vector3.zero, 0f);
 
             foreach (float deg in new[] { 35f, 95f, 155f, 215f, 275f, 335f })
-                Add("SM_Pillar", PieceRole.Solid, Polar(deg, 12f), deg);
+                Add("SM_ProvPillar", PieceRole.Solid, Polar(deg, 12f), deg);
 
             l.pieces = pieces.ToArray();
             l.gates = gates.ToArray();

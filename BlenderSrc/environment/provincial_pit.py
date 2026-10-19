@@ -113,6 +113,27 @@ def prov_stand(name, width=4.6, tiers=3, rise=0.45, run=0.8):
 
 # ------------------------------------------------------------------------------------------------ terrain
 
+def prov_pillar(name, height=4.2, radius=0.5):
+    """Stone column (a line-of-sight blocker): grey plinth and capital, a sandstone shaft of three drums of slightly
+    different girth so it reads as stacked stone, not a wooden post. Origin at the base centre; ~1.3 m footprint."""
+    parts = [K.box(name, size=(1.3, 1.3, 0.32), pivot=(0, 0, -1), bevel=0.04, swatch="stone_grey"),
+             K.cylinder("Torus", radius=radius + 0.1, depth=0.16, verts=12, location=(0, 0, 0.32), pivot=(0, 0, -1),
+                        swatch="stone_grey")]
+    z, drum = 0.48, (height - 0.48 - 0.55) / 3
+    for i, (r, sw) in enumerate(((radius, "sandstone"), (radius - 0.03, "sand_d"), (radius - 0.05, "sandstone"))):
+        parts.append(K.cylinder("Drum%d" % i, radius=r, depth=drum - 0.03, verts=12, location=(0, 0, z), pivot=(0, 0, -1),
+                                taper=0.97, swatch=sw))
+        parts.append(K.cylinder("Joint%d" % i, radius=r - 0.06, depth=0.03, verts=12, location=(0, 0, z + drum - 0.03),
+                                pivot=(0, 0, -1), swatch="sandstone_d"))
+        z += drum
+    parts.append(K.cylinder("Echinus", radius=radius - 0.06, depth=0.25, verts=12, location=(0, 0, z), pivot=(0, 0, -1),
+                            taper=1.35, swatch="stone_grey"))
+    parts.append(K.box("Abacus", size=(1.3, 1.3, 0.3), location=(0, 0, z + 0.25), pivot=(0, 0, -1), bevel=0.04,
+                       swatch="stone_grey"))
+    finish(parts)
+    return K.join(parts, name)
+
+
 def prov_floor(name, radius=26.4, seed=17):
     """Packed sand disc of 2 m cells: nearly flat (the arena is built, not dug), a little darker at the rim."""
     rng = random.Random(seed)
@@ -124,7 +145,7 @@ def prov_floor(name, radius=26.4, seed=17):
         r = v.co.length
         v.co.z = rng.uniform(-0.03, 0.03) + 0.12 * max(0.0, (r - 22.0) / 4.4)
     obj = K.object_from_bmesh(name, bm, swatch="sand")
-    K.set_swatch_where(obj, "sand_l", lambda c, n: rng.random() < 0.18)
+    K.set_swatch_where(obj, "sand_l", lambda c, n: rng.random() < 0.07)  # a few light cells: floors stay low-contrast
     K.set_swatch_where(obj, "sand_d", lambda c, n: c.length > 21.5 and rng.random() < 0.5)
     return obj
 
@@ -174,13 +195,14 @@ def prov_platform(name, size=(6.0, 4.0), height=1.2, seed=23):
 
 
 def prov_dais(name, radius=3.6, height=0.45):
-    """Low round dais in the centre, one step up (the boss's stage before the fight)."""
+    """Low round dais in the centre, one step up (the boss's stage before the fight). Its seal is ochre, not red: red
+    means 'this hurts you' (CLAUDE.md §5)."""
     base = K.cylinder(name, radius=radius, depth=height * 0.5, verts=12, pivot=(0, 0, -1), swatch="sandstone_d")
     parts = [base,
              K.cylinder("Top", radius=radius - 0.6, depth=height * 0.5, verts=12, location=(0, 0, height * 0.5),
                         pivot=(0, 0, -1), swatch="sandstone"),
              K.cylinder("Seal", radius=0.9, depth=0.03, verts=8, location=(0, 0, height), pivot=(0, 0, -1),
-                        swatch="red_banner")]
+                        swatch="ochre")]
     finish(parts)
     return K.join(parts, name)
 
@@ -260,6 +282,7 @@ if PART == "structures":
         "SM_ProvWall_4m": prov_wall("SM_ProvWall_4m"),
         "SM_ProvGate": prov_gate("SM_ProvGate"),
         "SM_ProvStand_4m": prov_stand("SM_ProvStand_4m"),
+        "SM_ProvPillar": prov_pillar("SM_ProvPillar"),
     }
 elif PART == "terrain":
     items = {

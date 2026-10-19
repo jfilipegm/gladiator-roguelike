@@ -1,10 +1,10 @@
 # Progress
 
-**Current phase:** Phase 4 — slice polish and performance
-**Current milestone:** GATE 2 reached — waiting for the producer's playtest (report: `docs/GATE2_REPORT.md`) (Gate 1 passed 2026-10-18: "proceed", no feel changes)
+**Current phase:** Phase 5 — expansion (starting)
+**Current milestone:** release tooling + v0.1.0, then Phase 5 (Gate 2 report delivered; producer: "push and continue") (Gate 1 passed 2026-10-18: "proceed", no feel changes)
 **Last updated:** 2026-10-19
 
-**Repository:** https://github.com/jfilipegm/gladiator-roguelike (public, branch `main`, remote `origin`, `.blend` files via Git LFS). Push only when the producer asks.
+**Repository:** https://github.com/jfilipegm/gladiator-roguelike (public, branch `main`, remote `origin`, `.blend` files via Git LFS). Work on a branch per milestone, push as you go, merge through a PR; release every playable build (`Tools/release`).
 
 ## Resume checklist (read first after a context reset)
 1. Read `CLAUDE.md`, then this file, then `docs/TOOLING.md`.
@@ -56,14 +56,19 @@
 
 - **Phase 4 — polish, audio, options, balance, builds (all committed)** — Placeholder audio: `SfxSynth` (Editor, 28 synthesised one-shots + a 4 s crowd loop → `Assets/Audio/SFX`), `SfxBank` (`Assets/Data/Audio/SfxBank.asset`: volume, pitch jitter, repeat interval, voice cap, positional, priority, crowd bus per sound), `SfxPlayer` (24 pooled 2D voices, distance fade + pan, priority stealing; bus events for hits/crits/kills/damage/pickups/level-ups/announcer/Director, direct calls for swings, throws, chests, altar, boss roar/horn/slams, gates, explosions, fire-pots, FIGHT!, victory, death; gem pickups climb in pitch), `MixerSetup` (AudioMixer Master → SFX/Crowd/Music with exposed volumes, built through Editor internals by reflection), crowd loop follows `CrowdExcitement` + cheers on spikes. `CrowdAnnouncer` + `AnnouncerConfig` (kill-streak ladder 40/80/140/220 in 4 s, STILL STANDING!, THE CROWD ROARS!). `GameOptions` (`options.json`) + `OptionsPanel` (main menu OPTIONS, pause screen O): volumes, look sensitivity, invert Y, FOV, screen shake, render scale (`OptionsEditorGuard` restores the URP asset after Play). `HurtOverlay` (orange-red edge flash on hits, pulse below 30 % HP). XP curve `5 + 5·(L−1)^1.6` (C8). Release build `BuildScripts.BuildLinuxRelease` → `Builds/Linux` (menu + Slave Pit, no admin; F3 fps only); dev build keeps F1 admin. Tests: EditMode 50/50 (+4 `OptionsTests`), PlayMode 70/70 (+3 `FeedbackTests`: 100 hits in a frame play once, far hits silent, status ticks silent; announcer ladder climbs and never repeats; options reach mixer/camera FOV/shake). **Verified:** screenshots `Screenshots/p4_options.png`, `p4_hurt.png`, `p4_announcer.png`; release build smoke run (bot 90 s, menu → run → death → run recorded, 0 exceptions). **Final 10-minute timed bot run (dev build, menu → Slave Pit → Gorm):** 480 fps avg (2.08 ms, p95 3.80, worst 19 ms); ≥250 enemies 247 fps (4.05 ms, p95 6.25, p99 7.13), gameplay 1.23 / 1.63 ms; max 300 alive, 0 pool growths; bot level 28, 9,653 kills, 7 chests, **Gorm DEFEATED at 8:42 run time** (victory). GC after warm-up: ~14 KB of one-offs during play (boss entrance 1.8 KB, ≤ 1.2 KB others) plus ~238 KB in the victory frames (end screen + save write, game over); steady state ~0 B/frame. Not heard: every sound is unverified by ear (C9).
 
-## Gate 2 — reached 2026-10-19 (waiting for the producer's playtest)
-- **Report:** `docs/GATE2_REPORT.md` (§11 format). Stopped here: **no Phase 5 until the producer says so.** Push only if asked.
-- **Final stress check (dev build, Slave Pit, 1,000 enemies, 60 s):** 111 fps avg (8.97 ms, p95 19.4, p99 22.2, worst 56.6), gameplay 3.11 / 4.58 ms, 0 exceptions, 10 KB GC in 57 s (mostly the first level-up). §8 "no crash at 1,000" met.
-- **New concern C11:** Gorm's fight length swings with the build (≈40 s to 2+ min across three bot runs). Judge in the playtest; levers in CONCERNS.
-- **Waiting on the producer:** playtest notes (fun, pacing C8, crowding C1, Gorm C11, sounds C9, announcer C10), and Q1 (recommended: one arena per run).
+## Gate 2 — reached 2026-10-19
+- **Report:** `docs/GATE2_REPORT.md` (§11 format). Producer's answer: **"push and continue"** (playtest later, they're at work), plus a new workflow: branches + PRs, a versioned GitHub release for every playable build, and Windows + macOS builds beside Linux (DECISIONS "After Gate 2"). Q1 taken as recommended: one arena per run.
+- **Final stress check (dev build, Slave Pit, 1,000 enemies, 60 s):** 111 fps avg (8.97 ms, p95 19.4, p99 22.2, worst 56.6), gameplay 3.11 / 4.58 ms, 0 exceptions, 10 KB GC in 57 s. §8 "no crash at 1,000" met.
+- **New concern C11:** Gorm's fight length swings with the build (judge in the playtest).
+- `main` pushed to GitHub at `54bf82a` (2026-10-19).
+
+## In progress — release tooling + v0.1.0 (branch `release-tooling`)
+- Done on the branch: `GameInfo.Version` 0.1.0 + `VersionLabel` (main menu bottom-right, logged at startup); `BuildScripts` Windows/macOS release targets + `BuildReleaseSet()` (Linux release + dev, Windows, macOS); `Tools/release`; notes `docs/releases/v0.1.0.md`; Windows + Mac (Mono) build support installed by hand (TOOLING "Installing Unity build modules").
+- **Blocked (2026-10-19 ~12:15):** the module installer closed the Editor; the relaunched Editor (pid 361922) waits on a modal **"Scene Backup Detected"** dialog (backup `Temp/__Backupscenes/0.backup` = the Slave Pit from the 11:05 build, same as the saved scene). The desktop is locked; force-stopping the Editor needs the producer's OK. Once the Editor is back: `Tools/ucompile`, EditMode + PlayMode tests, merge the PR, then on `main`: `Tools/release 0.1.0` (first Windows/macOS builds; check sizes and contents of the archives), check the Linux archive runs (`Tools/perfrun bot 60` on the dev build).
+- Then Phase 5 (each milestone a branch + PR + release): Favor → Pit Goblin + rattling-crate unlock → Blood Knight → Arena 2.
 
 ## Next
-- After the producer's Gate 2 playtest: a tuning commit from their notes, then Phase 5 only on their go-ahead (proposed order in `docs/GATE2_REPORT.md` §6: Favor → Pit Goblin + rattling-crate unlock → Blood Knight → Arena 2).
+- Phase 5 in the order above. The producer's Gate 2 playtest notes become a tuning PR whenever they arrive.
 
 ## Known issues
 - **Residual GC (target 0 B/frame, met in steady state):** the first level-up allocates ~7.5 KB once (paused; a hidden pre-draw of the cards didn't remove it; BACKLOG), the boss entrance 1.8 KB, the victory screen + save write ~238 KB (game over). Small first-occurrence allocations (≤ 1.2 KB) in the first minutes.

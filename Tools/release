@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+# Cut a GitHub release from an up-to-date main: build the Linux (release + dev), Windows and macOS players in the open
+# Editor, pack them, tag and publish. The version must already be in GameInfo.Version (bumped in the PR) and the notes
+# written to docs/releases/v<version>.md (first line "# v<version> — <title>").
+# Usage: Tools/release <version>        e.g. Tools/release 0.2.0
+#        Tools/release <version> --pack-only   (build + pack into Builds/Releases, no tag, no upload)
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT"
+die() { echo "release: $*" >&2; exit 1; }
+
+ver="${1:-}"; [ -n "$ver" ] || die "usage: Tools/release <version> [--pack-only]"
+pack_only=0; [ "${2:-}" = "--pack-only" ] && pack_only=1
+tag="v$ver"
+notes="docs/releases/$tag.md"
+
+[ -f "$notes" ] || die "missing $notes"
+grep -q "Version = \"$ver\"" Assets/Scripts/Core/GameInfo.cs || die "GameInfo.Version is not $ver"
+if [ $pack_only = 0 ]; then
+  [ "$(git branch --show-current)" = main ] || die "not on main"
+  git fetch -q origin main
+  [ "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" ] || die "main is not in sync with origin/main"
+  # tracked changes block a release; untracked files only when they'd end up in the build (under Assets/)
+  [ -z "$(git status --porcelain --untracked-files=no -- . ':!ProjectSettings/ProjectSettings.asset')" ] || die "working tree not clean"
+  [ -z "$(git status --porcelain -- Assets)" ] || die "untracked files under Assets/ would ship in the build"
+  ! git rev-parse -q --verify "refs/tags/$tag" >/dev/null || die "tag $tag already exists"
+fi
+
+echo "== compile"
+Tools/ucompile >/dev/null || die "compile errors (run Tools/ucompile)"
+
+echo "== build (release + dev)"
+log="Logs/Editor.log"
+mark=$(wc -l < "$log")
+Tools/ueval 'Gladiator.EditorTools.BuildScripts.BuildReleaseSet(); return "ok";' 10 >/dev/null 2>&1 || true  # the bridge times out; the build runs on
+for _ in $(seq 1 540); do  # up to 45 min: a platform's first build compiles every shader variant
+  line=$(tail -n +"$((mark + 1))" "$log" | grep -a "\[Build\] release set" | tail -1 || true)
+  [ -n "$line" ] && break
+  sleep 5
+done
+[ -n "${line:-}" ] || die "no build result after 45 min (see $log)"
+tail -n +"$((mark + 1))" "$log" | grep -a "^\[Build\]" | sed 's/^/   /'
+case "$line" in *"release set OK"*) ;; *) die "build failed" ;; esac
+
+echo "== pack"
+out="Builds/Releases/$tag"
+rm -rf "$out"; mkdir -p "$out"
+skip=(--exclude '*_BackUpThisFolder_ButDontShipItWithYourGame' --exclude '*_BurstDebugInformation_DoNotShip' --exclude '*.debug')
+pack() { # <build dir> <archive base name> <tar.gz|zip>
+  local stage="$out/$2"
+  mkdir -p "$stage"
+  rsync -a "${skip[@]}" "$1"/ "$stage"/
+  if [ "$3" = zip ]; then (cd "$out" && zip -qry "$2.zip" "$2"); else tar -czf "$out/$2.tar.gz" -C "$out" "$2"; fi
+  rm -rf "$stage"
+  echo "   $out/$2.$3 ($(du -h "$out/$2.$3" | cut -f1))"
+}
+pack Builds/Linux "Gladiator-$tag-linux" tar.gz
+pack Builds/LinuxDev "Gladiator-$tag-linux-dev" tar.gz
+pack Builds/Windows "Gladiator-$tag-windows" zip
+pack Builds/Mac "Gladiator-$tag-macos" zip   # contains Gladiator.app; zip -y keeps the bundle's symlinks
+[ $pack_only = 1 ] && { echo "packed only (no tag, no upload)"; exit 0; }
+
+echo "== tag + publish"
+title="$(head -1 "$notes" | sed 's/^# *//')"
+git tag -a "$tag" -m "$title"
+git push -q origin "$tag"
+gh release create "$tag" "$out"/*.tar.gz "$out"/*.zip --title "$title" --notes-file <(tail -n +2 "$notes") --verify-tag

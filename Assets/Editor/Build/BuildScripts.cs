@@ -13,6 +13,11 @@ namespace Gladiator.EditorTools
     {
         public const string DevOutput = "Builds/LinuxDev/Gladiator.x86_64";
         public const string ReleaseOutput = "Builds/Linux/Gladiator.x86_64";
+        public const string WindowsOutput = "Builds/Windows/Gladiator.exe";
+        public const string MacOutput = "Builds/Mac/Gladiator.app";
+
+        /// <summary>What a player gets: the menu and the Slave Pit (no dev test arena).</summary>
+        static string[] ReleaseScenes => new[] { Gladiator.Gameplay.GameSession.MenuScene, ArenaBuilder.SlavePitScene };
 
         public static void ConfigurePlayer()
         {
@@ -34,16 +39,61 @@ namespace Gladiator.EditorTools
 
         /// <summary>The playtest build: what a player gets (menu + the Slave Pit, no admin panel, no dev overlay).</summary>
         [MenuItem("Gladiator/Build/Linux Release Build")]
-        public static string BuildLinuxRelease() => Build(new[] { Gladiator.Gameplay.GameSession.MenuScene, ArenaBuilder.SlavePitScene }, ReleaseOutput, BuildOptions.None);
+        public static string BuildLinuxRelease() => Build(ReleaseScenes, ReleaseOutput, BuildOptions.None);
 
-        public static string Build(string[] scenes, string output, BuildOptions options)
+        /// <summary>The release build for Windows (64-bit, Mono). Needs the "Windows Build Support (Mono)" module.</summary>
+        [MenuItem("Gladiator/Build/Windows Release Build")]
+        public static string BuildWindowsRelease() => Build(ReleaseScenes, WindowsOutput, BuildOptions.None, BuildTarget.StandaloneWindows64);
+
+        /// <summary>The release build for macOS (Mono). Needs the "Mac Build Support (Mono)" module; unsigned (see the release notes).</summary>
+        [MenuItem("Gladiator/Build/macOS Release Build")]
+        public static string BuildMacRelease()
         {
+            UseUniversalMacBuild();
+            return Build(ReleaseScenes, MacOutput, BuildOptions.None, BuildTarget.StandaloneOSX);
+        }
+
+        /// <summary>
+        /// One app for Intel and Apple-silicon Macs (the Mac module defaults to Apple silicon only). Set by reflection:
+        /// the setting lives in the Mac module's own assembly, which isn't there when the module isn't installed.
+        /// </summary>
+        static void UseUniversalMacBuild()
+        {
+            var settings = System.Type.GetType("UnityEditor.OSXStandalone.UserBuildSettings, UnityEditor.OSXStandalone.Extensions");
+            var arch = settings?.GetProperty("architecture");
+            if (arch != null) arch.SetValue(null, UnityEditor.Build.OSArchitecture.x64ARM64);
+            else Debug.LogWarning("[Build] couldn't set the macOS architecture; the app may run on Apple silicon only");
+        }
+
+        /// <summary>
+        /// Every player for a GitHub release (<c>Tools/release</c>): Linux release + dev, Windows and macOS release.
+        /// Ends with one "[Build] release set OK|FAILED" log line the script waits for.
+        /// </summary>
+        public static string BuildReleaseSet()
+        {
+            var results = new[] { BuildLinuxRelease(), BuildLinuxDev(), BuildWindowsRelease(), BuildMacRelease() };
+            bool ok = true;
+            foreach (var r in results) ok &= r.StartsWith("Succeeded");
+            EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Standalone, BuildTarget.StandaloneLinux64);
+            Debug.Log("[Build] release set " + (ok ? "OK" : "FAILED") + " v" + Gladiator.Core.GameInfo.Version);
+            return string.Join("\n", results);
+        }
+
+        public static string Build(string[] scenes, string output, BuildOptions options, BuildTarget target = BuildTarget.StandaloneLinux64)
+        {
+            if (!BuildPipeline.IsBuildTargetSupported(BuildTargetGroup.Standalone, target))
+            {
+                string skip = $"Failed: {target} build support is not installed → {output}";
+                Debug.LogError("[Build] " + skip);
+                return skip;
+            }
             ConfigurePlayer();
             var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
             {
                 scenes = scenes,
                 locationPathName = output,
-                target = BuildTarget.StandaloneLinux64,
+                target = target,
+                targetGroup = BuildTargetGroup.Standalone,
                 options = options,
             });
             var s = report.summary;

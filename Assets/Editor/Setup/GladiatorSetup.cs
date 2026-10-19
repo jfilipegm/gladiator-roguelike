@@ -77,7 +77,7 @@ namespace Gladiator.EditorTools
                 g = PlayerSetup.EnsureAsset<GladiatorDef>(GoblinPath);
                 g.id = "pit_goblin";
                 g.displayName = "The Pit Goblin";
-                g.description = "Lived under the pit floor. Lobs bombs into crowds, leaves snares where it slides, and pulls junk weapons out of its sack.";
+                g.description = "Lived under the pit floor. Lobs bombs, leaves snares, pulls junk out of its sack.";
                 g.baseStats = new[]
                 {
                     new GladiatorDef.BaseStat { stat = StatId.MaxHp, value = 70f },

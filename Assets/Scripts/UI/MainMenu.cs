@@ -142,7 +142,11 @@ namespace Gladiator.UI
                 hit.onClick.AddListener(() => Choose(index));
                 _available[a] = g;
                 _cardBorders[a++] = border;
-                Line(card, g.displayName.ToUpperInvariant(), 36, Gold, 205);
+                var title = Line(card, g.displayName.ToUpperInvariant(), 36, Gold, 205);
+                title.textWrappingMode = TextWrappingModes.NoWrap; // long names shrink instead of spilling onto the text
+                title.enableAutoSizing = true;
+                title.fontSizeMin = 20f;
+                title.fontSizeMax = 36f;
                 Line(card, g.description, 25, Soft, 105, 150f).fontStyle = FontStyles.Normal;
                 Line(card, StatsLine(g), 24, new Color(0.6f, 0.95f, 1f), -15, 60f);
                 if (!string.IsNullOrEmpty(g.tradeoff)) Line(card, g.tradeoff, 21, Soft, -85, 70f).fontStyle = FontStyles.Italic;

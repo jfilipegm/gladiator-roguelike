@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.GladiatorDef
   id: pit_goblin
   displayName: The Pit Goblin
-  description: Lived under the pit floor. Lobs bombs into crowds, leaves snares where it slides, and pulls junk weapons out of its sack.
+  description: Lived under the pit floor. Lobs bombs, leaves snares, pulls junk out of its sack.
   baseStats:
   - stat: 0
     value: 70

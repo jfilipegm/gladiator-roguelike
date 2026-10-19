@@ -24,7 +24,9 @@ namespace Gladiator.Gameplay
         public float rattleRange = 10f;
         [Tooltip("Seconds between rattles: close (×0.5 at point blank) to far.")]
         public Vector2 rattleEvery = new Vector2(1.2f, 2.6f);
-        public float rattleTime = 0.4f;
+        public float rattleTime = 0.45f;
+        [Tooltip("Rattle shake: tilt (deg) and hop (m). Big enough to catch the eye at 10 m.")]
+        public float rattleAngle = 11f, rattleHop = 0.1f;
         [Tooltip("Walking this close breaks it (m).")]
         public float bumpRange = 1.1f;
         [Tooltip("Interact (E) works from this far (m).")]
@@ -122,9 +124,9 @@ namespace Gladiator.Gameplay
             {
                 _shake -= dt;
                 float k = _shake / rattleTime;
-                float a = Mathf.Sin(_shake * 70f) * 7f * k;
+                float a = Mathf.Sin(_shake * 70f) * rattleAngle * k;
                 _crate.rotation = _crateRot * Quaternion.Euler(a * 0.6f, a * 0.4f, a);
-                _crate.position = _pos + Vector3.up * (Mathf.Abs(Mathf.Sin(_shake * 45f)) * 0.06f * k);
+                _crate.position = _pos + Vector3.up * (Mathf.Abs(Mathf.Sin(_shake * 45f)) * rattleHop * k);
             }
             else { _crate.rotation = _crateRot; _crate.position = _pos; }
         }

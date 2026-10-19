@@ -120,5 +120,29 @@ namespace Gladiator.Tests
             yield return null;
             Assert.LessOrEqual(em.EdgeDistance01(em.GetPosition(slot)), 1.001f, "an enemy outside the oval is pulled back in");
         }
+
+        /// <summary>The first bot run in the big pit parked for minutes beside a chest near the east wall: its round
+        /// leash (31 m) was smaller than the oval, so it never opened a chest, picked up a gem or a gift.</summary>
+        [UnityTest, Timeout(60000)]
+        public IEnumerator Bot_OpensAChestNearTheEdgeOfTheOval()
+        {
+            yield return Boot();
+            var em = EnemyManager.Instance;
+            var props = Interactables.Instance;
+            var chest = new Vector3(34f, 0f, -1f); // a layout chest anchor, 34 m out along the long axis
+            chest.y = em.Height.Sample(chest.x, chest.z);
+            Assert.GreaterOrEqual(props.PlaceChestAt(chest), 0, "a free chest slot");
+            RunState.Current.AddGold(200);
+            Player.Main.GetComponent<PlayerMotor>().Teleport(new Vector3(29f, em.Height.Sample(29f, -1f) + 0.1f, -1f));
+            var bot = Object.FindAnyObjectByType<PlaytestBot>(FindObjectsInactive.Include);
+            Assert.IsNotNull(bot, "the scene has a bot");
+            bot.gameObject.SetActive(true);
+            bot.enabled = true;
+            float end = Time.realtimeSinceStartup + 10f;
+            while (Time.realtimeSinceStartup < end && props.ChestsOpened == 0) yield return null;
+            Vector3 p = Player.Main.transform.position;
+            bot.gameObject.SetActive(false);
+            Assert.AreEqual(1, props.ChestsOpened, $"the bot walked to the chest by the wall and opened it (bot at {p})");
+        }
     }
 }

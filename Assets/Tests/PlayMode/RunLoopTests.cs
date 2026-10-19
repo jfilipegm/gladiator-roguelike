@@ -77,7 +77,12 @@ namespace Gladiator.Tests
             Assert.IsTrue(Player.Main.InputEnabled);
             Assert.AreEqual(1, lvl.TimesChosen);
             Assert.AreEqual(1, build.State.LevelOf(picked), "the picked upgrade is owned");
-            Assert.Greater(build.Stats.Block.Version, version0, "and changed the player's stats");
+            if (picked.kind == UpgradeKind.Weapon)
+                Assert.IsNotNull(Player.Main.GetComponent<WeaponSystem>().Find(picked.weapon), "a weapon card equips/levels its weapon");
+            else if (picked.perLevel != null && picked.perLevel.Length > 0)
+                Assert.Greater(build.Stats.Block.Version, version0, "and changed the player's stats");
+            else
+                Assert.Greater(picked.effects.Length, 0, "an effect-only Boon (BoonEffects reads it from the build)");
         }
     }
 }

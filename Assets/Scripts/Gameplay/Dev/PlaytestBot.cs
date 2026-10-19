@@ -105,12 +105,30 @@ namespace Gladiator.Gameplay
             if (runSeconds > 0f && _elapsed >= runSeconds) Finish();
         }
 
+        /// <summary>What the bot ended up with (perf runs record which upgrades were exercised).</summary>
+        static void LogBuild()
+        {
+            var player = Player.Main;
+            var build = player != null ? player.GetComponent<PlayerBuild>() : null;
+            if (build == null) return;
+            var sb = new System.Text.StringBuilder("[PlaytestBot] build:");
+            for (int i = 0; i < build.State.OwnedCount; i++)
+            {
+                var o = build.State.GetOwned(i);
+                sb.Append(' ').Append(o.Def.id).Append(" L").Append(o.Level);
+            }
+            var run = RunState.Current;
+            if (run != null) sb.Append(" | level ").Append(run.Level).Append(" gold ").Append(run.Gold).Append(" kills ").Append(run.Kills);
+            Debug.Log(sb.ToString());
+        }
+
         void Finish()
         {
             _finished = true;
             var rec = FindAnyObjectByType<FrameStatsRecorder>();
             if (rec != null && rec.IsRecording) rec.End();
             Debug.Log($"[PlaytestBot] finished after {_elapsed:0.0}s");
+            LogBuild(); // after the recorder stopped: this string building is not part of the measurement
 #if !UNITY_EDITOR
             Application.Quit(0);
 #endif

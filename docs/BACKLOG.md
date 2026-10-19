@@ -12,6 +12,9 @@ Good ideas that are **not** in the current phase. Pull from here only when a pha
 - **Affixes Cursed / Gilded / Berserk** — Gilded after M2.7 gives gold a purpose.
 - **Card tooltips with the current total** ("Damage 134 % → 151 %") — needs a stat sheet; pause menu in M3.5.
 - **Weighted offers that favour owned upgrades** (Vampire-Survivors style) — only if picks feel too random at Gate 2.
+- **More effect kinds** — on-jump / on-land (Thunderfall shock ring), on-pickup, on-damaged (thorns), Curse and Root statuses with the Arena 2–3 enemies that use them.
+- **Status icons over enemies** (tiny pips above the head) if the puffs + coloured numbers don't read at Gate 2.
+- **Status effects on the player** (enemy Burn/Slow/Root) — fire patches are their own system today.
 
 ## Art / audio
 - **Upgrade icons** — cards and the HUD build strip show 2-letter glyphs (`UpgradeDef.glyph`); procedural pixel icons per Boon/weapon in the Phase 4 juice pass.

@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 40ebe3582a67739c6bdb000081f621a7, type: 3}
+  m_Name: UP_Pyre
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.UpgradeDef
+  id: pyre
+  displayName: Pyre
+  glyph: PY
+  kind: 0
+  tags: 1
+  weight: 8
+  maxLevel: 5
+  minRarity: 0
+  maxRarity: 3
+  requiresAny:
+  - {fileID: 11400000, guid: 88dec8640666390588da59378da65968, type: 2}
+  - {fileID: 11400000, guid: e9cecf92373d7033f89c4bbc6859a71d, type: 2}
+  weapon: {fileID: 0}
+  perLevel: []
+  effects:
+  - kind: 2
+    status: {fileID: 11400000, guid: b6b06c7d29ea6ab1397bb31eff19805c, type: 2}
+    chance: 0
+    power: 8
+    bonus: 0
+    radius: 2.8
+    duration: 0
+    count: 0
+    stacks: 0
+    everyNth: 0
+  healFraction: 0
+  gold: 0

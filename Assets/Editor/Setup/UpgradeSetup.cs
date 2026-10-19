@@ -51,9 +51,78 @@ namespace Gladiator.EditorTools
             if (purse != null) { purse.gold = 15; EditorUtility.SetDirty(purse); }
 
             CreateWeapons();
+            CreateStatusBoons();
 
             AssetDatabase.SaveAssets();
             return Refresh();
+        }
+
+        public const string StatusDir = "Assets/Data/Status/";
+
+        static StatusDef Status(string file, string id, string name, string adjective, StatusKind kind, StatusStacking rule,
+            float duration, int maxStacks, Color color, float damageTaken = 0f, float speed = 1f)
+        {
+            string path = StatusDir + file + ".asset";
+            var existing = AssetDatabase.LoadAssetAtPath<StatusDef>(path);
+            if (existing != null) return existing;
+            if (!AssetDatabase.IsValidFolder("Assets/Data/Status")) AssetDatabase.CreateFolder("Assets/Data", "Status");
+            var s = PlayerSetup.EnsureAsset<StatusDef>(path);
+            s.id = id; s.displayName = name; s.adjective = adjective; s.kind = kind; s.stacking = rule;
+            s.duration = duration; s.maxStacks = maxStacks; s.color = color; s.damageTakenBonus = damageTaken; s.speedMultiplier = speed;
+            EditorUtility.SetDirty(s);
+            return s;
+        }
+
+        static UpgradeDef Load(string file) => AssetDatabase.LoadAssetAtPath<UpgradeDef>(Dir + file + ".asset");
+
+        /// <summary>
+        /// M2.6: statuses (player colours: gold Burn, crimson Bleed, cyan Shock) and the behavioural Boons that apply
+        /// and combine them. Synergy Boons that do nothing alone require a source Boon first (requiresAny).
+        /// </summary>
+        static void CreateStatusBoons()
+        {
+            var burn = Status("SE_Burn", "burn", "Burn", "Burning", StatusKind.Burn, StatusStacking.Refresh, 3f, 1, new Color(1f, 0.8f, 0.25f));
+            var bleed = Status("SE_Bleed", "bleed", "Bleed", "Bleeding", StatusKind.Bleed, StatusStacking.Stack, 4f, 10, new Color(0.9f, 0.16f, 0.36f));
+            var shock = Status("SE_Shock", "shock", "Shock", "Shocked", StatusKind.Shock, StatusStacking.Refresh, 2.5f, 1, new Color(0.45f, 0.92f, 1f), damageTaken: 0.2f);
+            Status("SE_Slow", "slow", "Slow", "Slowed", StatusKind.Slow, StatusStacking.Refresh, 2f, 1, new Color(0.6f, 0.75f, 1f), speed: 0.6f);
+
+            const UpgradeTag Fire = UpgradeTag.Fire, Bolt = UpgradeTag.Lightning, Blood = UpgradeTag.Blood;
+            Effects(Boon("UP_Kindling", "kindling", "Kindling", "KN", Fire),
+                new BoonEffect { kind = EffectKind.StatusOnHit, status = burn, chance = 0.1f, power = 0.4f });
+            Effects(Boon("UP_StaticCharge", "static_charge", "Static Charge", "SC", Bolt),
+                new BoonEffect { kind = EffectKind.ChainSpark, status = shock, power = 7f, everyNth = 6, count = 3, radius = 5f });
+            Effects(Boon("UP_SerratedEdge", "serrated_edge", "Serrated Edge", "SE", Blood | UpgradeTag.Crit, M(StatId.CritChance, ModOp.Flat, 0.04f)),
+                new BoonEffect { kind = EffectKind.StatusOnCrit, status = bleed, power = 2.5f, stacks = 2 });
+            Effects(Boon("UP_BloodSlide", "blood_slide", "Blood Slide", "BS", Blood | UpgradeTag.Movement),
+                new BoonEffect { kind = EffectKind.SlideTrail, status = bleed, power = 3f, stacks = 1, radius = 1f, duration = 2.5f });
+
+            var kindling = Load("UP_Kindling");
+            var staticCharge = Load("UP_StaticCharge");
+            var serrated = Load("UP_SerratedEdge");
+            var bloodSlide = Load("UP_BloodSlide");
+            var oil = Effects(Boon("UP_ConductiveOil", "conductive_oil", "Conductive Oil", "CO", Fire | Bolt),
+                new BoonEffect { kind = EffectKind.SparkBonus, status = burn, bonus = 0.5f });
+            Requires(oil, staticCharge);
+            Requires(Effects(Boon("UP_Pyre", "pyre", "Pyre", "PY", Fire),
+                new BoonEffect { kind = EffectKind.BurstOnDeath, status = burn, power = 8f, radius = 2.8f }), kindling, Load("UP_ConductiveOil"));
+            Requires(Effects(Boon("UP_OpenWounds", "open_wounds", "Open Wounds", "OW", Blood),
+                new BoonEffect { kind = EffectKind.DamagePerStack, status = bleed, bonus = 0.04f }), serrated, bloodSlide);
+        }
+
+        static UpgradeDef Effects(UpgradeDef d, params BoonEffect[] effects)
+        {
+            if (d == null) return null; // existed already: designer-owned
+            d.effects = effects;
+            EditorUtility.SetDirty(d);
+            return d;
+        }
+
+        static void Requires(UpgradeDef d, params UpgradeDef[] any)
+        {
+            if (d == null) return;
+            d.requiresAny = any;
+            d.weight = 8f;
+            EditorUtility.SetDirty(d);
         }
 
         public const string WeaponDir = "Assets/Data/Weapons/";

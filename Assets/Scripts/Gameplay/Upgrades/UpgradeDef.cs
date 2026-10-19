@@ -21,7 +21,7 @@ namespace Gladiator.Gameplay
     /// A level-up card's content as data. Every time it's taken, `perLevel` is added to the player's stats scaled by
     /// the card's rarity (UpgradeConfig.rarityMagnitude), so a Rare "Brute Force" is a bigger step than a Common one.
     /// Weapon cards equip their weapon at level 1 and apply the weapon's own level table after that.
-    /// Behaviour hooks (on-hit, on-slide...) arrive with the M2.6 Boons.
+    /// Behavioural Boons add `effects` (BoonEffect), run by BoonEffects through the event bus.
     /// </summary>
     [CreateAssetMenu(menuName = "Gladiator/Upgrade", fileName = "UP_")]
     public sealed class UpgradeDef : ScriptableObject
@@ -39,12 +39,16 @@ namespace Gladiator.Gameplay
         [Range(1, 8)] public int maxLevel = 5;
         public Rarity minRarity = Rarity.Common;
         public Rarity maxRarity = Rarity.Legendary;
+        [Tooltip("Only offered once you own at least one of these (synergy Boons that do nothing on their own).")]
+        public UpgradeDef[] requiresAny = Array.Empty<UpgradeDef>();
 
         [Header("Effect")]
         [Tooltip("Weapon cards: the weapon equipped at level 1; levels 2+ apply its own level table (max level = its MaxLevel).")]
         public WeaponDef weapon;
         [Tooltip("Added to the player's stats each time this is taken, scaled by the card's rarity.")]
         public StatMod[] perLevel = Array.Empty<StatMod>();
+        [Tooltip("Behaviour (M2.6): status on hit, sparks, bursts, slide trails… handled by BoonEffects.")]
+        public BoonEffect[] effects = Array.Empty<BoonEffect>();
         [Tooltip("Consumables: heal this fraction of max HP.")]
         [Range(0f, 1f)] public float healFraction;
         [Tooltip("Consumables: gold given.")]

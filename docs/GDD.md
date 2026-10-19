@@ -37,6 +37,8 @@ Tier 1 (slice): Starving Convict (swarmer), Pit Cur (fast), Shield Thug (frontal
 - 4 weapon slots (lv 1–8), 6 Boon slots (lv 1–5). Rarity Common/Uncommon/Rare/Legendary, weighted by Luck.
 - Weapons are **patterns** composed from data: MeleeArc, Thrust, MultiHit, GroundSlam, Projectile, Returning, Orbit, Chain, Summon.
 - Synergy through **tags + status effects + events** (Burn, Shock, Bleed, Curse, Slow, Root; OnHit/OnKill/OnCrit/OnDamaged/OnLevelUp/OnJump/OnSlide/OnPickup). Example: "Burning enemies take +X % lightning damage".
+  - Slice statuses: **Burn** (gold, refreshes, damage over time), **Bleed** (crimson, stacks to 10), **Shock** (cyan, +20 % damage taken), **Slow** (data only until an enemy or Boon uses it). Curse and Root come with the enemies that need them.
+  - Slice synergy webs (M2.6): **Fire** — Kindling (chance on hit to Burn) → Pyre (burning enemies burst and spread fire). **Storm** — Static Charge (every 6th hit chains a Shocking spark) → Conductive Oil (sparks +50 % to burning enemies and ignite them). **Blood** — Serrated Edge (crits Bleed) / Blood Slide (slides leave a bleeding trail) → Open Wounds (+4 % damage per Bleed stack). Synergy Boons are only offered once a source is owned.
 - Stats: flat → additive % → multiplicative layers.
 
 ## Meta

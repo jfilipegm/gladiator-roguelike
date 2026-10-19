@@ -28,6 +28,12 @@ namespace Gladiator.Gameplay
             if (d == null || d.kind == UpgradeKind.Consumable || d.weight <= 0f || build.IsBanished(d)) return false;
             int level = build.LevelOf(d);
             if (level >= d.maxLevel) return false;
+            if (level == 0 && d.requiresAny != null && d.requiresAny.Length > 0)
+            {
+                bool met = false;
+                for (int r = 0; r < d.requiresAny.Length && !met; r++) met = d.requiresAny[r] != null && build.LevelOf(d.requiresAny[r]) > 0;
+                if (!met) return false;
+            }
             if (level == 0)
             {
                 int slots = d.kind == UpgradeKind.Weapon ? config.weaponSlots : config.boonSlots;

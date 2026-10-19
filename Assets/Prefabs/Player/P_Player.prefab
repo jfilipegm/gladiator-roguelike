@@ -78,6 +78,7 @@ GameObject:
   - component: {fileID: 2938869018944654561}
   - component: {fileID: 7524997544282564053}
   - component: {fileID: 2791122852982351566}
+  - component: {fileID: 6343050640776242577}
   - component: {fileID: 806913137643507375}
   - component: {fileID: 4759577533021436214}
   - component: {fileID: 3068265213352874394}
@@ -206,6 +207,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.PlayerBuild
   config: {fileID: 11400000, guid: a75b64ea525751d30a96d0df7879d523, type: 2}
   catalog: {fileID: 11400000, guid: e93cb754957a0d6b3b06acc9f47ac07a, type: 2}
+--- !u!114 &6343050640776242577
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3120198515773125934}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53ef14c343bcbdcd1b88c28806d7f4d2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.BoonEffects
+  sparkColorA: {r: 0.55, g: 0.95, b: 1, a: 1}
+  sparkColorB: {r: 1, g: 1, b: 1, a: 1}
+  burstColorA: {r: 1, g: 0.85, b: 0.3, a: 1}
+  burstColorB: {r: 1, g: 0.97, b: 0.8, a: 1}
+  trailColor: {r: 0.85, g: 0.35, b: 0.55, a: 0.8}
+  trailSpacing: 0.8
+  trailTick: 0.3
+  maxBurstsPerFrame: 12
 --- !u!114 &806913137643507375
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -30,7 +30,7 @@ namespace Gladiator.Gameplay
     /// behaviours in <see cref="EnemyBehaviour"/> (wind-up → attack → recover, telegraphed in orange-red) and elite
     /// affixes (<see cref="AffixDef"/>). Zero allocation in steady state.
     /// </summary>
-    public sealed class EnemyManager : MonoBehaviour, ITickable
+    public sealed partial class EnemyManager : MonoBehaviour, ITickable
     {
         public static EnemyManager Instance { get; private set; }
 
@@ -133,6 +133,7 @@ namespace Gladiator.Gameplay
             _aim = new Vector3[capacity]; _attackHit = new bool[capacity]; _affix = new AffixDef[capacity];
             _view = new EnemyView[capacity];
             _free = new int[capacity];
+            AllocStatus();
             for (int i = capacity - 1; i >= 0; i--) _free[_freeCount++] = i;
             _grid = new SpatialHashGrid(boundsMin, boundsMax, gridCellSize, capacity);
             _poolRoot = new GameObject("[EnemyPool]").transform;
@@ -267,6 +268,7 @@ namespace Gladiator.Gameplay
             _aim[i] = Vector3.forward;
             _flash[i] = 0f; _contactCd[i] = 0.5f; _phase[i] = GameRandom.Range(0f, 6.28f); _recoil[i] = 0f; _dying[i] = 0f;
             _uid[i] = _nextUid++;
+            ClearStatus(i);
             Vector3 toPlayer = _player != null ? _player.position - position : Vector3.forward;
             _yaw[i] = Mathf.Atan2(toPlayer.x, toPlayer.z) * Mathf.Rad2Deg;
             v.Root.SetPositionAndRotation(position, Quaternion.Euler(0f, _yaw[i], 0f));
@@ -381,21 +383,26 @@ namespace Gladiator.Gameplay
         {
             if (!IsAlive(i)) return;
             var def = _view[i].Def;
-            bool blocked = IsBlocking(i, info.Direction);
+            bool statusTick = (info.Flags & DamageFlags.Status) != 0;
+            bool blocked = !statusTick && IsBlocking(i, info.Direction);
             float amount = info.Amount * _dmgTakenMul[i] * (blocked ? 1f - def.blockReduction : 1f);
+            if (_stMask[i] != 0) amount *= StatusDamageMul(i, statusTick);
             bool elite = _affix[i] != null;
             _hp[i] -= amount;
-            _knock[i] += info.Direction * (info.Knockback * def.knockbackTaken * _knockMul[i] * (blocked ? 0.4f : 1f));
-            _recoil[i] = feedback != null ? feedback.hitRecoilTime * (blocked ? 0.5f : 1f) : 0.15f;
-            if (feedback != null)
+            if (!statusTick) // ticks don't flash, recoil or push: hundreds of burning enemies must stay readable
             {
-                _flash[i] = feedback.flashDuration;
-                if (!_view[i].Flashing) SetMaterial(_view[i], flashMaterial);
+                _knock[i] += info.Direction * (info.Knockback * def.knockbackTaken * _knockMul[i] * (blocked ? 0.4f : 1f));
+                _recoil[i] = feedback != null ? feedback.hitRecoilTime * (blocked ? 0.5f : 1f) : 0.15f;
+                if (feedback != null)
+                {
+                    _flash[i] = feedback.flashDuration;
+                    if (!_view[i].Flashing) SetMaterial(_view[i], flashMaterial);
+                }
             }
             var hit = new HitEvent
             {
-                TargetId = _uid[i], Position = _pos[i] + Vector3.up * (1.2f * _scale[i]), Damage = amount, Crit = info.IsCrit && !blocked,
-                SourceId = info.SourceId, Blocked = blocked, Elite = elite,
+                TargetId = _uid[i], Index = i, Position = _pos[i] + Vector3.up * (1.2f * _scale[i]), Damage = amount, Crit = info.IsCrit && !blocked,
+                SourceId = info.SourceId, Blocked = blocked, Elite = elite, Flags = info.Flags, Status = info.Status,
             };
             GameEvents.OnHit.Raise(hit);
             if (hit.Crit)
@@ -403,7 +410,7 @@ namespace Gladiator.Gameplay
                 GameEvents.OnCrit.Raise(hit);
                 if (feedback != null) { TimeController.HitStop(feedback.hitStopOnCrit); ScreenShake.Add(feedback.shakeOnCrit); }
             }
-            else if (elite && feedback != null && Time.unscaledTime >= _nextEliteStop)
+            else if (elite && feedback != null && !statusTick && Time.unscaledTime >= _nextEliteStop)
             {
                 _nextEliteStop = Time.unscaledTime + feedback.eliteHitStopInterval;
                 TimeController.HitStop(feedback.hitStopOnElite);
@@ -423,7 +430,7 @@ namespace Gladiator.Gameplay
             bool elite = affix != null;
             GameEvents.OnKill.Raise(new KillEvent
             {
-                TargetId = _uid[i], Position = _pos[i], EnemyTypeId = def.RuntimeId, Elite = elite, SourceId = info.SourceId,
+                TargetId = _uid[i], Index = i, Position = _pos[i], EnemyTypeId = def.RuntimeId, Elite = elite, SourceId = info.SourceId,
                 Xp = def.xp * (elite ? affix.xpMultiplier : 1f), GoldChance = def.goldChance,
             });
             if (deathPop != null && feedback != null)
@@ -500,6 +507,7 @@ namespace Gladiator.Gameplay
         public void Tick(float dt, float unscaledDt)
         {
             _threatCount = 0;
+            _puffsThisFrame = 0;
             if ((_high == 0 && _blastCount == 0) || dt <= 0f) return;
             _grid.Build(_pos, _active, _high);
             if (_player == null && Player.Main != null)
@@ -534,6 +542,8 @@ namespace Gladiator.Gameplay
                     continue;
                 }
 
+                if (_stMask[i] != 0 && !TickStatus(i, dt)) continue; // burned/bled to death this tick
+
                 var def = v.Def;
                 Vector3 p = _pos[i];
                 Vector3 to = player - p;
@@ -544,6 +554,7 @@ namespace Gladiator.Gameplay
                 // behaviour: desired velocity + where to face
                 bool facePlayer;
                 Vector3 desired = Think(i, def, p, player, dirTo, dist, dt, tele, out facePlayer);
+                if (_stMask[i] != 0) desired *= StatusSpeedMul(i);
 
                 // separation (bounded neighbour checks)
                 Vector3 sep = Vector3.zero;

@@ -41,6 +41,21 @@ namespace Gladiator.Gameplay
             _ps.Play();
         }
 
+        /// <summary>A status tick on an enemy: two small motes rising around its body (Burn gold, Bleed crimson, Shock cyan).</summary>
+        public void StatusPuff(Vector3 position, float radius, Color color)
+        {
+            for (int k = 0; k < 2; k++)
+            {
+                Vector3 off = new Vector3(GameRandom.Range(-1f, 1f), GameRandom.Range(-0.4f, 0.4f), GameRandom.Range(-1f, 1f)) * radius;
+                _ep.position = position + off;
+                _ep.velocity = new Vector3(off.x * 0.6f, GameRandom.Range(2.6f, 4f), off.z * 0.6f);
+                _ep.startSize = GameRandom.Range(0.15f, 0.24f);
+                _ep.startColor = color;
+                _ep.startLifetime = GameRandom.Range(0.3f, 0.5f);
+                _ps.Emit(_ep, 1);
+            }
+        }
+
         /// <summary>Radial burst (level-up, pickups of note). Player colours: cyan/white/gold.</summary>
         public void Burst(Vector3 position, int count, float speed, float size, Color a, Color b)
         {

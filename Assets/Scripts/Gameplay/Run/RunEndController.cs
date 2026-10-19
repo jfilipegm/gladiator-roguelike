@@ -84,6 +84,8 @@ namespace Gladiator.Gameplay
                 if (EnemyProjectiles.Instance != null) EnemyProjectiles.Instance.Clear();
                 if (HazardZones.Instance != null) HazardZones.Instance.Clear();
                 if (PlayerProjectiles.Instance != null) PlayerProjectiles.Instance.Clear();
+                var boons = Player.Main != null ? Player.Main.GetComponent<BoonEffects>() : null;
+                if (boons != null) boons.Clear(); // no bursts from the corpses KillAll just made
                 if (burst != null) burst.Burst(at, 40, 8f, 0.22f, new Color(1f, 0.86f, 0.4f), new Color(0.43f, 0.95f, 1f));
             }
         }

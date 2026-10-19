@@ -77,6 +77,34 @@ namespace Gladiator.EditorTools
             return "alive " + em.AliveCount;
         }
 
+        /// <summary>
+        /// Status Boons on a ring of stationary, sturdy dummies in front of the player: gladius + Kindling, Static Charge,
+        /// Conductive Oil, Serrated Edge with 100 % crits. Let it run a few seconds, then Pause() and capture.
+        /// </summary>
+        public static string Statuses()
+        {
+            Quiet(out var p, out var fwd, out var right, weapon: true);
+            if (Director.Instance != null) Director.Instance.enabled = false;
+            var lvl = Object.FindAnyObjectByType<LevelUpController>();
+            if (lvl != null) lvl.enabled = false;
+            DevSettings.CritPct = 100f;
+            var build = Player.Main.GetComponent<PlayerBuild>();
+            foreach (var u in build.catalog.upgrades)
+                if (u.id == "kindling" || u.id == "static_charge" || u.id == "conductive_oil" || u.id == "serrated_edge")
+                    build.Take(new CardOffer { Def = u, Rarity = Rarity.Legendary, Level = build.State.LevelOf(u) + 1 });
+            var dummy = Object.Instantiate(Def("convict"));
+            dummy.moveSpeed = 0f;
+            dummy.maxHp = 4000f;
+            dummy.attackDamage = dummy.contactDamage = 0f;
+            var em = EnemyManager.Instance;
+            for (int k = 0; k < 9; k++)
+            {
+                float a = (k - 4) * 0.33f;
+                em.Spawn(dummy, p + (fwd * Mathf.Cos(a) + right * Mathf.Sin(a)) * (k % 2 == 0 ? 2.2f : 3.6f));
+            }
+            return "alive " + em.AliveCount;
+        }
+
         public static string Pause() { TimeController.PushPause(); return "paused"; }
         public static string Resume() { TimeController.PopPause(); return "resumed"; }
     }

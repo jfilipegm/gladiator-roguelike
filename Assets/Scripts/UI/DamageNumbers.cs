@@ -73,6 +73,13 @@ namespace Gladiator.UI
         void OnHit(in HitEvent e)
         {
             var c = feedback;
+            if (e.Status != StatusKind.None)
+            {
+                var em = EnemyManager.Instance;
+                var def = em != null ? em.StatusDefOf(e.Status) : null;
+                Spawn(e.Position, e.Damage, def != null ? def.color : c.numberColor, c.statusNumberScale, false);
+                return;
+            }
             if (e.Blocked) Spawn(e.Position, e.Damage, c.blockedNumberColor, c.blockedNumberScale, false);
             else Spawn(e.Position, e.Damage, e.Crit ? c.critNumberColor : c.numberColor, e.Crit ? c.critNumberScale : c.numberScale, e.Crit);
         }

@@ -46,6 +46,7 @@ namespace Gladiator.EditorTools
             var build = root.AddComponent<PlayerBuild>();
             build.config = AssetDatabase.LoadAssetAtPath<UpgradeConfig>(UpgradeSetup.ConfigPath);
             build.catalog = catalog;
+            root.AddComponent<BoonEffects>();
 
             var visual = new GameObject("Visual").transform;
             visual.SetParent(root.transform, false);

@@ -44,6 +44,52 @@ namespace Gladiator.Gameplay
                 if (i > 0) t.Append('\n');
                 Mod(d.perLevel[i], scale, t);
             }
+            for (int i = 0; d.effects != null && i < d.effects.Length; i++)
+            {
+                if (t.Length > 0) t.Append('\n');
+                Effect(d.effects[i], scale, t);
+            }
+        }
+
+        static string Name(StatusDef s) => s != null ? s.displayName : "?";
+        static string Adj(StatusDef s) => s != null ? s.adjective : "?";
+
+        /// <summary>One Boon effect as a card line, its headline number at this card's rarity.</summary>
+        public static void Effect(in BoonEffect e, float scale, CharBuffer t)
+        {
+            switch (e.kind)
+            {
+                case EffectKind.StatusOnHit:
+                    t.Append(e.chance * scale * 100f, 0).Append("% chance on hit to ").Append(Name(e.status));
+                    break;
+                case EffectKind.StatusOnCrit:
+                    t.Append("Crits apply ").Append(Mathf.Max(1, e.stacks), 0).Append(' ').Append(Name(e.status))
+                        .Append(" (").Append(e.power * scale, 1).Append("/s each)");
+                    break;
+                case EffectKind.BurstOnDeath:
+                    t.Append(Adj(e.status)).Append(" enemies burst on death: ").Append(e.power * scale, 0)
+                        .Append(" damage, spreading ").Append(Name(e.status));
+                    break;
+                case EffectKind.ChainSpark:
+                    t.Append("Every ").Append(e.everyNth, 0).Append(" hits a spark jumps to ").Append(e.count, 0)
+                        .Append(" enemies (").Append(e.power * scale, 0).Append(" damage, ").Append(Name(e.status)).Append(')');
+                    if (e.status != null && e.status.damageTakenBonus > 0f)
+                        t.Append('\n').Append(Adj(e.status)).Append(" enemies take +").Append(e.status.damageTakenBonus * 100f, 0).Append("% damage");
+                    break;
+                case EffectKind.SparkBonus:
+                    t.Append("Sparks deal +").Append(e.bonus * scale * 100f, 0).Append("% to ").Append(Adj(e.status))
+                        .Append(" enemies and apply ").Append(Name(e.status));
+                    break;
+                case EffectKind.DamagePerStack:
+                    t.Append('+').Append(e.bonus * scale * 100f, 1).Append("% damage per ").Append(Name(e.status)).Append(" stack");
+                    break;
+                case EffectKind.DamageVsStatus:
+                    t.Append('+').Append(e.bonus * scale * 100f, 0).Append("% damage to ").Append(Adj(e.status)).Append(" enemies");
+                    break;
+                case EffectKind.SlideTrail:
+                    t.Append("Slides leave a trail that applies ").Append(Name(e.status)).Append(" (").Append(e.power * scale, 1).Append("/s)");
+                    break;
+            }
         }
 
         /// <summary>One modifier as a card line: "+17% Damage", "+28 Max HP", "+0.6 HP Regen/s", "x1.25 Area".</summary>

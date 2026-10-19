@@ -14,6 +14,8 @@ namespace Gladiator.Gameplay
             public UpgradeDef Def;
             public int Level;
             public Rarity BestRarity;
+            /// <summary>Sum of the rarity magnitudes of every take (Common 1, Rare 1.8…): Boon effects scale with it.</summary>
+            public float Potency;
         }
 
         readonly List<Owned> _owned = new List<Owned>(16);
@@ -64,11 +66,12 @@ namespace Gladiator.Gameplay
                 if (_owned[i].Def != d) continue;
                 var o = _owned[i];
                 o.Level++;
+                o.Potency += scale;
                 if (rarity > o.BestRarity) o.BestRarity = rarity;
                 _owned[i] = o;
                 return o.Level;
             }
-            _owned.Add(new Owned { Def = d, Level = 1, BestRarity = rarity });
+            _owned.Add(new Owned { Def = d, Level = 1, BestRarity = rarity, Potency = scale });
             return 1;
         }
 

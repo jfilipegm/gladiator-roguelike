@@ -42,6 +42,8 @@ namespace Gladiator.Gameplay
         public float streakLength = 2.6f, streakWidth = 0.32f;
         [Tooltip("Spear thrust streak width (m).")]
         public float thrustStreakWidth = 0.45f;
+        [Tooltip("Boon sparks: bolt width (m) and how long one stays on screen (s).")]
+        public float boltWidth = 0.2f, boltLife = 0.14f;
 
         const int MaxMeshes = 8;
 
@@ -58,6 +60,10 @@ namespace Gladiator.Gameplay
         Mesh _streakMesh;
         Matrix4x4[] _streaks;
         int _streakBatch, _lastStreakBatch;
+        const int MaxBolts = 48;
+        readonly Vector3[] _boltFrom = new Vector3[MaxBolts], _boltTo = new Vector3[MaxBolts];
+        readonly float[] _boltT = new float[MaxBolts];
+        int _boltCount;
         RenderParams _streakRp;
         Matrix4x4[][] _matrices;
         int[] _batch, _lastBatch;
@@ -216,8 +222,18 @@ namespace Gladiator.Gameplay
             _life[i] = Mathf.Max(0.05f, duration);
         }
 
+        /// <summary>A spark jumping from `from` to `to` (Boon chain lightning): a bright streak for a moment.</summary>
+        public void Bolt(Vector3 from, Vector3 to)
+        {
+            if (_boltCount >= MaxBolts) return;
+            _boltFrom[_boltCount] = from;
+            _boltTo[_boltCount] = to;
+            _boltT[_boltCount++] = boltLife;
+        }
+
         public void Clear()
         {
+            _boltCount = 0;
             for (int i = 0; i < _high; i++) _used[i] = false;
             _high = _count = 0;
         }
@@ -242,6 +258,7 @@ namespace Gladiator.Gameplay
                 }
                 AddMatrix(i);
             }
+            StepBolts(dt);
             Draw(false);
         }
 
@@ -350,6 +367,27 @@ namespace Gladiator.Gameplay
         {
             _hits[i * hitMemory + _hitCount[i] % hitMemory] = uid;
             _hitCount[i]++;
+        }
+
+        void StepBolts(float dt)
+        {
+            for (int b = 0; b < _boltCount; b++)
+            {
+                _boltT[b] -= dt;
+                if (_boltT[b] <= 0f)
+                {
+                    _boltCount--;
+                    _boltFrom[b] = _boltFrom[_boltCount]; _boltTo[b] = _boltTo[_boltCount]; _boltT[b] = _boltT[_boltCount];
+                    b--;
+                    continue;
+                }
+                if (_streaks == null || _streakBatch >= _streaks.Length) continue;
+                Vector3 d = _boltTo[b] - _boltFrom[b];
+                float len = d.magnitude;
+                if (len < 0.05f) continue;
+                float w = boltWidth * (0.7f + 0.6f * (_boltT[b] / boltLife));
+                _streaks[_streakBatch++] = Matrix4x4.TRS(_boltTo[b], Quaternion.LookRotation(d / len, Vector3.up), new Vector3(w, w, len * 1.15f));
+            }
         }
 
         float TipOf(int i) => _mesh[i] >= 0 && _mesh[i] < _meshCount ? _tip[_mesh[i]] * _scale[i] : 0f;

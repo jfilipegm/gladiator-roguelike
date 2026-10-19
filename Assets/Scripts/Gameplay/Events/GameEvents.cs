@@ -7,8 +7,14 @@ namespace Gladiator.Gameplay
     public struct JumpEvent { public Vector3 Position; public bool FromSlide; public bool AirJump; }
     public struct SlideEvent { public Vector3 Position; public Vector3 Velocity; public float Boost; }
     public struct LandEvent { public Vector3 Position; public float FallSpeed; }
-    public struct HitEvent { public int TargetId; public Vector3 Position; public float Damage; public bool Crit; public int SourceId; public bool Blocked; public bool Elite; }
-    public struct KillEvent { public int TargetId; public Vector3 Position; public int EnemyTypeId; public bool Elite; public int SourceId; public float Xp; public float GoldChance; }
+    /// <summary>`Index` is the enemy's EnemyManager slot, valid during the event (hooks apply statuses through it).</summary>
+    public struct HitEvent
+    {
+        public int TargetId; public int Index; public Vector3 Position; public float Damage; public bool Crit; public int SourceId;
+        public bool Blocked; public bool Elite; public DamageFlags Flags; public StatusKind Status;
+    }
+    /// <summary>`Index` is the dead enemy's slot: its statuses can still be read during the event (Pyre spreads Burn).</summary>
+    public struct KillEvent { public int TargetId; public int Index; public Vector3 Position; public int EnemyTypeId; public bool Elite; public int SourceId; public float Xp; public float GoldChance; }
     public struct DamagedEvent { public Vector3 Position; public float Damage; public float HealthAfter; public float HealthMax; }
     public struct PickupEvent { public int Kind; public Vector3 Position; public float Amount; }
     public struct LevelUpEvent { public int NewLevel; }

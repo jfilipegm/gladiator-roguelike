@@ -34,6 +34,8 @@ namespace Gladiator.Gameplay
         public float numberRise = 1.4f;
         public float numberScale = 1f;
         public float critNumberScale = 1.55f;
+        [Tooltip("Status ticks (Burn, Bleed…): smaller numbers in the status colour.")]
+        public float statusNumberScale = 0.72f;
         public Color numberColor = Color.white;
         public Color critNumberColor = new Color(1f, 0.82f, 0.29f);
         [Tooltip("Hit soaked by a shield (grey, smaller): tells you to flank.")]

@@ -98,6 +98,8 @@ namespace Gladiator.UI
             }
             var hint = UiFactory.Text("Keys", root, "Enter / A: select     Esc / B: back", 24, new Color(1f, 1f, 1f, 0.45f), TextAlignmentOptions.Left, new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(116, 40), new Vector2(900, 34), font, fontMaterial);
             hint.fontStyle = FontStyles.Normal;
+            var bottomRight = new Vector2(1f, 0f);
+            UiFactory.Text("Version", root, GameInfo.VersionLabel, 22, new Color(1f, 1f, 1f, 0.35f), TextAlignmentOptions.Right, bottomRight, bottomRight, new Vector2(-60, 40), new Vector2(400, 34), font, fontMaterial).fontStyle = FontStyles.Normal;
             var save = MetaProgress.Data;
             var corner = new Vector2(1f, 1f);
             var renown = UiFactory.Text("Renown", root, "RENOWN  " + save.renown, 34, Gold, TextAlignmentOptions.Right, corner, corner, new Vector2(-60, -60), new Vector2(600, 50), font, fontMaterial);

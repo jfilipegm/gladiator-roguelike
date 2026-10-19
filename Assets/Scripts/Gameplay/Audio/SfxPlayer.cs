@@ -22,7 +22,12 @@ namespace Gladiator.Gameplay
         float[] _started;
         SfxEntry[] _byId;
         float[] _last;
-        AudioSource _crowd;
+        AudioSource _crowd, _roar;
+
+        /// <summary>The crowd layers as they play now (tests, tuning).</summary>
+        public float CrowdMurmurVolume => _crowd != null ? _crowd.volume : 0f;
+        public float CrowdRoarVolume => _roar != null ? _roar.volume : 0f;
+        public float CrowdPitch => _crowd != null ? _crowd.pitch : 1f;
         Transform _cam;
 
         [Header("Gem pickup chain")]
@@ -77,6 +82,16 @@ namespace Gladiator.Gameplay
                 _crowd.spatialBlend = 0f;
                 _crowd.volume = bank.crowdQuiet;
                 _crowd.outputAudioMixerGroup = bank.crowdGroup;
+                if (bank.crowdRoar != null)
+                {
+                    _roar = gameObject.AddComponent<AudioSource>();
+                    _roar.clip = bank.crowdRoar;
+                    _roar.loop = true;
+                    _roar.playOnAwake = false;
+                    _roar.spatialBlend = 0f;
+                    _roar.volume = 0f;
+                    _roar.outputAudioMixerGroup = bank.crowdGroup;
+                }
             }
             GameOptions.Apply(bank != null ? bank.mixer : null);
         }
@@ -84,7 +99,12 @@ namespace Gladiator.Gameplay
         void Start()
         {
             GameOptions.Apply(bank != null ? bank.mixer : null); // again: a mixer ignores SetFloat until it's running
-            if (_crowd != null && CrowdExcitement.Instance != null) _crowd.Play();
+            if (_crowd != null && CrowdExcitement.Instance != null)
+            {
+                _crowd.time = Random.value * _crowd.clip.length * 0.9f; // a different stretch of the crowd each run
+                _crowd.Play();
+                if (_roar != null) { _roar.time = Random.value * _roar.clip.length * 0.9f; _roar.Play(); }
+            }
         }
 
         void OnEnable()
@@ -118,10 +138,19 @@ namespace Gladiator.Gameplay
         {
             if (_crowd == null) return;
             var c = CrowdExcitement.Instance;
-            float target = c != null ? Mathf.Lerp(bank.crowdQuiet, bank.crowdLoud, c.Value) : 0f;
-            _crowd.volume = Mathf.MoveTowards(_crowd.volume, target, unscaledDt * 0.8f);
-            _crowd.pitch = c != null ? 0.95f + 0.12f * c.Value : 1f;
+            float ex = c != null ? c.Value : 0f, act = c != null ? c.Activity : 0f;
+            // the murmur is always there, louder in a fight; the roar rides on top as excitement climbs
+            float murmur = c != null ? Mathf.Lerp(bank.crowdQuiet, bank.crowdMurmurFight, act) * Mathf.Lerp(1f, 0.75f, ex) : 0f;
+            float roar = c != null ? bank.crowdLoud * Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(bank.crowdRoarFrom, 1f, ex)) : 0f;
+            _crowd.volume = Chase(_crowd.volume, murmur, unscaledDt);
+            if (_roar != null) _roar.volume = Chase(_roar.volume, roar, unscaledDt);
+            // nobody fighting: the whole crowd slows and drops a little (a settling murmur); excited: a touch faster
+            float pitch = Mathf.Lerp(bank.crowdCalmPitch, 1f, act) + bank.crowdExcitedPitch * ex;
+            _crowd.pitch = Mathf.MoveTowards(_crowd.pitch, pitch, unscaledDt * 0.25f);
+            if (_roar != null) _roar.pitch = _crowd.pitch;
         }
+
+        float Chase(float v, float target, float dt) => Mathf.MoveTowards(v, target, dt * (target > v ? bank.crowdRise : bank.crowdFall));
 
         // ---------- events ----------
         void OnHit(in HitEvent e)

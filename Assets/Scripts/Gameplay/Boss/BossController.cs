@@ -3,13 +3,16 @@ using UnityEngine;
 
 namespace Gladiator.Gameplay
 {
-    public enum BossAttack : byte { None, Sweep, Whip, Slam, Charge }
+    /// <summary>Every boss attack the controller knows. Appended only: BossDef assets serialize these.</summary>
+    public enum BossAttack : byte { None, Sweep, Whip, Slam, Charge, Bash, Flurry }
 
     /// <summary>
-    /// Gorm's brain (docs/BOSSES.md). The body is a Scripted enemy in EnemyManager — so every weapon, status, damage
-    /// number and death pop already works on him — and this drives it: the gate entrance, chasing, four telegraphed
-    /// attacks (Flail Sweep, Whip Lash, Chain Slam, Charge in phase 2), calling the guards through the gates, the
-    /// phase-2 roar that sets the fence on fire, and his rigid-part animation. Telegraphs are orange-red
+    /// A boss's brain (docs/BOSSES.md), driven by its BossDef. The body is a Scripted enemy in EnemyManager — so every
+    /// weapon, status, damage number and death pop already works on him — and this drives it: the gate entrance,
+    /// chasing, the telegraphed attacks his def lists for each phase (Gorm: Flail Sweep, Whip Lash, Chain Slam, Charge
+    /// in phase 2; the Champion: Shield Bash, Gladius Flurry, Shield Charge that smashes barricades and stuns him on
+    /// stone), a frontal shield if his body has one, calling the guards through the gates, the phase-2 roar (Gorm sets
+    /// the fence on fire, the Champion fires every spike trap), and his rigid-part animation. Telegraphs are orange-red
     /// (EnemyManager.telegraphColor). Central tick, no allocation after Begin.
     /// </summary>
     public sealed class BossController : MonoBehaviour, ITickable
@@ -24,9 +27,6 @@ namespace Gladiator.Gameplay
         public float entranceRoar = 1.2f;
         public float playerRadius = 0.35f;
 
-        const string GuardsText = "GORM CALLS HIS GUARDS!";
-        const string BurnText = "\"BURN IT!\"";
-
         EnemyManager _em;
         int _slot = -1, _uid;
         State _state;
@@ -34,6 +34,8 @@ namespace Gladiator.Gameplay
         int _phase = 1;
         float _t, _dur, _clock, _walk, _spin, _contactCd, _guardsT, _chaseMin, _chargeTravel;
         bool _hitDone;
+        int _flurryLeft, _chargesLeft;
+        readonly float[] _weights = new float[8];
         Vector3 _pos, _aim, _target, _entryEnd;
         float _yaw;
         PartRig _rig;
@@ -55,6 +57,9 @@ namespace Gladiator.Gameplay
         public Vector3 Position => _pos;
         public int AttacksDone { get; private set; }
         public int GuardWaves { get; private set; }
+        /// <summary>His shield blocks frontal hits right now (a body with a block arc, not stunned).</summary>
+        public bool ShieldUp { get; private set; }
+        public int Stuns { get; private set; }
 
         float Speed => _phase == 2 ? def.enrageSpeed : 1f;
         Color Danger => _em != null ? _em.telegraphColor : new Color(1f, 0.22f, 0.06f, 0.95f);
@@ -121,6 +126,16 @@ namespace Gladiator.Gameplay
         /// <summary>Calls the guards now (tests, admin).</summary>
         public void ForceGuards() => CallGuards();
 
+        /// <summary>Puts him at `position` (on the ground) facing `yaw` degrees (tests, admin).</summary>
+        public void Warp(Vector3 position, float yaw)
+        {
+            if (!Alive) return;
+            _pos = position;
+            if (_em.Height != null) _pos.y = _em.Height.Sample(position.x, position.z);
+            _yaw = yaw;
+            _em.SetScripted(_slot, _pos, _yaw, false);
+        }
+
         public void Tick(float dt, float unscaledDt)
         {
             if (_slot < 0 || _state == State.Dead) return;
@@ -142,9 +157,11 @@ namespace Gladiator.Gameplay
             if (_phase == 1 && _state != State.Entering && _state != State.Roaring && _state != State.Enraging && Hp01 <= def.phase2At)
             {
                 _em.SetInvulnerable(_slot, true);
+                EndStun();
                 Enter(State.Enraging, def.enrageRoar);
                 SfxPlayer.Play2D(SfxId.BossRoar);
-                GameEvents.OnAnnounce.Raise(new AnnounceEvent { Kind = AnnounceKind.BossPhase, Text = BurnText, Color = Danger, Seconds = 2.2f });
+                GameEvents.OnAnnounce.Raise(new AnnounceEvent { Kind = AnnounceKind.BossPhase, Text = def.phase2Text, Color = Danger, Seconds = 2.2f });
+                if (def.phase2SpikeVolley && SpikeTraps.Instance != null) SpikeTraps.Instance.FireAll(); // on his roar
                 if (CrowdExcitement.Instance != null) CrowdExcitement.Instance.Spike(1f);
                 ScreenShake.Add(0.45f);
             }
@@ -172,7 +189,7 @@ namespace Gladiator.Gameplay
                     if (u >= 1f)
                     {
                         _phase = 2;
-                        LightTheFence();
+                        if (def.phase2FireRing) LightTheFence();
                         _em.SetInvulnerable(_slot, false);
                         Enter(State.Chase, 0.5f);
                         _chaseMin = 0.5f;
@@ -194,7 +211,11 @@ namespace Gladiator.Gameplay
                     break;
                 case State.Strike:
                     StrikeTick(pp, u, dt);
-                    if (u >= 1f && _attack != BossAttack.Charge) { AttacksDone++; _last = _attack; Enter(State.Recover, def.recover / Speed); }
+                    if (u >= 1f && _attack != BossAttack.Charge)
+                    {
+                        if (_attack == BossAttack.Flurry && _flurryLeft > 0) { _flurryLeft--; StartAttack(BossAttack.Flurry, true); } // re-aims
+                        else { AttacksDone++; _last = _attack; Enter(State.Recover, def.recover / Speed); }
+                    }
                     break;
                 case State.Recover:
                     GuardsClock(dt);
@@ -203,10 +224,13 @@ namespace Gladiator.Gameplay
                 case State.Stunned:
                     _goal.Body = new Vector3(28f, 0f, 0f);
                     _goal.Head = new Vector3(25f, 10f * Mathf.Sin(_clock * 9f), 0f);
-                    if (u >= 1f) { AttacksDone++; _last = _attack; _attack = BossAttack.None; Enter(State.Recover, def.recover / Speed); }
+                    _goal.ArmL = new Vector3(25f, 0f, 30f); // guard down
+                    if (u >= 1f) { EndStun(); AttacksDone++; _last = _attack; _attack = BossAttack.None; Enter(State.Recover, def.recover / Speed); }
                     break;
             }
 
+            ShieldUp = def.enemy.blockArc > 0f && _state != State.Stunned && _state != State.Entering;
+            _em.SetScriptedShield(_slot, ShieldUp);
             Contact(pp, dt);
             _em.SetScripted(_slot, _pos, _yaw, _state == State.Windup);
             Animate(dt);
@@ -253,25 +277,49 @@ namespace Gladiator.Gameplay
 
         // ---------- attacks ----------
 
+        /// <summary>How much he wants `a` with the player `d` metres away (0 = out of its range).</summary>
+        float Weight(BossAttack a, float d) => a switch
+        {
+            BossAttack.Sweep => d < def.sweepRadius * 0.85f ? 3f : 0f,
+            BossAttack.Whip => d > 3f && d < def.whipLength * 0.9f ? 3f : 0f,
+            BossAttack.Slam => 2f,
+            BossAttack.Charge => d > 5f && d < def.chargeLength ? 2.5f : 0f,
+            BossAttack.Bash => d < def.bashRange * 0.9f ? 3f : 0f,
+            BossAttack.Flurry => d > 1.5f && d < def.flurryLength * 0.95f ? 2.5f : 0f,
+            _ => 0f,
+        };
+
+        /// <summary>A weighted pick from this phase's attacks (the last one is less likely). If none is in range: the
+        /// charge (any range), else the slam, else the first listed.</summary>
         BossAttack Choose(float d)
         {
-            float wSweep = d < def.sweepRadius * 0.85f ? 3f : 0f;
-            float wWhip = d > 3f && d < def.whipLength * 0.9f ? 3f : 0f;
-            float wSlam = 2f;
-            float wCharge = _phase == 2 && d > 5f && d < def.chargeLength ? 2.5f : 0f;
-            if (_last == BossAttack.Sweep) wSweep *= 0.3f;
-            if (_last == BossAttack.Whip) wWhip *= 0.3f;
-            if (_last == BossAttack.Slam) wSlam *= 0.3f;
-            if (_last == BossAttack.Charge) wCharge *= 0.3f;
-            float r = GameRandom.Value * (wSweep + wWhip + wSlam + wCharge);
-            if ((r -= wSweep) < 0f) return BossAttack.Sweep;
-            if ((r -= wWhip) < 0f) return BossAttack.Whip;
-            if ((r -= wSlam) < 0f) return BossAttack.Slam;
-            return wCharge > 0f ? BossAttack.Charge : BossAttack.Slam;
+            var list = _phase == 2 ? def.phase2Attacks : def.phase1Attacks;
+            if (list == null || list.Length == 0) return BossAttack.Slam;
+            float total = 0f;
+            for (int k = 0; k < list.Length; k++)
+            {
+                float w = Weight(list[k], d) * (list[k] == _last ? 0.3f : 1f);
+                _weights[k % _weights.Length] = w;
+                total += w;
+            }
+            if (total > 0f)
+            {
+                float r = GameRandom.Value * total;
+                for (int k = 0; k < list.Length; k++)
+                    if ((r -= _weights[k % _weights.Length]) < 0f) return list[k];
+            }
+            bool charge = false, slam = false;
+            foreach (var a in list) { charge |= a == BossAttack.Charge; slam |= a == BossAttack.Slam; }
+            return charge ? BossAttack.Charge : slam ? BossAttack.Slam : list[0];
         }
 
-        void StartAttack(BossAttack a)
+        void StartAttack(BossAttack a, bool chained = false)
         {
+            if (!chained) // a fresh flurry / charge sets how many follow; chained ones re-aim and count down
+            {
+                _flurryLeft = a == BossAttack.Flurry ? Mathf.Max(1, _phase == 2 ? def.flurryThrusts.y : def.flurryThrusts.x) - 1 : 0;
+                _chargesLeft = a == BossAttack.Charge ? Mathf.Max(1, _phase == 2 ? def.chargeRepeats.y : def.chargeRepeats.x) - 1 : 0;
+            }
             _attack = a;
             Vector3 pp = _player != null ? _player.position : _pos + Vector3.forward;
             _aim = Flat(pp - _pos);
@@ -283,6 +331,8 @@ namespace Gladiator.Gameplay
                 BossAttack.Sweep => def.sweepWindup,
                 BossAttack.Whip => def.whipWindup,
                 BossAttack.Slam => def.slamWindup,
+                BossAttack.Bash => def.bashWindup,
+                BossAttack.Flurry => def.flurryWindup,
                 _ => def.chargeWindup,
             };
             Enter(State.Windup, w / Speed);
@@ -293,8 +343,12 @@ namespace Gladiator.Gameplay
             BossAttack.Sweep => 0.3f,
             BossAttack.Whip => 0.18f,
             BossAttack.Slam => 0.25f,
+            BossAttack.Bash => 0.25f,
+            BossAttack.Flurry => 0.12f,
             _ => def.chargeLength / Mathf.Max(1f, def.chargeSpeed) + 0.2f,
         };
+
+        float ChargeWidth => def.chargeWidth > 0f ? def.chargeWidth : def.enemy.radius * 2f;
 
         void WindupTick(Vector3 pp, float u, TelegraphRenderer tele)
         {
@@ -308,7 +362,7 @@ namespace Gladiator.Gameplay
                     _goal.Body = new Vector3(0f, -25f * u, 0f);
                     break;
                 case BossAttack.Whip:
-                    Lane(_pos, _aim, def.whipLength, def.whipWidth, u, tele, col);
+                    if (tele != null) tele.Lane(_pos, _aim, def.whipLength, def.whipWidth, u, col);
                     _goal.ArmL = new Vector3(45f, 0f, 30f);
                     _goal.Body = new Vector3(-8f, 15f, 0f);
                     break;
@@ -319,24 +373,22 @@ namespace Gladiator.Gameplay
                     _goal.Body = new Vector3(-12f, 0f, 0f);
                     break;
                 case BossAttack.Charge:
-                    Lane(_pos, _aim, def.chargeLength, def.enemy.radius * 2f, u, tele, col);
+                    if (tele != null) tele.Lane(_pos, _aim, def.chargeLength, ChargeWidth, u, col);
                     _goal.Body = new Vector3(28f, 0f, 0f);
+                    _goal.ArmL = new Vector3(-60f, 0f, 0f); // shield up in front
                     _goal.LegL = new Vector3(-30f, 0f, 0f);
                     _goal.LegR = new Vector3(20f, 0f, 0f);
                     break;
-            }
-        }
-
-        static void Lane(Vector3 from, Vector3 dir, float length, float width, float fill, TelegraphRenderer tele, Color col)
-        {
-            if (tele == null) return;
-            float r = width * 0.5f;
-            int n = Mathf.Max(2, Mathf.CeilToInt(length / (r * 1.6f)));
-            for (int k = 0; k < n; k++)
-            {
-                float along = (k + 0.5f) / n * length;
-                float f = Mathf.Clamp01(fill * n - k); // fills from the boss outward
-                tele.Circle(from + dir * along, r, f, col, TelegraphRenderer.Style.Telegraph, 0.08f, k * 0.17f);
+                case BossAttack.Bash:
+                    if (tele != null) tele.Sector(_pos, _aim, def.bashRange, def.bashAngle, u, col);
+                    _goal.ArmL = new Vector3(-15f, 0f, 25f * u); // shield drawn in
+                    _goal.Body = new Vector3(-10f * u, -22f * u, 0f);
+                    break;
+                case BossAttack.Flurry:
+                    if (tele != null) tele.Lane(_pos, _aim, def.flurryLength, def.flurryWidth, u, col);
+                    _goal.ArmR = new Vector3(35f * u, 0f, 0f); // sword drawn back
+                    _goal.Body = new Vector3(0f, -18f * u, 0f);
+                    break;
             }
         }
 
@@ -385,6 +437,28 @@ namespace Gladiator.Gameplay
                         HazardZones.Instance.Add(_target, def.slamFire.x, def.slamFire.y, def.slamFire.z);
                     break;
                 }
+                case BossAttack.Bash:
+                {
+                    Vector3 rel = Flat(pp - _pos);
+                    float dist = rel.magnitude;
+                    if (dist < def.bashRange + playerRadius && (dist < def.enemy.radius + 0.3f || Vector3.Angle(rel, _aim) < def.bashAngle * 0.5f))
+                        HitPlayer(def.bashDamage, dist > 0.01f ? rel / dist : _aim, def.bashKnockback);
+                    if (burst != null) burst.Burst(_pos + _aim * (def.enemy.radius + 0.8f) + Vector3.up * 0.3f, 18, 7f, 0.2f, new Color(0.55f, 0.42f, 0.3f), Danger);
+                    SfxPlayer.Play(SfxId.Slam, _pos);
+                    ScreenShake.Add(0.25f);
+                    break;
+                }
+                case BossAttack.Flurry:
+                {
+                    Vector3 rel = Flat(pp - _pos);
+                    float along = Vector3.Dot(rel, _aim);
+                    float side = (rel - _aim * along).magnitude;
+                    if (along > -0.5f && along < def.flurryLength + playerRadius && side < def.flurryWidth * 0.5f + playerRadius)
+                        HitPlayer(def.flurryDamage, _aim, 2.5f);
+                    if (burst != null) burst.Burst(_pos + _aim * def.flurryLength * 0.6f + Vector3.up * 1f, 6, 4f, 0.12f, Color.white, Danger);
+                    SfxPlayer.Play(SfxId.Thrust, _pos + _aim);
+                    break;
+                }
             }
         }
 
@@ -405,10 +479,22 @@ namespace Gladiator.Gameplay
                     _goal.ArmR = new Vector3(-15f, 0f, 0f);
                     _goal.Body = new Vector3(18f, 0f, 0f);
                     break;
+                case BossAttack.Bash:
+                    _goal.ArmL = new Vector3(-85f, 0f, 0f); // shield punched forward
+                    _goal.Body = new Vector3(15f, 12f, 0f);
+                    break;
+                case BossAttack.Flurry:
+                    _goal.ArmR = new Vector3(-90f, 0f, 0f); // thrust
+                    _goal.Body = new Vector3(8f, 15f, 0f);
+                    break;
                 case BossAttack.Charge:
                 {
                     float stepLen = def.chargeSpeed * dt;
+                    // barricades and braziers in his way go first (gone for the run), so only stone stops him
+                    var breakables = ArenaBreakables.Instance;
+                    if (breakables != null) breakables.SmashAlong(_pos, _pos + _aim * (stepLen + def.enemy.radius), ChargeWidth * 0.5f);
                     bool wall = Step(_aim * stepLen);
+                    _goal.ArmL = new Vector3(-60f, 0f, 0f);
                     _chargeTravel += stepLen;
                     _walk += dt * 10f;
                     _goal.Body = new Vector3(30f, 0f, 0f);
@@ -424,17 +510,36 @@ namespace Gladiator.Gameplay
                         SfxPlayer.Play(SfxId.Slam, _pos);
                         ScreenShake.Add(0.3f);
                         if (_em.deathPop != null) _em.deathPop.Burst(_pos + _aim * def.enemy.radius + Vector3.up * 0.8f, 18, 6f, 0.22f, new Color(0.5f, 0.38f, 0.28f), Color.white);
-                        Enter(State.Stunned, def.chargeStun);
+                        BeginStun();
                     }
                     else if (_chargeTravel >= def.chargeLength || u >= 1f)
                     {
-                        AttacksDone++;
-                        _last = _attack;
-                        Enter(State.Recover, def.recover / Speed);
+                        if (_chargesLeft > 0) { _chargesLeft--; StartAttack(BossAttack.Charge, true); } // phase 2: again, re-aimed
+                        else
+                        {
+                            AttacksDone++;
+                            _last = _attack;
+                            Enter(State.Recover, def.recover / Speed);
+                        }
                     }
                     break;
                 }
             }
+        }
+
+        /// <summary>The charge hit stone: stunned, guard down (takes stunDamageTakenMul), the rest of a double charge lost.</summary>
+        void BeginStun()
+        {
+            Enter(State.Stunned, def.chargeStun);
+            _chargesLeft = 0;
+            Stuns++;
+            if (def.stunDamageTakenMul != 1f) _em.SetDamageTakenMul(_slot, def.stunDamageTakenMul);
+            if (CrowdExcitement.Instance != null) CrowdExcitement.Instance.Spike(0.4f);
+        }
+
+        void EndStun()
+        {
+            if (_state == State.Stunned && _slot >= 0) _em.SetDamageTakenMul(_slot, 1f);
         }
 
         void HitPlayer(float damage, Vector3 dir, float knockback)
@@ -487,7 +592,7 @@ namespace Gladiator.Gameplay
                 _em.Spawn(g, at);
             }
             GuardWaves++;
-            GameEvents.OnAnnounce.Raise(new AnnounceEvent { Kind = AnnounceKind.BossGuards, Text = GuardsText, Color = Danger, Seconds = 2f });
+            GameEvents.OnAnnounce.Raise(new AnnounceEvent { Kind = AnnounceKind.BossGuards, Text = def.guardsText, Color = Danger, Seconds = 2f });
         }
 
         /// <summary>Phase 2: a ring of burning ground along the wall foot ("he set the fence on fire").</summary>

@@ -20,11 +20,11 @@ MonoBehaviour:
   playerDamageTakenMul: 1.15
   center: {x: 0, y: 0, z: 0}
   radius: 24.4
-  playerSpawn: {x: 0, y: 0.1, z: -9}
+  playerSpawn: {x: 0, y: 0.1, z: -6.5}
   playerYaw: 0
   maxAlive: 300
   sunEuler: {x: 42, y: 28, z: 0}
-  boss: {fileID: 0}
+  boss: {fileID: 11400000, guid: fd512218ec0bb2f9fb7394d81bf0d1a8, type: 2}
   bossGate: 0
   pieces:
   - model: Environment/SM_ProvFloor

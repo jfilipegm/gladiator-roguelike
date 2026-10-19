@@ -82,7 +82,7 @@ namespace Gladiator.Gameplay
         float[] _stateT, _stateDur, _attackCd, _strafe, _dmgTakenMul, _knockMul, _atkTimeMul, _scale;
         Vector3[] _aim, _target;
         Vector3 _viewDir = Vector3.forward;
-        bool[] _attackHit, _invuln, _scriptedWindup;
+        bool[] _attackHit, _invuln, _scriptedWindup, _scriptedShield;
         AffixDef[] _affix;
 
         struct Blast { public Vector3 Pos; public float T, Fuse, Radius, ToPlayer, ToEnemies; }
@@ -139,6 +139,7 @@ namespace Gladiator.Gameplay
             _free = new int[capacity];
             _invuln = new bool[capacity];
             _scriptedWindup = new bool[capacity];
+            _scriptedShield = new bool[capacity];
             AllocStatus();
             for (int i = capacity - 1; i >= 0; i--) _free[_freeCount++] = i;
             _grid = new SpatialHashGrid(boundsMin, boundsMax, gridCellSize, capacity);
@@ -274,7 +275,7 @@ namespace Gladiator.Gameplay
             _aim[i] = Vector3.forward;
             _flash[i] = 0f; _contactCd[i] = 0.5f; _phase[i] = GameRandom.Range(0f, 6.28f); _recoil[i] = 0f; _dying[i] = 0f;
             _uid[i] = _nextUid++;
-            _invuln[i] = _scriptedWindup[i] = false;
+            _invuln[i] = _scriptedWindup[i] = _scriptedShield[i] = false;
             ClearStatus(i);
             Vector3 toPlayer = _player != null ? _player.position - position : Vector3.forward;
             _yaw[i] = Mathf.Atan2(toPlayer.x, toPlayer.z) * Mathf.Rad2Deg;
@@ -393,7 +394,8 @@ namespace Gladiator.Gameplay
         {
             var def = _view[i].Def;
             // the Shield Archer's pavise is down only while it recovers from a shot
-            bool shield = def.behaviour == EnemyBehaviour.ShieldBearer || (def.behaviour == EnemyBehaviour.ShieldedRanged && _state[i] != AiState.Recover);
+            bool shield = def.behaviour == EnemyBehaviour.ShieldBearer || (def.behaviour == EnemyBehaviour.ShieldedRanged && _state[i] != AiState.Recover)
+                          || (def.behaviour == EnemyBehaviour.Scripted && _scriptedShield[i]); // a boss's shield, raised by its controller
             if (!shield || def.blockArc <= 0f) return false;
             dir.y = 0f;
             float m = dir.magnitude;
@@ -712,6 +714,13 @@ namespace Gladiator.Gameplay
 
         /// <summary>Takes no damage while on (boss entrance / phase change).</summary>
         public void SetInvulnerable(int i, bool on) { if (i >= 0 && i < capacity) _invuln[i] = on; }
+
+        /// <summary>A scripted enemy's shield (its EnemyDef's blockArc / blockReduction) is up while on (the Champion,
+        /// except while stunned).</summary>
+        public void SetScriptedShield(int i, bool up) { if (i >= 0 && i < capacity) _scriptedShield[i] = up; }
+
+        /// <summary>Damage this enemy takes is multiplied by `mul` (a stunned boss's open guard). Spawn resets it.</summary>
+        public void SetDamageTakenMul(int i, float mul) { if (i >= 0 && i < capacity) _dmgTakenMul[i] = mul; }
 
         public PartRig GetRig(int i) => _view[i] != null ? _view[i].Rig : null;
         public Transform GetViewRoot(int i) => _view[i] != null ? _view[i].Root : null;

@@ -23,6 +23,7 @@ namespace Gladiator.EditorTools
         {
             var layout = ProvincialPitLayout.Ensure();
             EnsureEnemies();
+            if (layout.boss == null) { layout.boss = BossSetup.EnsureChampion(); layout.bossGate = 0; EditorUtility.SetDirty(layout); } // north gate
             var table = EnsureTable();
             if (layout.spawnTable == null) { layout.spawnTable = table; EditorUtility.SetDirty(layout); }
             AssetDatabase.SaveAssetIfDirty(layout);

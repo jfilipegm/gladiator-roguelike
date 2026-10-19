@@ -1,7 +1,8 @@
 // Gladiator/Telegraph — ground decals drawn instanced by TelegraphRenderer (procedural, no texture):
 //   style 0 = attack telegraph (orange-red ring + filling disc + bright fill front), style 1 = fire patch (flickering),
 //   style 2 = thin pulsing ring (elite affix / fuse), style 3 = straight lane (charge / dash / aim line: rim along the
-//   sides, fills from the start toward the far end). Per-instance colour + params via the instancing buffer.
+//   sides, fills from the start toward the far end), style 4 = cone (z = half-angle in radians; fills outward).
+//   Per-instance colour + params via the instancing buffer.
 Shader "Gladiator/Telegraph"
 {
     Properties
@@ -69,6 +70,21 @@ Shader "Gladiator/Telegraph"
                 float2 p = i.uv * 2 - 1;
                 float d = length(p);
                 if (d > 1) discard;
+                if (prm.y > 3.5)
+                {
+                    // cone: angle from the forward axis (+v); rim along the arc and both straight edges
+                    float ang = abs(atan2(p.x, p.y));
+                    float half = prm.z;
+                    if (ang > half) discard;
+                    float aa = fwidth(d) * 1.5;
+                    float arc = smoothstep(1 - th - aa, 1 - th, d);
+                    float edge = 1 - smoothstep(th, th + aa, (half - ang) * d);
+                    float sf = saturate(prm.x);
+                    float inside = d < sf ? 1 : 0;
+                    float sfront = 1 - saturate(abs(d - sf) / 0.05);
+                    float sa = max(max(arc, edge), 0.18 + inside * 0.36 + sfront * sf * 0.5);
+                    return half4(col.rgb * _Intensity * (1 + sfront * 0.35), saturate(sa) * col.a);
+                }
                 float t = _Time.y + prm.z * 7.13;
                 float aa = fwidth(d) * 1.5;
                 float ring = smoothstep(1 - th - aa, 1 - th, d) * (1 - smoothstep(1 - aa, 1, d));

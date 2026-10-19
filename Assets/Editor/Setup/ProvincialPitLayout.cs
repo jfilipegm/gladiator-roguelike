@@ -43,7 +43,7 @@ namespace Gladiator.EditorTools
             l.tier = 1;
             l.center = Vector3.zero;
             l.radius = 24.4f;
-            l.playerSpawn = new Vector3(0f, 0.1f, -9f);
+            l.playerSpawn = new Vector3(0f, 0.1f, -6.5f); // ahead of the south ramp, so it doesn't fill the opening shot
             l.playerYaw = 0f;
             l.maxAlive = 300;
             l.sunEuler = new Vector3(42f, 28f, 0f);

@@ -33,6 +33,7 @@ Good ideas that are **not** in the current phase. Pull from here only when a pha
 - **Goblin personality beats from the spec:** a cackle on level-up, ears flopping when it runs (separate ear parts), grabbing gems with both hands.
 - **The Blood Knight's real unlock** (§6.7 "Reach Arena 3"): `UL_BloodKnight` uses the interim `DefeatBossBelowHp gorm 0.3` until more arenas exist; then switch its condition to `ReachArena`.
 - **Knight feedback to judge in the playtest:** a faint crimson pulse on kill heals (nothing yet: 300 kills a minute would be noise), a heartbeat under 20 % HP, the blade resting on the shoulder between swings.
+- **The Champion's second gladius** (BOSSES.md point 9): the crowd throws it to him on his phase-2 roar; a prop thrown from the stands and a dual-wield pose. The gameplay change (faster attacks, five-thrust flurry) is in.
 - **Weapon on-hit status for projectiles** (`WeaponDef.onHitStatus` only works for MeleeArc/Thrust): a net that roots needs it on thrown weapons.
 
 ## Art / audio

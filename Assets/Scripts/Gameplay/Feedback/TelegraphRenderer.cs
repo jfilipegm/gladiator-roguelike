@@ -11,7 +11,7 @@ namespace Gladiator.Gameplay
     /// </summary>
     public sealed class TelegraphRenderer : MonoBehaviour, ITickable
     {
-        public enum Style { Telegraph = 0, Fire = 1, Ring = 2, Lane = 3 }
+        public enum Style { Telegraph = 0, Fire = 1, Ring = 2, Lane = 3, Sector = 4 }
         public const int Max = 512;
 
         public static TelegraphRenderer Instance { get; private set; }
@@ -90,6 +90,22 @@ namespace Gladiator.Gameplay
             _matrices[_count] = Matrix4x4.TRS(new Vector3(c.x, from.y + lift, c.z), Quaternion.LookRotation(dir), new Vector3(width, 1f, length));
             _colors[_count] = color;
             _params[_count] = new Vector4(fill, (float)Style.Lane, 0f, thickness);
+            _count++;
+        }
+
+        /// <summary>
+        /// Queue a ground cone for this frame: centred on `center`, opening along `dir` (flattened), `radius` long and
+        /// `angle` degrees wide, filling outward (`fill` 0..1). Shield bashes, breath, swings.
+        /// </summary>
+        public void Sector(Vector3 center, Vector3 dir, float radius, float angle, float fill, Color color, float thickness = 0.06f)
+        {
+            if (_count >= Max || Time.deltaTime <= 0f) return;
+            dir.y = 0f;
+            if (dir.sqrMagnitude < 1e-6f || radius <= 0f) return;
+            float s = radius * 2f;
+            _matrices[_count] = Matrix4x4.TRS(new Vector3(center.x, center.y + lift, center.z), Quaternion.LookRotation(dir), new Vector3(s, 1f, s));
+            _colors[_count] = color;
+            _params[_count] = new Vector4(fill, (float)Style.Sector, Mathf.Clamp(angle, 1f, 360f) * 0.5f * Mathf.Deg2Rad, thickness);
             _count++;
         }
 

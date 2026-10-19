@@ -6,7 +6,8 @@ namespace Gladiator.Gameplay
     /// <summary>
     /// The arena's boss beat (docs/BOSSES.md): when the run timer hits 0:00 the run waits instead of ending, the horde
     /// is dragged off, the announcer calls the boss, the camera turns to the gate and the boss walks in. When he dies:
-    /// slow motion, "GORM FALLS!", the hoard (a Rare+ pick), then the run ends as a victory. Dying still ends it as a loss.
+    /// slow motion, his fall line ("GORM FALLS!"), the hoard (a Rare+ pick), then the run ends as a victory. Dying still
+    /// ends it as a loss. Words come from the BossDef.
     /// </summary>
     public sealed class BossFight : MonoBehaviour, ITickable
     {
@@ -20,9 +21,6 @@ namespace Gladiator.Gameplay
         public float cameraBeat = 2.6f;
         public float fallSlowMo = 0.25f;
         public float fallSeconds = 1.8f;
-
-        const string EnterText = "THE PIT MASTER ENTERS!";
-        const string FallText = "GORM FALLS!";
 
         public Stage Current { get; private set; }
         float _t;
@@ -67,7 +65,7 @@ namespace Gladiator.Gameplay
                         _t = 0f;
                         TimeController.SlowMotion = fallSlowMo;
                         ScreenShake.Add(0.6f);
-                        GameEvents.OnAnnounce.Raise(new AnnounceEvent { Kind = AnnounceKind.BossFalls, Text = FallText, Color = new Color(1f, 0.86f, 0.4f), Seconds = 3f });
+                        GameEvents.OnAnnounce.Raise(new AnnounceEvent { Kind = AnnounceKind.BossFalls, Text = boss.fallText, Color = new Color(1f, 0.86f, 0.4f), Seconds = 3f });
                         if (CrowdExcitement.Instance != null) CrowdExcitement.Instance.Spike(1f);
                     }
                     break;
@@ -115,7 +113,7 @@ namespace Gladiator.Gameplay
             }
             controller.def = boss;
             controller.Begin(at, inward);
-            GameEvents.OnAnnounce.Raise(new AnnounceEvent { Kind = AnnounceKind.BossEnters, Text = EnterText, Color = new Color(1f, 0.3f, 0.2f), Seconds = 3f });
+            GameEvents.OnAnnounce.Raise(new AnnounceEvent { Kind = AnnounceKind.BossEnters, Text = boss.enterText, Color = new Color(1f, 0.3f, 0.2f), Seconds = 3f });
             if (CrowdExcitement.Instance != null) CrowdExcitement.Instance.Spike(0.85f);
         }
 

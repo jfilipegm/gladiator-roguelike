@@ -304,8 +304,7 @@ namespace Gladiator.Gameplay
 
         Vector3 RingPoint(EnemyManager em, float angle)
         {
-            float r = em.arenaRadius - config.ringInset;
-            return em.arenaCenter + new Vector3(Mathf.Cos(angle) * r, 0f, Mathf.Sin(angle) * r);
+            return em.EdgePoint(angle, config.ringInset);
         }
 
         /// <summary>Spawns near `angle` on the ring, nudged away from the player and (if asked) out of view.</summary>

@@ -196,7 +196,6 @@ namespace Gladiator.Gameplay
             var def = Selected;
             if (em == null || def == null) return 0;
             Vector3 player = Player.Main != null ? Player.Main.transform.position : em.arenaCenter;
-            float maxR = em.arenaRadius - 1f;
             int spawned = 0;
             for (int k = 0; k < count; k++)
             {
@@ -211,13 +210,12 @@ namespace Gladiator.Gameplay
                     p = em.arenaCenter;
                     for (int attempt = 0; attempt < 8; attempt++)
                     {
-                        float a = GameRandom.Range(0f, Mathf.PI * 2f), r = maxR * Mathf.Sqrt(GameRandom.Range(0.2f, 1f));
-                        p = em.arenaCenter + new Vector3(Mathf.Cos(a) * r, 0f, Mathf.Sin(a) * r);
+                        float a = GameRandom.Range(0f, Mathf.PI * 2f);
+                        p = em.arenaCenter + (em.EdgePoint(a, 1f) - em.arenaCenter) * Mathf.Sqrt(GameRandom.Range(0.2f, 1f));
                         if ((p - player).sqrMagnitude > 64f) break;
                     }
                 }
-                float dx = p.x - em.arenaCenter.x, dz = p.z - em.arenaCenter.z, d2 = dx * dx + dz * dz;
-                if (d2 > maxR * maxR) { float s = maxR / Mathf.Sqrt(d2); p.x = em.arenaCenter.x + dx * s; p.z = em.arenaCenter.z + dz * s; }
+                em.ClampInside(ref p, 1f);
                 if (em.Spawn(def, p, Affix) >= 0) spawned++;
             }
             return spawned;

@@ -60,3 +60,8 @@ His shield takes 90 % of frontal damage and he turns slowly toward you, so a sin
 ## C14 — Hit-stop adds up in long fights (NEW in Phase 5.4)
 The 10-minute bot run in the Provincial Pit logged 1,113 hit-stops totalling 45.9 s of frozen time (≈ 7.6 % of the run, ~1.9 per second). Each one is short, but late-run crit builds against elites and a boss trigger them almost continuously, which may read as stutter rather than impact.
 **Proposal:** judge in the playtest. If it stutters, raise `HitFeedbackConfig.hitStopInterval` (fewer stops) before shortening each stop, or restrict hit-stop to crits on elites and bosses.
+
+## C15 — The bigger Slave Pit may thin the pressure (NEW, playtest fixes)
+The Slave Pit is now 84 × 70 m (was a 42 m circle) with the same spawn curve and the same 300 cap. Enemies spawn on the oval's edge away from the player, so they walk further to reach you, and the horde is spread over ~3.5× the floor area. The bot run measures frame time, not how crowded it feels.
+**Proposal:** judge in the playtest. If the first minutes feel empty, raise the early budget in `DirectorConfig` (or the Slave Pit's `maxAlive`) or lower `DirectorConfig.ringInset`'s distance from the player (`minPlayerDistance`) so spawns land closer, before shrinking the arena again.
+

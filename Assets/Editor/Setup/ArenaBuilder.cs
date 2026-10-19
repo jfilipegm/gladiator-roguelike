@@ -39,7 +39,7 @@ namespace Gladiator.EditorTools
             var scene = SceneSetupUtil.NewEmptyScene();
             // the new scene unloads unused assets: assets the layout points at (its boss) die in memory, so reload it
             if (!string.IsNullOrEmpty(layoutPath)) layout = AssetDatabase.LoadAssetAtPath<ArenaLayoutDef>(layoutPath);
-            ArenaSceneCommon.AddLook(layout.sunEuler);
+            ArenaSceneCommon.AddLook(layout.sunEuler, layout.fog);
             ArenaSceneCommon.AddGameLoop();
 
             var env = new GameObject("Environment").transform;
@@ -98,6 +98,12 @@ namespace Gladiator.EditorTools
             var (player, _) = ArenaSceneCommon.AddPlayerAndCamera(layout.playerSpawn, layout.playerYaw);
             var (enemies, _) = ArenaSceneCommon.AddCombatSystems(player, layout.radius, debugEnemies: 0);
             enemies.arenaCenter = layout.center;
+            enemies.arenaAspect = layout.aspect > 0f ? layout.aspect : 1f;
+            // the nav bake and the spatial hash cover the whole arena (the old ±26 m box fits only the small ones)
+            var half = new Vector2(Mathf.Max(26f, layout.radius + 7f), Mathf.Max(26f, layout.radius * enemies.arenaAspect + 7f));
+            enemies.boundsMin = new Vector2(layout.center.x, layout.center.z) - half;
+            enemies.boundsMax = new Vector2(layout.center.x, layout.center.z) + half;
+            AddBoundary(layout, env);
             ArenaNavBaker.Bake(enemies, System.IO.Path.GetFileNameWithoutExtension(scenePath));
             ArenaSceneCommon.AddRunSystems(player);
 
@@ -183,7 +189,7 @@ namespace Gladiator.EditorTools
 
             var bot = new GameObject("[PlaytestBot]").AddComponent<PlaytestBot>();
             bot.arenaCenter = layout.center;
-            bot.arenaRadius = layout.radius - 3f;
+            bot.arenaRadius = Mathf.Min(layout.radius, layout.radius * (layout.aspect > 0f ? layout.aspect : 1f)) - 3f;
             bot.gameObject.SetActive(false); // enabled by -bot / smoke test
 
             SceneSetupUtil.SaveScene(scene, scenePath);
@@ -202,6 +208,25 @@ namespace Gladiator.EditorTools
                 default: go = ArenaSceneCommon.PlaceDecor(p.model, parent, p.position, p.yaw, scale); break;
             }
             if (p.model.EndsWith("PR_Brazier")) AddFireLight(go);
+        }
+
+        /// <summary>Invisible walls that only the player hits (Props layer: the camera and the nav bake ignore them), tall
+        /// enough that no number of air jumps clears them.</summary>
+        static void AddBoundary(ArenaLayoutDef layout, Transform env)
+        {
+            if (layout.boundary == null || layout.boundary.Length == 0) return;
+            var root = new GameObject("Boundary").transform;
+            root.SetParent(env, false);
+            foreach (var b in layout.boundary)
+            {
+                var go = new GameObject("Wall");
+                go.layer = Layers.Props;
+                go.transform.SetParent(root, false);
+                go.transform.SetPositionAndRotation(new Vector3(b.x, 0f, b.y), Quaternion.Euler(0f, b.z, 0f));
+                var box = go.AddComponent<BoxCollider>();
+                box.size = new Vector3(b.w, 30f, 1f);
+                box.center = new Vector3(0f, 12f, -0.5f); // yaw faces inward: the inner face on the line, the box behind it
+            }
         }
 
         static void AddFireLight(GameObject go)

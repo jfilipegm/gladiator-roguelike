@@ -136,8 +136,7 @@ namespace Gladiator.Gameplay
             {
                 float a = Rand01() * Mathf.PI * 2f;
                 spot = player + new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * config.challengeDistance;
-                float dx = spot.x - em.arenaCenter.x, dz = spot.z - em.arenaCenter.z;
-                if (dx * dx + dz * dz > (em.arenaRadius - 2f) * (em.arenaRadius - 2f)) continue;
+                if (em.EdgeDistance01(spot, 2f) > 1f) continue;
                 if (em.Obstacles != null && em.Obstacles.Overlaps(new Vector2(spot.x, spot.z), 1f)) continue;
                 found = true;
             }

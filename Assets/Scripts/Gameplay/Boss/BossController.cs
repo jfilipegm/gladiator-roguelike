@@ -267,10 +267,7 @@ namespace Gladiator.Gameplay
             Vector3 np = want;
             float r = def.enemy.radius;
             bool blocked = _em.Obstacles != null && _em.Obstacles.PushOut(ref np, r);
-            Vector3 c = _em.arenaCenter;
-            Vector3 fromC = Flat(np - c);
-            float max = _em.arenaRadius - r;
-            if (fromC.magnitude > max) { np = c + fromC.normalized * max; blocked = true; }
+            if (_em.ClampInside(ref np, r)) blocked = true;
             np.y = _em.Height != null ? _em.Height.Sample(np.x, np.z) : _pos.y;
             _pos = np;
             return blocked && Flat(np - want).sqrMagnitude > 0.0004f;
@@ -601,12 +598,14 @@ namespace Gladiator.Gameplay
         {
             var zones = HazardZones.Instance;
             if (zones == null) return;
-            Vector3 c = _em.arenaCenter;
-            int n = Mathf.Max(8, Mathf.RoundToInt(2f * Mathf.PI * def.fireRingRadius / def.fireRingSpacing));
+            // around the arena's edge (an oval in the Slave Pit): Ramanujan's perimeter sets the patch count
+            float rx = _em.arenaRadius - def.fireRingInset, rz = _em.ArenaRadiusZ - def.fireRingInset;
+            float h = (rx - rz) * (rx - rz) / ((rx + rz) * (rx + rz));
+            float perimeter = Mathf.PI * (rx + rz) * (1f + 3f * h / (10f + Mathf.Sqrt(4f - 3f * h)));
+            int n = Mathf.Max(8, Mathf.RoundToInt(perimeter / def.fireRingSpacing));
             for (int k = 0; k < n; k++)
             {
-                float a = k * Mathf.PI * 2f / n;
-                var p = c + new Vector3(Mathf.Sin(a), 0f, Mathf.Cos(a)) * def.fireRingRadius;
+                var p = _em.EdgePoint(k * Mathf.PI * 2f / n, def.fireRingInset);
                 p.y = _em.Height != null ? _em.Height.Sample(p.x, p.z) : 0f;
                 zones.AddPermanent(p, def.fireRingPatch, def.fireRingDps);
             }

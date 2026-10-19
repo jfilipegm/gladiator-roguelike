@@ -40,6 +40,8 @@ namespace Gladiator.Gameplay
         [Tooltip("Arena difficulty: every non-boss enemy spawns with this much HP (ArenaLayoutDef.enemyHpMul).")]
         public float hpMul = 1f;
         public float arenaRadius = 20f;
+        [Tooltip("The arena's shape: an ellipse, arenaRadius along X and arenaRadius × arenaAspect along Z (1 = a circle).")]
+        public float arenaAspect = 1f;
         public Vector2 boundsMin = new Vector2(-26f, -26f);
         public Vector2 boundsMax = new Vector2(26f, 26f);
         public float gridCellSize = 2f;
@@ -180,6 +182,35 @@ namespace Gladiator.Gameplay
                 foreach (var c in w.GetComponentsInChildren<Collider>()) walkables.Add(c);
             obstacles = StaticObstacles.FromScene(Layers.SolidMask, 0.5f, height, walkables);
         }
+
+        // ------------------------------------------------------------------ the arena's shape (an ellipse; a circle at aspect 1)
+
+        /// <summary>Half-extent along Z.</summary>
+        public float ArenaRadiusZ => arenaRadius * arenaAspect;
+        /// <summary>The shorter half-extent: a circle of this radius fits inside.</summary>
+        public float ArenaMinRadius => Mathf.Min(arenaRadius, ArenaRadiusZ);
+
+        /// <summary>How far `p` is toward the edge of the arena shrunk by `margin` (XZ): 1 on that edge, above 1 outside.</summary>
+        public float EdgeDistance01(Vector3 p, float margin = 0f)
+        {
+            float x = (p.x - arenaCenter.x) / Mathf.Max(0.1f, arenaRadius - margin);
+            float z = (p.z - arenaCenter.z) / Mathf.Max(0.1f, ArenaRadiusZ - margin);
+            return Mathf.Sqrt(x * x + z * z);
+        }
+
+        /// <summary>Pulls `p` (XZ) back inside the arena shrunk by `margin`, toward the centre. True if it was outside.</summary>
+        public bool ClampInside(ref Vector3 p, float margin)
+        {
+            float d = EdgeDistance01(p, margin);
+            if (d <= 1f) return false;
+            p.x = arenaCenter.x + (p.x - arenaCenter.x) / d;
+            p.z = arenaCenter.z + (p.z - arenaCenter.z) / d;
+            return true;
+        }
+
+        /// <summary>The point at `angle` (radians: cos → X, sin → Z) on the edge of the arena shrunk by `inset`.</summary>
+        public Vector3 EdgePoint(float angle, float inset) =>
+            arenaCenter + new Vector3(Mathf.Cos(angle) * Mathf.Max(0.1f, arenaRadius - inset), 0f, Mathf.Sin(angle) * Mathf.Max(0.1f, ArenaRadiusZ - inset));
 
         void OnEnable() => GameLoop.Register(this, TickGroup.Enemies);
         void OnDisable() { GameLoop.Unregister(this); if (Instance == this) Instance = null; }
@@ -633,11 +664,11 @@ namespace Gladiator.Gameplay
 
                 _obstacles?.PushOut(ref np, _radius[i]);
 
-                // keep inside the arena
+                // keep inside the arena (an ellipse)
                 float cx = np.x - arenaCenter.x, cz = np.z - arenaCenter.z;
-                float cr = arenaRadius - _radius[i];
-                float c2 = cx * cx + cz * cz;
-                if (c2 > cr * cr) { float k2 = cr / Mathf.Sqrt(c2); np.x = arenaCenter.x + cx * k2; np.z = arenaCenter.z + cz * k2; }
+                float erx = arenaRadius - _radius[i], erz = arenaRadius * arenaAspect - _radius[i];
+                float ux = cx / erx, uz = cz / erz, e2 = ux * ux + uz * uz;
+                if (e2 > 1f) { float k2 = 1f / Mathf.Sqrt(e2); np.x = arenaCenter.x + cx * k2; np.z = arenaCenter.z + cz * k2; }
 
                 // terrain: follow walkable height, but never step up a wall
                 float h0 = p.y;

@@ -131,10 +131,11 @@ namespace Gladiator.Tests
             yield return Boot(director: true);
             AdminController.Instance.SetTimer(250f);
             var input = (ScriptedInput)_player.OverrideSource;
-            input.Next.Move = new Vector2(0f, 1f); // run north into the gate for a while
-            yield return new WaitForSeconds(4f);
+            input.Next.Move = new Vector2(0f, 1f); // run north into the gate (35 m away since the playtest rebuild)
+            yield return new WaitForSeconds(9f);
             Vector3 p = _player.transform.position;
-            Assert.Less(new Vector2(p.x, p.z).magnitude, 22.5f, "the player stays inside the walls");
+            Assert.Greater(p.z, 25f, "got all the way to the north gate");
+            Assert.Less(_em.EdgeDistance01(p, -2.5f), 1f, "the player stays inside the walls (the oval + 1.5 m: the gate's door line)");
             for (int i = 0; i < _em.HighWater; i++)
             {
                 if (!_em.IsAlive(i)) continue;

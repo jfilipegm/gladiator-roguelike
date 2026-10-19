@@ -108,8 +108,8 @@ namespace Gladiator.Gameplay
         [Tooltip("Attack wind-ups and recovery are this much faster.")]
         public float enrageSpeed = 1.3f;
         public float enrageRoar = 1.5f;
-        [Tooltip("Ring of burning ground along the wall foot (radius from the arena centre, patch spacing, dps).")]
-        public float fireRingRadius = 19.3f;
+        [Tooltip("Ring of burning ground along the wall foot (metres inside the arena's edge, patch spacing, dps). It follows the arena's shape.")]
+        public float fireRingInset = 1.1f;
         public float fireRingSpacing = 2.4f;
         public float fireRingPatch = 1.5f;
         public float fireRingDps = 12f;

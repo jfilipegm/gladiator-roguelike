@@ -79,8 +79,14 @@ namespace Gladiator.Gameplay
 
         [Header("Play area")]
         public Vector3 center = Vector3.zero;
-        [Tooltip("Radius enemies and the player stay inside (m).")]
+        [Tooltip("Radius enemies stay inside (m), along X.")]
         public float radius = 20.5f;
+        [Tooltip("Z extent ÷ X extent: 1 = a round arena, below 1 an oval (the playtest Slave Pit).")]
+        public float aspect = 1f;
+        [Tooltip("Invisible walls (x, z, yaw, width) that keep the player in even over a low fence with air jumps; only the player collides with them.")]
+        public Vector4[] boundary = Array.Empty<Vector4>();
+        [Tooltip("Linear fog start / end (m); zero = the look's default. Big arenas push it out.")]
+        public Vector2 fog;
         public Vector3 playerSpawn = new Vector3(0f, 0.1f, -6f);
         public float playerYaw;
         [Tooltip("Director cap on enemies alive in this arena (0 = DirectorConfig.hardCap).")]

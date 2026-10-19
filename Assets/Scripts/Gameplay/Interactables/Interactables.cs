@@ -143,8 +143,8 @@ namespace Gladiator.Gameplay
             var c = config;
             for (int attempt = 0; attempt < 40; attempt++)
             {
-                float a = Rand01() * Mathf.PI * 2f, r = Mathf.Sqrt(Rand01()) * (em.arenaRadius - 3f);
-                var p = em.arenaCenter + new Vector3(Mathf.Cos(a) * r, 0f, Mathf.Sin(a) * r);
+                float a = Rand01() * Mathf.PI * 2f;
+                var p = em.arenaCenter + (em.EdgePoint(a, 3f) - em.arenaCenter) * Mathf.Sqrt(Rand01());
                 if ((new Vector2(p.x - player.x, p.z - player.z)).sqrMagnitude < c.minPlayerDistance * c.minPlayerDistance) continue;
                 bool crowded = false;
                 for (int i = 0; i < _slots.Length && !crowded; i++)

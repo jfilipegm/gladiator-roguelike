@@ -108,7 +108,7 @@ namespace Gladiator.Gameplay
             }
             else
             {
-                at = em != null ? em.arenaCenter + Vector3.forward * (em.arenaRadius - 2f) : Vector3.forward * 15f;
+                at = em != null ? em.EdgePoint(Mathf.PI * 0.5f, 2f) : Vector3.forward * 15f; // the north edge
                 inward = -at.normalized;
             }
             controller.def = boss;

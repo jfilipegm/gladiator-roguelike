@@ -145,7 +145,7 @@ namespace Gladiator.Gameplay
             Vector3 outward = new Vector3(to.x - em.arenaCenter.x, 0f, to.z - em.arenaCenter.z);
             if (outward.sqrMagnitude < 0.01f) outward = Vector3.forward;
             outward.Normalize();
-            Vector3 from = em.arenaCenter + outward * (em.arenaRadius + 4f);
+            Vector3 from = em.EdgePoint(Mathf.Atan2(outward.z, outward.x), 0f) + outward * 4f;
             from.y = to.y + 5f;
 
             ref var s = ref _slots[slot];
@@ -175,8 +175,7 @@ namespace Gladiator.Gameplay
             {
                 float a = Rand01() * Mathf.PI * 2f, r = Mathf.Lerp(c.landDistance.x, c.landDistance.y, Rand01());
                 var p = player + new Vector3(Mathf.Cos(a) * r, 0f, Mathf.Sin(a) * r);
-                float dx = p.x - em.arenaCenter.x, dz = p.z - em.arenaCenter.z;
-                if (dx * dx + dz * dz > (em.arenaRadius - 2f) * (em.arenaRadius - 2f)) continue;
+                if (em.EdgeDistance01(p, 2f) > 1f) continue;
                 if (em.Obstacles != null && em.Obstacles.Overlaps(new Vector2(p.x, p.z), 0.8f)) continue;
                 p.y = em.Height != null ? em.Height.Sample(p.x, p.z) : player.y;
                 if (Mathf.Abs(p.y - player.y) > 2.5f) continue; // not on top of a mound you'd have to climb

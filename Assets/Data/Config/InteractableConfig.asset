@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b4618828a70b3b22bc5f2c31f71c3d9, type: 3}
+  m_Name: InteractableConfig
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.InteractableConfig
+  basePrice: 15
+  priceGrowth: 1.4
+  maxChests: 3
+  startingChests: 2
+  respawnDelay: 35
+  chestFloor: 1
+  altars: 1
+  altarMaxHpCost: 0.15
+  altarFloor: 2
+  interactRadius: 1.8
+  minPlayerDistance: 9
+  minSpacing: 7
+  clearance: 1.3

@@ -122,6 +122,14 @@ namespace Gladiator.EditorTools
             shots.material = em.bodyMaterial;
             shots.streakMaterial = AssetDatabase.LoadAssetAtPath<Material>(CombatSetup.SlashMat);
 
+            var props = new GameObject("Interactables").AddComponent<Interactables>();
+            props.transform.SetParent(systems, false);
+            props.config = PlayerSetup.EnsureAsset<InteractableConfig>(CombatSetup.InteractablesPath);
+            props.chestModel = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Art/Models/Props/PR_ArmoryChest.fbx");
+            props.altarModel = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Art/Models/Props/PR_BloodAltar.fbx");
+            props.burst = pop;
+            props.material = AssetDatabase.LoadAssetAtPath<Material>(LookSetup.EnvMat);
+
             var zones = new GameObject("HazardZones").AddComponent<HazardZones>();
             zones.transform.SetParent(systems, false);
 

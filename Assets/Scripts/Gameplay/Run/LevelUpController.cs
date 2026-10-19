@@ -3,10 +3,14 @@ using UnityEngine;
 
 namespace Gladiator.Gameplay
 {
+    /// <summary>Why the cards are open: the panel's title and the rarity floor.</summary>
+    public enum PickSource : byte { LevelUp, Chest, Altar }
+
     /// <summary>
     /// Level-up flow (CLAUDE.md §6.5): XP threshold → short burst beat → pause → 3 cards (4 with Luck) rolled from the
-    /// UpgradeCatalog → pick / reroll / banish / skip → resume (repeats for queued level-ups). LevelUpPanel draws
-    /// Offers; PlaytestBot picks through RunBotSensor hooks. Allocation-free.
+    /// UpgradeCatalog → pick / reroll / banish / skip → resume (repeats for queued level-ups). Chests and the Blood
+    /// Altar queue reward picks (M2.7) that open first, with a rarity floor. LevelUpPanel draws Offers; PlaytestBot
+    /// picks through RunBotSensor hooks. Allocation-free.
     /// </summary>
     public sealed class LevelUpController : MonoBehaviour, ITickable
     {
@@ -17,6 +21,8 @@ namespace Gladiator.Gameplay
         public DeathPopFx burst;
         [Tooltip("Real-time beat between the level-up burst and the cards (s).")]
         public float openDelay = 0.35f;
+        [Tooltip("Real-time beat between using a chest/altar and its cards (s).")]
+        public float rewardDelay = 0.3f;
 
         public bool IsOpen { get; private set; }
         public readonly CardOffer[] Offers = new CardOffer[4];
@@ -24,6 +30,10 @@ namespace Gladiator.Gameplay
         public int TimesChosen { get; private set; }
         /// <summary>Bumps whenever the offers change (open, reroll, banish) so the panel redraws.</summary>
         public int OffersVersion { get; private set; }
+        /// <summary>What opened the current cards (title, rarity floor).</summary>
+        public PickSource Source { get; private set; }
+        public Rarity Floor { get; private set; }
+        public int PendingRewards => _rewardCount;
 
         public UpgradeConfig Config => build != null ? build.config : null;
         public int RerollsLeft => build != null ? build.RerollsLeft : 0;
@@ -31,6 +41,17 @@ namespace Gladiator.Gameplay
 
         readonly UpgradeRoller _roller = new UpgradeRoller();
         float _delay = -1f;
+        struct Reward { public PickSource Source; public Rarity Floor; }
+        readonly Reward[] _rewards = new Reward[8];
+        int _rewardCount;
+
+        /// <summary>Queues a pick from a chest or altar: it opens (paused) before any queued level-up. False if the queue is full.</summary>
+        public bool QueueReward(PickSource source, Rarity floor)
+        {
+            if (_rewardCount >= _rewards.Length) return false;
+            _rewards[_rewardCount++] = new Reward { Source = source, Floor = floor };
+            return true;
+        }
 
         void Awake() => Instance = this;
 
@@ -56,13 +77,22 @@ namespace Gladiator.Gameplay
         void OnRunEnd(in RunEndEvent e)
         {
             if (run != null) run.PendingLevelUps = 0;
+            _rewardCount = 0;
             if (IsOpen) Close();
             _delay = -1f;
         }
 
         public void Tick(float dt, float unscaledDt)
         {
-            if (IsOpen || run == null || run.PendingLevelUps <= 0 || run.Ended) return;
+            if (IsOpen || run == null || run.Ended) return;
+            if (_rewardCount > 0) // a chest/altar you just used: a short beat (the lid pops), then its cards
+            {
+                if (_delay < 0f) _delay = rewardDelay;
+                _delay -= unscaledDt;
+                if (_delay <= 0f) Open(_rewards[0].Source, _rewards[0].Floor);
+                return;
+            }
+            if (run.PendingLevelUps <= 0) return;
             if (_delay < 0f)
             {
                 _delay = openDelay;
@@ -71,13 +101,16 @@ namespace Gladiator.Gameplay
                         new Color(0.43f, 0.95f, 1f), new Color(1f, 0.86f, 0.4f));
             }
             _delay -= unscaledDt;
-            if (_delay <= 0f) Open();
+            if (_delay <= 0f) Open(PickSource.LevelUp, Rarity.Common);
         }
 
         float Luck => build != null ? build.Stats.Luck : 0f;
 
-        void Open()
+        void Open(PickSource source, Rarity floor)
         {
+            Source = source;
+            Floor = floor;
+            _roller.MinRarity = floor;
             var c = Config;
             int n = c != null ? c.CardCount(Luck, GameRandom.Value) : 3;
             ChoiceCount = RollAll(n);
@@ -136,7 +169,12 @@ namespace Gladiator.Gameplay
 
         void Finish()
         {
-            run.PendingLevelUps--;
+            if (Source == PickSource.LevelUp) run.PendingLevelUps--;
+            else if (_rewardCount > 0)
+            {
+                for (int i = 1; i < _rewardCount; i++) _rewards[i - 1] = _rewards[i];
+                _rewardCount--;
+            }
             Close();
         }
 

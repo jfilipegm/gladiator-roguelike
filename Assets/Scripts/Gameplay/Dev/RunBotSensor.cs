@@ -35,6 +35,28 @@ namespace Gladiator.Gameplay
 
         public void ChooseCard(int index) => ChooseCardHook?.Invoke(index);
 
+        public bool TryGetAffordableChest(Vector3 from, float maxDistance, out Vector3 position, out bool inReach)
+        {
+            position = default;
+            inReach = false;
+            var props = Interactables.Instance;
+            var run = RunState.Current;
+            if (props == null || run == null || run.Gold < props.ChestPrice) return false;
+            float best = maxDistance * maxDistance;
+            int found = -1;
+            for (int i = 0; i < props.SlotCount; i++)
+            {
+                if (!props.IsReady(i) || props.KindOf(i) != Interactables.Kind.Chest) continue;
+                Vector3 d = props.PositionOf(i) - from;
+                float d2 = d.x * d.x + d.z * d.z;
+                if (d2 < best) { best = d2; found = i; }
+            }
+            if (found < 0) return false;
+            position = props.PositionOf(found);
+            inReach = props.InReach == found;
+            return true;
+        }
+
         public int RequestStressSpawn(int count)
         {
             if (stressSpawner == null) return 0;

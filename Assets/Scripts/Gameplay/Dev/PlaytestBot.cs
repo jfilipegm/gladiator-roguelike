@@ -33,6 +33,8 @@ namespace Gladiator.Gameplay
 
         [Header("Behaviour")]
         public float pickupSeekRange = 25f;
+        [Tooltip("Goes for a chest it can afford within this range (m).")]
+        public float chestSeekRange = 30f;
         public float threatRadius = 5f;
         public float threatWeight = 2.5f;
         public Vector2 jumpEvery = new Vector2(1.5f, 4f);
@@ -119,6 +121,8 @@ namespace Gladiator.Gameplay
             }
             var run = RunState.Current;
             if (run != null) sb.Append(" | level ").Append(run.Level).Append(" gold ").Append(run.Gold).Append(" kills ").Append(run.Kills);
+            var props = Interactables.Instance;
+            if (props != null) sb.Append(" chests ").Append(props.ChestsOpened).Append(" altars ").Append(props.AltarsUsed);
             Debug.Log(sb.ToString());
         }
 
@@ -141,9 +145,14 @@ namespace Gladiator.Gameplay
             float t = _elapsed;
             Vector3 pos = _body.position;
 
-            // 1) Where to go: nearest pickup, else a wander point.
+            // 1) Where to go: a chest it can pay for (and open it), else the nearest pickup, else a wander point.
             Vector3 desired;
-            if (Sensor != null && Sensor.TryGetNearestPickup(pos, pickupSeekRange, out var pickup))
+            if (Sensor != null && Sensor.TryGetAffordableChest(pos, chestSeekRange, out var chest, out bool atChest))
+            {
+                desired = Flat(chest - pos);
+                f.InteractPressed = atChest;
+            }
+            else if (Sensor != null && Sensor.TryGetNearestPickup(pos, pickupSeekRange, out var pickup))
                 desired = Flat(pickup - pos);
             else
             {

@@ -16,6 +16,8 @@ namespace Gladiator.Gameplay
         public bool SlidePressed;
         public bool SlideHeld;
         public bool PausePressed;
+        /// <summary>Use the chest / altar in reach (E, gamepad North).</summary>
+        public bool InteractPressed;
     }
 
     public interface IPlayerInputSource

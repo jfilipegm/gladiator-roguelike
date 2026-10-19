@@ -30,3 +30,8 @@ Slingers and Fire-Pot Throwers keep 6–11 m away, so a melee build rarely reach
 ## C7 — Upgrade numbers are first guesses (NEW in M2.4)
 Every Boon step (+12 % damage, +10 % attack speed, +20 max HP…), the rarity odds (62/26/10/2) and magnitudes (×1/1.4/1.8/2.5) are starting values, not tuned. With 11 stat-only Boons and one weapon, picks feel like small number bumps until M2.5 (weapons and weapon levels) and M2.6 (behaviour Boons) give choices real texture.
 **Proposal:** keep everything in `UpgradeConfig` / `UP_*` assets (done), and judge it at Gate 2. The admin panel's UPGRADES column gives any Boon at any rarity without waiting for it to roll.
+
+## C8 — Builds max out by minute 6 (NEW in M2.7)
+The 8-minute bot run (M2.7) reached **level 38** with 6,279 kills and opened 6 chests: 43 picks for 10 slots (4 weapons up to 8, 6 Boons up to 5), so the build is complete around 6:00 and the last minutes offer only filler cards (heal / gold). The XP curve (`ProgressionConfig`) was set for M1.3's single weapon; four weapons and synergies kill far faster, so XP floods in.
+**Proposal:** in the Phase 4 balance pass, steepen the level curve so a strong 8-minute run ends around level 25–30 (build nearly, not fully, complete when Gorm arrives), and re-check with the bot's end-of-run summary (level, kills, chests). Not changed now: the curve should be tuned against Arena 1 and Gorm, not the test arena.
+

@@ -79,5 +79,13 @@ namespace Gladiator.Gameplay
         }
 
         public void AddGold(int amount) { if (!Ended) Gold += amount; }
+
+        /// <summary>Pays `amount` if there's enough (chests). False = not enough gold, nothing spent.</summary>
+        public bool SpendGold(int amount)
+        {
+            if (Ended || amount < 0 || Gold < amount) return false;
+            Gold -= amount;
+            return true;
+        }
     }
 }

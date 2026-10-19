@@ -37,6 +37,7 @@ namespace Gladiator.UI
         static readonly Color Dim = new Color(0.02f, 0.03f, 0.06f, 0.62f);
         static readonly Color InnerColor = new Color(0.12f, 0.14f, 0.18f, 0.98f);
         static readonly Color BanishRed = new Color(1f, 0.3f, 0.24f);
+        static readonly Color AltarRed = new Color(0.9f, 0.16f, 0.36f);
         static readonly Color PipEmpty = new Color(0.26f, 0.29f, 0.34f);
         static readonly Color PipOwned = new Color(0.9f, 0.92f, 0.95f);
         static readonly Color NewGold = new Color(1f, 0.86f, 0.3f);
@@ -54,6 +55,7 @@ namespace Gladiator.UI
         int _drawnRerolls = -1, _drawnBanishes = -1;
         float _openedAt, _prevStickX;
         bool _drawnBanishMode;
+        PickSource _drawnSource = (PickSource)255;
 
         public bool BanishMode => _banishMode;
         public int Selected => _selected;
@@ -143,11 +145,12 @@ namespace Gladiator.UI
                     t.ForceMeshUpdate(true, true);
                 }
             }
-            foreach (var t in new[] { _sub, _rerollText, _banishText })
+            foreach (var t in new[] { _title, _sub, _rerollText, _banishText })
             {
                 t.SetText(Long);
                 t.ForceMeshUpdate(true, true);
             }
+            _title.SetText("LEVEL UP!");
             _sub.SetText("choose one");
         }
 
@@ -306,12 +309,34 @@ namespace Gladiator.UI
                 float s = sel ? 1.06f : 1f;
                 if (!Mathf.Approximately(v.Root.localScale.x, s)) v.Root.localScale = new Vector3(s, s, 1f);
             }
-            if (_banishMode != _drawnBanishMode)
+            if (_banishMode != _drawnBanishMode || c.Source != _drawnSource)
             {
                 _drawnBanishMode = _banishMode;
-                _title.text = _banishMode ? "BANISH" : "LEVEL UP!";
-                _title.color = _banishMode ? BanishRed : NewGold;
-                _sub.text = _banishMode ? "pick a card to remove it for the rest of the run" : "choose one";
+                _drawnSource = c.Source;
+                if (_banishMode)
+                {
+                    _title.text = "BANISH";
+                    _title.color = BanishRed;
+                    _sub.text = "pick a card to remove it for the rest of the run";
+                }
+                else if (c.Source == PickSource.Chest)
+                {
+                    _title.text = "ARMORY CHEST";
+                    _title.color = NewGold;
+                    _sub.text = "choose one: uncommon or better";
+                }
+                else if (c.Source == PickSource.Altar)
+                {
+                    _title.text = "BLOOD ALTAR";
+                    _title.color = AltarRed;
+                    _sub.text = "your blood buys one: rare or better";
+                }
+                else
+                {
+                    _title.text = "LEVEL UP!";
+                    _title.color = NewGold;
+                    _sub.text = "choose one";
+                }
             }
             int rr = c.RerollsLeft, bn = c.BanishesLeft;
             if (rr != _drawnRerolls) { _drawnRerolls = rr; _rerollText.SetText("[R] Reroll ({0})", rr); }

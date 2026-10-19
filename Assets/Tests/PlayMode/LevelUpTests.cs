@@ -67,19 +67,24 @@ namespace Gladiator.Tests
                 if (o.Def.kind == UpgradeKind.Boon)
                 {
                     Assert.AreEqual(1, o.Level, "no Boons owned yet: every Boon card is NEW");
-                    StringAssert.Contains(StatInfo.Name(o.Def.perLevel[0].stat), _panel.CardDescription(i));
-                    if (boon < 0) boon = i;
+                    if (o.Def.perLevel.Length > 0)
+                    {
+                        StringAssert.Contains(StatInfo.Name(o.Def.perLevel[0].stat), _panel.CardDescription(i));
+                        if (boon < 0) boon = i; // a stat Boon: the pick's numbers are checked below
+                    }
+                    else Assert.IsNotEmpty(_panel.CardDescription(i), "an effect Boon describes its effect");
                 }
                 else if (o.Def.kind == UpgradeKind.Weapon && o.Level == 1)
                     Assert.AreEqual(o.Def.weapon.description, _panel.CardDescription(i), "a new weapon shows its description");
             }
-            if (boon < 0) // all weapon cards (~1 %): reroll for a Boon
+            for (int r = 0; r < 2 && boon < 0; r++) // no stat Boon among the cards: reroll for one
             {
                 _lvl.Reroll();
                 yield return null;
-                for (int i = 0; i < _lvl.ChoiceCount && boon < 0; i++) if (_lvl.Offers[i].Def.kind == UpgradeKind.Boon) boon = i;
+                for (int i = 0; i < _lvl.ChoiceCount && boon < 0; i++)
+                    if (_lvl.Offers[i].Def.kind == UpgradeKind.Boon && _lvl.Offers[i].Def.perLevel.Length > 0) boon = i;
             }
-            Assert.GreaterOrEqual(boon, 0, "a Boon was offered");
+            Assert.GreaterOrEqual(boon, 0, "a stat Boon was offered");
             var pick = _lvl.Offers[boon];
             var mod = pick.Def.perLevel[0];
             float before = _stats.Block[mod.stat];

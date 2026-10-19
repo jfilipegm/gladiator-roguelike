@@ -151,3 +151,13 @@ One line each: what, and why. Newest at the bottom of each section.
 - **Synergy Boons that do nothing alone need a source first (`requiresAny`)**: Pyre needs Kindling or Conductive Oil, Conductive Oil needs Static Charge, Open Wounds needs Serrated Edge or Blood Slide. Avoids dead picks without a hidden weighting system.
 - **Status colours stay in the player palette**: Burn gold, Bleed crimson, Shock cyan. Burn is not orange-red, which is reserved for what hurts the player (§5). Blood Slide's trail is a pink-crimson ring, not a fire-coloured patch.
 - **18 Boons, not ~14**: the 11 stat Boons from M2.4 stay (they're the backbone of the stat build) plus 7 behavioural ones that form three synergy webs: Fire (Kindling → Pyre), Storm (Static Charge → Conductive Oil, Shock amplifying everything), Blood (Serrated Edge / Blood Slide → Open Wounds).
+
+### M2.7 — chests, gold, shrine
+- **An Armory Chest is a pick of 3 Uncommon-or-better cards, not a random item.** It reuses the level-up flow (reroll/banish/skip included) with a rarity floor, so gold buys a better, chosen upgrade and the panel says "ARMORY CHEST". Skipping after paying is allowed (your call).
+- **Chest price = 15 × 1.4^chests opened** (15, 21, 29, 41, 58…), shown floating over every chest in gold (red when you can't pay). Every chest on the map costs the same, so the choice is where, not which.
+- **2 chests at the start, topped up to 3, one new chest 35 s after an opening**; spots are random clear, flat ground ≥ 9 m from the player and ≥ 7 m from each other. Arena 1's layout will provide anchor points in M3.2 instead.
+- **The shrine is a Blood Altar: lose 15 % max HP for good (a ×0.85 multiplier) for a pick of 3 Rare-or-better cards, once per run.** Permanent cost makes it a real decision in an 8-minute run; HP damage instead would be free at full health. One per run in the slice.
+- **Interact = E / gamepad North (Y)**; North only means "banish" while the cards are open, so there's no clash. Chests and the altar have a ring (gold / crimson) and the HUD shows "[E] Armory Chest 21 gold" when in reach.
+- **Reward picks open after a 0.3 s beat** (the lid pops and the gold burst plays), then pause like a level-up; queued rewards open before queued level-ups.
+- **The altar is crimson (it hurts you, by your choice); chests are gold.** Neither uses the orange-red danger colour.
+- **The bot buys chests it can afford within 30 m** and logs chests opened in its end-of-run summary, so perf runs exercise the flow.

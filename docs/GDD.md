@@ -10,7 +10,7 @@ A 3D horde-survival roguelike in the Megabonk mould. An unknown pit fighter clim
 - Weapons **fire automatically** (nearest enemy or facing). The player positions, dodges, collects and chooses.
 - Kills drop XP gems (magnet radius). Level-up pauses → pick 1 of 3 cards (4 with Luck): new weapon, weapon upgrade, or Boon. Limited rerolls/banishes.
 - Pressure ramps with the run timer: swarm spikes, an elite every ~90 s, a **boss when the timer ends** (slice: 8 min, data-driven).
-- Map interactables: Armory Chests (gold, price rises), Shrines (risk/reward).
+- Map interactables: Armory Chests (gold, price rises), Shrines (risk/reward). Slice: chests cost 15 × 1.4^opened gold and give a pick of 3 Uncommon+ cards; the Blood Altar takes 15 % max HP for good for a pick of 3 Rare+ cards, once. Interact = E / gamepad Y.
 - Juice: damage numbers (crit styling), hit flash, death pop, gem vacuum, level-up burst, streak announcer, restrained shake (slider), hit-stop only on crit/elite/boss.
 
 ## Readability rules (non-negotiable)

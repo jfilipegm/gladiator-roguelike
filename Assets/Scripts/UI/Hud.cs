@@ -36,6 +36,17 @@ namespace Gladiator.UI
         int _lastBuildVersion = -1;
         PlayerBuild _build;
         static readonly Color TileInner = new Color(0.1f, 0.12f, 0.15f, 0.92f);
+        // interactables (M2.7): prompt at the bottom + floating price tags over ready chests / the altar
+        const int Tags = 6;
+        readonly RectTransform[] _tagRoot = new RectTransform[Tags];
+        readonly Image[] _tagIcon = new Image[Tags];
+        readonly TextMeshProUGUI[] _tagText = new TextMeshProUGUI[Tags];
+        readonly int[] _tagKey = new int[Tags];
+        TextMeshProUGUI _prompt;
+        int _promptKey = int.MinValue;
+        static readonly Color CantAfford = new Color(1f, 0.45f, 0.4f);
+        static readonly Color AltarColor = new Color(1f, 0.4f, 0.55f);
+
         static readonly Color WeaponTileInner = new Color(0.2f, 0.13f, 0.07f, 0.92f); // warm bronze: weapons vs Boons
 
         static readonly Color XpColor = new Color(0.31f, 0.89f, 0.82f);
@@ -80,6 +91,23 @@ namespace Gladiator.UI
                 PreSize(_tileGlyph[i], "WWWW");
                 PreSize(_tileLevel[i], "88");
             }
+
+            var mid = new Vector2(0.5f, 0.5f);
+            for (int i = 0; i < Tags; i++)
+            {
+                var root = UiFactory.Image("PriceTag" + i, canvas, Color.clear, mid, mid, Vector2.zero, new Vector2(120, 36), PixelIcons.White);
+                _tagRoot[i] = root.rectTransform;
+                _tagIcon[i] = UiFactory.Image("Coin", root.transform, Color.white, mid, mid, new Vector2(-26, 0), new Vector2(26, 26), PixelIcons.Coin);
+                _tagText[i] = UiFactory.Text("Price", root.transform, "", 30, Gold, TextAlignmentOptions.Left, mid, mid, new Vector2(30, 2), new Vector2(90, 36), font, fontMaterial);
+                PreSize(_tagText[i], "ALTAR");
+                PreSize(_tagText[i], "88888");
+                _tagRoot[i].localScale = Vector3.zero;
+                _tagKey[i] = int.MinValue;
+            }
+            var bottom = new Vector2(0.5f, 0f);
+            _prompt = UiFactory.Text("Prompt", canvas, "", 32, Color.white, TextAlignmentOptions.Center, bottom, bottom, new Vector2(0, 150), new Vector2(1300, 46), font, fontMaterial);
+            PreSize(_prompt, "[E] Blood Altar: lose 88% max HP for a Rare+ upgrade");
+            PreSize(_prompt, "[E] Armory Chest  88888 gold  (not enough gold)");
 
             _toast = UiFactory.Text("Toast", canvas, "LEVEL UP!", 84, Gold, TextAlignmentOptions.Center, top, top, new Vector2(0, -170), new Vector2(900, 110), font, fontMaterial);
             _toast.alpha = 0f;
@@ -166,6 +194,8 @@ namespace Gladiator.UI
                 if (_build != null && _build.State.Version != _lastBuildVersion) RefreshStrip();
             }
 
+            DrawInteractables(run);
+
             // Dev switches in effect (so a test never silently runs with God mode on). Rebuilt only when they change.
             int tags = (DevSettings.GodMode ? 1 : 0) | (DevSettings.Timeless ? 2 : 0) | (DevSettings.AnyBuff ? 4 : 0) |
                        (!Mathf.Approximately(TimeController.GameSpeed, 1f) ? 8 : 0);
@@ -210,6 +240,63 @@ namespace Gladiator.UI
                 _frames = 0;
                 _debugT = 0f;
             }
+        }
+
+        /// <summary>Price tags over ready chests (gold, red when you can't pay), "ALTAR" over the altar, and the
+        /// bottom prompt for whatever is in reach. Texts change only when what they show changes.</summary>
+        void DrawInteractables(RunState run)
+        {
+            var props = Interactables.Instance;
+            var cam = Camera.main;
+            int shown = 0;
+            bool live = props != null && cam != null && run != null && !run.Ended;
+            int price = live ? props.ChestPrice : 0;
+            bool afford = live && run.Gold >= price;
+            for (int i = 0; live && i < props.SlotCount && shown < Tags; i++)
+            {
+                if (!props.IsReady(i)) continue;
+                bool chest = props.KindOf(i) == Interactables.Kind.Chest;
+                Vector3 sp = cam.WorldToScreenPoint(props.PositionOf(i) + Vector3.up * (chest ? 1.5f : 2.1f));
+                if (sp.z <= 0f) continue;
+                var rt = _tagRoot[shown];
+                rt.position = new Vector3(sp.x, sp.y, 0f);
+                if (rt.localScale.x == 0f) rt.localScale = Vector3.one;
+                int key = chest ? price * 2 + (afford ? 1 : 0) : -1;
+                if (key != _tagKey[shown])
+                {
+                    _tagKey[shown] = key;
+                    if (chest)
+                    {
+                        _tagText[shown].SetText("{0}", price);
+                        _tagText[shown].color = afford ? Gold : CantAfford;
+                        _tagIcon[shown].color = Color.white;
+                    }
+                    else
+                    {
+                        _tagText[shown].text = "ALTAR";
+                        _tagText[shown].color = AltarColor;
+                        _tagIcon[shown].color = Color.clear;
+                    }
+                }
+                shown++;
+            }
+            for (int k = shown; k < Tags; k++)
+                if (_tagRoot[k].localScale.x != 0f) _tagRoot[k].localScale = Vector3.zero;
+
+            int reach = live ? props.InReach : -1;
+            int pkey = reach < 0 ? -1 : props.KindOf(reach) == Interactables.Kind.Altar ? -2 : price * 2 + (afford ? 1 : 0);
+            if (pkey == _promptKey) return;
+            _promptKey = pkey;
+            if (pkey == -1) { _prompt.text = ""; return; }
+            if (pkey == -2)
+            {
+                _prompt.SetText("[E] Blood Altar: lose {0}% max HP for a Rare+ upgrade", Mathf.Round(props.config.altarMaxHpCost * 100f));
+                _prompt.color = AltarColor;
+                return;
+            }
+            if (afford) _prompt.SetText("[E] Armory Chest  {0} gold", price);
+            else _prompt.SetText("[E] Armory Chest  {0} gold  (not enough gold)", price);
+            _prompt.color = afford ? Gold : CantAfford;
         }
 
         void RefreshStrip()

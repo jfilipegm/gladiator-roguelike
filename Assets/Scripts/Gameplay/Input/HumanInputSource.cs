@@ -11,7 +11,7 @@ namespace Gladiator.Gameplay
     public sealed class HumanInputSource : IPlayerInputSource, IDisposable
     {
         readonly InputActionMap _map;
-        readonly InputAction _move, _lookMouse, _lookStick, _jump, _slide, _pause;
+        readonly InputAction _move, _lookMouse, _lookStick, _jump, _slide, _pause, _interact;
 
         public HumanInputSource()
         {
@@ -41,6 +41,9 @@ namespace Gladiator.Gameplay
             _pause = _map.AddAction("Pause", InputActionType.Button, "<Keyboard>/escape");
             _pause.AddBinding("<Gamepad>/start");
 
+            _interact = _map.AddAction("Interact", InputActionType.Button, "<Keyboard>/e");
+            _interact.AddBinding("<Gamepad>/buttonNorth");
+
             _map.Enable();
         }
 
@@ -56,6 +59,7 @@ namespace Gladiator.Gameplay
                 SlidePressed = _slide.WasPressedThisFrame(),
                 SlideHeld = _slide.IsPressed(),
                 PausePressed = _pause.WasPressedThisFrame(),
+                InteractPressed = _interact.WasPressedThisFrame(),
             };
         }
 

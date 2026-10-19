@@ -16,5 +16,7 @@ namespace Gladiator.Gameplay
         void ChooseCard(int index);
         /// <summary>Spawn up to `count` enemies for a stress test. Returns how many were requested.</summary>
         int RequestStressSpawn(int count);
+        /// <summary>The nearest ready chest the player can pay for, within maxDistance (M2.7). inReach = Interact uses it now.</summary>
+        bool TryGetAffordableChest(Vector3 from, float maxDistance, out Vector3 position, out bool inReach);
     }
 }

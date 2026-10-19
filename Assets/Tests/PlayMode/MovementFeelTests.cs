@@ -17,6 +17,7 @@ namespace Gladiator.Tests
             var f = Next;
             Next.JumpPressed = false;
             Next.SlidePressed = false;
+            Next.InteractPressed = false;
             return f;
         }
     }

@@ -133,6 +133,7 @@ namespace Gladiator.Tests
             yield return Until(() => proj.Count > 0, 8f);
             Assert.Greater(proj.Count, 0, "slinger throws again");
             _motor.Teleport(P + _player.transform.right * 3f);
+            _em.KillAll(); // no third stone (aimed at the new spot) while the second is still flying
             yield return Until(() => proj.Count == 0, 3f);
             Assert.AreEqual(1, CountDamage(def.attackDamage), "a stone aimed at your old spot misses");
         }

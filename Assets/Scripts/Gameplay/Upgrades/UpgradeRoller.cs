@@ -56,6 +56,9 @@ namespace Gladiator.Gameplay
             return max;
         }
 
+        /// <summary>Rarity floor for the cards rolled next (chests: Uncommon, the Blood Altar: Rare). Common = no floor.</summary>
+        public Rarity MinRarity = Rarity.Common;
+
         /// <summary>Fills offers[0..count) with fresh cards. Returns how many were filled (fewer if even fillers run out).</summary>
         public int Roll(IReadOnlyList<UpgradeDef> pool, IReadOnlyList<UpgradeDef> fallbacks, BuildState build,
             UpgradeConfig config, float luck, CardOffer[] offers, int count)
@@ -123,7 +126,8 @@ namespace Gladiator.Gameplay
             }
             if (pick == null) return false;
             card.Def = pick;
-            card.Rarity = pick.kind == UpgradeKind.Consumable ? pick.minRarity : RollRarity(config, luck, pick.minRarity, pick.maxRarity);
+            card.Rarity = pick.kind == UpgradeKind.Consumable ? pick.minRarity
+                : RollRarity(config, luck, pick.minRarity > MinRarity ? pick.minRarity : MinRarity, pick.maxRarity);
             card.Level = pick.kind == UpgradeKind.Consumable ? 0 : build.LevelOf(pick) + 1;
             return true;
         }

@@ -14,7 +14,8 @@ Machine: CachyOS (Linux), KDE Plasma on Wayland. Unity Hub + Unity **6000.6.6f1*
   - `Tools/u <command> [--param value]` — any Pipeline command, prints only the result. `Tools/u` with no args lists ~160 commands (`editor_play`, `editor_stop`, `capture_game_view`, `run_tests`, `console`, `package_add`, `simulate_key`, `build`, …).
   - `Tools/ueval '<C# body with return>'` / `Tools/ueval -f file.cs` — Roslyn eval inside the Editor.
   - `Tools/uwait [s]` — block until not compiling / not reloading.
-  - `Tools/ucompile [--logs]` — AssetDatabase.Refresh + recompile + wait + dump console; exit 1 if errors.
+  - `Tools/ucompile [--logs]` — AssetDatabase.Refresh + recompile + wait + dump console; exit 1 if errors. The bridge's own "Failed to handle /api/exec request" errors (timeouts during builds, aborts during domain reloads) are counted apart as "bridge noise", not as errors.
+  - Clear the console: `Tools/ueval 'System.Type.GetType("UnityEditor.LogEntries,UnityEditor").GetMethod("Clear").Invoke(null,null); return "ok";'`
   - `Tools/snippets/*.cs` — reusable eval snippets (console dump, …).
 - If the Editor ever stops answering: `unity pipeline list --format json` (checks Safe Mode → compile errors → read `Logs/Editor.log`).
 - First-time package resolution needed the window focused once; done via a KWin script (`qdbus6 org.kde.KWin /Scripting …`). `Tools/u editor_focus` does the same now.

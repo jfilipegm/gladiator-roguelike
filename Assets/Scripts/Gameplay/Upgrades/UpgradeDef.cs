@@ -28,8 +28,11 @@ namespace Gladiator.Gameplay
     {
         public string id = "upgrade";
         public string displayName = "Upgrade";
-        [Tooltip("Two letters shown in the HUD build strip until real icons exist.")]
+        [Tooltip("Two letters shown where there's no icon.")]
         public string glyph = "UP";
+        [Tooltip("The pixel-icon atlas (PixelSrc/upgrade_icons.py → Assets/Art/Textures/UI/UpgradeIcons.png) and this upgrade's row in it; set by IconSetup.")]
+        public Texture2D icon;
+        public int iconRow = -1;
         public UpgradeKind kind = UpgradeKind.Boon;
         public UpgradeTag tags;
 

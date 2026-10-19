@@ -52,6 +52,7 @@ namespace Gladiator.EditorTools
 
             CreateWeapons();
             CreateStatusBoons();
+            IconSetup.Apply(); // pixel icons (playtest pass)
 
             AssetDatabase.SaveAssets();
             return Refresh();

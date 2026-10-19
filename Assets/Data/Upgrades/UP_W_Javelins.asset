@@ -15,13 +15,17 @@ MonoBehaviour:
   id: weapon_javelins
   displayName: Javelins
   glyph: JV
+  icon: {fileID: 2800000, guid: 13ceaa4af4e914da3ab8c2724bbfa51d, type: 3}
+  iconRow: 2
   kind: 1
   tags: 0
   weight: 8
   maxLevel: 8
   minRarity: 0
   maxRarity: 3
+  requiresAny: []
   weapon: {fileID: 11400000, guid: cc5309c48af116602a3e0baa0faef624, type: 2}
   perLevel: []
+  effects: []
   healFraction: 0
   gold: 0

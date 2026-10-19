@@ -111,6 +111,7 @@ namespace Gladiator.EditorTools
             BloodKnight();
             UpgradeSetup.Refresh();
             MetaSetup.CreateOrUpdate();
+            IconSetup.Apply(); // the goblin's and the knight's weapon cards get their icons too
             AssetDatabase.SaveAssets();
             return g;
         }

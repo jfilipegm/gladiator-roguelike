@@ -22,8 +22,9 @@ namespace Gladiator.UI
         public Material fontMaterial;
 
         const int MaxCards = 4, MaxPips = 8;
+        const float PipY = -14f;
         const int IdReroll = 10, IdBanish = 11, IdSkip = 12;
-        const float CardW = 340f, CardH = 480f, Spacing = 380f;
+        const float CardW = 340f, CardH = 536f, Spacing = 380f;
 
         sealed class CardView
         {
@@ -31,6 +32,7 @@ namespace Gladiator.UI
             public Image Glow, Border, Inner, Band;
             public TextMeshProUGUI Rarity, Kind, Title, Desc, Key;
             public Image[] Pips;
+            public UpgradeIconView Icon;
             public readonly CharBuffer Text = new CharBuffer(160);
         }
 
@@ -63,6 +65,7 @@ namespace Gladiator.UI
         public string CardTitle(int i) => _cards[i].Title.text;
         public string CardRarity(int i) => _cards[i].Rarity.text;
         public string CardDescription(int i) => _cards[i].Text.ToString();
+        public UpgradeIconView CardIcon(int i) => _cards[i].Icon;
 
         void Awake()
         {
@@ -108,13 +111,14 @@ namespace Gladiator.UI
             v.Inner = UiFactory.Image("Inner", v.Root, InnerColor, mid, mid, Vector2.zero, new Vector2(CardW - 12, CardH - 12), PixelIcons.White);
             v.Band = UiFactory.Image("Band", v.Root, Color.white, mid, mid, new Vector2(0, CardH * 0.5f - 30), new Vector2(CardW - 12, 48), PixelIcons.White);
             v.Rarity = UiFactory.Text("Rarity", v.Root, "COMMON", 26, new Color(0.06f, 0.07f, 0.09f), TextAlignmentOptions.Center, mid, mid, new Vector2(0, CardH * 0.5f - 30), new Vector2(CardW - 20, 44), font, null);
-            v.Kind = UiFactory.Text("Kind", v.Root, "NEW!", 26, NewGold, TextAlignmentOptions.Center, mid, mid, new Vector2(0, 168), new Vector2(CardW - 20, 40), font, fontMaterial);
-            v.Title = UiFactory.Text("Title", v.Root, "Title", 38, Color.white, TextAlignmentOptions.Center, mid, mid, new Vector2(0, 110), new Vector2(CardW - 30, 84), font, fontMaterial);
+            v.Icon = new UpgradeIconView(v.Root, "Icon", mid, new Vector2(0, 150), 100f, lively: true); // playtest: an animated 8-bit icon
+            v.Kind = UiFactory.Text("Kind", v.Root, "NEW!", 26, NewGold, TextAlignmentOptions.Center, mid, mid, new Vector2(0, 82), new Vector2(CardW - 20, 40), font, fontMaterial);
+            v.Title = UiFactory.Text("Title", v.Root, "Title", 38, Color.white, TextAlignmentOptions.Center, mid, mid, new Vector2(0, 34), new Vector2(CardW - 30, 84), font, fontMaterial);
             v.Title.textWrappingMode = TextWrappingModes.Normal;
             v.Pips = new Image[MaxPips];
             for (int p = 0; p < MaxPips; p++)
-                v.Pips[p] = UiFactory.Image("Pip" + p, v.Root, PipEmpty, mid, mid, new Vector2(0, 50), new Vector2(18, 18), PixelIcons.White);
-            v.Desc = UiFactory.Text("Desc", v.Root, "Desc", 30, new Color(0.85f, 0.95f, 1f), TextAlignmentOptions.Top, mid, mid, new Vector2(0, -50), new Vector2(CardW - 36, 150), font, fontMaterial);
+                v.Pips[p] = UiFactory.Image("Pip" + p, v.Root, PipEmpty, mid, mid, new Vector2(0, PipY), new Vector2(18, 18), PixelIcons.White);
+            v.Desc = UiFactory.Text("Desc", v.Root, "Desc", 30, new Color(0.85f, 0.95f, 1f), TextAlignmentOptions.Top, mid, mid, new Vector2(0, -114), new Vector2(CardW - 36, 150), font, fontMaterial);
             v.Desc.textWrappingMode = TextWrappingModes.Normal;
             v.Desc.fontStyle = FontStyles.Normal;
             v.Key = UiFactory.Text("Key", v.Root, "[" + (index + 1) + "]", 28, new Color(1f, 1f, 1f, 0.55f), TextAlignmentOptions.Center, mid, mid, new Vector2(0, -CardH * 0.5f + 32), new Vector2(CardW - 20, 44), font, fontMaterial);
@@ -216,6 +220,8 @@ namespace Gladiator.UI
                 if (open) { _openedAt = Time.unscaledTime; _selected = 0; _drawnVersion = -1; }
             }
             if (!open) return;
+            float now = Time.unscaledTime;
+            for (int i = 0; i < _shownCount; i++) _cards[i].Icon.Tick(now);
             if (!InGrace) ReadInput(c);
             if (!c.IsOpen) return;
             if (c.OffersVersion != _drawnVersion) Redraw(c);
@@ -274,13 +280,14 @@ namespace Gladiator.UI
                 var v = _cards[i];
                 bool on = i < _shownCount;
                 // unused cards park off-screen instead of being deactivated
-                v.Root.anchoredPosition = on ? new Vector2(x0 + i * Spacing, 10f) : new Vector2(0f, -5000f);
+                v.Root.anchoredPosition = on ? new Vector2(x0 + i * Spacing, 0f) : new Vector2(0f, -5000f);
                 if (!on) continue;
                 var o = c.Offers[i];
                 var col = cfg.RarityColor(o.Rarity);
                 v.Band.color = col;
                 v.Rarity.text = CardText.RarityName(o.Rarity);
                 v.Title.text = o.Def.displayName;
+                v.Icon.Set(o.Def, col, i * 0.31f);
                 if (o.Def.kind == UpgradeKind.Consumable) { v.Kind.color = PipOwned; v.Kind.text = "SUPPLIES"; }
                 else if (o.IsNew) { v.Kind.color = NewGold; v.Kind.text = o.Def.kind == UpgradeKind.Weapon ? "NEW WEAPON!" : "NEW!"; }
                 else { v.Kind.color = PipOwned; v.Kind.SetText("LV {0}", o.Level); }
@@ -292,7 +299,7 @@ namespace Gladiator.UI
                 {
                     var pip = v.Pips[p];
                     if (p >= pips) { pip.color = Color.clear; continue; }
-                    pip.rectTransform.anchoredPosition = new Vector2(px0 + p * 26f, 50f);
+                    pip.rectTransform.anchoredPosition = new Vector2(px0 + p * 26f, PipY);
                     pip.color = p < o.Level - 1 ? PipOwned : p == o.Level - 1 ? col : PipEmpty;
                 }
             }

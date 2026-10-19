@@ -8,7 +8,8 @@ using UnityEngine.TestTools;
 
 namespace Gladiator.Tests
 {
-    /// <summary>M2.4: real level-up cards — pick applies the rarity's numbers, reroll/banish/skip, max-HP heal, panel text.</summary>
+    /// <summary>M2.4: real level-up cards — pick applies the rarity's numbers, reroll/banish/skip, max-HP heal, panel text.
+    /// Playtest pass: every card and every owned slot in the HUD shows its upgrade's animated pixel icon.</summary>
     public class LevelUpTests
     {
         const string Scene = "Assets/Scenes/Dev/TestArena.unity";
@@ -182,6 +183,46 @@ namespace Gladiator.Tests
             Assert.AreEqual(dmg0 * (1f + 0.12f * _build.config.Magnitude(Rarity.Legendary)), weapons.DamageMul, 1e-4f, "weapons read the pipeline");
             Assert.AreEqual(owned + 2, _build.State.OwnedCount);
             yield return null;
+        }
+        /// <summary>Playtest: cards and HUD slots show 8-bit icons (with the rarity aura), not letters; the card icons animate.</summary>
+        [UnityTest, Timeout(60000)]
+        public IEnumerator EveryUpgradeHasAnIcon_CardsAnimateThem_TheHudShowsThem()
+        {
+            yield return Boot();
+            foreach (var u in _build.catalog.upgrades)
+            {
+                if (u == null) continue;
+                Assert.IsNotNull(u.icon, u.id + " has the icon atlas");
+                Assert.GreaterOrEqual(u.iconRow, 0, u.id + " has a row");
+                Assert.Less((u.iconRow + 1) * Gladiator.UI.UpgradeIconView.Cell, u.icon.height + 1, u.id + "'s row is inside the atlas");
+            }
+            yield return OpenCards();
+            for (int i = 0; i < _lvl.ChoiceCount; i++)
+            {
+                var icon = _panel.CardIcon(i);
+                Assert.IsTrue(icon.Showing, "card " + i + " shows an icon");
+                Assert.AreEqual(_lvl.Offers[i].Def.iconRow, icon.Row);
+            }
+            var view = _panel.CardIcon(0);
+            var seenIcon = new System.Collections.Generic.HashSet<int>();
+            var seenAura = new System.Collections.Generic.HashSet<int>();
+            for (float t = 0f; t < 2.6f; t += 0.03f) { view.Tick(100f + t); seenIcon.Add(view.IconFrame); seenAura.Add(view.AuraFrame); }
+            Assert.AreEqual(4, seenIcon.Count, "the icon shines through all its frames");
+            Assert.AreEqual(4, seenAura.Count, "the aura flickers through all its frames");
+
+            int pick = 0;
+            var picked = _lvl.Offers[pick].Def;
+            _lvl.Choose(pick);
+            yield return null;
+            yield return null;
+            var hud = Object.FindAnyObjectByType<Gladiator.UI.Hud>();
+            bool found = false;
+            for (int k = 0; k < 10; k++)
+            {
+                var tile = hud.TileIcon(k);
+                if (tile.Showing && tile.Row == picked.iconRow) found = true;
+            }
+            Assert.IsTrue(found, "the picked upgrade's icon is in the HUD strip");
         }
     }
 }

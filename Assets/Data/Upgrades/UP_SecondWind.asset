@@ -15,15 +15,20 @@ MonoBehaviour:
   id: second_wind
   displayName: Second Wind
   glyph: SW
+  icon: {fileID: 2800000, guid: 13ceaa4af4e914da3ab8c2724bbfa51d, type: 3}
+  iconRow: 23
   kind: 0
   tags: 512
   weight: 10
   maxLevel: 5
   minRarity: 0
   maxRarity: 3
+  requiresAny: []
+  weapon: {fileID: 0}
   perLevel:
   - stat: 1
     op: 0
     value: 0.4
+  effects: []
   healFraction: 0
   gold: 0

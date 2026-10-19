@@ -10,6 +10,8 @@ Good ideas that are **not** in the current phase. Pull from here only when a pha
 - **PlaytestBot dodging** — jump when inside a slam/landing telegraph or a fire patch, so mortal bot runs measure fairer difficulty. Not needed for perf runs (the bot is immortal there).
 - **Enemies hurt by fire patches / explosions from the player's own fire upgrades** — natural Boon synergy (M2.6 candidate).
 - **Affixes Cursed / Gilded / Berserk** — Gilded after M2.7 gives gold a purpose.
+- **Card tooltips with the current total** ("Damage 134 % → 151 %") — needs a stat sheet; pause menu in M3.5.
+- **Weighted offers that favour owned upgrades** (Vampire-Survivors style) — only if picks feel too random at Gate 2.
 
 ## Art / audio
-- (empty)
+- **Upgrade icons** — cards and the HUD build strip show 2-letter glyphs (`UpgradeDef.glyph`); procedural pixel icons per Boon/weapon in the Phase 4 juice pass.

@@ -26,17 +26,16 @@ namespace Gladiator.Gameplay
         public WeaponDef[] startingWeapons;
         public PlayerPartAnimator animator;
         public SlashFx slashFx;
-        [Header("Player stat multipliers (stat pipeline replaces these in M2.4)")]
-        public float damageMultiplier = 1f;
-        public float attackSpeedMultiplier = 1f;
-        public float critChanceBonus = 0f;
-        public float rangeMultiplier = 1f;
 
-        // Effective values: the run's own bonuses × the admin/dev buff layer.
-        public float DamageMul => damageMultiplier * DevSettings.DamageMul;
-        public float AttackSpeedMul => attackSpeedMultiplier * DevSettings.AttackSpeedMul;
-        public float RangeMul => rangeMultiplier * DevSettings.RangeMul;
-        public float CritBonus => critChanceBonus + DevSettings.CritBonus;
+        PlayerStats _stats;
+
+        // Player stats (upgrades × admin buffs) every weapon scales with.
+        public float DamageMul => _stats != null ? _stats.Damage : DevSettings.DamageMul;
+        public float AttackSpeedMul => _stats != null ? _stats.AttackSpeed : DevSettings.AttackSpeedMul;
+        public float RangeMul => _stats != null ? _stats.Area : DevSettings.RangeMul;
+        public float CritBonus => _stats != null ? _stats.CritChance : DevSettings.CritBonus;
+        public float CritDamageBonus => _stats != null ? _stats.CritDamage : 0f;
+        public float KnockbackMul => _stats != null ? _stats.Knockback : 1f;
 
         readonly List<WeaponInstance> _weapons = new List<WeaponInstance>(MaxSlots);
         readonly int[] _hits = new int[256];
@@ -47,6 +46,7 @@ namespace Gladiator.Gameplay
 
         void Awake()
         {
+            _stats = GetComponent<PlayerStats>();
             if (startingWeapons != null)
                 foreach (var w in startingWeapons) if (w != null) Equip(w);
         }
@@ -128,11 +128,11 @@ namespace Gladiator.Gameplay
                 bool crit = GameRandom.Chance(d.critChance + CritBonus);
                 var info = new DamageInfo
                 {
-                    Amount = d.damage * DamageMul * (crit ? d.critMultiplier : 1f),
+                    Amount = d.damage * DamageMul * (crit ? d.critMultiplier + CritDamageBonus : 1f),
                     Flags = DamageFlags.Melee | (crit ? DamageFlags.Crit : 0),
                     Point = em.GetPosition(i),
                     Direction = dist > 1e-3f ? to / dist : w.AimDir,
-                    Knockback = d.knockback,
+                    Knockback = d.knockback * KnockbackMul,
                     SourceId = sourceId,
                 };
                 em.ApplyDamage(i, info);

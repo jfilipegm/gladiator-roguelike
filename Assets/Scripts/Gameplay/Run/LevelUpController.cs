@@ -3,49 +3,33 @@ using UnityEngine;
 
 namespace Gladiator.Gameplay
 {
-    /// <summary>M1.3 stub boons (the real data-driven upgrade/card system replaces this in M2.4).</summary>
-    public enum StubBoon { Damage, AttackSpeed, MoveSpeed, MaxHp, Magnet, Range, Crit }
-
-    public struct LevelUpChoice
-    {
-        public StubBoon Boon;
-        public string Title;
-        public string Description;
-    }
-
     /// <summary>
-    /// Level-up flow (stub): XP threshold → short burst beat → pause → N cards → apply → resume (repeats for queued
-    /// level-ups). UI reads IsOpen/Choices; PlaytestBot picks through RunBotSensor hooks.
+    /// Level-up flow (CLAUDE.md §6.5): XP threshold → short burst beat → pause → 3 cards (4 with Luck) rolled from the
+    /// UpgradeCatalog → pick / reroll / banish / skip → resume (repeats for queued level-ups). LevelUpPanel draws
+    /// Offers; PlaytestBot picks through RunBotSensor hooks. Allocation-free.
     /// </summary>
     public sealed class LevelUpController : MonoBehaviour, ITickable
     {
         public static LevelUpController Instance { get; private set; }
 
         public RunState run;
-        public WeaponSystem weapons;
-        public PlayerMotor motor;
-        public PlayerHealth health;
-        public PickupSystem pickups;
+        public PlayerBuild build;
         public DeathPopFx burst;
         [Tooltip("Real-time beat between the level-up burst and the cards (s).")]
         public float openDelay = 0.35f;
 
-        static readonly LevelUpChoice[] Table =
-        {
-            new LevelUpChoice { Boon = StubBoon.Damage, Title = "Brute Force", Description = "+15% damage" },
-            new LevelUpChoice { Boon = StubBoon.AttackSpeed, Title = "Quick Hands", Description = "+12% attack speed" },
-            new LevelUpChoice { Boon = StubBoon.MoveSpeed, Title = "Light Feet", Description = "+8% move speed" },
-            new LevelUpChoice { Boon = StubBoon.MaxHp, Title = "Thick Skin", Description = "+20 max HP, heal 20" },
-            new LevelUpChoice { Boon = StubBoon.Magnet, Title = "Greedy", Description = "+30% pickup range" },
-            new LevelUpChoice { Boon = StubBoon.Range, Title = "Long Reach", Description = "+12% weapon reach" },
-            new LevelUpChoice { Boon = StubBoon.Crit, Title = "Lucky Cut", Description = "+6% crit chance" },
-        };
-
         public bool IsOpen { get; private set; }
-        public readonly LevelUpChoice[] Choices = new LevelUpChoice[4];
+        public readonly CardOffer[] Offers = new CardOffer[4];
         public int ChoiceCount { get; private set; }
         public int TimesChosen { get; private set; }
+        /// <summary>Bumps whenever the offers change (open, reroll, banish) so the panel redraws.</summary>
+        public int OffersVersion { get; private set; }
 
+        public UpgradeConfig Config => build != null ? build.config : null;
+        public int RerollsLeft => build != null ? build.RerollsLeft : 0;
+        public int BanishesLeft => build != null ? build.BanishesLeft : 0;
+
+        readonly UpgradeRoller _roller = new UpgradeRoller();
         float _delay = -1f;
 
         void Awake() => Instance = this;
@@ -68,7 +52,7 @@ namespace Gladiator.Gameplay
 
         int BotPending() => IsOpen ? ChoiceCount : 0;
 
-        // The run is over: drop the open card (nothing applied) and anything queued.
+        // The run is over: drop the open cards (nothing applied) and anything queued.
         void OnRunEnd(in RunEndEvent e)
         {
             if (run != null) run.PendingLevelUps = 0;
@@ -82,37 +66,76 @@ namespace Gladiator.Gameplay
             if (_delay < 0f)
             {
                 _delay = openDelay;
-                if (burst != null && motor != null)
-                    burst.Burst(motor.transform.position + Vector3.up * 0.9f, 28, 7f, 0.2f,
+                if (burst != null && build != null)
+                    burst.Burst(build.transform.position + Vector3.up * 0.9f, 28, 7f, 0.2f,
                         new Color(0.43f, 0.95f, 1f), new Color(1f, 0.86f, 0.4f));
             }
             _delay -= unscaledDt;
             if (_delay <= 0f) Open();
         }
 
+        float Luck => build != null ? build.Stats.Luck : 0f;
+
         void Open()
         {
-            int n = Mathf.Clamp(run.config.cardsPerLevelUp, 1, Choices.Length);
-            ChoiceCount = n;
-            // distinct random picks (partial Fisher-Yates over table indices, allocation-free)
-            System.Span<int> idx = stackalloc int[Table.Length];
-            for (int i = 0; i < idx.Length; i++) idx[i] = i;
-            for (int i = 0; i < n; i++)
-            {
-                int j = GameRandom.Range(i, idx.Length);
-                (idx[i], idx[j]) = (idx[j], idx[i]);
-                Choices[i] = Table[idx[i]];
-            }
+            var c = Config;
+            int n = c != null ? c.CardCount(Luck, GameRandom.Value) : 3;
+            ChoiceCount = RollAll(n);
+            OffersVersion++;
             IsOpen = true;
             TimeController.PushPause();
             if (Player.Main != null) Player.Main.BlockInput();
         }
 
+        int RollAll(int n)
+        {
+            if (build == null || build.catalog == null) return 0;
+            return _roller.Roll(build.catalog.upgrades, build.catalog.fallbacks, build.State, build.config, Luck, Offers, n);
+        }
+
+        /// <summary>Takes card `index`, closes (the next queued level-up opens after the beat).</summary>
         public void Choose(int index)
         {
             if (!IsOpen || index < 0 || index >= ChoiceCount) return;
-            Apply(Choices[index].Boon);
+            build.Take(Offers[index]);
             TimesChosen++;
+            Finish();
+        }
+
+        /// <summary>New cards for the same level-up (limited per run). Returns false if none left.</summary>
+        public bool Reroll()
+        {
+            if (!IsOpen || RerollsLeft <= 0) return false;
+            build.State.RerollsUsed++;
+            int n = ChoiceCount;
+            ChoiceCount = RollAll(n);
+            OffersVersion++;
+            return true;
+        }
+
+        /// <summary>Removes card `index`'s upgrade from this run's pool and replaces the card (limited per run).</summary>
+        public bool Banish(int index)
+        {
+            if (!IsOpen || BanishesLeft <= 0 || index < 0 || index >= ChoiceCount) return false;
+            var d = Offers[index].Def;
+            if (d == null || d.kind == UpgradeKind.Consumable) return false;
+            build.State.BanishesUsed++;
+            build.State.Banish(d);
+            ChoiceCount = _roller.Replace(build.catalog.upgrades, build.catalog.fallbacks, build.State, build.config, Luck, Offers, ChoiceCount, index);
+            OffersVersion++;
+            if (ChoiceCount == 0) Skip();
+            return true;
+        }
+
+        /// <summary>Takes nothing this level.</summary>
+        public void Skip()
+        {
+            if (!IsOpen) return;
+            Finish();
+        }
+
+        void Finish()
+        {
             run.PendingLevelUps--;
             Close();
         }
@@ -123,20 +146,6 @@ namespace Gladiator.Gameplay
             _delay = -1f;
             TimeController.PopPause();
             if (Player.Main != null) Player.Main.UnblockInput();
-        }
-
-        void Apply(StubBoon b)
-        {
-            switch (b)
-            {
-                case StubBoon.Damage: weapons.damageMultiplier *= 1.15f; break;
-                case StubBoon.AttackSpeed: weapons.attackSpeedMultiplier *= 1.12f; break;
-                case StubBoon.MoveSpeed: motor.SpeedMultiplier *= 1.08f; break;
-                case StubBoon.MaxHp: health.maxHp += 20f; health.Heal(20f); break;
-                case StubBoon.Magnet: pickups.magnetMultiplier *= 1.3f; break;
-                case StubBoon.Range: weapons.rangeMultiplier *= 1.12f; break;
-                case StubBoon.Crit: weapons.critChanceBonus += 0.06f; break;
-            }
         }
     }
 }

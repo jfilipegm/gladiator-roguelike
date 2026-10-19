@@ -113,7 +113,7 @@ namespace Gladiator.Gameplay
         public void LevelUp()
         {
             var run = RunState.Current;
-            if (run != null) run.AddXp(Mathf.Max(0.01f, (run.XpToNext - run.Xp) / Mathf.Max(0.01f, run.xpMultiplier)));
+            if (run != null) run.AddXp(Mathf.Max(0.01f, run.XpToNext - run.Xp));
         }
 
         public void AddGold(int amount) => RunState.Current?.AddGold(amount);
@@ -135,6 +135,42 @@ namespace Gladiator.Gameplay
             if (n == 0) return;
             SelectedEnemy = ((SelectedEnemy + dir) % n + n) % n;
             if (crowd != null && Selected != null) crowd.enemy = Selected; // the background crowd follows the selection
+        }
+
+        // ---------- upgrades ----------
+        public int SelectedUpgrade { get; private set; }
+        public Rarity SelectedRarity { get; private set; }
+        public PlayerBuild Build => Player.Main != null ? Player.Main.GetComponent<PlayerBuild>() : null;
+
+        public UpgradeDef Upgrade
+        {
+            get
+            {
+                var b = Build;
+                if (b == null || b.catalog == null || b.catalog.upgrades.Length == 0) return null;
+                return b.catalog.upgrades[Mathf.Clamp(SelectedUpgrade, 0, b.catalog.upgrades.Length - 1)];
+            }
+        }
+
+        public void CycleUpgrade(int dir)
+        {
+            var b = Build;
+            int n = b != null && b.catalog != null ? b.catalog.upgrades.Length : 0;
+            if (n > 0) SelectedUpgrade = ((SelectedUpgrade + dir) % n + n) % n;
+        }
+
+        public void CycleRarity() => SelectedRarity = (Rarity)(((int)SelectedRarity + 1) % UpgradeConfig.RarityCount);
+
+        /// <summary>Takes one level of the selected upgrade at the selected rarity (ignores slots; respects max level).</summary>
+        public bool GiveUpgrade()
+        {
+            var b = Build;
+            var d = Upgrade;
+            if (b == null || d == null) return false;
+            int level = b.State.LevelOf(d);
+            if (level >= d.maxLevel) return false;
+            b.Take(new CardOffer { Def = d, Rarity = SelectedRarity, Level = level + 1 });
+            return true;
         }
 
         public void CycleAffix(int dir)

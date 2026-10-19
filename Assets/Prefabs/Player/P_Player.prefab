@@ -75,7 +75,9 @@ GameObject:
   - component: {fileID: 4275805521266120438}
   - component: {fileID: 1469098544168003787}
   - component: {fileID: 3442605643400915903}
+  - component: {fileID: 2938869018944654561}
   - component: {fileID: 7524997544282564053}
+  - component: {fileID: 2791122852982351566}
   - component: {fileID: 806913137643507375}
   - component: {fileID: 4759577533021436214}
   - component: {fileID: 3068265213352874394}
@@ -162,6 +164,19 @@ MonoBehaviour:
     Jumps: 0
     Slides: 0
     Lands: 0
+--- !u!114 &2938869018944654561
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3120198515773125934}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 77184ebfc63559329a26b47831b96c4b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.PlayerStats
+  gladiator: {fileID: 11400000, guid: fb2a9c8c134c113e99d7d8b67db69361, type: 2}
 --- !u!114 &7524997544282564053
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -174,9 +189,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 34523c005bde7cf9da888e85295a563a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.PlayerHealth
-  maxHp: 100
   invulnerableTime: 0.4
+  maxArmor: 0.75
   feedback: {fileID: 11400000, guid: 0327740b5aa030136919a4b2d5feb6a6, type: 2}
+--- !u!114 &2791122852982351566
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3120198515773125934}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 97353113ff5d199d687f74d0267da391, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.PlayerBuild
+  config: {fileID: 11400000, guid: a75b64ea525751d30a96d0df7879d523, type: 2}
+  catalog: {fileID: 11400000, guid: e93cb754957a0d6b3b06acc9f47ac07a, type: 2}
 --- !u!114 &806913137643507375
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -222,10 +251,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 1e64e81441c35618692cc0a42fe51ce8, type: 2}
   animator: {fileID: 4759577533021436214}
   slashFx: {fileID: 0}
-  damageMultiplier: 1
-  attackSpeedMultiplier: 1
-  critChanceBonus: 0
-  rangeMultiplier: 1
 --- !u!1001 &601906944168044144
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -163,10 +163,7 @@ namespace Gladiator.EditorTools
             var lvl = new GameObject("LevelUpController").AddComponent<LevelUpController>();
             lvl.transform.SetParent(root, false);
             lvl.run = run;
-            lvl.weapons = player.GetComponent<WeaponSystem>();
-            lvl.motor = player.GetComponent<PlayerMotor>();
-            lvl.health = player.GetComponent<PlayerHealth>();
-            lvl.pickups = pickups;
+            lvl.build = player.GetComponent<PlayerBuild>();
             lvl.burst = Object.FindAnyObjectByType<DeathPopFx>();
 
             var hud = new GameObject("Hud").AddComponent<Gladiator.UI.Hud>();

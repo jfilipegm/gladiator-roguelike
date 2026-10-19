@@ -18,8 +18,6 @@ namespace Gladiator.Gameplay
         public ProgressionConfig config;
         public Mesh gemSmall, gemMedium, gemLarge, coin;
         public Material material;
-        [Tooltip("Magnet radius multiplier (upgrades).")]
-        public float magnetMultiplier = 1f;
         public float hoverHeight = 0.45f;
 
         Vector3[] _pos, _vel;
@@ -33,6 +31,8 @@ namespace Gladiator.Gameplay
         Mesh[] _meshes;
         RenderParams _rp;
         Transform _player;
+        PlayerStats _stats;
+        float _goldFrac;
 
         public int ActiveCount => _activeCount;
 
@@ -142,14 +142,14 @@ namespace Gladiator.Gameplay
         public void Tick(float dt, float unscaledDt)
         {
             for (int k = 0; k < KindCount; k++) _batchCount[k] = 0;
-            if (_player == null && Player.Main != null) _player = Player.Main.transform;
+            if (_player == null && Player.Main != null) { _player = Player.Main.transform; _stats = Player.Main.GetComponent<PlayerStats>(); }
             var em = EnemyManager.Instance;
             var height = em != null ? em.Height : null;
             Vector3 arenaC = em != null ? em.arenaCenter : Vector3.zero;
             float arenaR = em != null ? em.arenaRadius - 0.3f : float.MaxValue;
             var run = RunState.Current;
             Vector3 target = _player != null ? _player.position + Vector3.up * 0.8f : Vector3.zero;
-            float magnet = config.magnetRadius * magnetMultiplier * DevSettings.PickupRangeMul;
+            float magnet = config.magnetRadius * (_stats != null ? _stats.PickupRange : DevSettings.PickupRangeMul);
             float magnet2 = magnet * magnet;
             float collect2 = config.collectRadius * config.collectRadius;
             float magnetDelay = config.magnetDelay;
@@ -218,8 +218,15 @@ namespace Gladiator.Gameplay
             while (_high > 0 && !_active[_high - 1]) _high--;
             if (run != null)
             {
-                if (kind == Kind.Gold) run.AddGold(Mathf.RoundToInt(v));
-                else run.AddXp(v);
+                if (kind == Kind.Gold)
+                {
+                    // Gold Gain keeps its fraction across coins so +20% on 1-gold coins still adds up.
+                    _goldFrac += v * (_stats != null ? _stats.Get(StatId.GoldGain) : 1f);
+                    int whole = (int)_goldFrac;
+                    _goldFrac -= whole;
+                    if (whole > 0) run.AddGold(whole);
+                }
+                else run.AddXp(v * (_stats != null ? _stats.Get(StatId.XpGain) : 1f));
             }
             GameEvents.OnPickup.Raise(new PickupEvent { Kind = (int)kind, Position = _pos[i], Amount = v });
         }

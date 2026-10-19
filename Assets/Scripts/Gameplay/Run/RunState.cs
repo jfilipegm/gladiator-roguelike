@@ -11,8 +11,6 @@ namespace Gladiator.Gameplay
         public static RunState Current { get; private set; }
 
         public ProgressionConfig config;
-        [Tooltip("XP gain multiplier (upgrades, The Nobody's Underdog later).")]
-        public float xpMultiplier = 1f;
 
         public float Elapsed { get; private set; }
         public float TimeRemaining => Mathf.Max(0f, config.runDuration - Elapsed);
@@ -66,10 +64,11 @@ namespace Gladiator.Gameplay
         /// <summary>Dev/admin: jump the countdown (e.g. to 0:10 to see the timer end).</summary>
         public void SetTimeRemaining(float seconds) => Elapsed = Mathf.Clamp(config.runDuration - seconds, 0f, config.runDuration);
 
+        /// <summary>Adds XP as given (XP Gain is applied by whoever awards it — PickupSystem for gems).</summary>
         public void AddXp(float amount)
         {
             if (Ended) return;
-            Xp += amount * xpMultiplier;
+            Xp += amount;
             while (Xp >= XpToNext)
             {
                 Xp -= XpToNext;

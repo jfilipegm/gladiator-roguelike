@@ -22,7 +22,11 @@ Editor Play-mode frame times swing between ~18 fps and ~180 fps depending on foc
 Each enemy is a pooled GameObject with ~6 rigid-part MeshRenderers. At 1,000 enemies frame time is bimodal: ~6 ms when the crowd is partly off-screen, ~15–16 ms when the camera faces all of it (draw submission, not gameplay; gameplay is 3.5 ms). 500 enemies stays at ~5 ms / p95 8 ms, so the §8 budget (300 → 500 peak at 60 fps) holds with a wide margin on this PC.
 **Proposal if an arena really needs 1,000+ on screen (Colosseum):** draw enemies with `Graphics.RenderMeshInstanced` per (enemy type × part), with part matrices computed in the central tick (the SoA state already holds everything); keep GameObjects only for elites/bosses. Decide in the Phase 4 perf pass with real arena numbers.
 
-## C6 — Kiting enemies pile up (NEW in M2.2)
+## C6 — Kiting enemies pile up (MITIGATED in M2.3)
 Slingers and Fire-Pot Throwers keep 6–11 m away, so a melee build rarely reaches them. In a 60 s mixed stress run they accumulated until their pools ran dry. In real play that becomes a wall of ranged fire nobody can clear.
 **Proposal (M2.3 Director):** a per-type max-alive in the arena's spawn table (ranged/area types low, e.g. ≤ 8–12 each in Arena 1), and ranged enemies slowly advancing when they've been alive too long. Weapons with reach (Spear, Javelins in M2.5) are the player-side answer.
+**Status (M2.3):** the Slave Pit table caps slingers at 10 and fire-pots at 6; the 8-minute Director run never exceeded them. Still open: ranged enemies never advance, so a melee-only build has to walk out to them (watch at Gate 2; reach weapons arrive in M2.5).
 
+## C7 — Upgrade numbers are first guesses (NEW in M2.4)
+Every Boon step (+12 % damage, +10 % attack speed, +20 max HP…), the rarity odds (62/26/10/2) and magnitudes (×1/1.4/1.8/2.5) are starting values, not tuned. With 11 stat-only Boons and one weapon, picks feel like small number bumps until M2.5 (weapons and weapon levels) and M2.6 (behaviour Boons) give choices real texture.
+**Proposal:** keep everything in `UpgradeConfig` / `UP_*` assets (done), and judge it at Gate 2. The admin panel's UPGRADES column gives any Boon at any rarity without waiting for it to roll.

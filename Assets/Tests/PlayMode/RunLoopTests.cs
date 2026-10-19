@@ -59,7 +59,6 @@ namespace Gladiator.Tests
             yield return Boot();
             var run = RunState.Current;
             var lvl = LevelUpController.Instance;
-            var weapons = Player.Main.GetComponent<WeaponSystem>();
             run.AddXp(run.XpToNext);
             Assert.AreEqual(2, run.Level);
             float end = Time.realtimeSinceStartup + 2f;
@@ -68,18 +67,17 @@ namespace Gladiator.Tests
             Assert.AreEqual(0f, Time.timeScale, "game pauses while choosing");
             Assert.IsFalse(Player.Main.InputEnabled, "gameplay input is off while choosing");
 
-            // pick whichever card is damage if offered, else the first
-            int pick = 0;
-            for (int i = 0; i < lvl.ChoiceCount; i++) if (lvl.Choices[i].Boon == StubBoon.Damage) pick = i;
-            var boon = lvl.Choices[pick].Boon;
-            float dmg0 = weapons.damageMultiplier;
-            lvl.Choose(pick);
+            var build = Player.Main.GetComponent<PlayerBuild>();
+            var picked = lvl.Offers[0].Def;
+            int version0 = build.Stats.Block.Version;
+            lvl.Choose(0);
             yield return null;
             Assert.IsFalse(lvl.IsOpen);
             Assert.AreEqual(1f, Time.timeScale, "game resumes");
             Assert.IsTrue(Player.Main.InputEnabled);
             Assert.AreEqual(1, lvl.TimesChosen);
-            if (boon == StubBoon.Damage) Assert.Greater(weapons.damageMultiplier, dmg0);
+            Assert.AreEqual(1, build.State.LevelOf(picked), "the picked upgrade is owned");
+            Assert.Greater(build.Stats.Block.Version, version0, "and changed the player's stats");
         }
     }
 }

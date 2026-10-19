@@ -9,8 +9,8 @@ namespace Gladiator.UI
 {
     /// <summary>
     /// In-run HUD (M1.3): XP bar (top), run timer (top centre), level (top right), HP bar + gold + kills (top left),
-    /// LEVEL UP toast, pause overlay, F3 debug line. Built in code; texts only change when values change and use
-    /// allocation-free TMP calls.
+    /// build strip (owned Boons with level, under the gold), LEVEL UP toast, pause overlay, F3 debug line. Built in
+    /// code; texts only change when values change and use allocation-free TMP calls.
     /// </summary>
     public sealed class Hud : MonoBehaviour, ITickable
     {
@@ -26,6 +26,16 @@ namespace Gladiator.UI
         int _frames;
         int _lastTags = -1;
         float _lastSpeed = 1f;
+
+        // build strip: one tile per owned Boon (border = best rarity taken, glyph, level)
+        const int StripTiles = 6;
+        readonly Image[] _tileBorder = new Image[StripTiles];
+        readonly Image[] _tileInner = new Image[StripTiles];
+        readonly TextMeshProUGUI[] _tileGlyph = new TextMeshProUGUI[StripTiles];
+        readonly TextMeshProUGUI[] _tileLevel = new TextMeshProUGUI[StripTiles];
+        int _lastBuildVersion = -1;
+        PlayerBuild _build;
+        static readonly Color TileInner = new Color(0.1f, 0.12f, 0.15f, 0.92f);
 
         static readonly Color XpColor = new Color(0.31f, 0.89f, 0.82f);
         static readonly Color HpColor = new Color(0.88f, 0.2f, 0.17f);
@@ -58,6 +68,17 @@ namespace Gladiator.UI
             _gold = UiFactory.Text("Gold", canvas, "0", 32, Gold, TextAlignmentOptions.Left, tl, tl, new Vector2(66, -78), new Vector2(150, 40), font, fontMaterial);
             UiFactory.Image("KillIcon", canvas, Color.white, tl, tl, new Vector2(200, -82), new Vector2(30, 30), PixelIcons.Skull);
             _kills = UiFactory.Text("Kills", canvas, "0", 32, Color.white, TextAlignmentOptions.Left, tl, tl, new Vector2(240, -78), new Vector2(150, 40), font, fontMaterial);
+
+            for (int i = 0; i < StripTiles; i++)
+            {
+                var pos = new Vector2(24 + i * 58, -122);
+                _tileBorder[i] = UiFactory.Image("Tile" + i, canvas, Color.clear, tl, tl, pos, new Vector2(52, 52), PixelIcons.White);
+                var inner = _tileInner[i] = UiFactory.Image("Inner", _tileBorder[i].transform, Color.clear, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(44, 44), PixelIcons.White);
+                _tileGlyph[i] = UiFactory.Text("Glyph", inner.transform, "", 22, Color.white, TextAlignmentOptions.Center, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 4), new Vector2(44, 30), font, fontMaterial);
+                _tileLevel[i] = UiFactory.Text("Level", inner.transform, "", 16, Gold, TextAlignmentOptions.BottomRight, new Vector2(1, 0), new Vector2(1, 0), new Vector2(-2, 0), new Vector2(30, 20), font, fontMaterial);
+                PreSize(_tileGlyph[i], "WWWW");
+                PreSize(_tileLevel[i], "88");
+            }
 
             _toast = UiFactory.Text("Toast", canvas, "LEVEL UP!", 84, Gold, TextAlignmentOptions.Center, top, top, new Vector2(0, -170), new Vector2(900, 110), font, fontMaterial);
             _toast.alpha = 0f;
@@ -140,6 +161,8 @@ namespace Gladiator.UI
                     if (hp != _lastHp || max != _lastMaxHp) { _lastHp = hp; _lastMaxHp = max; _hpText.SetText("{0} / {1}", (float)hp, (float)max); }
                 }
                 _pause.alpha = player.IsPaused ? 1f : 0f;
+                if (_build == null) _build = player.GetComponent<PlayerBuild>();
+                if (_build != null && _build.State.Version != _lastBuildVersion) RefreshStrip();
             }
 
             // Dev switches in effect (so a test never silently runs with God mode on). Rebuilt only when they change.
@@ -185,6 +208,30 @@ namespace Gladiator.UI
                 else _debug.SetText("");
                 _frames = 0;
                 _debugT = 0f;
+            }
+        }
+
+        void RefreshStrip()
+        {
+            var state = _build.State;
+            _lastBuildVersion = state.Version;
+            int k = 0;
+            for (int i = 0; i < state.OwnedCount && k < StripTiles; i++)
+            {
+                var o = state.GetOwned(i);
+                if (o.Def.kind != UpgradeKind.Boon) continue;
+                _tileBorder[k].color = _build.config.RarityColor(o.BestRarity);
+                _tileInner[k].color = TileInner;
+                _tileGlyph[k].text = o.Def.glyph;
+                _tileLevel[k].SetText("{0}", o.Level);
+                k++;
+            }
+            for (; k < StripTiles; k++)
+            {
+                _tileBorder[k].color = Color.clear;
+                _tileInner[k].color = Color.clear;
+                _tileGlyph[k].text = "";
+                _tileLevel[k].text = "";
             }
         }
 

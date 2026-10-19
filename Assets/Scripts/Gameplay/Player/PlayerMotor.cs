@@ -56,14 +56,18 @@ namespace Gladiator.Gameplay
         /// <summary>Seconds since the last landing (for squash), large when airborne.</summary>
         public float TimeSinceLanded { get; private set; } = 10f;
         public float TimeSinceJump { get; private set; } = 10f;
-        /// <summary>Air jumps granted on top of config.extraJumps (upgrades).</summary>
-        public int BonusAirJumps { get; set; }
-        /// <summary>Run/air speed multiplier (upgrades). Slide physics are left alone on purpose.</summary>
+        /// <summary>
+        /// Situational run/air speed multiplier (mud, slows) on top of the Move Speed stat. Slide physics are left
+        /// alone on purpose.
+        /// </summary>
         public float SpeedMultiplier { get; set; } = 1f;
+        float MoveStat => _stats != null ? _stats.MoveSpeed : DevSettings.MoveSpeedMul;
+        int BonusAirJumps => _stats != null ? (int)_stats.Get(StatId.ExtraJumps) : 0;
         public MotorTelemetry Telemetry;
 
         CharacterController _cc;
         Player _player;
+        PlayerStats _stats;
         Vector3 _hv;          // horizontal velocity
         float _vy;            // vertical velocity
         float _vyStep;        // vertical velocity used for this frame's displacement (average over the step)
@@ -77,6 +81,7 @@ namespace Gladiator.Gameplay
         {
             _cc = GetComponent<CharacterController>();
             _player = GetComponent<Player>();
+            _stats = GetComponent<PlayerStats>();
             ApplyCapsule(standing: true);
             _cc.stepOffset = config.stepOffset;
             _cc.slopeLimit = config.slopeLimit;
@@ -240,7 +245,7 @@ namespace Gladiator.Gameplay
                 return;
             }
 
-            float maxSpeed = c.maxSpeed * SpeedMultiplier * DevSettings.MoveSpeedMul;
+            float maxSpeed = c.maxSpeed * SpeedMultiplier * MoveStat;
             if (speed > maxSpeed + 0.01f && wishMag > 0.01f)
             {
                 // Above run speed (after a slide / slide-jump): keep momentum, steer, bleed off slowly.
@@ -317,7 +322,7 @@ namespace Gladiator.Gameplay
             {
                 // Quake-style: accelerate along the wish direction up to airMaxSpeed; never brakes existing momentum.
                 float along = Vector3.Dot(_hv, wishDir);
-                float airMax = c.airMaxSpeed * SpeedMultiplier * DevSettings.MoveSpeedMul;
+                float airMax = c.airMaxSpeed * SpeedMultiplier * MoveStat;
                 float add = airMax * wishMag - along;
                 if (add > 0f) _hv += wishDir * Mathf.Min(c.airAccel * dt, add);
                 speed = _hv.magnitude;

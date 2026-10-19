@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a7c912b632c075e996edb7db0ab3f81, type: 3}
+  m_Name: UpgradeCatalog
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.UpgradeCatalog
+  upgrades:
+  - {fileID: 11400000, guid: 2446dc469c68d506e8cc69857dbb41f1, type: 2}
+  - {fileID: 11400000, guid: 8caa2b839fe57ed6aa965293f75da629, type: 2}
+  - {fileID: 11400000, guid: 34e644b69e5f4db73a2c30fcedaa2bc9, type: 2}
+  - {fileID: 11400000, guid: 40f2c36b39516d957bc4532e3c9b7905, type: 2}
+  - {fileID: 11400000, guid: a911f2684494085dca292a6021add533, type: 2}
+  - {fileID: 11400000, guid: 3adcad343a218acf8ba1d7ebe9a885f8, type: 2}
+  - {fileID: 11400000, guid: 0f4729de611d9b088b409a58c6bc476e, type: 2}
+  - {fileID: 11400000, guid: 4dd6c6be54adddb24b74f8ac6c824793, type: 2}
+  - {fileID: 11400000, guid: 494461d5986513fd0b555af62b5a8911, type: 2}
+  - {fileID: 11400000, guid: 355acdb287fe2cb96b599acf5beec988, type: 2}
+  - {fileID: 11400000, guid: 625519cf5562862e99fc58fef7a3c6b2, type: 2}
+  fallbacks:
+  - {fileID: 11400000, guid: df8e29555a3296d86aab6f4ddee62772, type: 2}
+  - {fileID: 11400000, guid: f0751ff12ce33613aa6e39d318b30d6f, type: 2}

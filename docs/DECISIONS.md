@@ -117,3 +117,16 @@ One line each: what, and why. Newest at the bottom of each section.
 - **Pool sizes come from simulating the run's head-count** (`Director.ComputePoolTargets`), not each type's weight share: capped types top out and hand their share to the uncapped ones, so by 8:00 convicts are ~330 of 460, not 32 %. Swarm types add a full swarm (swarms ignore caps), +10 % + 8 for enemies still dying. The first 8-minute run with the share formula grew the convict pool 127 times mid-fight.
 - **Spawn points are a ring near the arena edge for now**, preferring off-screen. Arena 1's real gates come from its `ArenaLayoutDef` in M3.2.
 
+
+### M2.4 — stats, upgrades, level-up cards
+- **One `StatBlock` per player, 20 stats, value = (base + Σflat) × (1 + Σpercent) × Πmultiply.** Multiplier stats (damage, area, move speed…) have base 1, so "+12 % damage" is a Percent mod and stacks additively with other % bonuses (no runaway compounding); Multiply is reserved for rare "×" effects. Chance-like stats (crit chance/damage, armor, luck) are flat fractions shown as %.
+- **Admin buffs stay a separate `DevSettings` layer**, applied on top in `PlayerStats.Get`, so "reset buffs" never undoes a real pick.
+- **Rarity scales the size of the step (Megabonk-style), not which upgrade you get:** Common ×1, Uncommon ×1.4, Rare ×1.8, Legendary ×2.5 of the per-level values; whole-number stats (air jumps, rerolls, projectile count) never scale. Base odds 62/26/10/2; Luck multiplies tier r's weight by e^(1.5·luck·r) and gives a 4th card with chance luck/0.5.
+- **A Boon's level = times taken (max 5)**; each take adds its step at that card's rarity. The HUD tile shows the best rarity taken.
+- **Reroll redraws every card; banish removes one upgrade for the rest of the run and replaces only that card; skip is free.** Rerolls 2 / banishes 1 per run, as base stats so gladiators and Boons can change them.
+- **When nothing is eligible the cards fall back to filler consumables** (Bread and Water: heal 30 %; Coin Purse: +15 gold), so a maxed build never sees an empty level-up.
+- **Max-HP raises heal by the same amount; armor is % damage reduction capped at 75 %**; regen ticks every frame.
+- **XP Gain is applied where XP is awarded (gem pickup), not inside `RunState.AddXp`**, so the admin "level up" button stays exact.
+- **Behaviour hooks (on-hit, on-slide…) wait for M2.6**, where the first behavioural Boons need them; M2.4's Boons are pure stat data.
+- **Level-up UI avoids every known allocation source:** no `Button` (colour-tint tweens), `UiHit` pointer forwarding + own highlight, shown by toggling the Canvas (no `SetActive`), text from char buffers / non-allocating `SetText`, first show done hidden at load. Skip is X on keyboard (S is movement) and Select on gamepad (East is slide).
+- **`GladiatorDef` exists now with base stats only**; starting weapon, signature behaviour and unlock join in M3.5.

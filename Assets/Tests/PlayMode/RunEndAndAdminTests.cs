@@ -112,10 +112,12 @@ namespace Gladiator.Tests
         {
             yield return Boot();
             var weapons = _player.GetComponent<WeaponSystem>();
+            var stats = _player.GetComponent<PlayerStats>();
             float baseHp = _health.MaxHp;
+            float runDamage = stats.Block[Gladiator.Core.StatId.Damage]; // the run's own bonuses (no admin layer)
             _admin.SetBuff(AdminController.Buff.Damage, 100f);
             _admin.SetBuff(AdminController.Buff.MaxHp, 50f);
-            Assert.AreEqual(weapons.damageMultiplier * 2f, weapons.DamageMul, 1e-4f);
+            Assert.AreEqual(runDamage * 2f, weapons.DamageMul, 1e-4f);
             Assert.AreEqual(baseHp * 1.5f, _health.MaxHp, 1e-3f);
             Assert.AreEqual(_health.MaxHp, _health.Hp, 1e-3f, "HP keeps its fraction when max HP is buffed");
 
@@ -127,13 +129,13 @@ namespace Gladiator.Tests
             EnemyManager.Instance.Spawn(def, _player.transform.position + new Vector3(0f, 0f, 1.6f));
             yield return WaitRealtime(() => hitDamage >= 0f, 4f);
             GameEvents.OnHit.Unsubscribe(onHit);
-            float baseDamage = weapons.startingWeapons[0].damage * weapons.damageMultiplier;
+            float baseDamage = weapons.startingWeapons[0].damage * runDamage;
             Assert.Greater(hitDamage, 0f, "the gladius should hit");
             float ratio = hitDamage / baseDamage;
             Assert.IsTrue(Mathf.Abs(ratio - 2f) < 0.01f || Mathf.Abs(ratio - 2f * weapons.startingWeapons[0].critMultiplier) < 0.01f, "hit was " + hitDamage);
 
             _admin.ResetBuffs();
-            Assert.AreEqual(weapons.damageMultiplier, weapons.DamageMul, 1e-4f);
+            Assert.AreEqual(runDamage, weapons.DamageMul, 1e-4f);
             Assert.AreEqual(baseHp, _health.MaxHp, 1e-3f);
         }
 

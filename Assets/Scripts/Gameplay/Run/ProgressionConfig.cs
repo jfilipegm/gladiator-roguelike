@@ -27,8 +27,6 @@ namespace Gladiator.Gameplay
         [Header("Run")]
         [Tooltip("Seconds until the boss (slice: 8 min). Arenas will override.")]
         public float runDuration = 480f;
-        [Tooltip("Level-up cards offered (4 with Luck later).")]
-        public int cardsPerLevelUp = 3;
 
         public float XpForLevel(int level) => Mathf.Round(baseXp + perLevelXp * Mathf.Pow(Mathf.Max(0, level - 1), exponent));
     }

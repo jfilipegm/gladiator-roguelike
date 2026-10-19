@@ -54,7 +54,7 @@ namespace Gladiator.Tests
         public IEnumerator Crit_HitStops_And_Kill_RaisesEvent()
         {
             yield return Boot();
-            _weapons.critChanceBonus = 1f;
+            DevSettings.CritPct = 100f; // every swing crits
             int kills = 0, crits = 0;
             EventHandler<KillEvent> onKill = (in KillEvent e) => kills++;
             EventHandler<HitEvent> onCrit = (in HitEvent e) => crits++;

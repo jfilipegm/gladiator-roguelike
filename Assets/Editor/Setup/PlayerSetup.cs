@@ -40,7 +40,12 @@ namespace Gladiator.EditorTools
             var motor = root.AddComponent<PlayerMotor>();
             motor.config = move;
             var feedback = AssetDatabase.LoadAssetAtPath<HitFeedbackConfig>(CombatSetup.FeedbackPath);
+            var catalog = UpgradeSetup.CreateOrUpdate();
+            root.AddComponent<PlayerStats>().gladiator = AssetDatabase.LoadAssetAtPath<GladiatorDef>(UpgradeSetup.NobodyPath);
             root.AddComponent<PlayerHealth>().feedback = feedback;
+            var build = root.AddComponent<PlayerBuild>();
+            build.config = AssetDatabase.LoadAssetAtPath<UpgradeConfig>(UpgradeSetup.ConfigPath);
+            build.catalog = catalog;
 
             var visual = new GameObject("Visual").transform;
             visual.SetParent(root.transform, false);

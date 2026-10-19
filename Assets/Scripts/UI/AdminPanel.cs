@@ -25,7 +25,9 @@ namespace Gladiator.UI
         Transform _panel;
         readonly TextMeshProUGUI[] _buffValues = new TextMeshProUGUI[AdminController.BuffCount];
         Button _god, _timeless, _director;
-        TextMeshProUGUI _enemyName, _affix, _count, _crowd, _speed, _status;
+        TextMeshProUGUI _enemyName, _affix, _count, _crowd, _speed, _status, _upgradeName, _upgradeInfo;
+        Button _rarity;
+        static readonly string[] RarityLabels = { "Rarity: Common", "Rarity: Uncommon", "Rarity: Rare", "Rarity: Legendary" };
         bool _shown;
         float _y;
         const float Width = 600f;
@@ -70,6 +72,16 @@ namespace Gladiator.UI
             Buttons(("Restart run", () => Ctl.Restart()));
             Line("Settings and buffs survive Restart/Retry (not a new play session).", 18f, new Color(1f, 1f, 1f, 0.45f));
 
+            // second column, left of the first: build tools (weapons and chests join it later)
+            var bg2 = UiFactory.Image("AdminPanel2", canvas, PanelColor, Vector2.one, Vector2.one, new Vector2(-20f - Width - 12f, -80f), new Vector2(Width, 190f), PixelIcons.White);
+            bg2.raycastTarget = true;
+            _panel = bg2.transform;
+            _y = -12f;
+            Section("UPGRADES  (skip the level-up cards)");
+            Row("Upgrade", out _upgradeName, () => Ctl.CycleUpgrade(-1), () => Ctl.CycleUpgrade(+1), 300f);
+            _upgradeInfo = Line("", 20f, new Color(1f, 1f, 1f, 0.7f));
+            _rarity = Buttons((RarityLabels[0], () => Ctl.CycleRarity()), ("Give 1 level", () => Ctl.GiveUpgrade()))[0];
+
             _root.SetActive(false);
         }
 
@@ -105,6 +117,13 @@ namespace Gladiator.UI
             _count.SetText("{0}", Ctl.SpawnCount);
             _crowd.SetText("{0}", Ctl.CrowdSize);
             _speed.SetText("x{0:2}", TimeController.GameSpeed);
+            var up = Ctl.Upgrade;
+            _upgradeName.text = up != null ? up.displayName : "(no upgrades)";
+            var build = Ctl.Build;
+            if (up != null && build != null) _upgradeInfo.SetText("owned: level {0} of {1}", (float)build.State.LevelOf(up), (float)up.maxLevel);
+            var rarityLabel = UiFactory.Label(_rarity);
+            rarityLabel.text = RarityLabels[(int)Ctl.SelectedRarity];
+            if (build != null && build.config != null) rarityLabel.color = build.config.RarityColor(Ctl.SelectedRarity);
             var em = EnemyManager.Instance;
             var run = RunState.Current;
             if (run != null) _status.SetText("enemies alive {0}   |   level {1}   |   {2}:{3:00} left", em != null ? em.AliveCount : 0, run.Level, Mathf.Floor(run.TimeRemaining / 60f), Mathf.Floor(run.TimeRemaining % 60f));

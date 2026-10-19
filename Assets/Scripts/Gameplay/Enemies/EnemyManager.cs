@@ -98,7 +98,8 @@ namespace Gladiator.Gameplay
         StaticObstacles _obstacles;
         readonly int[] _query = new int[512];
         readonly Dictionary<EnemyDef, Stack<EnemyView>> _pools = new Dictionary<EnemyDef, Stack<EnemyView>>();
-        readonly Dictionary<EnemyDef, int> _aliveByDef = new Dictionary<EnemyDef, int>();
+        // keys are added when a type's pool is created (prewarm), so a type's first spawn mid-run never resizes it
+        readonly Dictionary<EnemyDef, int> _aliveByDef = new Dictionary<EnemyDef, int>(32);
         Transform _poolRoot;
         Transform _player;
         PlayerHealth _playerHealth;
@@ -195,7 +196,12 @@ namespace Gladiator.Gameplay
 
         Stack<EnemyView> GetPool(EnemyDef def)
         {
-            if (!_pools.TryGetValue(def, out var s)) { s = new Stack<EnemyView>(def.prewarm); _pools[def] = s; }
+            if (!_pools.TryGetValue(def, out var s))
+            {
+                s = new Stack<EnemyView>(def.prewarm);
+                _pools[def] = s;
+                if (!_aliveByDef.ContainsKey(def)) _aliveByDef[def] = 0;
+            }
             return s;
         }
 

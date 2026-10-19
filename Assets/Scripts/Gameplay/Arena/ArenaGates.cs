@@ -80,6 +80,21 @@ namespace Gladiator.Gameplay
             return best;
         }
 
+        /// <summary>The gate closest to `p` (-1 if there are none).</summary>
+        public int Nearest(Vector3 p)
+        {
+            int best = -1;
+            float bestD = float.MaxValue;
+            for (int i = 0; i < gates.Length; i++)
+            {
+                if (gates[i] == null) continue;
+                Vector3 d = gates[i].position - p;
+                float d2 = d.x * d.x + d.z * d.z;
+                if (d2 < bestD) { bestD = d2; best = i; }
+            }
+            return best;
+        }
+
         /// <summary>A spawn point just inside gate i, spread across its opening.</summary>
         public Vector3 SpawnPoint(int i)
         {

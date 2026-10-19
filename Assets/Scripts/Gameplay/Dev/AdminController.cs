@@ -117,6 +117,9 @@ namespace Gladiator.Gameplay
         }
 
         public void AddGold(int amount) => RunState.Current?.AddGold(amount);
+        public void AddFavor(float amount) { if (Favor.Instance != null) Favor.Instance.Add(amount); }
+        public void GiftNow() { if (CrowdGifts.Instance != null) CrowdGifts.Instance.Throw(); }
+        public void WhimNow() { if (ArenaMaster.Instance != null) ArenaMaster.Instance.FireWhim(); }
         public void Heal() => health?.HealFull();
         public void KillPlayer() { SetOpen(false); health?.Kill(); }
         public void SetTimer(float secondsLeft) => RunState.Current?.SetTimeRemaining(secondsLeft);

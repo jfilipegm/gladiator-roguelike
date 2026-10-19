@@ -110,6 +110,10 @@ namespace Gladiator.EditorTools
                 case "sfx_victory": { var b = new Buf(1.4f); float[] f = { 392f, 523.3f, 659.3f, 784f }; for (int k = 0; k < 4; k++) Tone(b, k * 0.12f, 1.4f - k * 0.12f, f[k], f[k], 0.45f, 0.005f, 0.45f, 2); return Finish(b, 0.75f); }
                 case "sfx_death": { var b = new Buf(1.2f); Tone(b, 0, 1.2f, 220, 110, 0.6f, 0.01f, 0.5f, 2); Tone(b, 0.15f, 1.05f, 207.7f, 98f, 0.5f, 0.01f, 0.5f, 2); return Finish(b, 0.7f); }
                 case "sfx_cheer": { var b = new Buf(2.0f); Noise(b, 0, 2f, 1f, 0.35f, 0.7f, 0.12f, 0.06f, 41); Noise(b, 0.05f, 1.9f, 0.5f, 0.3f, 0.6f, 0.35f, 0.2f, 42, true); return Finish(b, 0.7f); }
+                // Phase 5.1 (Favor): a gift whooshing out of the stands, its landing, the crowd booing a dull show
+                case "sfx_giftthrow": { var b = new Buf(0.6f); Noise(b, 0, 0.6f, 0.8f, 0.15f, 0.25f, 0.05f, 0.4f, 43, true); Tone(b, 0.05f, 0.5f, 420, 880, 0.25f, 0.05f, 0.2f); return Finish(b, 0.6f); }
+                case "sfx_giftland": { var b = new Buf(0.7f); Tone(b, 0, 0.2f, 110, 60, 0.8f, 0.002f, 0.07f); Noise(b, 0, 0.12f, 0.5f, 0.001f, 0.04f, 0.2f, 0.05f, 44); float[] f = { 1318.5f, 1568f, 2093f }; for (int k = 0; k < 3; k++) Tone(b, 0.08f + k * 0.06f, 0.45f, f[k], f[k], 0.25f, 0.002f, 0.15f, 1); return Finish(b, 0.6f); }
+                case "sfx_boo": { var b = new Buf(1.6f); Noise(b, 0, 1.6f, 0.9f, 0.25f, 0.6f, 0.06f, 0.03f, 45); Tone(b, 0, 1.6f, 150, 120, 0.5f, 0.2f, 0.6f, 2, 0.03f); Tone(b, 0, 1.6f, 180, 140, 0.35f, 0.25f, 0.6f, 2, 0.04f); return Finish(b, 0.7f); }
                 case "amb_crowd": return CrowdLoop();
                 default: throw new ArgumentException("unknown sound " + name);
             }
@@ -120,7 +124,8 @@ namespace Gladiator.EditorTools
             "sfx_swing", "sfx_thrust", "sfx_throw", "sfx_hit", "sfx_crit", "sfx_blocked", "sfx_kill", "sfx_elite_kill",
             "sfx_player_hurt", "sfx_gem", "sfx_coin", "sfx_levelup", "sfx_card", "sfx_pick", "sfx_chest", "sfx_altar",
             "sfx_explosion", "sfx_slam", "sfx_spark", "sfx_fire_pot", "sfx_boss_roar", "sfx_horn", "sfx_gate",
-            "sfx_announce", "sfx_fight", "sfx_victory", "sfx_death", "sfx_cheer", "amb_crowd",
+            "sfx_announce", "sfx_fight", "sfx_victory", "sfx_death", "sfx_cheer", "sfx_giftthrow", "sfx_giftland", "sfx_boo",
+            "amb_crowd",
         };
 
         /// <summary>A 4 s seamless murmur: low-passed noise with slow swells, crossfaded end into start.</summary>

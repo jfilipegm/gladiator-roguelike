@@ -207,6 +207,27 @@ namespace Gladiator.EditorTools
             var announcer = new GameObject("CrowdAnnouncer").AddComponent<CrowdAnnouncer>();
             announcer.transform.SetParent(root, false);
             announcer.config = AssetDatabase.LoadAssetAtPath<AnnouncerConfig>(AudioSetup.AnnouncerPath);
+            // Phase 5.1: the crowd's Favor, its gifts, and the Arena Master's whims (docs/FAVOR.md)
+            var favorConfig = PlayerSetup.EnsureAsset<FavorConfig>(CombatSetup.FavorPath);
+            var favor = new GameObject("Favor").AddComponent<Favor>();
+            favor.transform.SetParent(root, false);
+            favor.config = favorConfig;
+            var gifts = new GameObject("CrowdGifts").AddComponent<CrowdGifts>();
+            gifts.transform.SetParent(root, false);
+            gifts.config = favorConfig;
+            gifts.models = new[] // by GiftKind: Amphora, GoldShower, WeaponInSand, Laurel
+            {
+                AssetDatabase.LoadAssetAtPath<GameObject>(Props + "PR_GiftAmphora.fbx"),
+                AssetDatabase.LoadAssetAtPath<GameObject>(Props + "PR_GiftPouch.fbx"),
+                AssetDatabase.LoadAssetAtPath<GameObject>(Props + "PR_GiftWeapon.fbx"),
+                AssetDatabase.LoadAssetAtPath<GameObject>(Props + "PR_GiftLaurel.fbx"),
+            };
+            gifts.material = AssetDatabase.LoadAssetAtPath<Material>(LookSetup.EnvMat);
+            gifts.burst = lvl.burst;
+            var master = new GameObject("ArenaMaster").AddComponent<ArenaMaster>();
+            master.transform.SetParent(root, false);
+            master.config = favorConfig;
+
             var hurt = new GameObject("HurtOverlay").AddComponent<Gladiator.UI.HurtOverlay>();
             hurt.transform.SetParent(root, false);
             hurt.feedback = AssetDatabase.LoadAssetAtPath<HitFeedbackConfig>(CombatSetup.FeedbackPath);

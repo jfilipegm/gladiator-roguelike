@@ -144,7 +144,7 @@ namespace Gladiator.Gameplay
                 _em.SetInvulnerable(_slot, true);
                 Enter(State.Enraging, def.enrageRoar);
                 SfxPlayer.Play2D(SfxId.BossRoar);
-                GameEvents.OnAnnounce.Raise(new AnnounceEvent { Text = BurnText, Color = Danger, Seconds = 2.2f });
+                GameEvents.OnAnnounce.Raise(new AnnounceEvent { Kind = AnnounceKind.BossPhase, Text = BurnText, Color = Danger, Seconds = 2.2f });
                 if (CrowdExcitement.Instance != null) CrowdExcitement.Instance.Spike(1f);
                 ScreenShake.Add(0.45f);
             }
@@ -487,7 +487,7 @@ namespace Gladiator.Gameplay
                 _em.Spawn(g, at);
             }
             GuardWaves++;
-            GameEvents.OnAnnounce.Raise(new AnnounceEvent { Text = GuardsText, Color = Danger, Seconds = 2f });
+            GameEvents.OnAnnounce.Raise(new AnnounceEvent { Kind = AnnounceKind.BossGuards, Text = GuardsText, Color = Danger, Seconds = 2f });
         }
 
         /// <summary>Phase 2: a ring of burning ground along the wall foot ("he set the fence on fire").</summary>

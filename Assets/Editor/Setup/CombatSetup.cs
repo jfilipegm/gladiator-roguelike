@@ -27,6 +27,7 @@ namespace Gladiator.EditorTools
         public const string Models = "Assets/Art/Models/";
         public const string DirectorPath = "Assets/Data/Config/DirectorConfig.asset";
         public const string InteractablesPath = "Assets/Data/Config/InteractableConfig.asset";
+        public const string FavorPath = "Assets/Data/Config/FavorConfig.asset";
         public const string SlavePitTablePath = "Assets/Data/Arenas/ST_SlavePit.asset";
         public const string StoneMesh = Models + "Props/PR_SlingStone.fbx";
         public const string PotMesh = Models + "Props/PR_FirePot.fbx";

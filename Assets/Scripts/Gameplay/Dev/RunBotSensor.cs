@@ -9,6 +9,8 @@ namespace Gladiator.Gameplay
 
         /// <summary>Optional hooks wired by other systems (pickups, level-up UI).</summary>
         public static System.Func<Vector3, float, (bool ok, Vector3 pos)> NearestPickup;
+        /// <summary>Crowd gifts (Phase 5.1): worth a longer walk than a gem.</summary>
+        public static System.Func<Vector3, float, (bool ok, Vector3 pos)> NearestGift;
         public static System.Func<int> PendingCards;
         public static System.Action<int> ChooseCardHook;
 
@@ -18,6 +20,11 @@ namespace Gladiator.Gameplay
         public bool TryGetNearestPickup(Vector3 from, float maxDistance, out Vector3 position)
         {
             position = default;
+            if (NearestGift != null)
+            {
+                var g = NearestGift(from, maxDistance * 2f);
+                if (g.ok) { position = g.pos; return true; }
+            }
             if (NearestPickup == null) return false;
             var r = NearestPickup(from, maxDistance);
             position = r.pos;

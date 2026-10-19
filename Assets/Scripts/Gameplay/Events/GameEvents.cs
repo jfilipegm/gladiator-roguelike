@@ -20,8 +20,13 @@ namespace Gladiator.Gameplay
     public struct LevelUpEvent { public int NewLevel; }
     public struct RunEndEvent { public RunOutcome Outcome; public float Elapsed; }
     public enum DirectorEventKind { Swarm, Elite }
-    /// <summary>A line for the HUD announcer (boss beats now; crowd lines in Phase 4). Text must be a constant string.</summary>
-    public struct AnnounceEvent { public string Text; public Color Color; public float Seconds; }
+    /// <summary>What an announcer line is about (Favor listens for streaks, close calls and the boss's beats).</summary>
+    public enum AnnounceKind { Line, Streak, CloseCall, Roar, BossEnters, BossPhase, BossGuards, BossFalls, Gift, Whim }
+    /// <summary>A line for the HUD announcer. Text must be a constant string. Tier = the streak rung for Streak lines.</summary>
+    public struct AnnounceEvent { public string Text; public Color Color; public float Seconds; public AnnounceKind Kind; public int Tier; }
+    public enum FavorEventKind { GiftEarned, GiftThrown, GiftCollected, WhimFired, ChallengeWon, ChallengeFailed }
+    /// <summary>The crowd's Favor (Phase 5.1): gifts earned, thrown and collected; the Arena Master's whims.</summary>
+    public struct FavorEvent { public FavorEventKind Kind; public GiftKind Gift; public WhimKind Whim; public Vector3 Position; }
     /// <summary>The Director started a swarm or sent an elite (HUD announcer, crowd excitement later).</summary>
     public struct DirectorEvent { public DirectorEventKind Kind; public Vector3 Position; public Color Color; }
 
@@ -44,12 +49,13 @@ namespace Gladiator.Gameplay
         public static readonly EventChannel<RunEndEvent> OnRunEnd = new EventChannel<RunEndEvent>();
         public static readonly EventChannel<DirectorEvent> OnDirector = new EventChannel<DirectorEvent>();
         public static readonly EventChannel<AnnounceEvent> OnAnnounce = new EventChannel<AnnounceEvent>();
+        public static readonly EventChannel<FavorEvent> OnFavor = new EventChannel<FavorEvent>();
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         public static void ClearAll()
         {
             OnHit.Clear(); OnCrit.Clear(); OnKill.Clear(); OnDamaged.Clear(); OnLevelUp.Clear();
-            OnJump.Clear(); OnSlide.Clear(); OnLand.Clear(); OnPickup.Clear(); OnRunEnd.Clear(); OnDirector.Clear(); OnAnnounce.Clear();
+            OnJump.Clear(); OnSlide.Clear(); OnLand.Clear(); OnPickup.Clear(); OnRunEnd.Clear(); OnDirector.Clear(); OnAnnounce.Clear(); OnFavor.Clear();
         }
     }
 }

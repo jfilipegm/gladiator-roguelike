@@ -122,7 +122,11 @@ namespace Gladiator.Gameplay
             }
         }
 
-        void OnEnable() => GameLoop.Register(this, TickGroup.Director, -10);
+        void OnEnable()
+        {
+            Instance = this; // also after a disable/enable (admin toggle): OnDisable cleared it
+            GameLoop.Register(this, TickGroup.Director, -10);
+        }
 
         void OnDisable()
         {
@@ -168,19 +172,7 @@ namespace Gladiator.Gameplay
             if (t >= _nextSwarm)
             {
                 _nextSwarm = t + config.swarmEvery;
-                _swarmEntry = Pick(em, t, runLength, swarmOnly: true, eliteOnly: false);
-                if (_swarmEntry >= 0)
-                {
-                    _swarmLeft = Mathf.RoundToInt(config.swarmSize.Evaluate(t) * densityMultiplier);
-                    _swarmRate = _swarmLeft / Mathf.Max(0.1f, config.swarmDuration);
-                    _swarmAcc = 1f; // first one right away
-                    _swarmAngle = RandomAngle();
-                    _swarmGate = PickGate(em);
-                    SwarmsStarted++;
-                    Vector3 at = _swarmGate >= 0 ? _gates.Position(_swarmGate) : RingPoint(em, _swarmAngle);
-                    if (_swarmGate >= 0) _gates.Open(_swarmGate, config.swarmDuration + 1.2f);
-                    GameEvents.OnDirector.Raise(new DirectorEvent { Kind = DirectorEventKind.Swarm, Position = at, Color = em.telegraphColor });
-                }
+                BeginSwarm(em, t, runLength, PickGate(em));
             }
             if (_swarmLeft > 0 && _swarmEntry >= 0)
             {
@@ -216,6 +208,54 @@ namespace Gladiator.Gameplay
                     }
                 }
             }
+        }
+
+        /// <summary>A swarm from now on through `gate` (-1 = from a random side of the ring). False if no swarm type is active.</summary>
+        bool BeginSwarm(EnemyManager em, float t, float runLength, int gate)
+        {
+            _swarmEntry = Pick(em, t, runLength, swarmOnly: true, eliteOnly: false);
+            if (_swarmEntry < 0) return false;
+            if (_gates == null) _gates = ArenaGates.Instance;
+            _swarmLeft = Mathf.RoundToInt(config.swarmSize.Evaluate(t) * densityMultiplier);
+            _swarmRate = _swarmLeft / Mathf.Max(0.1f, config.swarmDuration);
+            _swarmAcc = 1f; // first one right away
+            _swarmAngle = RandomAngle();
+            _swarmGate = _gates != null && gate >= 0 && gate < _gates.Count ? gate : -1;
+            SwarmsStarted++;
+            Vector3 at = _swarmGate >= 0 ? _gates.Position(_swarmGate) : RingPoint(em, _swarmAngle);
+            if (_swarmGate >= 0) _gates.Open(_swarmGate, config.swarmDuration + 1.2f);
+            GameEvents.OnDirector.Raise(new DirectorEvent { Kind = DirectorEventKind.Swarm, Position = at, Color = em.telegraphColor });
+            return true;
+        }
+
+        float RunLength => RunState.Current != null ? RunState.Current.config.runDuration : 480f;
+
+        /// <summary>
+        /// The Arena Master's "gates thrown open" whim (Phase 5.1): a swarm right now through `gate`, any gate, even the one
+        /// next to the player (-1 = the ring). The swarm pours in over the next ticks, so the Director must be running.
+        /// </summary>
+        public bool StartSwarmThrough(int gate)
+        {
+            var em = EnemyManager.Instance;
+            if (em == null || config == null || table == null || table.entries.Length == 0) return false;
+            return BeginSwarm(em, Clock, RunLength, gate);
+        }
+
+        /// <summary>The Arena Master's champion (Phase 5.1): an elite of the table's elite types, random affix, at `pos`. Slot or -1.</summary>
+        public int SpawnEliteAt(Vector3 pos)
+        {
+            var em = EnemyManager.Instance;
+            if (em == null || config == null || table == null || table.affixes.Length == 0) return -1;
+            int k = Pick(em, Clock, RunLength, swarmOnly: false, eliteOnly: true);
+            if (k < 0) return -1;
+            var affix = table.affixes[GameRandom.Range(0, table.affixes.Length)];
+            int slot = em.Spawn(table.entries[k].enemy, pos, affix);
+            if (slot >= 0)
+            {
+                ElitesSent++;
+                GameEvents.OnDirector.Raise(new DirectorEvent { Kind = DirectorEventKind.Elite, Position = em.GetPosition(slot), Color = affix.color });
+            }
+            return slot;
         }
 
         /// <summary>Weighted pick among entries active at t and under their cap. -1 if none.</summary>

@@ -9,6 +9,7 @@ namespace Gladiator.Gameplay
     {
         Swing, Thrust, Throw, Hit, Crit, Blocked, Kill, EliteKill, PlayerHurt, Gem, Coin, LevelUp, Card, Pick, Chest, Altar,
         Explosion, Slam, Spark, FirePot, BossRoar, Horn, Gate, Announce, Fight, Victory, Death, Cheer,
+        GiftThrow, GiftLand, Boo,
     }
 
     [Serializable]

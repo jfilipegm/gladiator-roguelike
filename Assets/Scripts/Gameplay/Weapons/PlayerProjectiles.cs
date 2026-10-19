@@ -8,6 +8,8 @@ namespace Gladiator.Gameplay
     {
         public float Speed, Range, Radius, Damage, CritChance, CritMultiplier, Knockback, Scale;
         public int Pierce, SourceId, Mesh;
+        /// <summary>Lob only: seconds in the air, fuse after landing (s), arc apex (m). Radius = blast radius.</summary>
+        public float Flight, Fuse, Arc;
     }
 
     /// <summary>
@@ -15,6 +17,8 @@ namespace Gladiator.Gameplay
     /// the enemy spatial hash, no physics). Straight = javelin (pierces N enemies; stopped by walls, mounds and its
     /// range). Returning = chakram (decelerates out to its range, then flies back to the player, hitting each enemy once
     /// per leg). Thrust = the spear's visual (follows the player, no hits — WeaponSystem resolves the line hit).
+    /// Lob = a bomb: arcs to a ground point, sits there while a cyan-white fuse ring shrinks, then blasts every enemy in
+    /// its radius (never the player).
     /// Struct-of-arrays, fixed capacity, instanced draw with the palette material. Javelins and thrusts also get a
     /// white→cyan streak (player VFX language, §5) drawn with the slash material so they read at gameplay distance.
     /// Meshes point along +Z from their pivot; the tip (bounds max Z) is where hits happen. Zero allocation in steady
@@ -22,7 +26,7 @@ namespace Gladiator.Gameplay
     /// </summary>
     public sealed class PlayerProjectiles : MonoBehaviour, ITickable
     {
-        public enum Kind : byte { Straight, Returning, Thrust }
+        public enum Kind : byte { Straight, Returning, Thrust, Lob }
 
         public static PlayerProjectiles Instance { get; private set; }
 
@@ -46,12 +50,19 @@ namespace Gladiator.Gameplay
         public float boltWidth = 0.2f, boltLife = 0.14f;
         [Tooltip("Orbit weapons (flail balls): motion streak behind each ball, width and length (m).")]
         public float orbitStreakWidth = 0.3f, orbitStreakLength = 1.4f;
+        [Header("Bombs (Lob)")]
+        [Tooltip("Landing ring and fuse ring: player colours (cyan-white), never the orange-red of threats.")]
+        public Color bombRing = new Color(0.72f, 0.95f, 1f, 0.9f);
+        public Color blastColorA = new Color(1f, 0.92f, 0.55f), blastColorB = new Color(0.7f, 0.95f, 1f);
+        [Tooltip("Particles for the blast (the shared death-pop system).")]
+        public DeathPopFx burst;
+        public float blastShake = 0.07f;
 
         const int MaxMeshes = 8;
 
         Kind[] _kind;
-        Vector3[] _pos, _dir;
-        float[] _speed, _t, _life, _range, _radius, _damage, _crit, _critMul, _knock, _scale, _spin, _travel;
+        Vector3[] _pos, _dir, _origin;
+        float[] _speed, _t, _life, _range, _radius, _damage, _crit, _critMul, _knock, _scale, _spin, _travel, _fuse, _arc;
         int[] _pierceLeft, _source, _mesh, _hitCount, _hits;
         bool[] _used, _back;
         int _high, _count;
@@ -81,12 +92,15 @@ namespace Gladiator.Gameplay
 
         public int Count => _count;
         public int Hits { get; private set; }
+        /// <summary>Bombs that have gone off (tests).</summary>
+        public int Blasts { get; private set; }
 
         void Awake()
         {
             Instance = this;
             _kind = new Kind[capacity];
-            _pos = new Vector3[capacity]; _dir = new Vector3[capacity];
+            _pos = new Vector3[capacity]; _dir = new Vector3[capacity]; _origin = new Vector3[capacity];
+            _fuse = new float[capacity]; _arc = new float[capacity];
             _speed = new float[capacity]; _t = new float[capacity]; _life = new float[capacity]; _range = new float[capacity];
             _radius = new float[capacity]; _damage = new float[capacity]; _crit = new float[capacity]; _critMul = new float[capacity];
             _knock = new float[capacity]; _scale = new float[capacity]; _spin = new float[capacity]; _travel = new float[capacity];
@@ -220,6 +234,19 @@ namespace Gladiator.Gameplay
             return true;
         }
 
+        /// <summary>A bomb: arcs from `from` to the ground point `to` in p.Flight s, then goes off p.Fuse s later.</summary>
+        public bool FireLob(Vector3 from, Vector3 to, in ShotParams p)
+        {
+            int i = Alloc();
+            if (i < 0) return false;
+            Set(i, Kind.Lob, from, to, p); // _dir holds the landing point
+            _origin[i] = from;
+            _life[i] = Mathf.Max(0.05f, p.Flight);
+            _fuse[i] = Mathf.Max(0.05f, p.Fuse);
+            _arc[i] = p.Arc;
+            return true;
+        }
+
         /// <summary>The spear's thrust visual: the tip reaches `length` along `dir` and retracts over `duration`.</summary>
         public void Thrust(Vector3 dir, float length, float duration, int mesh, float scale)
         {
@@ -290,6 +317,7 @@ namespace Gladiator.Gameplay
                     case Kind.Straight: if (!StepStraight(i, em, dt)) { Free(i); continue; } break;
                     case Kind.Returning: if (!StepReturning(i, em, hand, dt)) { Free(i); continue; } break;
                     case Kind.Thrust: if (!StepThrust(i, hand, dt)) { Free(i); continue; } break;
+                    case Kind.Lob: if (!StepLob(i, em, dt)) { Free(i); continue; } break;
                 }
                 AddMatrix(i);
             }
@@ -351,6 +379,66 @@ namespace Gladiator.Gameplay
                 _streaks[_streakBatch++] = Matrix4x4.TRS(hand + _dir[i] * reach, Quaternion.LookRotation(_dir[i], Vector3.up),
                     new Vector3(thrustStreakWidth * _scale[i], thrustStreakWidth * _scale[i], reach * 0.9f));
             return true;
+        }
+
+        bool StepLob(int i, EnemyManager em, float dt)
+        {
+            _t[i] += dt;
+            Vector3 to = _dir[i];
+            float flight = _life[i], blast = _radius[i];
+            var tele = TelegraphRenderer.Instance;
+            if (_t[i] < flight)
+            {
+                float u = _t[i] / flight;
+                _pos[i] = Vector3.LerpUnclamped(_origin[i], to, u) + Vector3.up * (_arc[i] * 4f * u * (1f - u));
+                _spin[i] += dt * 720f;
+                if (tele != null) tele.Circle(to, blast, 1f, bombRing, TelegraphRenderer.Style.Ring, 0.05f, i * 0.37f); // where it lands
+                return true;
+            }
+            float left = flight + _fuse[i] - _t[i];
+            _pos[i] = to;
+            if (left > 0f)
+            {
+                if (tele != null)
+                {
+                    tele.Circle(to, blast, 1f, bombRing, TelegraphRenderer.Style.Ring, 0.05f, i * 0.37f);
+                    tele.Circle(to, Mathf.Max(0.15f, blast * left / _fuse[i]), 1f, bombRing, TelegraphRenderer.Style.Ring, 0.12f, i * 0.37f); // the fuse
+                }
+                return true;
+            }
+            Explode(i, em);
+            return false;
+        }
+
+        void Explode(int i, EnemyManager em)
+        {
+            Vector3 at = _dir[i];
+            float blast = _radius[i];
+            Blasts++;
+            if (burst != null) burst.Burst(at + Vector3.up * 0.4f, 22, 7f, 0.2f, blastColorA, blastColorB);
+            SfxPlayer.Play(SfxId.Bomb, at);
+            ScreenShake.Add(blastShake);
+            if (em == null) return;
+            int n = em.QueryAlive(at, blast + em.MaxRadius, _query);
+            for (int k = 0; k < n; k++)
+            {
+                int e = _query[k];
+                Vector3 ep = em.GetPosition(e);
+                float dx = ep.x - at.x, dz = ep.z - at.z, rr = blast + em.GetRadius(e);
+                if (dx * dx + dz * dz > rr * rr) continue;
+                float d = Mathf.Sqrt(dx * dx + dz * dz);
+                bool crit = GameRandom.Chance(_crit[i]);
+                em.ApplyDamage(e, new DamageInfo
+                {
+                    Amount = _damage[i] * (crit ? _critMul[i] : 1f),
+                    Flags = DamageFlags.Area | DamageFlags.Projectile | (crit ? DamageFlags.Crit : 0),
+                    Point = ep,
+                    Direction = d > 1e-3f ? new Vector3(dx / d, 0f, dz / d) : Vector3.forward,
+                    Knockback = _knock[i],
+                    SourceId = _source[i],
+                });
+                Hits++;
+            }
         }
 
         /// <summary>Damages enemies touching projectile i. Returns false when a straight shot has used up its pierce.</summary>
@@ -438,6 +526,14 @@ namespace Gladiator.Gameplay
                     new Vector3(streakWidth, streakWidth, len));
             }
             if (m < 0 || m >= _meshCount) return;
+            if (_kind[i] == Kind.Lob)
+            {
+                float landed = _t[i] - _life[i];
+                var rotL = landed < 0f ? Quaternion.Euler(_spin[i], _spin[i] * 0.6f, 0f) : Quaternion.identity;
+                float pulse = landed < 0f ? 1f : 1f + 0.18f * Mathf.Abs(Mathf.Sin(landed * 30f)); // the fuse fizzing
+                _matrices[m][_batch[m]++] = Matrix4x4.TRS(_pos[i], rotL, Vector3.one * (_scale[i] * pulse));
+                return;
+            }
             if (_kind[i] == Kind.Returning)
             {
                 _matrices[m][_batch[m]++] = Matrix4x4.TRS(_pos[i], Quaternion.Euler(0f, _spin[i], 0f), Vector3.one * _scale[i]);

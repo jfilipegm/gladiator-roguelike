@@ -80,6 +80,7 @@ GameObject:
   - component: {fileID: 2791122852982351566}
   - component: {fileID: 6343050640776242577}
   - component: {fileID: 806913137643507375}
+  - component: {fileID: 4417229196442158196}
   - component: {fileID: 4759577533021436214}
   - component: {fileID: 3068265213352874394}
   m_Layer: 9
@@ -242,6 +243,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.CameraProximityFade
   target: {fileID: 7672570851582761492}
   hideDistance: 0.75
+--- !u!114 &4417229196442158196
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3120198515773125934}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3bbe16c310ac41bdca2f7a79a7d21fae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.GladiatorLoadout
+  visualRoot: {fileID: 2545547385822470409}
+  cameraTarget: {fileID: 7672570851582761492}
+  characterMaterial: {fileID: 2100000, guid: 05a9990b9ad10f8f2aaf5ee4b41e035e, type: 2}
 --- !u!114 &4759577533021436214
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -276,6 +292,7 @@ MonoBehaviour:
   volleySpread: 12
   orbitHeight: 0.8
   orbitRoll: 540
+  lobCandidates: 8
 --- !u!1001 &601906944168044144
 PrefabInstance:
   m_ObjectHideFlags: 0

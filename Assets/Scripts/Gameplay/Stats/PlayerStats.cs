@@ -20,7 +20,9 @@ namespace Gladiator.Gameplay
             {
                 if (_block != null) return _block;
                 _block = new StatBlock();
-                if (GameSession.Gladiator != null) gladiator = GameSession.Gladiator; // picked in the menu
+                var loadout = GetComponent<GladiatorLoadout>();
+                if (loadout != null && loadout.Current != null) gladiator = loadout.Current; // the gladiator this player spawned as
+                else if (GameSession.Gladiator != null) gladiator = GameSession.Gladiator; // picked in the menu
                 if (gladiator != null)
                     foreach (var b in gladiator.baseStats) _block.SetBase(b.stat, b.value);
                 return _block;

@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3f244af30c794398bf8108a48772002, type: 3}
+  m_Name: GL_PitGoblin
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.GladiatorDef
+  id: pit_goblin
+  displayName: The Pit Goblin
+  description: Lived under the pit floor. Lobs bombs, leaves snares, pulls junk out of its sack.
+  baseStats:
+  - stat: 0
+    value: 70
+  - stat: 3
+    value: 1.12
+  - stat: 4
+    value: 0.9
+  - stat: 13
+    value: 1.25
+  model: {fileID: 919132149155446097, guid: e4c0290cdf04be19b92d98ed07f4b9c8, type: 3}
+  movement: {fileID: 11400000, guid: 2ab99a796832c570a9f96eb9288504ad, type: 2}
+  animProfile: {fileID: 11400000, guid: 33cf72a910d9ee89a91605bf26dc22ce, type: 2}
+  cameraTargetHeight: 0.85
+  startingWeapon: {fileID: 11400000, guid: b5d8728f416dd02acb8c33b0c3b6701c, type: 2}
+  traits:
+  - {fileID: 11400000, guid: 53becba20b6882122a81c67031972caa, type: 2}
+  - {fileID: 11400000, guid: d0d506f85f1baf71b84da26e6125ac3c, type: 2}
+  unlock: {fileID: 11400000, guid: 062cde42a02861921afcb4e11cd6dbb6, type: 2}
+  selectLine: 
+  tradeoff: 'Fast and greedy, but fragile: 70 HP, -10 % damage.'

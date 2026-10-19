@@ -14,6 +14,12 @@ namespace Gladiator.Gameplay
         ParticleSystem _ps;
         ParticleSystem.EmitParams _ep;
 
+        /// <summary>The arena's particle system, for components that aren't wired to it (gladiator traits).</summary>
+        public static DeathPopFx Instance { get; private set; }
+
+        void OnEnable() { if (Instance == null) Instance = this; }
+        void OnDisable() { if (Instance == this) Instance = null; }
+
         void Awake()
         {
             _ps = GetComponent<ParticleSystem>();

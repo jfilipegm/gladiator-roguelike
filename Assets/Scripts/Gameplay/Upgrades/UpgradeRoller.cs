@@ -22,11 +22,12 @@ namespace Gladiator.Gameplay
         UpgradeDef[] _cand = new UpgradeDef[64];
         float[] _w = new float[64];
 
-        /// <summary>Can `d` be offered right now? Not locked by meta progression, not banished, not maxed, and a free slot if it's new.</summary>
+        /// <summary>Can `d` be offered right now? Not banished, not maxed; if it's new: not locked by meta progression and a free slot.</summary>
         public static bool IsEligible(UpgradeDef d, BuildState build, UpgradeConfig config)
         {
-            if (d == null || d.kind == UpgradeKind.Consumable || d.weight <= 0f || build.IsBanished(d) || build.IsLocked(d)) return false;
+            if (d == null || d.kind == UpgradeKind.Consumable || d.weight <= 0f || build.IsBanished(d)) return false;
             int level = build.LevelOf(d);
+            if (level == 0 && build.IsLocked(d)) return false; // locked = never a new pick; what you hold still levels
             if (level >= d.maxLevel) return false;
             if (level == 0 && d.requiresAny != null && d.requiresAny.Length > 0)
             {

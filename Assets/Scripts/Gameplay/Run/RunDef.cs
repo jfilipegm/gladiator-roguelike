@@ -38,6 +38,9 @@ namespace Gladiator.Gameplay
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void Reset() { Gladiator = null; Run = null; ArenaIndex = 0; }
 
+        /// <summary>Forget the chosen gladiator and run (tests: one that picks a gladiator must not leak it into the next).</summary>
+        public static void Clear() => Reset();
+
         public static string ArenaName =>
             Run != null && ArenaIndex < Run.arenas.Length ? Run.arenas[ArenaIndex].displayName : null;
 

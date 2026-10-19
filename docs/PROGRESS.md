@@ -1,7 +1,7 @@
 # Progress
 
 **Current phase:** Phase 5 — expansion
-**Current milestone:** Phase 5.1 Favor done (release v0.2.0); next Phase 5.2 Pit Goblin (branch `phase5-goblin`, v0.3.0). Gate 2 report delivered, producer: "push and continue".
+**Current milestone:** Phase 5.2 Pit Goblin (branch `phase5-goblin`, v0.3.0): built and tested, PR + release next. v0.2.0 released. Gate 2 report delivered, producer: "push and continue".
 **Last updated:** 2026-10-19
 
 **Repository:** https://github.com/jfilipegm/gladiator-roguelike (public, branch `main`, remote `origin`, `.blend` files via Git LFS). Work on a branch per milestone, push as you go, merge through a PR; release every playable build (`Tools/release`).
@@ -66,8 +66,29 @@
 
 - **Phase 5.1 — Favor (branch `phase5-favor`, release v0.2.0)** — `FavorConfig`/`Favor`/`CrowdGifts`/`ArenaMaster` (Gameplay/Crowd): Favor meter fed by announced streaks, elite kills, variety, style kills (slide/air, capped 3/s), close calls, no-hit stretches, boss entrance/phase; gifts thrown 3–6 m away (healing amphora, gold shower, laurel XP, weapon in the sand = a level-4 loan beside the 4 slots for 30 s, `WeaponSystem.GrantTemporary`); Arena Master whims when play is dull (gate swarm via `Director.StartSwarmThrough`, or a champion challenge with a bounty). `AnnounceEvent.Kind/Tier`, `GameEvents.OnFavor`, HUD Favor bar + loan tile, admin Favor +50 / Gift now / Whim now, SFX GiftThrow/GiftLand/Boo, models PR_GiftAmphora/Pouch/Laurel/Weapon (`BlenderSrc/props/gifts.py`), bot walks to gifts and logs Favor + hit-stops. **Fixes:** `Director.Instance` restored in OnEnable (admin swarm/elite after a Director toggle); **crit hit-stop capped** (crits and elite hits share `hitStopInterval` 0.8 s): a crit build had spent 144 s of a 10-min run frozen, so the clock reached 7:35 and Gorm never came. **Verified:** EditMode 58/58 (+8 FavorTests), PlayMode 77/77 (+6 FavorPlayTests, +1 crit hit-stop cap); screenshots `p51_gifts_landed.png`, `p51_loan.png`. **10-min timed bot run (dev build, after the fix):** 630 fps avg (1.59 ms, p95 2.38, worst 9.84), gameplay 0.35 / 0.67 ms, max 176 alive (a fire build killed fast; the run before the fix held 300 alive at 241 fps, gameplay 1.18 / 1.59 ms); hit-stops 387 (16 s); level 28, 9,516 kills, gifts 3 collected / 4 thrown, whims 0; **Gorm arrived and fell, outcome Survived at 544 s**. GC: only the known boss entrance (1.8 KB) and victory screen + save (~230 KB, game over).
 
-## Next — Phase 5.2 Pit Goblin + rattling crate (branch `phase5-goblin`, release v0.3.0)
-- Spec in `docs/GLADIATORS.md`. Then Blood Knight (v0.4.0), Arena 2 (v0.5.0).
+- **v0.2.0 released 2026-10-19** (PR #3 merged with the producer's OK; self-merge is blocked by the permission check, so ask for each PR): https://github.com/jfilipegm/gladiator-roguelike/releases/tag/v0.2.0. Linux 38 MB, Linux dev 68 MB, Windows 40 MB, macOS 47 MB. Smoke runs of the exact archives: Linux (gamescope headless, `-bot -timed -botSeconds 40`) and Windows under Wine (Direct3D 11): both v0.2.0, 40 s, clock ran, 0 exceptions. macOS not run.
+
+## In progress — Phase 5.2 Pit Goblin (branch `phase5-goblin`, version 0.3.0, no PR yet)
+- **Built (commit `9215021` + the commit after it):**
+  - Data-driven gladiators: `GladiatorDef` (model, movement, animation, camera height, starting weapon, traits, unlock, select text) and `GladiatorLoadout` on the player prefab.
+  - Select screen and Codex list every `GladiatorDef`; `MainMenu.Pick`; bot flag `-gladiator <id>`.
+  - Bomb Satchel: `WeaponPattern.Lob`, `PlayerProjectiles.FireLob/Blasts`.
+  - Traits `ScavengerTrait`/`Scavenger` and `TrapSlideTrait`/`SnareLayer`; `StatusKind.Root` (5 slots; rooted enemies stop dead).
+  - `RattlingCrate` with `ArenaLayoutDef.secretSpots`; `MetaProgress.SetFlag/CheckUnlocks`; locked cards only block new picks; `GameSession.Clear`; `DeathPopFx.Instance`.
+  - Sounds: Cackle, Snare, Rattle, Bomb.
+  - Models: `CH_PitGoblin` (iteration 2, 904 tris), `WP_Bomb`, `PR_Snare`.
+  - Setup: `GladiatorSetup` creates GL_PitGoblin, TR_*, WP_BombSatchel + card, UL_PitGoblin, SE_Root, MovementConfig_Goblin and PartAnim_Goblin.
+  - Docs: GLADIATORS, DECISIONS, BACKLOG and `docs/releases/v0.3.0.md` are written.
+- **Verified:**
+  - EditMode 62/62; PlayMode 83/83, including 6 `GoblinPlayTests`.
+  - Screenshots `Screenshots/p52_*` (select screen, bombs, snares, crate break).
+  - **10-min timed bot run as the goblin:** 474 fps avg; ≥250 enemies 237 fps (4.23 ms, p95 5.76); gameplay 1.35 / 1.74 ms; max 298 alive; Gorm fell, Survived at 523 s; 0 exceptions; hit-stops 44 s.
+  - GC: known one-offs, plus 4 KB once when the flail is first equipped (`WeaponInstance.NextHit`).
+- **Next:**
+  1. Open the PR. **Ask the producer before merging**: the permission check blocks merging my own PR.
+  2. After the merge: `git switch main && git pull`, then `Tools/release 0.3.0`.
+  3. Smoke-run the archives (recipe in TOOLING), add the PROGRESS Done entry, and delete the smoke Profiling files.
+- **Then:** Blood Knight (v0.4.0), Arena 2 (v0.5.0).
 
 ## Known issues
 - **Residual GC (target 0 B/frame, met in steady state):** the first level-up allocates ~7.5 KB once (paused; a hidden pre-draw of the cards didn't remove it; BACKLOG), the boss entrance 1.8 KB, the victory screen + save write ~238 KB (game over). Small first-occurrence allocations (≤ 1.2 KB) in the first minutes.

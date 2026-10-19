@@ -16,3 +16,12 @@ MonoBehaviour:
   displayName: The Nobody
   description: A nameless pit fighter with a rusty gladius and nothing to lose.
   baseStats: []
+  model: {fileID: 0}
+  movement: {fileID: 0}
+  animProfile: {fileID: 0}
+  cameraTargetHeight: 1.25
+  startingWeapon: {fileID: 11400000, guid: 1e64e81441c35618692cc0a42fe51ce8, type: 2}
+  traits: []
+  unlock: {fileID: 0}
+  selectLine: 
+  tradeoff: 'Steady: no strengths, no weaknesses.'

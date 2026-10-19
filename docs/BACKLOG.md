@@ -26,5 +26,11 @@ Good ideas that are **not** in the current phase. Pull from here only when a pha
 - **Unlock banner beat** — a dedicated "UNLOCKED!" moment (crowd roar, reveal of the weapon model) instead of one gold line on the end screen.
 - **Per-gladiator records** (best time / wins per gladiator) once there's more than one.
 
+## Gladiators (from Phase 5.2)
+- **Menu diorama shows the picked gladiator** (the hero model behind the select screen is always the Nobody).
+- **The escaping goblin from the crate wears the player's cyan marks** (same model as the playable goblin); a rag-only variant would read better.
+- **Break the rattling crate with weapon hits too** (needs weapons to test props, not only enemies).
+- **Goblin personality beats from the spec:** a cackle on level-up, ears flopping when it runs (separate ear parts), grabbing gems with both hands.
+
 ## Art / audio
 - **Upgrade icons** — cards and the HUD build strip show 2-letter glyphs (`UpgradeDef.glyph`); procedural pixel icons per Boon/weapon in the Phase 4 juice pass.

@@ -63,6 +63,11 @@ namespace Gladiator.EditorTools
 
             root.AddComponent<CameraProximityFade>().target = camTarget;
 
+            var loadout = root.AddComponent<GladiatorLoadout>(); // swaps in the chosen gladiator's model, capsule, weapon, traits
+            loadout.visualRoot = visual;
+            loadout.cameraTarget = camTarget;
+            loadout.characterMaterial = AssetDatabase.LoadAssetAtPath<Material>(LookSetup.CharMat);
+
             var animator = root.AddComponent<PlayerPartAnimator>();
             animator.profile = anim;
             animator.motor = motor;

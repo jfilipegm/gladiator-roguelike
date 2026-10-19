@@ -62,11 +62,11 @@ namespace Gladiator.EditorTools
             menu.fontMaterial = fontMat;
             menu.run = run;
             menu.meta = MetaSetup.Load();
-            menu.gladiators = nobody != null ? new[] { nobody } : new GladiatorDef[0];
-            menu.locked = new[]
+            GladiatorSetup.CreateOrUpdate();
+            menu.gladiators = GladiatorSetup.All(); // locked ones show their unlock's hint
+            menu.locked = new[] // not built as data yet
             {
                 new Gladiator.UI.MainMenu.Locked { name = "The Murder Machine", hint = "Gorm keeps something chained below the pit." },
-                new Gladiator.UI.MainMenu.Locked { name = "The Pit Goblin", hint = "Something rattles in a crate in the Slave Pit." },
                 new Gladiator.UI.MainMenu.Locked { name = "The Blood Knight", hint = "Reach the Stone Amphitheater." },
             };
             var options = new GameObject("OptionsPanel").AddComponent<Gladiator.UI.OptionsPanel>();

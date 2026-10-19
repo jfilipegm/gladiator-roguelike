@@ -88,5 +88,7 @@ namespace Gladiator.Gameplay
         public CrowdZone[] crowd = Array.Empty<CrowdZone>();
         public Vector3[] chestAnchors = Array.Empty<Vector3>();
         public Vector3[] altarAnchors = Array.Empty<Vector3>();
+        [Tooltip("Where a secret can hide: the rattling crate picks one per run (empty = no secret here).")]
+        public Vector3[] secretSpots = Array.Empty<Vector3>();
     }
 }

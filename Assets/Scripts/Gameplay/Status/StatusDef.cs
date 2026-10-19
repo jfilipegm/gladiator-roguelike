@@ -4,7 +4,7 @@ using UnityEngine;
 namespace Gladiator.Gameplay
 {
     /// <summary>The status slots an enemy can carry at once (one of each). None = "not a status" in damage/hit events.</summary>
-    public enum StatusKind : byte { None = 0, Burn = 1, Bleed = 2, Shock = 3, Slow = 4 }
+    public enum StatusKind : byte { None = 0, Burn = 1, Bleed = 2, Shock = 3, Slow = 4, Root = 5 }
 
     /// <summary>Refresh: one instance, re-applying resets the timer and keeps the stronger power. Stack: each
     /// application adds stacks (up to maxStacks) and resets the timer; all stacks fall off together.</summary>
@@ -29,8 +29,8 @@ namespace Gladiator.Gameplay
         [Min(1)] public int maxStacks = 1;
         [Tooltip("Extra damage the enemy takes from everything while this is on it (Shock: 0.2 = +20 %).")]
         public float damageTakenBonus;
-        [Tooltip("Enemy move speed multiplier while active (Slow).")]
-        [Range(0.1f, 1f)] public float speedMultiplier = 1f;
+        [Tooltip("Enemy move speed multiplier while active (Slow; Root = 0). Scripted enemies (bosses) ignore it.")]
+        [Range(0f, 1f)] public float speedMultiplier = 1f;
         [Tooltip("Particles puffed on each status tick and the colour of its damage numbers.")]
         public Color color = new Color(1f, 0.85f, 0.3f);
 

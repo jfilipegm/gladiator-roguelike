@@ -48,7 +48,7 @@ namespace Gladiator.UI
             if (meta != null)
                 foreach (var u in meta.unlocks)
                 {
-                    if (u == null) continue;
+                    if (u == null || UnlocksGladiator(u, gladiators)) continue; // those live in the gladiators column
                     bool open = save.IsUnlocked(u.id);
                     var name = Text(ul, open ? u.displayName.ToUpperInvariant() : "???", 34, open ? Gold : Dim, new Vector2(0, uy), new Vector2(480, 46));
                     name.fontStyle = FontStyles.Bold;
@@ -64,20 +64,30 @@ namespace Gladiator.UI
             foreach (var g in gladiators)
             {
                 if (g == null) continue;
+                if (!MainMenu.IsAvailable(g)) { LockedGladiator(gl, ref gy, g.unlock != null ? g.unlock.hint : "???"); continue; }
                 Text(gl, g.displayName.ToUpperInvariant(), 30, Gold, new Vector2(0, gy), new Vector2(480, 44)).fontStyle = FontStyles.Bold;
                 Text(gl, "Unlocked", 22, Soft, new Vector2(0, gy - 36), new Vector2(480, 32)).fontStyle = FontStyles.Normal;
                 gy -= 96f;
             }
-            foreach (var l in locked)
-            {
-                var sil = UiFactory.Image("Silhouette", gl, new Color(0f, 0f, 0f, 0.85f), mid, mid, new Vector2(-212, gy - 16), new Vector2(36, 66), PixelIcons.White);
-                sil.raycastTarget = false;
-                Text(gl, "???", 30, Dim, new Vector2(30, gy), new Vector2(400, 44));
-                Text(gl, l.hint, 21, new Color(1f, 0.84f, 0.3f, 0.65f), new Vector2(30, gy - 40), new Vector2(400, 56)).fontStyle = FontStyles.Italic;
-                gy -= 112f;
-            }
+            foreach (var l in locked) LockedGladiator(gl, ref gy, l.hint);
 
             UiFactory.Button("Back", root, "BACK", mid, mid, new Vector2(0, -420), new Vector2(240, 76), _font, _fontMat, () => back(), 34f);
+        }
+
+        void LockedGladiator(Transform gl, ref float gy, string hint)
+        {
+            var mid = new Vector2(0.5f, 0.5f);
+            var sil = UiFactory.Image("Silhouette", gl, new Color(0f, 0f, 0f, 0.85f), mid, mid, new Vector2(-212, gy - 16), new Vector2(36, 66), PixelIcons.White);
+            sil.raycastTarget = false;
+            Text(gl, "???", 30, Dim, new Vector2(30, gy), new Vector2(400, 44));
+            Text(gl, hint, 21, new Color(1f, 0.84f, 0.3f, 0.65f), new Vector2(30, gy - 40), new Vector2(400, 56)).fontStyle = FontStyles.Italic;
+            gy -= 112f;
+        }
+
+        static bool UnlocksGladiator(UnlockDef u, GladiatorDef[] gladiators)
+        {
+            foreach (var g in gladiators) if (g != null && g.unlock == u) return true;
+            return false;
         }
 
         static string Clock(float t) => Mathf.FloorToInt(t / 60f) + ":" + Mathf.FloorToInt(t % 60f).ToString("00");

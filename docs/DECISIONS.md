@@ -231,3 +231,15 @@ One line each: what, and why. Newest at the bottom of each section.
 - **Director.Instance is set in OnEnable too** (bug found by the whim tests): after the admin toggled the Director off and on, `Director.Instance` stayed null, so "Swarm now"/"Elite now" (and whims) silently did nothing.
 
 - **Crit and elite-hit freeze frames share one cooldown, `HitFeedbackConfig.hitStopInterval` = 0.8 s** (was: elite hits 0.35 s, crits unlimited). Found by the 10-min bot run: a crit build (Lucky Cut, Serrated Edge, Quick Hands) spent 144 s of 597 s at 0.05× speed, so the 8-minute clock reached only 7:35 and Gorm never came. Earlier runs already lost 50–69 s the same way. Player hits (gated by the 0.4 s invulnerability) and elite deaths keep their own stops. The bot log now prints `hitstops N (S s)`.
+
+### Phase 5.2 — The Pit Goblin (second gladiator)
+- **One player prefab, the gladiator swapped in at spawn** (`GladiatorLoadout`, runs before every other player component) instead of a prefab per gladiator: a new gladiator is a `GladiatorDef` asset (model, `MovementConfig`, animation, camera height, weapon, traits), and the player's systems (motor, weapons, Favor, HUD) stay in one place.
+- **Signature mechanics are `GladiatorTrait` assets that install a component** (Scavenger, Trap Slide): the numbers are data the producer can tune, the behaviour is code, as CLAUDE.md §2.4 asks.
+- **A locked card only blocks new picks.** The goblin starts with the Bomb Satchel, whose card is held back until the goblin is unlocked; it must still level its own weapon (and a bot run with `-gladiator` works on any save).
+- **The goblin's unlock also puts the Bomb Satchel in everyone's pool** (my addition): a discovery should change the next runs for every gladiator, not only add a character.
+- **The crate's flag is saved the moment it breaks**, not when the run ends: a discovery must never be lost to a death or a quit. The unlock is granted at the run's end (shown on the end screen) or, if the run was quit, by the main menu.
+- **Walk into the crate or press E; weapon hits don't break it** (spec said "any hit"): weapons only target enemies, and walking into a rattling box is what a curious player does. The crate stops appearing once found.
+- **Root is a fifth status slot** (speed × 0, the enemy stops dead instead of easing to a stop). Scripted enemies (bosses) ignore it but still bleed, as the spec says.
+- **Bombs use player colours** (a cyan-white landing ring and fuse ring) **and never hurt the player**: they are the player's weapon, so they must not look like the orange-red threats.
+- **Scavenger waits while another loan is out** (a crowd's weapon in the sand): a timer must never take away the crowd's gift.
+- **`GameSession.Clear()`**: a test that starts a run as the goblin leaked the choice into the next fixture (the movement test ran as a goblin at 112 % speed).

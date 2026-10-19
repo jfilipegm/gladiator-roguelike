@@ -66,6 +66,16 @@ namespace Gladiator.Gameplay
 
         public string id = "slave_pit";
         public string displayName = "The Slave Pit";
+        [Tooltip("0 = the Slave Pit, 1 = the Provincial Pit… (Renown bonus, deepest arena, ReachArena unlocks).")]
+        public int tier;
+
+        [Header("Difficulty")]
+        [Tooltip("The Director's enemy table here (empty = the Slave Pit's).")]
+        public SpawnTableDef spawnTable;
+        [Tooltip("Every non-boss enemy spawns with this much HP.")]
+        public float enemyHpMul = 1f;
+        [Tooltip("Every hit on the player is multiplied by this (enemies, hazards, the boss).")]
+        public float playerDamageTakenMul = 1f;
 
         [Header("Play area")]
         public Vector3 center = Vector3.zero;
@@ -83,6 +93,8 @@ namespace Gladiator.Gameplay
 
         [Header("Content")]
         public Piece[] pieces = Array.Empty<Piece>();
+        [Tooltip("Gate model under Assets/Art/Models/ (needs hinged DoorL / DoorR children).")]
+        public string gateModel = "Environment/SM_PitGate";
         public Gate[] gates = Array.Empty<Gate>();
         public Zone[] zones = Array.Empty<Zone>();
         public CrowdZone[] crowd = Array.Empty<CrowdZone>();
@@ -90,5 +102,13 @@ namespace Gladiator.Gameplay
         public Vector3[] altarAnchors = Array.Empty<Vector3>();
         [Tooltip("Where a secret can hide: the rattling crate picks one per run (empty = no secret here).")]
         public Vector3[] secretSpots = Array.Empty<Vector3>();
+
+        [Header("Breakables and traps (Phase 5.4)")]
+        [Tooltip("Barricades (x, y, z, yaw): obstacles a boss charge wrecks for the rest of the run.")]
+        public Vector4[] barricades = Array.Empty<Vector4>();
+        [Tooltip("Braziers a boss charge topples into burning ground (base position).")]
+        public Vector3[] braziers = Array.Empty<Vector3>();
+        [Tooltip("Spike grate centres (y = the floor): they cycle and hurt everyone on them.")]
+        public Vector3[] spikeTraps = Array.Empty<Vector3>();
     }
 }

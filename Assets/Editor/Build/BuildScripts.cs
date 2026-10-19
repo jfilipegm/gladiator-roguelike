@@ -16,8 +16,8 @@ namespace Gladiator.EditorTools
         public const string WindowsOutput = "Builds/Windows/Gladiator.exe";
         public const string MacOutput = "Builds/Mac/Gladiator.app";
 
-        /// <summary>What a player gets: the menu and the Slave Pit (no dev test arena).</summary>
-        static string[] ReleaseScenes => new[] { Gladiator.Gameplay.GameSession.MenuScene, ArenaBuilder.SlavePitScene };
+        /// <summary>What a player gets: the menu and the arenas (no dev test arena).</summary>
+        static string[] ReleaseScenes => new[] { Gladiator.Gameplay.GameSession.MenuScene, ArenaBuilder.SlavePitScene, ProvincialPitSetup.Scene };
 
         public static void ConfigurePlayer()
         {
@@ -33,11 +33,11 @@ namespace Gladiator.EditorTools
             PlayerSettings.SetScriptingBackend(UnityEditor.Build.NamedBuildTarget.Standalone, ScriptingImplementation.Mono2x);
         }
 
-        /// <summary>Main menu first (-bot / -stress jump straight into the run), then Arena 1, then the dev test arena.</summary>
+        /// <summary>Main menu first (-bot / -stress jump straight into the run), then the arenas, then the dev test arena.</summary>
         [MenuItem("Gladiator/Build/Linux Development Build")]
-        public static string BuildLinuxDev() => Build(new[] { Gladiator.Gameplay.GameSession.MenuScene, ArenaBuilder.SlavePitScene, TestArenaScene.ScenePath }, DevOutput, BuildOptions.Development);
+        public static string BuildLinuxDev() => Build(new[] { Gladiator.Gameplay.GameSession.MenuScene, ArenaBuilder.SlavePitScene, ProvincialPitSetup.Scene, TestArenaScene.ScenePath }, DevOutput, BuildOptions.Development);
 
-        /// <summary>The playtest build: what a player gets (menu + the Slave Pit, no admin panel, no dev overlay).</summary>
+        /// <summary>The playtest build: what a player gets (menu + the arenas, no admin panel, no dev overlay).</summary>
         [MenuItem("Gladiator/Build/Linux Release Build")]
         public static string BuildLinuxRelease() => Build(ReleaseScenes, ReleaseOutput, BuildOptions.None);
 

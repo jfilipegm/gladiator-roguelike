@@ -37,6 +37,8 @@ namespace Gladiator.Gameplay
         [Header("World")]
         public int capacity = 1024;
         public Vector3 arenaCenter = Vector3.zero;
+        [Tooltip("Arena difficulty: every non-boss enemy spawns with this much HP (ArenaLayoutDef.enemyHpMul).")]
+        public float hpMul = 1f;
         public float arenaRadius = 20f;
         public Vector2 boundsMin = new Vector2(-26f, -26f);
         public Vector2 boundsMax = new Vector2(26f, 26f);
@@ -255,7 +257,7 @@ namespace Gladiator.Gameplay
             float scale = affix != null ? affix.scale : 1f;
             _affix[i] = affix;
             _scale[i] = scale;
-            _hp[i] = _maxHp[i] = def.maxHp * (affix != null ? affix.hpMultiplier : 1f);
+            _hp[i] = _maxHp[i] = def.maxHp * (affix != null ? affix.hpMultiplier : 1f) * (def.behaviour == EnemyBehaviour.Scripted ? 1f : hpMul);
             _speed[i] = def.moveSpeed * (1f + GameRandom.Range(-def.speedJitter, def.speedJitter)) * (affix != null ? affix.speedMultiplier : 1f);
             _radius[i] = def.radius * scale;
             if (_radius[i] > _maxRadius) _maxRadius = _radius[i];

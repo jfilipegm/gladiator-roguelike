@@ -20,7 +20,13 @@ namespace Gladiator.Gameplay
         }
 
         public string id = "slice";
+        [Tooltip("Menu card text (arena select).")]
+        [TextArea] public string description;
+        [Tooltip("Empty = open from the start. Locked runs show their unlock's hint on the arena select.")]
+        public UnlockDef unlock;
         public Arena[] arenas = Array.Empty<Arena>();
+
+        public string DisplayName => arenas.Length > 0 ? arenas[0].displayName : id;
     }
 
     /// <summary>

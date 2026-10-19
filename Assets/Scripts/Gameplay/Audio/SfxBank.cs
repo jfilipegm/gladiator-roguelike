@@ -12,6 +12,7 @@ namespace Gladiator.Gameplay
         GiftThrow, GiftLand, Boo,
         Cackle, Snare, Rattle, Bomb,
         BloodRite,
+        Splinter, Spikes,
     }
 
     [Serializable]

@@ -11,6 +11,8 @@ namespace Gladiator.Gameplay
         public static RunState Current { get; private set; }
 
         public ProgressionConfig config;
+        [Tooltip("This arena's tier (0 = the Slave Pit): Renown bonus, deepest arena, ReachArena unlocks. Set by ArenaBuilder.")]
+        public int arenaTier;
 
         public float Elapsed { get; private set; }
         public float TimeRemaining => Mathf.Max(0f, config.runDuration - Elapsed);

@@ -18,6 +18,7 @@ namespace Gladiator.Gameplay
         public int Kills;
         public int GoldEarned;
         public int Level;
+        /// <summary>The arena's tier (0 = the Slave Pit, 1 = the Provincial Pit…), not its index in the run.</summary>
         public int ArenaIndex;
         public string GladiatorId;
         /// <summary>BossDef.id of the boss beaten this run (null = none).</summary>

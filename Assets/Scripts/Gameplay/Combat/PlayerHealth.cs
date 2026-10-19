@@ -14,6 +14,8 @@ namespace Gladiator.Gameplay
         public float invulnerableTime = 0.4f;
         [Tooltip("Armor is a damage-reduction fraction; this caps it so stacking can't make the player immune.")]
         [Range(0f, 0.95f)] public float maxArmor = 0.75f;
+        [Tooltip("Arena difficulty: every hit on the player is multiplied by this (ArenaLayoutDef.playerDamageTakenMul).")]
+        public float incomingMul = 1f;
         public HitFeedbackConfig feedback;
 
         PlayerStats _stats;
@@ -101,7 +103,7 @@ namespace Gladiator.Gameplay
             float floor = DevSettings.GodMode ? 1f : 0f;
             float before = Hp;
             float armor = _stats != null ? Mathf.Clamp(_stats.Get(StatId.Armor), 0f, maxArmor) : 0f;
-            float amount = info.Amount * (1f - armor);
+            float amount = info.Amount * incomingMul * (1f - armor);
             Hp = Mathf.Max(floor, Hp - amount);
             DamageTaken += before - Hp;
             if (!status) _invulnerableUntil = Time.time + invulnerableTime;

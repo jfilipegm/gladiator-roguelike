@@ -5,7 +5,8 @@ namespace Gladiator.Core
 {
     /// <summary>
     /// Static obstacles on the XZ plane (circles + oriented boxes) collected once from scene colliders.
-    /// Enemies are pushed out of them each tick — no physics, no NavMesh.
+    /// Enemies are pushed out of them each tick — no physics, no NavMesh. An obstacle can be switched off at runtime
+    /// (a barricade the Champion smashed, Phase 5.4): it stops pushing and blocking.
     /// </summary>
     public sealed class StaticObstacles
     {
@@ -14,6 +15,49 @@ namespace Gladiator.Core
 
         Circle[] _circles = new Circle[0];
         Box[] _boxes = new Box[0];
+        bool[] _circleOff, _boxOff; // null until something is switched off
+
+        /// <summary>The box whose centre is nearest `p` (within `maxDistance`), or -1.</summary>
+        public int FindBox(Vector2 p, float maxDistance)
+        {
+            int best = -1;
+            float bestD = maxDistance * maxDistance;
+            for (int i = 0; i < _boxes.Length; i++)
+            {
+                float d = (_boxes[i].C - p).sqrMagnitude;
+                if (d <= bestD) { bestD = d; best = i; }
+            }
+            return best;
+        }
+
+        /// <summary>The circle whose centre is nearest `p` (within `maxDistance`), or -1.</summary>
+        public int FindCircle(Vector2 p, float maxDistance)
+        {
+            int best = -1;
+            float bestD = maxDistance * maxDistance;
+            for (int i = 0; i < _circles.Length; i++)
+            {
+                float d = (_circles[i].C - p).sqrMagnitude;
+                if (d <= bestD) { bestD = d; best = i; }
+            }
+            return best;
+        }
+
+        public void SetBoxActive(int i, bool on)
+        {
+            if (i < 0 || i >= _boxes.Length) return;
+            _boxOff ??= new bool[_boxes.Length];
+            _boxOff[i] = !on;
+        }
+
+        public void SetCircleActive(int i, bool on)
+        {
+            if (i < 0 || i >= _circles.Length) return;
+            _circleOff ??= new bool[_circles.Length];
+            _circleOff[i] = !on;
+        }
+
+        public bool BoxActive(int i) => i >= 0 && i < _boxes.Length && (_boxOff == null || !_boxOff[i]);
 
         public int Count => _circles.Length + _boxes.Length;
 
@@ -88,11 +132,13 @@ namespace Gladiator.Core
         {
             for (int i = 0; i < _circles.Length; i++)
             {
+                if (_circleOff != null && _circleOff[i]) continue;
                 float r = _circles[i].R + radius;
                 if ((p - _circles[i].C).sqrMagnitude < r * r) return true;
             }
             for (int i = 0; i < _boxes.Length; i++)
             {
+                if (_boxOff != null && _boxOff[i]) continue;
                 var b = _boxes[i];
                 var d = p - b.C;
                 if (Mathf.Abs(Vector2.Dot(d, b.Ax)) < b.Half.x + radius && Mathf.Abs(Vector2.Dot(d, b.Az)) < b.Half.y + radius) return true;
@@ -107,6 +153,7 @@ namespace Gladiator.Core
             var p = new Vector2(pos.x, pos.z);
             for (int i = 0; i < _circles.Length; i++)
             {
+                if (_circleOff != null && _circleOff[i]) continue;
                 var c = _circles[i];
                 var d = p - c.C;
                 float r = c.R + radius;
@@ -118,6 +165,7 @@ namespace Gladiator.Core
             }
             for (int i = 0; i < _boxes.Length; i++)
             {
+                if (_boxOff != null && _boxOff[i]) continue;
                 var b = _boxes[i];
                 var d = p - b.C;
                 float lx = Vector2.Dot(d, b.Ax), lz = Vector2.Dot(d, b.Az);

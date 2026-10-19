@@ -11,7 +11,7 @@ namespace Gladiator.Gameplay
     /// </summary>
     public sealed class TelegraphRenderer : MonoBehaviour, ITickable
     {
-        public enum Style { Telegraph = 0, Fire = 1, Ring = 2 }
+        public enum Style { Telegraph = 0, Fire = 1, Ring = 2, Lane = 3 }
         public const int Max = 512;
 
         public static TelegraphRenderer Instance { get; private set; }
@@ -71,6 +71,25 @@ namespace Gladiator.Gameplay
             _matrices[_count] = Matrix4x4.TRS(new Vector3(center.x, center.y + lift, center.z), Quaternion.identity, new Vector3(s, 1f, s));
             _colors[_count] = color;
             _params[_count] = new Vector4(fill, (float)style, seed, thickness);
+            _count++;
+        }
+
+        /// <summary>
+        /// Queue a straight ground lane for this frame: from `from` along `dir` (flattened), `length` long and `width`
+        /// wide, filling from `from` toward the far end (`fill` 0..1: how close the hit is). Charges, dashes, aim lines.
+        /// `thickness` is the side rim as a fraction of the half-width.
+        /// </summary>
+        public void Lane(Vector3 from, Vector3 dir, float length, float width, float fill, Color color, float thickness = 0.14f)
+        {
+            if (_count >= Max || Time.deltaTime <= 0f) return;
+            dir.y = 0f;
+            float m = dir.magnitude;
+            if (m < 1e-4f || length <= 0f) return;
+            dir /= m;
+            Vector3 c = from + dir * (length * 0.5f);
+            _matrices[_count] = Matrix4x4.TRS(new Vector3(c.x, from.y + lift, c.z), Quaternion.LookRotation(dir), new Vector3(width, 1f, length));
+            _colors[_count] = color;
+            _params[_count] = new Vector4(fill, (float)Style.Lane, 0f, thickness);
             _count++;
         }
 

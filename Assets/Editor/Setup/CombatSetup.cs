@@ -31,6 +31,7 @@ namespace Gladiator.EditorTools
         public const string SlavePitTablePath = "Assets/Data/Arenas/ST_SlavePit.asset";
         public const string StoneMesh = Models + "Props/PR_SlingStone.fbx";
         public const string PotMesh = Models + "Props/PR_FirePot.fbx";
+        public const string ArrowMesh = Models + "Props/PR_Arrow.fbx";
 
         [MenuItem("Gladiator/Setup/Combat/Create Or Update Combat Assets")]
         public static string CreateOrUpdate()
@@ -181,7 +182,7 @@ namespace Gladiator.EditorTools
             EditorUtility.SetDirty(t);
         }
 
-        static PartAnimProfile Profile(string name, System.Action<PartAnimProfile> init)
+        internal static PartAnimProfile Profile(string name, System.Action<PartAnimProfile> init)
         {
             string path = "Assets/Data/Config/" + name + ".asset";
             bool isNew = AssetDatabase.LoadAssetAtPath<PartAnimProfile>(path) == null;
@@ -190,7 +191,7 @@ namespace Gladiator.EditorTools
             return p;
         }
 
-        static void Enemy(string asset, string displayName, string id, PartAnimProfile anim, System.Action<EnemyDef> init)
+        internal static void Enemy(string asset, string displayName, string id, PartAnimProfile anim, System.Action<EnemyDef> init)
         {
             string path = EnemyDir + asset + ".asset";
             bool isNew = AssetDatabase.LoadAssetAtPath<EnemyDef>(path) == null;

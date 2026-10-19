@@ -21,7 +21,7 @@ stands full of shouting, betting townsfolk.
 | **Barricades** | Eight wooden barricades in short lines: they split the floor into lanes and choke points. Enemies walk around them. **The Champion's charge smashes any barricade in its path** (gone for the run), so the arena opens up as the fight goes on. |
 | **Spike traps (new rule)** | Six iron grates in the floor. Every ~7 s each one telegraphs (orange-red, 1 s), then spikes shoot up for 1.2 s. **They hurt everyone**: the player (15) and enemies (40, ×2 for ordinary ones), so luring the horde over a grate is a tactic. Feet above 0.5 m clear them (jump). Traps are staggered so there's always one live. |
 | **Braziers** | Four lit braziers on the stone platforms and by the gates: light and set dressing. If the Champion charges through one, it topples and leaves burning ground for 8 s. |
-| **Enemies** | The Slave Pit's six, with tougher odds, plus two new ones: the **Shield Archer** (shield-protected archer) and the **Assassin** (flanker). Enemies have +25 % HP and +15 % damage here (`ArenaLayoutDef.enemyHpMul / enemyDamageMul`). |
+| **Enemies** | The Slave Pit's six, with tougher odds, plus two new ones: the **Shield Archer** (shield-protected archer) and the **Assassin** (flanker). Enemies have +25 % HP and +15 % damage here (`ArenaLayoutDef.enemyHpMul / playerDamageTakenMul`). |
 | **Crowd** | ~200 spectators in the stands (instanced, as before). Cheers on streaks; chants when the Champion enters. |
 | **Palette** | A2 ochre / dry grass for the floor and stands, warm sandstone and grey stone for the foundation, red-and-white banners. Distinct from the Slave Pit's mud browns at a glance. |
 | **Boss** | **The Provincial Champion** (docs/BOSSES.md). |
@@ -39,14 +39,14 @@ stands full of shouting, betting townsfolk.
 
 ### Building blocks
 - **Data:** `RunDef` gains `tier`, `unlock`, `description`; `ArenaLayoutDef` gains `spawnTable`, `enemyHpMul`,
-  `enemyDamageMul`, barricades, spike traps, braziers. `RunSummary.ArenaIndex` becomes the arena's tier.
+  `playerDamageTakenMul`, barricades, spike traps, braziers. `RunSummary.ArenaIndex` becomes the arena's tier.
 - **Menu:** after the gladiator, a "CHOOSE YOUR ARENA" step when more than one arena exists (locked ones show their
   hint). It remembers the last arena.
 - **Runtime:** `SpikeTraps` (central tick, instanced spikes, damage both sides), `Barricades` (obstacles that can be
   removed at runtime: the enemy push-out skips broken ones), brazier topple → `HazardZones` burning ground.
-- **Models (Blender, `BlenderSrc/environment/provincial_kit.py`):** `SM_ProvFloor`, `SM_ProvWall_4m` (stone
+- **Models (Blender, `BlenderSrc/environment/provincial_pit.py`):** `SM_ProvFloor`, `SM_ProvPillar`, `SM_ProvWall_4m` (stone
   foundation), `SM_ProvStand_4m` (wooden stand on top), `SM_ProvPlatform` + stairs, `PR_Barricade`, `PR_SpikeTrap`,
-  `PR_Banner`; enemies `EN_ShieldArcher`, `EN_Assassin`; boss `EN_Champion`.
+  `PR_Banner`; enemies `EN_ShieldArcher`, `EN_Assassin` (`BlenderSrc/enemies/`), arrow `PR_Arrow`; boss `EN_Champion`.
 
 ### Tests
 - Locked until Gorm falls; then the menu offers it and a run loads the Provincial Pit as the chosen gladiator.

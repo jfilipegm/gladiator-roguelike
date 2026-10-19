@@ -114,6 +114,7 @@ namespace Gladiator.EditorTools
             proj.material = em.bodyMaterial;
             proj.stoneMesh = AssetDatabase.LoadAssetAtPath<Mesh>(CombatSetup.StoneMesh);
             proj.potMesh = AssetDatabase.LoadAssetAtPath<Mesh>(CombatSetup.PotMesh);
+            proj.arrowMesh = AssetDatabase.LoadAssetAtPath<Mesh>(CombatSetup.ArrowMesh);
             proj.feedback = feedback;
             proj.burst = pop;
 

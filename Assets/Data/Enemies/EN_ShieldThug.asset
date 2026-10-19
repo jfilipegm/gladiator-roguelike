@@ -41,8 +41,13 @@ MonoBehaviour:
   projectileSpeed: 13
   lobTime: 0.95
   projectileRadius: 0.25
+  aimLockTime: 0.3
   zoneDuration: 3.5
   zoneDps: 10
+  dashSpeed: 18
+  dashLength: 7
+  flankRadius: 5.5
+  flankTimeout: 4
   xp: 3
   goldChance: 0.08
   prewarm: 32

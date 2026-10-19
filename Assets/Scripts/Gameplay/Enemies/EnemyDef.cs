@@ -20,6 +20,13 @@ namespace Gladiator.Gameplay
         /// <summary>Driven from outside (bosses, BossController): EnemyManager keeps its HP, hits, statuses and death but
         /// never moves, animates or attacks it.</summary>
         Scripted,
+        /// <summary>Keeps its distance behind a tall shield (frontal hits blocked, except while it recovers from a
+        /// shot), draws along a thin aim line that stops tracking just before release, then looses a fast straight
+        /// arrow (Shield Archer). Appended: enum values are serialized.</summary>
+        ShieldedRanged,
+        /// <summary>Circles to your side instead of your face, crouches behind a telegraphed lane, dashes through you,
+        /// then stands winded: the window to kill it (Assassin).</summary>
+        Dasher,
     }
 
     /// <summary>An enemy type as data (CLAUDE.md §2.4). New enemies = new assets; new behaviours = new code.</summary>
@@ -83,9 +90,20 @@ namespace Gladiator.Gameplay
         [Tooltip("Lobber: flight time of the lob (s).")]
         public float lobTime = 0.95f;
         public float projectileRadius = 0.25f;
+        [Tooltip("Shield Archer: seconds before the shot when the aim line stops tracking you (sidestep then).")]
+        public float aimLockTime = 0.3f;
         [Tooltip("Lobber: fire patch duration (s) and damage per second while you stand in it.")]
         public float zoneDuration = 3.5f;
         public float zoneDps = 10f;
+
+        [Header("Dasher")]
+        [Tooltip("Dash speed (m/s) and length (m): the lane it telegraphs.")]
+        public float dashSpeed = 18f;
+        public float dashLength = 7f;
+        [Tooltip("How far to your side it circles before it dashes (m).")]
+        public float flankRadius = 5.5f;
+        [Tooltip("Gives up flanking and dashes from wherever it is after this long (s).")]
+        public float flankTimeout = 4f;
 
         [Header("Rewards")]
         public float xp = 1f;

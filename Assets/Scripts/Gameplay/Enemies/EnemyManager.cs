@@ -80,7 +80,8 @@ namespace Gladiator.Gameplay
         enum AiState : byte { Move = 0, Windup = 1, Attack = 2, Recover = 3 }
         AiState[] _state;
         float[] _stateT, _stateDur, _attackCd, _strafe, _dmgTakenMul, _knockMul, _atkTimeMul, _scale;
-        Vector3[] _aim;
+        Vector3[] _aim, _target;
+        Vector3 _viewDir = Vector3.forward;
         bool[] _attackHit, _invuln, _scriptedWindup;
         AffixDef[] _affix;
 
@@ -133,7 +134,7 @@ namespace Gladiator.Gameplay
             _state = new AiState[capacity]; _stateT = new float[capacity]; _stateDur = new float[capacity];
             _attackCd = new float[capacity]; _strafe = new float[capacity]; _dmgTakenMul = new float[capacity];
             _knockMul = new float[capacity]; _atkTimeMul = new float[capacity]; _scale = new float[capacity];
-            _aim = new Vector3[capacity]; _attackHit = new bool[capacity]; _affix = new AffixDef[capacity];
+            _aim = new Vector3[capacity]; _target = new Vector3[capacity]; _attackHit = new bool[capacity]; _affix = new AffixDef[capacity];
             _view = new EnemyView[capacity];
             _free = new int[capacity];
             _invuln = new bool[capacity];
@@ -265,7 +266,7 @@ namespace Gladiator.Gameplay
             _knockMul[i] = affix != null ? affix.knockbackMultiplier : 1f;
             _atkTimeMul[i] = affix != null ? affix.attackTimeMultiplier : 1f;
             _state[i] = AiState.Move;
-            _stateT[i] = GameRandom.Range(1.5f, 3.5f); // Move: strafe-flip timer
+            _stateT[i] = def.behaviour == EnemyBehaviour.Dasher ? def.flankTimeout : GameRandom.Range(1.5f, 3.5f); // Move: strafe-flip / flank timer
             _stateDur[i] = 1f;
             _attackCd[i] = GameRandom.Range(0.6f, 1.4f) * def.attackCooldown * 0.5f; // don't all fire on the same frame
             _strafe[i] = (GameRandom.NextUInt() & 1) == 0 ? 1f : -1f;
@@ -391,7 +392,9 @@ namespace Gladiator.Gameplay
         public bool IsBlocking(int i, Vector3 dir)
         {
             var def = _view[i].Def;
-            if (def.behaviour != EnemyBehaviour.ShieldBearer || def.blockArc <= 0f) return false;
+            // the Shield Archer's pavise is down only while it recovers from a shot
+            bool shield = def.behaviour == EnemyBehaviour.ShieldBearer || (def.behaviour == EnemyBehaviour.ShieldedRanged && _state[i] != AiState.Recover);
+            if (!shield || def.blockArc <= 0f) return false;
             dir.y = 0f;
             float m = dir.magnitude;
             if (m < 1e-3f) return false;
@@ -553,6 +556,8 @@ namespace Gladiator.Gameplay
             if (_blastCount > 0) TickBlasts(dt, player);
             var cam = Camera.main;
             Vector3 camPos = cam != null ? cam.transform.position : player;
+            _viewDir = new Vector3(player.x - camPos.x, 0f, player.z - camPos.z);
+            _viewDir = _viewDir.sqrMagnitude > 1e-4f ? _viewDir.normalized : Vector3.forward;
             float animD2 = animDistance * animDistance;
             float knockDecay = feedback != null ? Mathf.Exp(-feedback.knockbackDecay * dt) : 0.85f;
             float recoilTime = feedback != null ? feedback.hitRecoilTime : 0.15f;
@@ -617,7 +622,9 @@ namespace Gladiator.Gameplay
                     sep.z += dz * push;
                 }
 
-                if (_state[i] == AiState.Attack && def.behaviour == EnemyBehaviour.Lunger) _vel[i] = desired; // the leap ignores acceleration
+                bool dasher = def.behaviour == EnemyBehaviour.Dasher;
+                if ((_state[i] == AiState.Attack && (def.behaviour == EnemyBehaviour.Lunger || dasher)) || (dasher && _state[i] == AiState.Recover))
+                    _vel[i] = desired; // the leap / dash ignores acceleration; a dasher stops dead when it's done
                 else _vel[i] = Vector3.MoveTowards(_vel[i], desired, def.acceleration * dt);
                 Vector3 np = p + (_vel[i] + _knock[i]) * dt + sep * Mathf.Min(1f, separationStrength * dt);
                 _knock[i] *= knockDecay;
@@ -642,7 +649,7 @@ namespace Gladiator.Gameplay
                 bool touching = dist < _radius[i] + playerRadius + 0.15f && Mathf.Abs(player.y - np.y) < 1.1f;
                 if (_playerHealth != null && touching)
                 {
-                    if (_state[i] == AiState.Attack && def.behaviour == EnemyBehaviour.Lunger)
+                    if (_state[i] == AiState.Attack && (def.behaviour == EnemyBehaviour.Lunger || dasher))
                     {
                         if (!_attackHit[i] && _playerHealth.TakeDamage(new DamageInfo { Amount = def.attackDamage, Flags = DamageFlags.Melee, Point = player, Direction = _aim[i] }))
                         {
@@ -658,7 +665,7 @@ namespace Gladiator.Gameplay
                 }
 
                 // facing: shield bearers / shooters / wind-ups look at the player (turn-rate limited), others look where they go
-                Vector3 face = facePlayer ? dirTo : (_state[i] == AiState.Attack ? _aim[i] : _vel[i]);
+                Vector3 face = facePlayer ? dirTo : (_state[i] == AiState.Attack || (dasher && _state[i] == AiState.Windup) ? _aim[i] : _vel[i]);
                 if (face.x * face.x + face.z * face.z > (facePlayer ? 1e-4f : 0.04f))
                     _yaw[i] = Mathf.MoveTowardsAngle(_yaw[i], Mathf.Atan2(face.x, face.z) * Mathf.Rad2Deg, def.turnRate * dt);
 
@@ -787,11 +794,18 @@ namespace Gladiator.Gameplay
 
                 case EnemyBehaviour.Ranged:
                 case EnemyBehaviour.Lobber:
+                case EnemyBehaviour.ShieldedRanged:
                     facePlayer = true;
                     switch (_state[i])
                     {
                         case AiState.Windup:
-                            if (tele != null) tele.Circle(p, _radius[i] * 2.2f, 1f, telegraphColor, TelegraphRenderer.Style.Ring, 0.14f);
+                            if (def.behaviour == EnemyBehaviour.ShieldedRanged)
+                            {
+                                // the aim line tracks you until aimLockTime before release, then freezes: sidestep then
+                                if (_stateT[i] > def.aimLockTime) _target[i] = player + Vector3.up * 0.9f;
+                                if (tele != null) tele.Lane(p, _target[i] - p, def.attackRange, 0.3f, 1f - _stateT[i] / _stateDur[i], telegraphColor, 0.3f);
+                            }
+                            else if (tele != null) tele.Circle(p, _radius[i] * 2.2f, 1f, telegraphColor, TelegraphRenderer.Style.Ring, 0.14f);
                             AddWindupThreat(p);
                             if (_stateT[i] <= 0f)
                             {
@@ -815,6 +829,46 @@ namespace Gladiator.Gameplay
                             if (dist > def.keepDistance.y) return dirTo * speed;
                             if (dist < def.keepDistance.x) return -dirTo * speed;
                             return new Vector3(dirTo.z, 0f, -dirTo.x) * (_strafe[i] * speed * 0.55f);
+                        }
+                    }
+
+                case EnemyBehaviour.Dasher:
+                    switch (_state[i])
+                    {
+                        case AiState.Windup:
+                            // crouched; the lane was fixed when the wind-up began: step out of it
+                            if (tele != null) tele.Lane(p, _aim[i], def.dashLength, _radius[i] * 2.4f, 1f - _stateT[i] / _stateDur[i], telegraphColor);
+                            AddWindupThreat(p);
+                            if (_stateT[i] <= 0f)
+                            {
+                                _attackHit[i] = false;
+                                SetState(i, AiState.Attack, def.dashLength / Mathf.Max(1f, def.dashSpeed));
+                                _attackCd[i] = def.attackCooldown * atkMul;
+                            }
+                            return Vector3.zero;
+                        case AiState.Attack:
+                            if (_stateT[i] <= 0f) SetState(i, AiState.Recover, def.recover);
+                            return _aim[i] * def.dashSpeed;
+                        case AiState.Recover:
+                            if (_stateT[i] <= 0f) { _state[i] = AiState.Move; _stateT[i] = def.flankTimeout; }
+                            return Vector3.zero; // winded: the window to kill it
+                        default:
+                        {
+                            // flank: make for a spot at your side (left or right of the camera's view, a little behind),
+                            // not your face; dash once there, or from wherever it is when the flank takes too long
+                            Vector3 side = new Vector3(_viewDir.z, 0f, -_viewDir.x) * _strafe[i];
+                            Vector3 spot = player + (side * 0.85f - _viewDir * 0.35f).normalized * def.flankRadius;
+                            Vector3 toSpot = spot - p;
+                            toSpot.y = 0f;
+                            float ds = toSpot.magnitude;
+                            if (_attackCd[i] <= 0f && dist < def.dashLength - 1f && Mathf.Abs(dy) < 1f && (ds < 1.2f || _stateT[i] <= 0f))
+                            {
+                                _aim[i] = dirTo;
+                                SetState(i, AiState.Windup, def.windup * atkMul);
+                                return Vector3.zero;
+                            }
+                            if (dist > def.flankRadius * 2.2f || ds < 0.05f) return dirTo * speed; // far: close in first
+                            return toSpot / ds * speed;
                         }
                     }
 
@@ -846,6 +900,8 @@ namespace Gladiator.Gameplay
             Vector3 hand = p + Vector3.up * (1.25f * _scale[i]) + fwd * (_radius[i] + 0.15f);
             if (def.behaviour == EnemyBehaviour.Lobber)
                 proj.Lob(hand + Vector3.up * 0.3f, player, def.lobTime, def.attackRadius, def.zoneDuration, def.zoneDps);
+            else if (def.behaviour == EnemyBehaviour.ShieldedRanged)
+                proj.FireStraight(hand, _target[i], def.projectileSpeed, def.attackDamage, def.projectileRadius, def.attackRange * 1.25f, true);
             else
                 proj.FireStraight(hand, player + Vector3.up * 0.9f, def.projectileSpeed, def.attackDamage, def.projectileRadius, def.attackRange * 1.25f);
         }
@@ -867,7 +923,8 @@ namespace Gladiator.Gameplay
             pose.ArmL = PartPose.Swing(-s * arm);
             pose.ArmR = PartPose.Swing(s * arm);
             pose.RootY = Mathf.Abs(s) * (prof != null ? prof.bobHeight : 0.05f) * run01;
-            if (def.behaviour == EnemyBehaviour.ShieldBearer) pose.ArmL = PartPose.Swing(-s * arm * 0.15f); // shield stays up
+            if (def.behaviour == EnemyBehaviour.ShieldBearer || def.behaviour == EnemyBehaviour.ShieldedRanged)
+                pose.ArmL = PartPose.Swing(-s * arm * 0.15f); // shield stays up
 
             // attack poses (the body language IS the telegraph)
             var st = _state[i];
@@ -910,6 +967,37 @@ namespace Gladiator.Gameplay
                             pose.Body = PartPose.Lean(28f * k);
                             pose.RootY = -0.12f * k;
                             pose.RootScale = new Vector3(1f + 0.08f * k, 1f - 0.08f * k, 1f + 0.08f * k);
+                        }
+                        break;
+                    case EnemyBehaviour.ShieldedRanged:
+                        // bow arm snaps up to level (it stands the bow upright), holds while drawing, lowers after
+                        pose.ArmR = PartPose.Swing(90f * (st == AiState.Windup ? Mathf.Min(1f, k * 3f) : k));
+                        pose.Body = PartPose.Lean(-5f * k);
+                        pose.ArmL = PartPose.Swing(st == AiState.Recover ? 25f * k : 0f); // the pavise dips while it recovers
+                        break;
+                    case EnemyBehaviour.Dasher:
+                        if (st == AiState.Windup)
+                        {
+                            pose.Body = PartPose.Lean(25f * k);
+                            pose.ArmL = pose.ArmR = PartPose.Swing(-45f * k);
+                            pose.LegL = pose.LegR = PartPose.Swing(30f * k);
+                            pose.RootY = -0.12f * k;
+                            pose.RootScale = new Vector3(1f + 0.08f * k, 1f - 0.14f * k + shake * 0.02f, 1f);
+                        }
+                        else if (st == AiState.Attack)
+                        {
+                            pose.Body = PartPose.Lean(35f);
+                            pose.ArmL = pose.ArmR = PartPose.Swing(-70f); // blades trailing
+                            pose.LegL = PartPose.Swing(50f);
+                            pose.LegR = PartPose.Swing(-40f);
+                            pose.RootScale = new Vector3(0.92f, 0.95f, 1.2f);
+                        }
+                        else
+                        {
+                            pose.Body = PartPose.Lean(22f * k); // hunched, winded
+                            pose.Head = PartPose.Lean(-10f * k);
+                            pose.ArmL = pose.ArmR = PartPose.Swing(10f * k);
+                            pose.RootY = -0.05f * k;
                         }
                         break;
                     case EnemyBehaviour.Ranged:

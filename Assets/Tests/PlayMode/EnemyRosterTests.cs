@@ -143,6 +143,83 @@ namespace Gladiator.Tests
             Assert.AreEqual(1, CountDamage(def.attackDamage), "a stone aimed at your old spot misses");
         }
 
+        /// <summary>Phase 5.4: the Shield Archer's pavise blocks from the front (but not while it recovers from a shot);
+        /// its arrow hits a player who stands still; its aim stops tracking just before release, so a late sidestep
+        /// dodges.</summary>
+        [UnityTest, Timeout(90000)]
+        public IEnumerator ShieldArcher_BlocksFromTheFront_ArrowHitsAStillPlayer_LockedAimMissesALateSidestep()
+        {
+            yield return Boot();
+            var def = Def("shieldarcher");
+            var root = UnityEditor.AssetDatabase.LoadAssetAtPath<StatusDef>("Assets/Data/Status/SE_Root.asset");
+            int i = _em.Spawn(def, P + new Vector3(0f, 0f, 10f));
+            yield return null;
+            Vector3 fromPlayer = _em.GetPosition(i) - P; fromPlayer.y = 0f; fromPlayer.Normalize();
+            Assert.IsTrue(_em.IsBlocking(i, fromPlayer), "the pavise faces the player");
+            Assert.IsFalse(_em.IsBlocking(i, -fromPlayer), "not from behind");
+
+            // first arrow: stand still -> hit (held in place so the test is about the shot, not the footwork)
+            var proj = EnemyProjectiles.Instance;
+            bool sawArrow = false;
+            yield return Until(() =>
+            {
+                if (_em.IsAlive(i)) _em.ApplyStatus(i, root, 0f);
+                for (int k = 0; k < proj.capacity; k++) sawArrow |= proj.IsActive(k) && proj.IsArrow(k);
+                return CountDamage(def.attackDamage) > 0;
+            }, 8f);
+            Assert.IsTrue(sawArrow, "an arrow, not a stone");
+            Assert.AreEqual(1, CountDamage(def.attackDamage), "the arrow hits a player who stands still");
+            Assert.AreEqual(3, _em.GetAiState(i), "recovering after the shot");
+            Assert.IsFalse(_em.IsBlocking(i, fromPlayer), "the pavise dips while it recovers: the window");
+
+            // second arrow: wait until the aim has locked, then step aside
+            yield return Until(() => { if (_em.IsAlive(i)) _em.ApplyStatus(i, root, 0f); return _em.GetAiState(i) == 1; }, 8f);
+            Assert.AreEqual(1, _em.GetAiState(i), "draws again");
+            yield return new WaitForSeconds(def.windup - def.aimLockTime + 0.1f);
+            Assert.AreEqual(1, _em.GetAiState(i), "still drawing, aim locked");
+            Vector3 line = P - _em.GetPosition(i); line.y = 0f;
+            _motor.Teleport(P + Vector3.Cross(Vector3.up, line.normalized) * 2.5f);
+            yield return Until(() => proj.Count > 0, 2f);
+            Assert.Greater(proj.Count, 0, "loosed");
+            _em.KillAll(); // no third arrow at the new spot while this one flies
+            yield return Until(() => proj.Count == 0, 3f);
+            Assert.AreEqual(1, CountDamage(def.attackDamage), "a locked shot misses a late sidestep");
+        }
+
+        /// <summary>Phase 5.4: the Assassin circles to your side (not your face), winds up behind a telegraphed lane,
+        /// dashes through a player who stays in it, then stands winded; a sidestep during the wind-up dodges.</summary>
+        [UnityTest, Timeout(90000)]
+        public IEnumerator Assassin_FlanksToYourSide_DashesThroughTheLane_ThenStandsWinded_ASidestepDodges()
+        {
+            yield return Boot();
+            var def = Def("assassin");
+            Vector3 view = Camera.main.transform.forward; view.y = 0f; view.Normalize();
+            int i = _em.Spawn(def, P + view * 9f);
+            yield return Until(() => _em.GetAiState(i) == 1, 8f);
+            Assert.AreEqual(1, _em.GetAiState(i), "winds up");
+            Vector3 off = _em.GetPosition(i) - P; off.y = 0f;
+            Assert.Greater(Vector3.Angle(off, view), 50f, "it came at you from the side, not from in front");
+            Assert.AreEqual(0, CountDamage(def.attackDamage), "nothing during the wind-up");
+            Vector3 start = _em.GetPosition(i);
+            yield return Until(() => _em.GetAiState(i) == 3, 3f);
+            Assert.AreEqual(3, _em.GetAiState(i), "dashed, now winded");
+            Assert.AreEqual(1, CountDamage(def.attackDamage), "the dash cuts through a player who stayed in the lane");
+            Vector3 end = _em.GetPosition(i);
+            Assert.Greater(Vector3.Distance(start, end), def.dashLength * 0.7f, "a long dash");
+            yield return new WaitForSeconds(def.recover * 0.6f);
+            Assert.AreEqual(3, _em.GetAiState(i));
+            Assert.Less(Vector3.Distance(end, _em.GetPosition(i)), 0.15f, "stands still while winded");
+
+            // the next dash: step out of the lane during the wind-up
+            yield return Until(() => _em.GetAiState(i) == 1, 10f);
+            Assert.AreEqual(1, _em.GetAiState(i));
+            Vector3 lane = P - _em.GetPosition(i); lane.y = 0f;
+            _motor.Teleport(P + Vector3.Cross(Vector3.up, lane.normalized) * 2.5f);
+            yield return Until(() => _em.GetAiState(i) == 3, 3f);
+            Assert.AreEqual(3, _em.GetAiState(i));
+            Assert.AreEqual(1, CountDamage(def.attackDamage), "sidestepped the lane: no second cut");
+        }
+
         [UnityTest, Timeout(60000)]
         public IEnumerator Brute_SlamIsTelegraphed_HitsGroundedPlayer_NotJumpingOne()
         {

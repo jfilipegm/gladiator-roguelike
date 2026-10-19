@@ -1,6 +1,7 @@
 // Gladiator/Telegraph — ground decals drawn instanced by TelegraphRenderer (procedural, no texture):
 //   style 0 = attack telegraph (orange-red ring + filling disc + bright fill front), style 1 = fire patch (flickering),
-//   style 2 = thin pulsing ring (elite affix / fuse). Per-instance colour + params via the instancing buffer.
+//   style 2 = thin pulsing ring (elite affix / fuse), style 3 = straight lane (charge / dash / aim line: rim along the
+//   sides, fills from the start toward the far end). Per-instance colour + params via the instancing buffer.
 Shader "Gladiator/Telegraph"
 {
     Properties
@@ -51,11 +52,24 @@ Shader "Gladiator/Telegraph"
                 UNITY_SETUP_INSTANCE_ID(i);
                 float4 col = UNITY_ACCESS_INSTANCED_PROP(Props, _TColor);
                 float4 prm = UNITY_ACCESS_INSTANCED_PROP(Props, _TParams);
+                float th = max(prm.w, 0.02);
+                if (prm.y > 2.5)
+                {
+                    // lane: uv.x across (0..1), uv.y along from the start (0) to the far end (1)
+                    float ex = 1 - abs(i.uv.x * 2 - 1);                   // 0 at the side edges, 1 on the centre line
+                    float aax = fwidth(ex) * 1.5;
+                    float rim = 1 - smoothstep(th, th + aax, ex);
+                    float lf = saturate(prm.x);
+                    float inside = i.uv.y < lf ? 1 : 0;
+                    float lfront = 1 - saturate(abs(i.uv.y - lf) / 0.04);
+                    float tip = smoothstep(1, 0.97, i.uv.y);                // soft far end
+                    float la = max(rim, 0.18 + inside * 0.36 + lfront * lf * 0.5) * tip;
+                    return half4(col.rgb * _Intensity * (1 + lfront * 0.35), saturate(la) * col.a);
+                }
                 float2 p = i.uv * 2 - 1;
                 float d = length(p);
                 if (d > 1) discard;
                 float t = _Time.y + prm.z * 7.13;
-                float th = max(prm.w, 0.02);
                 float aa = fwidth(d) * 1.5;
                 float ring = smoothstep(1 - th - aa, 1 - th, d) * (1 - smoothstep(1 - aa, 1, d));
                 half3 c = col.rgb;

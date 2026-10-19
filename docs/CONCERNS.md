@@ -54,5 +54,9 @@ The 10-minute bot run (God mode, so it couldn't die) healed 3,900 HP from kills:
 **Proposal:** judge in the playtest. If he never feels in danger, lower `TR_Bloodthirst.maxHealPerSecond` to ~3–4 and/or `frenzyHealMul` to 1.5. If he dies to the first swarm, raise `healPerKill` (it matters early, when kills are slow), not the cap.
 
 ## C13 — The Champion may be a slog for builds that can't get behind him (NEW in Phase 5.4)
-His shield takes 90 % of frontal damage and he turns slowly toward you, so a single-target weapon build that can't reposition does a tenth of its damage most of the fight. The counters are positioning, damage over time, blasts beside him, and luring his charge into stone (+50 % for 2 s). That is the fight's identity, but untested: 13,000 HP is a guess.
+His shield takes 90 % of frontal damage and he turns slowly toward you, so a single-target weapon build that can't reposition does a tenth of its damage most of the fight. The counters are positioning, damage over time, blasts beside him, and luring his charge into stone (+50 % for 2 s). That is the fight's identity, but untested: 13,000 HP is a guess. Data point: in the first 10-minute bot run (immortal bot, level 31, gladius + chakram + bombs + Gorm's flail) he was at 24 % after about a minute of fight.
 **Proposal:** judge in the playtest. If it drags, lower `EN_Champion.maxHp` (~10,000) or `blockReduction` (0.8) before touching the stun, which is the fun part; if he melts, raise HP first.
+
+## C14 — Hit-stop adds up in long fights (NEW in Phase 5.4)
+The 10-minute bot run in the Provincial Pit logged 1,113 hit-stops totalling 45.9 s of frozen time (≈ 7.6 % of the run, ~1.9 per second). Each one is short, but late-run crit builds against elites and a boss trigger them almost continuously, which may read as stutter rather than impact.
+**Proposal:** judge in the playtest. If it stutters, raise `HitFeedbackConfig.hitStopInterval` (fewer stops) before shortening each stop, or restrict hit-stop to crits on elites and bosses.

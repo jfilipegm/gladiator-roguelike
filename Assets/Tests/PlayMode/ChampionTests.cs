@@ -160,6 +160,22 @@ namespace Gladiator.Tests
             Assert.AreEqual(hp - 100f, _em.GetHp(Boss.Slot), 0.01f, "the bonus ends with the stun");
         }
 
+        /// <summary>The guard clock runs while he attacks too (the 10-minute bot run saw no waves when it only ran
+        /// between attacks).</summary>
+        [UnityTest, Timeout(90000)]
+        public IEnumerator CallsHisGuards_OnTheClock_EvenWhileAttackingNonStop()
+        {
+            yield return BootToBoss();
+            Assert.AreEqual(0, Boss.GuardWaves);
+            _motor.Teleport(Boss.Position + new Vector3(0f, 0.1f, -3f)); // close: he bashes and thrusts back to back
+            TimeController.GameSpeed = 3f;
+            float end = Time.time + Boss.def.guardsEvery + 4f;
+            while (Time.time < end && Boss.GuardWaves == 0) yield return null;
+            TimeController.GameSpeed = 1f;
+            Assert.AreEqual(1, Boss.GuardWaves, "one wave inside guardsEvery + a little");
+            Assert.Greater(Boss.AttacksDone, 3, "he kept attacking meanwhile");
+        }
+
         [UnityTest, Timeout(90000)]
         public IEnumerator Phase2_RoarFiresEverySpikeTrap_AndTheChargeComesTwice()
         {

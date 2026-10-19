@@ -200,7 +200,6 @@ namespace Gladiator.Gameplay
                     float d = Flat(pp - _pos).magnitude;
                     if (d > def.enemy.radius + 1.2f) Walk(pp, _phase == 2 ? def.enragedMoveSpeed : def.moveSpeed, dt);
                     else Face(pp, dt);
-                    GuardsClock(dt);
                     if (_t >= _chaseMin) StartAttack(Choose(d));
                     break;
                 }
@@ -218,7 +217,6 @@ namespace Gladiator.Gameplay
                     }
                     break;
                 case State.Recover:
-                    GuardsClock(dt);
                     if (u >= 1f) { _attack = BossAttack.None; Enter(State.Chase, 0f); _chaseMin = 0.45f / Speed; }
                     break;
                 case State.Stunned:
@@ -229,6 +227,9 @@ namespace Gladiator.Gameplay
                     break;
             }
 
+            // the guard clock runs through the whole fight (not just between attacks: a boss that attacks back to back
+            // would never call them), but not during his entrance or phase-2 roar
+            if (_state != State.Entering && _state != State.Roaring && _state != State.Enraging) GuardsClock(dt);
             ShieldUp = def.enemy.blockArc > 0f && _state != State.Stunned && _state != State.Entering;
             _em.SetScriptedShield(_slot, ShieldUp);
             Contact(pp, dt);

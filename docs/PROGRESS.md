@@ -1,7 +1,7 @@
 # Progress
 
 **Current phase:** Phase 5 — expansion
-**Current milestone:** Phase 5.2 Pit Goblin (branch `phase5-goblin`, v0.3.0): built and tested, PR + release next. v0.2.0 released. Gate 2 report delivered, producer: "push and continue".
+**Current milestone:** Phase 5.3 Blood Knight (branch `phase5-bloodknight`, v0.4.0). v0.3.0 (the Pit Goblin) released. Gate 2 report delivered, producer: "push and continue".
 **Last updated:** 2026-10-19
 
 **Repository:** https://github.com/jfilipegm/gladiator-roguelike (public, branch `main`, remote `origin`, `.blend` files via Git LFS). Work on a branch per milestone, push as you go, merge through a PR; release every playable build (`Tools/release`).
@@ -68,27 +68,13 @@
 
 - **v0.2.0 released 2026-10-19** (PR #3 merged with the producer's OK; self-merge is blocked by the permission check, so ask for each PR): https://github.com/jfilipegm/gladiator-roguelike/releases/tag/v0.2.0. Linux 38 MB, Linux dev 68 MB, Windows 40 MB, macOS 47 MB. Smoke runs of the exact archives: Linux (gamescope headless, `-bot -timed -botSeconds 40`) and Windows under Wine (Direct3D 11): both v0.2.0, 40 s, clock ran, 0 exceptions. macOS not run.
 
-## In progress — Phase 5.2 Pit Goblin (branch `phase5-goblin`, version 0.3.0, no PR yet)
-- **Built (commit `9215021` + the commit after it):**
-  - Data-driven gladiators: `GladiatorDef` (model, movement, animation, camera height, starting weapon, traits, unlock, select text) and `GladiatorLoadout` on the player prefab.
-  - Select screen and Codex list every `GladiatorDef`; `MainMenu.Pick`; bot flag `-gladiator <id>`.
-  - Bomb Satchel: `WeaponPattern.Lob`, `PlayerProjectiles.FireLob/Blasts`.
-  - Traits `ScavengerTrait`/`Scavenger` and `TrapSlideTrait`/`SnareLayer`; `StatusKind.Root` (5 slots; rooted enemies stop dead).
-  - `RattlingCrate` with `ArenaLayoutDef.secretSpots`; `MetaProgress.SetFlag/CheckUnlocks`; locked cards only block new picks; `GameSession.Clear`; `DeathPopFx.Instance`.
-  - Sounds: Cackle, Snare, Rattle, Bomb.
-  - Models: `CH_PitGoblin` (iteration 2, 904 tris), `WP_Bomb`, `PR_Snare`.
-  - Setup: `GladiatorSetup` creates GL_PitGoblin, TR_*, WP_BombSatchel + card, UL_PitGoblin, SE_Root, MovementConfig_Goblin and PartAnim_Goblin.
-  - Docs: GLADIATORS, DECISIONS, BACKLOG and `docs/releases/v0.3.0.md` are written.
-- **Verified:**
-  - EditMode 62/62; PlayMode 83/83, including 6 `GoblinPlayTests`.
-  - Screenshots `Screenshots/p52_*` (select screen, bombs, snares, crate break).
-  - **10-min timed bot run as the goblin:** 474 fps avg; ≥250 enemies 237 fps (4.23 ms, p95 5.76); gameplay 1.35 / 1.74 ms; max 298 alive; Gorm fell, Survived at 523 s; 0 exceptions; hit-stops 44 s.
-  - GC: known one-offs, plus 4 KB once when the flail is first equipped (`WeaponInstance.NextHit`).
-- **Next:**
-  1. Open the PR. **Ask the producer before merging**: the permission check blocks merging my own PR.
-  2. After the merge: `git switch main && git pull`, then `Tools/release 0.3.0`.
-  3. Smoke-run the archives (recipe in TOOLING), add the PROGRESS Done entry, and delete the smoke Profiling files.
-- **Then:** Blood Knight (v0.4.0), Arena 2 (v0.5.0).
+- **Phase 5.2 — the Pit Goblin (branch `phase5-goblin`, PR #4 merged with the producer's OK, release v0.3.0)** — Gladiators are data: `GladiatorDef` (model, `MovementConfig`, `PartAnimProfile`, camera height, starting weapon, `GladiatorTrait[]`, unlock, select text) applied at spawn by `GladiatorLoadout`; select screen and Codex list every `GladiatorDef` (`MainMenu.Pick`, locked = hint), bot flag `-gladiator <id>`. **The Pit Goblin** (`GL_PitGoblin`, `CH_PitGoblin` 904 tris, 70 HP, 112 % speed, −10 % damage, +25 % pickup): **Bomb Satchel** (`WeaponPattern.Lob`: densest of the 8 nearest, cyan landing + fuse rings, never hurts the player; `PlayerProjectiles.FireLob/Blasts`), **Scavenger** (lends an unheld weapon every 25 s for 15 s), **Trap Slide** (`SnareLayer`: a snare per slide, 3 max, roots + bleeds; new `StatusKind.Root`, 5 status slots, rooted enemies stop dead, bosses only bleed). **Unlock:** `RattlingCrate` at one of `ArenaLayoutDef.secretSpots`, rattles within 10 m, breaks into the escaping goblin (−5 gold, "WHAT WAS THAT?!"), `MetaProgress.SetFlag("rattling_crate")` saved at once, `CheckUnlocks` grants `UL_PitGoblin` (+ satchel in the pool). Locked cards only block new picks; `GameSession.Clear`. SFX Cackle/Snare/Rattle/Bomb; models `WP_Bomb`, `PR_Snare`. **Verified:** EditMode 62/62, PlayMode 83/83 (+6 `GoblinPlayTests`); screenshots `Screenshots/p52_*`. **10-min timed bot run as the goblin:** 474 fps avg; ≥250 enemies 237 fps (4.23 ms, p95 5.76), gameplay 1.35 / 1.74 ms; max 298 alive; Gorm fell, Survived at 523 s; 0 exceptions; hit-stops 44 s. GC: known one-offs plus 4 KB once when the flail is first equipped (`WeaponInstance.NextHit`).
+
+- **v0.3.0 released 2026-10-19** (PR #4): https://github.com/jfilipegm/gladiator-roguelike/releases/tag/v0.3.0. Linux 39 MB, Linux dev 69 MB, Windows 41 MB, macOS 48 MB. Smoke runs of the downloaded archives (`-bot -timed -botSeconds 40`): Linux as the Nobody and as the goblin (`-gladiator pit_goblin`: 23 bombs, 2 scavenged, snares 6/8, 61 kills), Windows under Wine as the Nobody; all v0.3.0, clock ran to 38 s, 0 exceptions. macOS not run. The build log's `errors=1` on the first build is the bridge's "Main thread operation timed out" (noise).
+
+## In progress — Phase 5.3 Blood Knight (branch `phase5-bloodknight`, version 0.4.0)
+- **Next:** write the spec in `docs/GLADIATORS.md` (§6.7: dark vampiric knight, greatsword, Blood meter, spend HP for damage, heal on kill, stronger at low HP; unlock "Reach Arena 3" can't be met with one arena, so pick an interim condition and log it), then build it like the goblin: data + traits, model, tests, 10-min bot run, PR, ask before merging, `Tools/release 0.4.0`.
+- **Then:** Arena 2 (v0.5.0).
 
 ## Known issues
 - **Residual GC (target 0 B/frame, met in steady state):** the first level-up allocates ~7.5 KB once (paused; a hidden pre-draw of the cards didn't remove it; BACKLOG), the boss entrance 1.8 KB, the victory screen + save write ~238 KB (game over). Small first-occurrence allocations (≤ 1.2 KB) in the first minutes.

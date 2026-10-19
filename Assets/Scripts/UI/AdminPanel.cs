@@ -57,6 +57,7 @@ namespace Gladiator.UI
             _god = r[0]; _timeless = r[1];
             Buttons(("Level up", () => Ctl.LevelUp()), ("+100 gold", () => Ctl.AddGold(100)), ("Heal", () => Ctl.Heal()));
             Buttons(("Timer to 0:10", () => Ctl.SetTimer(10f)), ("Timer +1:00", () => Ctl.AddTime(60f)), ("Kill me", () => Ctl.KillPlayer()));
+            Buttons(("Favor +50", () => Ctl.AddFavor(50f)), ("Gift now", () => Ctl.GiftNow()), ("Whim now", () => Ctl.WhimNow()));
 
             Section("ENEMIES");
             _director = Buttons(("Director", () => Ctl.ToggleDirector()), ("Swarm now", () => Ctl.SwarmNow()), ("Elite now", () => Ctl.EliteNow()))[0];

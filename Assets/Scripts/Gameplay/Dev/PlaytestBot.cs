@@ -123,10 +123,15 @@ namespace Gladiator.Gameplay
             if (run != null) sb.Append(" | level ").Append(run.Level).Append(" gold ").Append(run.Gold).Append(" kills ").Append(run.Kills);
             var props = Interactables.Instance;
             if (props != null) sb.Append(" chests ").Append(props.ChestsOpened).Append(" altars ").Append(props.AltarsUsed);
+            var gifts = CrowdGifts.Instance;
+            if (gifts != null) sb.Append(" | favor gifts ").Append(gifts.Collected).Append('/').Append(gifts.Thrown);
+            var master = ArenaMaster.Instance;
+            if (master != null) sb.Append(" whims ").Append(master.WhimsFired).Append(" challenges won ").Append(master.ChallengesWon);
             var boss = BossController.Active;
             if (boss != null)
                 sb.Append(" | boss ").Append(boss.Defeated ? "DEFEATED" : "alive").Append(" hp ").Append((boss.Hp01 * 100f).ToString("0")).Append("% phase ")
                   .Append(boss.Phase).Append(" attacks ").Append(boss.AttacksDone).Append(" guardWaves ").Append(boss.GuardWaves);
+            sb.Append(" | hitstops ").Append(TimeController.HitStopCount).Append(" (").Append(TimeController.HitStopSeconds.ToString("0.0")).Append(" s)");
             if (run != null) sb.Append(" | outcome ").Append(run.Outcome).Append(" at ").Append(run.Elapsed.ToString("0"));
             Debug.Log(sb.ToString());
         }

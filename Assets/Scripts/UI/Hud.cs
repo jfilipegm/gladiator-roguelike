@@ -63,6 +63,16 @@ namespace Gladiator.UI
 
         static readonly Color WeaponTileInner = new Color(0.2f, 0.13f, 0.07f, 0.92f); // warm bronze: weapons vs Boons
 
+        // Favor (Phase 5.1): a gold bar under the level (pulses when a gift is near) + the loaned weapon's tile after the
+        // weapon row, its inner draining as the loan runs out
+        Image _favorFill, _loanBorder, _loanInner;
+        TextMeshProUGUI _loanGlyph, _loanTime;
+        int _lastLoanSecond = -1;
+        WeaponDef _loanShown;
+        WeaponSystem _weapons;
+        static readonly Color FavorColor = new Color(1f, 0.78f, 0.25f);
+        static readonly Color FavorHot = new Color(1f, 0.95f, 0.6f);
+
         static readonly Color XpColor = new Color(0.31f, 0.89f, 0.82f);
         static readonly Color HpColor = new Color(0.88f, 0.2f, 0.17f);
         static readonly Color Gold = new Color(1f, 0.84f, 0.3f);
@@ -93,6 +103,21 @@ namespace Gladiator.UI
             UiFactory.Image("GoldIcon", canvas, Color.white, tl, tl, new Vector2(26, -82), new Vector2(30, 30), PixelIcons.Coin);
             _gold = UiFactory.Text("Gold", canvas, "0", 32, Gold, TextAlignmentOptions.Left, tl, tl, new Vector2(66, -78), new Vector2(150, 40), font, fontMaterial);
             UiFactory.Image("KillIcon", canvas, Color.white, tl, tl, new Vector2(200, -82), new Vector2(30, 30), PixelIcons.Skull);
+
+            var tr = new Vector2(1, 1);
+            UiFactory.Image("FavorIcon", canvas, Color.white, tr, tr, new Vector2(-292, -86), new Vector2(30, 26), PixelIcons.Laurel);
+            _favorFill = UiFactory.Bar("FavorBar", canvas, new Color(0.08f, 0.06f, 0.03f, 0.75f), FavorColor, tr, tr, new Vector2(-28, -90), new Vector2(256, 18));
+            _favorFill.fillAmount = 0f;
+
+            var loanPos = new Vector2(24 + WeaponTiles * 58 + 10, -122);
+            _loanBorder = UiFactory.Image("LoanTile", canvas, Color.clear, tl, tl, loanPos, new Vector2(52, 52), PixelIcons.White);
+            _loanInner = UiFactory.Image("Inner", _loanBorder.transform, Color.clear, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(44, 44), PixelIcons.White);
+            _loanInner.type = Image.Type.Filled;
+            _loanInner.fillMethod = Image.FillMethod.Vertical;
+            _loanGlyph = UiFactory.Text("Glyph", _loanBorder.transform, "", 22, Color.white, TextAlignmentOptions.Center, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 4), new Vector2(44, 30), font, fontMaterial);
+            _loanTime = UiFactory.Text("Time", _loanBorder.transform, "", 16, FavorHot, TextAlignmentOptions.BottomRight, new Vector2(1, 0), new Vector2(1, 0), new Vector2(-2, 0), new Vector2(30, 20), font, fontMaterial);
+            PreSize(_loanGlyph, "WWWW");
+            PreSize(_loanTime, "88");
             _kills = UiFactory.Text("Kills", canvas, "0", 32, Color.white, TextAlignmentOptions.Left, tl, tl, new Vector2(240, -78), new Vector2(150, 40), font, fontMaterial);
 
             for (int i = 0; i < StripTiles; i++)
@@ -301,6 +326,7 @@ namespace Gladiator.UI
             }
 
             DrawInteractables(run);
+            DrawFavor(unscaledDt);
             DrawBoss(run);
             DrawIntro(unscaledDt);
             if (player != null && player.IsPaused && !OptionsPanel.IsOpen && Keyboard.current != null)
@@ -356,6 +382,35 @@ namespace Gladiator.UI
                 _frames = 0;
                 _debugT = 0f;
             }
+        }
+
+        /// <summary>The Favor bar (pulses gold-white when a gift is close) and the loaned weapon's tile + seconds left.</summary>
+        void DrawFavor(float unscaledDt)
+        {
+            var favor = Favor.Instance;
+            if (favor != null)
+            {
+                float f = favor.Fill01;
+                _favorFill.fillAmount = Mathf.MoveTowards(_favorFill.fillAmount, f, unscaledDt * 1.5f);
+                _favorFill.color = f > 0.85f ? Color.Lerp(FavorColor, FavorHot, 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 8f)) : FavorColor;
+            }
+            if (_weapons == null && Player.Main != null) _weapons = Player.Main.GetComponent<WeaponSystem>();
+            var loan = _weapons != null ? _weapons.Temporary : null;
+            var def = loan != null ? loan.Def : null;
+            if (def != _loanShown)
+            {
+                _loanShown = def;
+                var card = def != null && _build != null ? _build.FindWeaponCard(def) : null;
+                _loanBorder.color = def != null ? FavorColor : Color.clear;
+                _loanInner.color = def != null ? WeaponTileInner : Color.clear;
+                _loanGlyph.text = card != null ? card.glyph : "";
+                _lastLoanSecond = -1;
+                if (def == null) _loanTime.text = "";
+            }
+            if (loan == null) return;
+            _loanInner.fillAmount = _weapons.TemporaryLeft / Mathf.Max(0.01f, _weapons.TemporaryDuration);
+            int sec = Mathf.CeilToInt(_weapons.TemporaryLeft);
+            if (sec != _lastLoanSecond) { _lastLoanSecond = sec; _loanTime.SetText("{0}", sec); }
         }
 
         /// <summary>Price tags over ready chests (gold, red when you can't pay), "ALTAR" over the altar, and the

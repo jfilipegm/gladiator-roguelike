@@ -14,6 +14,10 @@ namespace Gladiator.Core
         static float _slowMotion = 1f;
         static float _gameSpeed = 1f;
 
+        /// <summary>Hit-stops started and real seconds spent in them this run (bot log, tests).</summary>
+        public static int HitStopCount { get; private set; }
+        public static float HitStopSeconds { get; private set; }
+
         public static bool IsPaused => _pauseCount > 0;
         public static bool InHitStop => UnityEngine.Time.unscaledTime < _hitStopUntil;
 
@@ -44,6 +48,8 @@ namespace Gladiator.Core
             _pauseCount = 0;
             _hitStopUntil = 0f;
             _slowMotion = 1f;
+            HitStopCount = 0;
+            HitStopSeconds = 0f;
             Apply();
         }
 
@@ -55,13 +61,18 @@ namespace Gladiator.Core
         {
             if (seconds <= 0f) return;
             float end = UnityEngine.Time.unscaledTime + seconds;
+            if (!InHitStop) HitStopCount++;
             if (end > _hitStopUntil) _hitStopUntil = end;
             _hitStopScale = scale;
             Apply();
         }
 
         /// <summary>Call once per frame (GameLoop does it via TimeTicker) to release hit-stop.</summary>
-        public static void Update() => Apply();
+        public static void Update()
+        {
+            if (InHitStop && !IsPaused) HitStopSeconds += UnityEngine.Time.unscaledDeltaTime;
+            Apply();
+        }
 
         static void Apply()
         {

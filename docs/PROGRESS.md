@@ -1,7 +1,7 @@
 # Progress
 
-**Current phase:** Phase 5 — expansion (starting)
-**Current milestone:** release tooling + v0.1.0, then Phase 5 (Gate 2 report delivered; producer: "push and continue") (Gate 1 passed 2026-10-18: "proceed", no feel changes)
+**Current phase:** Phase 5 — expansion
+**Current milestone:** Phase 5.1 Favor done (release v0.2.0); next Phase 5.2 Pit Goblin (branch `phase5-goblin`, v0.3.0). Gate 2 report delivered, producer: "push and continue".
 **Last updated:** 2026-10-19
 
 **Repository:** https://github.com/jfilipegm/gladiator-roguelike (public, branch `main`, remote `origin`, `.blend` files via Git LFS). Work on a branch per milestone, push as you go, merge through a PR; release every playable build (`Tools/release`).
@@ -62,13 +62,12 @@
 - **New concern C11:** Gorm's fight length swings with the build (judge in the playtest).
 - `main` pushed to GitHub at `54bf82a` (2026-10-19).
 
-## In progress — release tooling + v0.1.0 (branch `release-tooling`)
-- Done on the branch: `GameInfo.Version` 0.1.0 + `VersionLabel` (main menu bottom-right, logged at startup); `BuildScripts` Windows/macOS release targets + `BuildReleaseSet()` (Linux release + dev, Windows, macOS); `Tools/release`; notes `docs/releases/v0.1.0.md`; Windows + Mac (Mono) build support installed by hand (TOOLING "Installing Unity build modules").
-- **Blocked (2026-10-19 ~12:15):** the module installer closed the Editor; the relaunched Editor (pid 361922) waits on a modal **"Scene Backup Detected"** dialog (backup `Temp/__Backupscenes/0.backup` = the Slave Pit from the 11:05 build, same as the saved scene). The desktop is locked; force-stopping the Editor needs the producer's OK. Once the Editor is back: `Tools/ucompile`, EditMode + PlayMode tests, merge the PR, then on `main`: `Tools/release 0.1.0` (first Windows/macOS builds; check sizes and contents of the archives), check the Linux archive runs (`Tools/perfrun bot 60` on the dev build).
-- Then Phase 5 (each milestone a branch + PR + release): Favor → Pit Goblin + rattling-crate unlock → Blood Knight → Arena 2.
+- **Release tooling + v0.1.0 (PRs #1, #2 merged; release published 2026-10-19)** — `GameInfo.Version` + `VersionLabel` (main menu bottom-right, "dev" suffix in dev builds, logged at startup); `BuildScripts` Windows (64-bit) + macOS (universal x64+ARM64 set by reflection) release targets + `BuildReleaseSet()`; `Tools/release <ver> [--pack-only]` (checks, builds all four players, packs Linux .tar.gz / Windows + macOS .zip into `Builds/Releases/v<ver>/`, tags, `gh release create` with `docs/releases/v<ver>.md`). Windows + Mac (Mono) build support installed by hand (TOOLING). **v0.1.0** = the Gate 2 slice: https://github.com/jfilipegm/gladiator-roguelike/releases/tag/v0.1.0 (linux 38 MB, linux-dev 68 MB, windows 40 MB, macos 47 MB). Verified: EditMode 50/50, PlayMode 70/70; the Linux archive smoke-ran headless (`-bot -timed`, clock 38 s, 34 enemies, 0 exceptions); the Windows build smoke-ran under Wine (scratch WINEPREFIX, D3D11, 40 s bot, 0 exceptions); the Mac app is a universal Mach-O with `_CodeSignature` (ad-hoc), never run on a Mac.
 
-## Next
-- Phase 5 in the order above. The producer's Gate 2 playtest notes become a tuning PR whenever they arrive.
+- **Phase 5.1 — Favor (branch `phase5-favor`, release v0.2.0)** — `FavorConfig`/`Favor`/`CrowdGifts`/`ArenaMaster` (Gameplay/Crowd): Favor meter fed by announced streaks, elite kills, variety, style kills (slide/air, capped 3/s), close calls, no-hit stretches, boss entrance/phase; gifts thrown 3–6 m away (healing amphora, gold shower, laurel XP, weapon in the sand = a level-4 loan beside the 4 slots for 30 s, `WeaponSystem.GrantTemporary`); Arena Master whims when play is dull (gate swarm via `Director.StartSwarmThrough`, or a champion challenge with a bounty). `AnnounceEvent.Kind/Tier`, `GameEvents.OnFavor`, HUD Favor bar + loan tile, admin Favor +50 / Gift now / Whim now, SFX GiftThrow/GiftLand/Boo, models PR_GiftAmphora/Pouch/Laurel/Weapon (`BlenderSrc/props/gifts.py`), bot walks to gifts and logs Favor + hit-stops. **Fixes:** `Director.Instance` restored in OnEnable (admin swarm/elite after a Director toggle); **crit hit-stop capped** (crits and elite hits share `hitStopInterval` 0.8 s): a crit build had spent 144 s of a 10-min run frozen, so the clock reached 7:35 and Gorm never came. **Verified:** EditMode 58/58 (+8 FavorTests), PlayMode 77/77 (+6 FavorPlayTests, +1 crit hit-stop cap); screenshots `p51_gifts_landed.png`, `p51_loan.png`. **10-min timed bot run (dev build, after the fix):** 630 fps avg (1.59 ms, p95 2.38, worst 9.84), gameplay 0.35 / 0.67 ms, max 176 alive (a fire build killed fast; the run before the fix held 300 alive at 241 fps, gameplay 1.18 / 1.59 ms); hit-stops 387 (16 s); level 28, 9,516 kills, gifts 3 collected / 4 thrown, whims 0; **Gorm arrived and fell, outcome Survived at 544 s**. GC: only the known boss entrance (1.8 KB) and victory screen + save (~230 KB, game over).
+
+## Next — Phase 5.2 Pit Goblin + rattling crate (branch `phase5-goblin`, release v0.3.0)
+- Spec in `docs/GLADIATORS.md`. Then Blood Knight (v0.4.0), Arena 2 (v0.5.0).
 
 ## Known issues
 - **Residual GC (target 0 B/frame, met in steady state):** the first level-up allocates ~7.5 KB once (paused; a hidden pre-draw of the cards didn't remove it; BACKLOG), the boss entrance 1.8 KB, the victory screen + save write ~238 KB (game over). Small first-occurrence allocations (≤ 1.2 KB) in the first minutes.

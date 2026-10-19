@@ -109,7 +109,7 @@ namespace Gladiator.UI
     /// </summary>
     public static class PixelIcons
     {
-        static Sprite _white, _coin, _skull, _heart, _chevron;
+        static Sprite _white, _coin, _skull, _heart, _chevron, _laurel;
 
         public static Sprite White => _white != null ? _white : _white = Make(new[] { "#" }, Color.white, Color.white);
 
@@ -148,6 +148,19 @@ namespace Gladiator.UI
             "...##...",
             "........",
         }, new Color(1f, 0.33f, 0.3f), new Color(0.35f, 0.05f, 0.08f));
+
+        /// <summary>A laurel wreath with a gold ribbon (the crowd's Favor).</summary>
+        public static Sprite Laurel => _laurel != null ? _laurel : _laurel = Make(new[]
+        {
+            "..#O..O#..",
+            ".#O#..#O#.",
+            "#O#....#O#",
+            "#O#....#O#",
+            ".#O#..#O#.",
+            "..#OYYO#..",
+            "...#YY#...",
+            "..#Y##Y#..",
+        }, new Color(0.45f, 0.78f, 0.3f), new Color(0.12f, 0.24f, 0.08f), new Color(1f, 0.82f, 0.3f));
 
         /// <summary>Arrow pointing up (+Y), white so Image.color tints it; rotate to aim.</summary>
         public static Sprite Chevron => _chevron != null ? _chevron : _chevron = Make(new[]

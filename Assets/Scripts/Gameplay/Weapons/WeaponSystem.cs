@@ -75,12 +75,17 @@ namespace Gladiator.Gameplay
 
         readonly List<WeaponInstance> _weapons = new List<WeaponInstance>(MaxSlots);
         readonly WeaponInstance[] _slots = { new WeaponInstance(), new WeaponInstance(), new WeaponInstance(), new WeaponInstance() };
+        readonly WeaponInstance _loan = new WeaponInstance();
         readonly int[] _hits = new int[256];
         readonly int[] _targets = new int[16];
 
         public IReadOnlyList<WeaponInstance> Weapons => _weapons;
         public int Swings { get; private set; }
         public int Hits { get; private set; }
+        /// <summary>The crowd's weapon in the sand (Phase 5.1): fights beside the slots for a while (null = none).</summary>
+        public WeaponInstance Temporary => TemporaryLeft > 0f ? _loan : null;
+        public float TemporaryLeft { get; private set; }
+        public float TemporaryDuration { get; private set; }
 
         void Awake()
         {
@@ -118,12 +123,32 @@ namespace Gladiator.Gameplay
         {
             var w = Find(def);
             if (w == null) return 0;
-            if (w.Level >= def.MaxLevel) return w.Level;
-            var mods = def.levels[w.Level - 1].mods;
-            if (mods != null) for (int m = 0; m < mods.Length; m++) w.Local.Add(mods[m], magnitude);
-            w.Level++;
+            ApplyNextLevel(w, magnitude);
             return w.Level;
         }
+
+        static void ApplyNextLevel(WeaponInstance w, float magnitude)
+        {
+            if (w.Level >= w.Def.MaxLevel) return;
+            var mods = w.Def.levels[w.Level - 1].mods;
+            if (mods != null) for (int m = 0; m < mods.Length; m++) w.Local.Add(mods[m], magnitude);
+            w.Level++;
+        }
+
+        /// <summary>
+        /// Lends `def` at `level` for `seconds` (the crowd's weapon in the sand): it fights beside the slots, takes none,
+        /// and never shows in the cards. A new loan replaces the old one.
+        /// </summary>
+        public void GrantTemporary(WeaponDef def, int level, float seconds)
+        {
+            if (def == null || seconds <= 0f) return;
+            _loan.Init(def);
+            while (_loan.Level < level && _loan.Level < def.MaxLevel) ApplyNextLevel(_loan, 1f);
+            TemporaryLeft = TemporaryDuration = seconds;
+        }
+
+        /// <summary>Ends the loan now (tests, run reset).</summary>
+        public void EndTemporary() => TemporaryLeft = 0f;
 
         // ---------- effective numbers ----------
         public float Damage(WeaponInstance w) => w.Def.damage * w.Local[StatId.Damage] * DamageMul;
@@ -154,6 +179,11 @@ namespace Gladiator.Gameplay
                 }
             }
             if (!anySwing && animator != null) animator.AttackT = -1f;
+            if (TemporaryLeft > 0f)
+            {
+                TemporaryLeft = Mathf.Max(0f, TemporaryLeft - dt);
+                if (TemporaryLeft > 0f) TickWeapon(_loan, em, dt);
+            }
         }
 
         void TickWeapon(WeaponInstance w, EnemyManager em, float dt)

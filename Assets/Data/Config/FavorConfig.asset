@@ -1,0 +1,68 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 46c61b82e32ccbd0a8b173c46022b922, type: 3}
+  m_Name: FavorConfig
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.FavorConfig
+  firstThreshold: 100
+  thresholdGrowth: 1.25
+  streakFavor:
+  - 8
+  - 12
+  - 16
+  - 20
+  eliteKill: 6
+  variety: 1.5
+  varietyWindow: 20
+  styleKill: 0.25
+  styleMaxPerSecond: 3
+  closeCall: 15
+  noHitStep: 20
+  noHitFavor:
+  - 5
+  - 7
+  - 10
+  bossEnters: 10
+  bossPhase: 10
+  gifts:
+  - kind: 0
+    weight: 1
+  - kind: 1
+    weight: 1
+  - kind: 2
+    weight: 0.8
+  - kind: 3
+    weight: 0.6
+  lowHp: 0.5
+  lowHpAmphoraBias: 3
+  throwTime: 1.2
+  throwArc: 5
+  landDistance: {x: 3, y: 6}
+  giftLifetime: 25
+  maxGifts: 3
+  pickupRadius: 1.2
+  amphoraHeal: 0.3
+  goldShowerCoins: 20
+  sandWeaponLevel: 4
+  sandWeaponSeconds: 30
+  laurelXp: 0.4
+  dullWindow: 10
+  dullKillShare: 0.1
+  dullEnemyDistance: 6
+  boredomRise: 8
+  boredomFall: 25
+  noWhimBefore: 90
+  whimCooldown: 60
+  whims: 0001y
+  challengeSeconds: 20
+  challengeDistance: 12
+  challengeFavor: 15
+  challengeGold: 15

@@ -87,6 +87,40 @@ namespace Gladiator.Tests
         }
 
         [UnityTest, Timeout(60000)]
+        public IEnumerator ConstantCrits_HitStopAtMostOncePerInterval()
+        {
+            yield return Boot();
+            _weapons.RemoveAll();
+            var feedback = _em.feedback;
+            int i = _em.Spawn(_convict, _player.transform.position + new Vector3(0f, 0f, 4f));
+            var crit = new DamageInfo { Amount = 0.001f, Flags = DamageFlags.Melee | DamageFlags.Crit, Point = _player.transform.position };
+            yield return new WaitForSecondsRealtime(feedback.hitStopInterval + 0.1f); // clear any earlier cooldown
+            int count = TimeController.HitStopCount, crits = 0, playerHits = 0;
+            float frozen = TimeController.HitStopSeconds;
+            EventHandler<DamagedEvent> onDamaged = (in DamagedEvent e) => playerHits++; // the convict walks up: its hits have their own stop
+            GameEvents.OnDamaged.Subscribe(onDamaged);
+            float start = Time.realtimeSinceStartup, window = 2f;
+            try
+            {
+                while (Time.realtimeSinceStartup - start < window)
+                {
+                    _em.ApplyDamage(i, crit); // a crit every frame: the worst crit build
+                    crits++;
+                    yield return null;
+                }
+            }
+            finally { GameEvents.OnDamaged.Unsubscribe(onDamaged); }
+            int stops = TimeController.HitStopCount - count;
+            frozen = TimeController.HitStopSeconds - frozen;
+            int allowed = Mathf.CeilToInt(window / feedback.hitStopInterval) + 1;
+            Assert.Greater(crits, 20, "plenty of crits landed");
+            Assert.GreaterOrEqual(stops, 1, "crits still hit-stop");
+            // back-to-back stops merge into one long freeze, so measure the time frozen, not the count
+            Assert.LessOrEqual(frozen, allowed * feedback.hitStopOnCrit + playerHits * feedback.hitStopOnPlayerHit + 0.05f,
+                "frozen for at most one crit stop per interval (was the whole window before the cap)");
+        }
+
+        [UnityTest, Timeout(60000)]
         public IEnumerator Enemies_DoNotWalkThroughWalls()
         {
             yield return Boot();

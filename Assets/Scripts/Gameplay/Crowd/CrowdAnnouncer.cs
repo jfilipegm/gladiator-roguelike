@@ -69,7 +69,7 @@ namespace Gladiator.Gameplay
             for (int t = config.streaks.Length - 1; t > _streakTier; t--)
             {
                 if (recent < config.streaks[t].kills) continue;
-                if (gap) { Say(config.streaks[t].text, config.streaks[t].crowd); _streakTier = t; _lastStreak = _clock; }
+                if (gap) { Say(config.streaks[t].text, config.streaks[t].crowd, AnnounceKind.Streak, t); _streakTier = t; _lastStreak = _clock; }
                 return;
             }
 
@@ -80,23 +80,23 @@ namespace Gladiator.Gameplay
                 else if (_wasLow && _health.Hp01 >= config.closeCallRecovered)
                 {
                     _wasLow = false;
-                    if (gap && _clock - _lastClose > config.closeCallCooldown) { Say(config.closeCallText, 0.8f); _lastClose = _clock; return; }
+                    if (gap && _clock - _lastClose > config.closeCallCooldown) { Say(config.closeCallText, 0.8f, AnnounceKind.CloseCall); _lastClose = _clock; return; }
                 }
             }
 
             var crowd = CrowdExcitement.Instance;
             if (gap && crowd != null && crowd.Value >= config.roarAt && _clock - _lastRoar > config.roarCooldown)
             {
-                Say(config.roarText, 1f);
+                Say(config.roarText, 1f, AnnounceKind.Roar);
                 _lastRoar = _clock;
             }
         }
 
-        void Say(string text, float crowd)
+        void Say(string text, float crowd, AnnounceKind kind, int tier = 0)
         {
             _lastLine = _clock;
             Lines++;
-            GameEvents.OnAnnounce.Raise(new AnnounceEvent { Text = text, Color = config.color, Seconds = config.seconds });
+            GameEvents.OnAnnounce.Raise(new AnnounceEvent { Text = text, Color = config.color, Seconds = config.seconds, Kind = kind, Tier = tier });
             if (CrowdExcitement.Instance != null) CrowdExcitement.Instance.Spike(crowd);
         }
     }

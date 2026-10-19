@@ -66,7 +66,7 @@ namespace Gladiator.Gameplay
                         _t = 0f;
                         TimeController.SlowMotion = fallSlowMo;
                         ScreenShake.Add(0.6f);
-                        GameEvents.OnAnnounce.Raise(new AnnounceEvent { Text = FallText, Color = new Color(1f, 0.86f, 0.4f), Seconds = 3f });
+                        GameEvents.OnAnnounce.Raise(new AnnounceEvent { Kind = AnnounceKind.BossFalls, Text = FallText, Color = new Color(1f, 0.86f, 0.4f), Seconds = 3f });
                         if (CrowdExcitement.Instance != null) CrowdExcitement.Instance.Spike(1f);
                     }
                     break;
@@ -114,7 +114,7 @@ namespace Gladiator.Gameplay
             }
             controller.def = boss;
             controller.Begin(at, inward);
-            GameEvents.OnAnnounce.Raise(new AnnounceEvent { Text = EnterText, Color = new Color(1f, 0.3f, 0.2f), Seconds = 3f });
+            GameEvents.OnAnnounce.Raise(new AnnounceEvent { Kind = AnnounceKind.BossEnters, Text = EnterText, Color = new Color(1f, 0.3f, 0.2f), Seconds = 3f });
             if (CrowdExcitement.Instance != null) CrowdExcitement.Instance.Spike(0.85f);
         }
 

@@ -25,4 +25,42 @@ MonoBehaviour:
   windup: 0.06
   range: 2.6
   arcDegrees: 150
+  width: 0.5
   acquireRange: 3.2
+  amount: 1
+  speed: 16
+  pierce: 0
+  mesh: {fileID: 0}
+  meshScale: 1
+  levels:
+  - mods:
+    - stat: 4
+      op: 1
+      value: 0.2
+  - mods:
+    - stat: 8
+      op: 1
+      value: 0.15
+  - mods:
+    - stat: 9
+      op: 0
+      value: 1
+  - mods:
+    - stat: 5
+      op: 1
+      value: 0.2
+  - mods:
+    - stat: 4
+      op: 1
+      value: 0.25
+  - mods:
+    - stat: 8
+      op: 1
+      value: 0.15
+  - mods:
+    - stat: 9
+      op: 0
+      value: 1
+    - stat: 4
+      op: 1
+      value: 0.2

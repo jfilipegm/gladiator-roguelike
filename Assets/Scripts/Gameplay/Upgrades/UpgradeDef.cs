@@ -20,6 +20,7 @@ namespace Gladiator.Gameplay
     /// <summary>
     /// A level-up card's content as data. Every time it's taken, `perLevel` is added to the player's stats scaled by
     /// the card's rarity (UpgradeConfig.rarityMagnitude), so a Rare "Brute Force" is a bigger step than a Common one.
+    /// Weapon cards equip their weapon at level 1 and apply the weapon's own level table after that.
     /// Behaviour hooks (on-hit, on-slide...) arrive with the M2.6 Boons.
     /// </summary>
     [CreateAssetMenu(menuName = "Gladiator/Upgrade", fileName = "UP_")]
@@ -40,6 +41,8 @@ namespace Gladiator.Gameplay
         public Rarity maxRarity = Rarity.Legendary;
 
         [Header("Effect")]
+        [Tooltip("Weapon cards: the weapon equipped at level 1; levels 2+ apply its own level table (max level = its MaxLevel).")]
+        public WeaponDef weapon;
         [Tooltip("Added to the player's stats each time this is taken, scaled by the card's rarity.")]
         public StatMod[] perLevel = Array.Empty<StatMod>();
         [Tooltip("Consumables: heal this fraction of max HP.")]

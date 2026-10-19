@@ -50,8 +50,100 @@ namespace Gladiator.EditorTools
             var purse = Consumable("UP_CoinPurse", "coin_purse", "Coin Purse", "CP");
             if (purse != null) { purse.gold = 15; EditorUtility.SetDirty(purse); }
 
+            CreateWeapons();
+
             AssetDatabase.SaveAssets();
             return Refresh();
+        }
+
+        public const string WeaponDir = "Assets/Data/Weapons/";
+        const string WeaponModels = "Assets/Art/Models/Weapons/";
+
+        static WeaponDef.Level L(params StatMod[] mods) => new WeaponDef.Level { mods = mods };
+        static StatMod Pct(StatId s, float v) => new StatMod(s, ModOp.Percent, v);
+        static StatMod Add(StatId s, float v) => new StatMod(s, ModOp.Flat, v);
+
+        /// <summary>The slice's four weapons (CLAUDE.md §6.8: different patterns, not reskins) and their cards.</summary>
+        static void CreateWeapons()
+        {
+            // Gladius exists since M1.2 (designer-owned): only give it a level table if it has none.
+            var gladius = AssetDatabase.LoadAssetAtPath<WeaponDef>(CombatSetup.GladiusPath);
+            if (gladius != null && (gladius.levels == null || gladius.levels.Length == 0))
+            {
+                gladius.levels = new[]
+                {
+                    L(Pct(StatId.Damage, 0.2f)), L(Pct(StatId.Area, 0.15f)), L(Add(StatId.Amount, 1f)), L(Pct(StatId.AttackSpeed, 0.2f)),
+                    L(Pct(StatId.Damage, 0.25f)), L(Pct(StatId.Area, 0.15f)), L(Add(StatId.Amount, 1f), Pct(StatId.Damage, 0.2f)),
+                };
+                EditorUtility.SetDirty(gladius);
+            }
+
+            var spear = Weapon("WP_Spear", "spear", "Pit Spear", "Thrusts through every enemy in a line. Long reach.", WeaponPattern.Thrust, w =>
+            {
+                w.damage = 15f; w.critChance = 0.10f; w.knockback = 7f; w.cooldown = 1.1f; w.swingDuration = 0.24f; w.windup = 0.08f;
+                w.range = 4.4f; w.width = 0.7f; w.acquireRange = 4.8f; w.mesh = Mesh("WP_Spear"); w.meshScale = 1f;
+                w.levels = new[]
+                {
+                    L(Pct(StatId.Damage, 0.2f)), L(Pct(StatId.Area, 0.2f)), L(Add(StatId.Amount, 1f)), L(Pct(StatId.AttackSpeed, 0.15f)),
+                    L(Pct(StatId.Damage, 0.25f)), L(Add(StatId.CritChance, 0.1f)), L(Add(StatId.Amount, 1f), Pct(StatId.Area, 0.15f)),
+                };
+            });
+            var javelins = Weapon("WP_Javelins", "javelins", "Javelins", "Throws javelins at the nearest enemies. Pierces one.", WeaponPattern.Projectile, w =>
+            {
+                w.damage = 11f; w.critChance = 0.08f; w.knockback = 4f; w.cooldown = 1.4f; w.swingDuration = 0.25f; w.windup = 0.1f;
+                w.range = 16f; w.width = 0.35f; w.acquireRange = 14f; w.amount = 2; w.speed = 20f; w.pierce = 1;
+                w.mesh = Mesh("WP_Javelin"); w.meshScale = 1.3f;
+                w.levels = new[]
+                {
+                    L(Add(StatId.Amount, 1f)), L(Pct(StatId.Damage, 0.2f)), L(Add(StatId.Pierce, 1f)), L(Pct(StatId.AttackSpeed, 0.15f)),
+                    L(Add(StatId.Amount, 1f)), L(Pct(StatId.Damage, 0.25f)), L(Add(StatId.Pierce, 1f), Pct(StatId.ProjectileSpeed, 0.2f)),
+                };
+            });
+            var chakram = Weapon("WP_Chakram", "chakram", "Chakram", "A bladed disc that flies out and comes back, cutting everything twice.", WeaponPattern.Returning, w =>
+            {
+                w.damage = 8f; w.critChance = 0.08f; w.knockback = 3f; w.cooldown = 1.7f; w.swingDuration = 0.25f; w.windup = 0.1f;
+                w.range = 7f; w.width = 0.55f; w.acquireRange = 9f; w.amount = 1; w.speed = 14f; w.pierce = -1;
+                w.mesh = Mesh("WP_Chakram"); w.meshScale = 1.3f;
+                w.levels = new[]
+                {
+                    L(Pct(StatId.Damage, 0.2f)), L(Pct(StatId.Area, 0.2f)), L(Add(StatId.Amount, 1f)), L(Pct(StatId.AttackSpeed, 0.15f)),
+                    L(Pct(StatId.ProjectileSpeed, 0.2f)), L(Pct(StatId.Damage, 0.25f)), L(Add(StatId.Amount, 1f)),
+                };
+            });
+
+            WeaponCard("UP_W_Gladius", gladius, "GL");
+            WeaponCard("UP_W_Spear", spear, "SP");
+            WeaponCard("UP_W_Javelins", javelins, "JV");
+            WeaponCard("UP_W_Chakram", chakram, "CK");
+        }
+
+        static Mesh Mesh(string model) => AssetDatabase.LoadAssetAtPath<Mesh>(WeaponModels + model + ".fbx");
+
+        /// <summary>Loads the weapon, or creates it with `init` the first time (designer-owned afterwards).</summary>
+        static WeaponDef Weapon(string file, string id, string name, string description, WeaponPattern pattern, System.Action<WeaponDef> init)
+        {
+            string path = WeaponDir + file + ".asset";
+            var w = AssetDatabase.LoadAssetAtPath<WeaponDef>(path);
+            if (w != null) return w;
+            w = PlayerSetup.EnsureAsset<WeaponDef>(path);
+            w.id = id; w.displayName = name; w.description = description; w.pattern = pattern;
+            init(w);
+            EditorUtility.SetDirty(w);
+            return w;
+        }
+
+        static void WeaponCard(string file, WeaponDef weapon, string glyph)
+        {
+            if (weapon == null) return;
+            string path = Dir + file + ".asset";
+            if (AssetDatabase.LoadAssetAtPath<UpgradeDef>(path) != null) return;
+            var d = PlayerSetup.EnsureAsset<UpgradeDef>(path);
+            d.id = "weapon_" + weapon.id; d.displayName = weapon.displayName; d.glyph = glyph;
+            d.kind = UpgradeKind.Weapon;
+            d.weapon = weapon;
+            d.maxLevel = weapon.MaxLevel;
+            d.weight = 8f;
+            EditorUtility.SetDirty(d);
         }
 
         static StatMod M(StatId s, ModOp op, float v) => new StatMod(s, op, v);

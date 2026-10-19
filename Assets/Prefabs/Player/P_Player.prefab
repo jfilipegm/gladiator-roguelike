@@ -251,6 +251,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 1e64e81441c35618692cc0a42fe51ce8, type: 2}
   animator: {fileID: 4759577533021436214}
   slashFx: {fileID: 0}
+  volleySpread: 12
 --- !u!1001 &601906944168044144
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -275,7 +275,7 @@ namespace Gladiator.UI
                 v.Rarity.text = CardText.RarityName(o.Rarity);
                 v.Title.text = o.Def.displayName;
                 if (o.Def.kind == UpgradeKind.Consumable) { v.Kind.color = PipOwned; v.Kind.text = "SUPPLIES"; }
-                else if (o.IsNew) { v.Kind.color = NewGold; v.Kind.text = "NEW!"; }
+                else if (o.IsNew) { v.Kind.color = NewGold; v.Kind.text = o.Def.kind == UpgradeKind.Weapon ? "NEW WEAPON!" : "NEW!"; }
                 else { v.Kind.color = PipOwned; v.Kind.SetText("LV {0}", o.Level); }
                 CardText.Describe(o, cfg, v.Text);
                 v.Desc.SetCharArray(v.Text.Chars, 0, v.Text.Length);

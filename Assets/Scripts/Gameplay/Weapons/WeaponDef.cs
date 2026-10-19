@@ -1,16 +1,29 @@
+using System;
+using Gladiator.Core;
 using UnityEngine;
 
 namespace Gladiator.Gameplay
 {
-    /// <summary>Attack patterns that weapon data composes (CLAUDE.md §6.8). Slice implements MeleeArc first.</summary>
+    /// <summary>Attack patterns that weapon data composes (CLAUDE.md §6.8). The slice implements the first four marked.</summary>
     public enum WeaponPattern { MeleeArc, Thrust, MultiHit, GroundSlam, Projectile, Returning, Orbit, Chain, Summon }
 
-    /// <summary>A weapon as data. Levels/upgrades layer on top (M2.5).</summary>
+    /// <summary>
+    /// A weapon as data. Its numbers are the level-1 base; each level 2-8 adds `levels[level-2].mods` to that weapon only
+    /// (scaled by the card's rarity, like Boons), and the player's stats multiply everything on top.
+    /// Implemented patterns: MeleeArc (Gladius), Thrust (Spear), Projectile (Javelins), Returning (Chakram).
+    /// </summary>
     [CreateAssetMenu(menuName = "Gladiator/Weapon", fileName = "WP_")]
     public sealed class WeaponDef : ScriptableObject
     {
+        [Serializable]
+        public struct Level
+        {
+            [Tooltip("Weapon-local modifiers: Damage/AttackSpeed/Area/ProjectileSpeed/Knockback (Percent), Amount/Pierce (Flat), CritChance/CritDamage (Flat).")]
+            public StatMod[] mods;
+        }
+
         /// <summary>Stable numeric id derived from `id` (events, stats, saves).</summary>
-        public int RuntimeId => Gladiator.Core.GameInfo.StableId(id);
+        public int RuntimeId => GameInfo.StableId(id);
         public string id = "gladius";
         public string displayName = "Rusty Gladius";
         [TextArea] public string description = "Fast arcs at the nearest enemy.";
@@ -25,16 +38,34 @@ namespace Gladiator.Gameplay
         [Header("Timing")]
         [Tooltip("Seconds between attacks (before attack-speed bonuses).")]
         public float cooldown = 0.8f;
-        [Tooltip("Swing animation length (s).")]
+        [Tooltip("Swing / thrust animation length (s).")]
         public float swingDuration = 0.2f;
         [Tooltip("Delay from swing start to the damage frame (s).")]
         public float windup = 0.06f;
 
         [Header("Shape")]
-        [Tooltip("Reach from the player's centre (m).")]
+        [Tooltip("Arc: reach from the player's centre. Thrust: line length. Projectile: max travel. Returning: throw distance (m).")]
         public float range = 2.6f;
         public float arcDegrees = 150f;
-        [Tooltip("Auto-aim acquires the nearest enemy within this range; nothing in range = no swing.")]
+        [Tooltip("Thrust: line width. Projectiles: hit radius (m).")]
+        public float width = 0.5f;
+        [Tooltip("Auto-aim acquires the nearest enemy within this range; nothing in range = no attack.")]
         public float acquireRange = 3.2f;
+
+        [Header("Amount / projectiles")]
+        [Tooltip("Arc/Thrust: attacks per trigger (extra ones follow at the next targets). Projectiles: per volley.")]
+        public int amount = 1;
+        [Tooltip("Projectile speed (m/s).")]
+        public float speed = 16f;
+        [Tooltip("Extra enemies a projectile passes through after the first (-1 = unlimited).")]
+        public int pierce = 0;
+        [Tooltip("Mesh drawn for the spear / projectile (instanced, palette material). Gladius: none (it's in the hand).")]
+        public Mesh mesh;
+        public float meshScale = 1f;
+
+        [Header("Levels 2-8")]
+        public Level[] levels = Array.Empty<Level>();
+
+        public int MaxLevel => 1 + (levels != null ? levels.Length : 0);
     }
 }

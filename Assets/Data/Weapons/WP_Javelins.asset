@@ -1,0 +1,66 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 39f0cecc993934a19800cd9b6e8df985, type: 3}
+  m_Name: WP_Javelins
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.WeaponDef
+  id: javelins
+  displayName: Javelins
+  description: Throws javelins at the nearest enemies. Pierces one.
+  pattern: 4
+  damage: 11
+  critChance: 0.08
+  critMultiplier: 2
+  knockback: 4
+  cooldown: 1.4
+  swingDuration: 0.25
+  windup: 0.1
+  range: 16
+  arcDegrees: 150
+  width: 0.35
+  acquireRange: 14
+  amount: 2
+  speed: 20
+  pierce: 1
+  mesh: {fileID: -3905448839839639213, guid: 5a6fb7fe020a204f29a7527690314c04, type: 3}
+  meshScale: 1.3
+  levels:
+  - mods:
+    - stat: 9
+      op: 0
+      value: 1
+  - mods:
+    - stat: 4
+      op: 1
+      value: 0.2
+  - mods:
+    - stat: 20
+      op: 0
+      value: 1
+  - mods:
+    - stat: 5
+      op: 1
+      value: 0.15
+  - mods:
+    - stat: 9
+      op: 0
+      value: 1
+  - mods:
+    - stat: 4
+      op: 1
+      value: 0.25
+  - mods:
+    - stat: 20
+      op: 0
+      value: 1
+    - stat: 10
+      op: 1
+      value: 0.2

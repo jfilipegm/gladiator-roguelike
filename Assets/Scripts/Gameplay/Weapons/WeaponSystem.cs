@@ -4,20 +4,27 @@ using UnityEngine;
 
 namespace Gladiator.Gameplay
 {
-    /// <summary>Runtime state of one equipped weapon.</summary>
+    /// <summary>Runtime state of one equipped weapon: its level, its own modifiers (weapon-level cards), and the swing.</summary>
     public sealed class WeaponInstance
     {
         public WeaponDef Def;
         public int Level = 1;
+        /// <summary>This weapon's modifiers from its level-up cards (multiplier stats start at 1, Amount/Pierce at 0).</summary>
+        public readonly StatBlock Local = new StatBlock();
         public float Cooldown;
         public float SwingT = -1f;
         public bool Impacted;
+        public int BurstLeft;
+        public int Mesh = -2; // -2 = not registered yet
         public Vector3 AimDir = Vector3.forward;
     }
 
     /// <summary>
     /// Fires the player's weapons automatically (CLAUDE.md §5): nearest-enemy auto-aim, central tick, hits via the
     /// enemy spatial hash (never Physics.Overlap), damage through EnemyManager.ApplyDamage. Up to 4 slots.
+    /// Every weapon runs the same timeline (acquire → wind-up → impact → cooldown); the impact is the pattern:
+    /// MeleeArc (arc hit around the aim), Thrust (line hit + spear visual), Projectile (javelin volley at the nearest
+    /// enemies), Returning (chakram out and back). Numbers = weapon base × its level modifiers × player stats.
     /// </summary>
     public sealed class WeaponSystem : MonoBehaviour, ITickable
     {
@@ -26,6 +33,8 @@ namespace Gladiator.Gameplay
         public WeaponDef[] startingWeapons;
         public PlayerPartAnimator animator;
         public SlashFx slashFx;
+        [Tooltip("Degrees between extra projectiles when a volley has more shots than targets.")]
+        public float volleySpread = 12f;
 
         PlayerStats _stats;
 
@@ -36,9 +45,11 @@ namespace Gladiator.Gameplay
         public float CritBonus => _stats != null ? _stats.CritChance : DevSettings.CritBonus;
         public float CritDamageBonus => _stats != null ? _stats.CritDamage : 0f;
         public float KnockbackMul => _stats != null ? _stats.Knockback : 1f;
+        float PlayerStat(StatId s, float fallback) => _stats != null ? _stats.Get(s) : fallback;
 
         readonly List<WeaponInstance> _weapons = new List<WeaponInstance>(MaxSlots);
         readonly int[] _hits = new int[256];
+        readonly int[] _targets = new int[16];
 
         public IReadOnlyList<WeaponInstance> Weapons => _weapons;
         public int Swings { get; private set; }
@@ -54,70 +65,151 @@ namespace Gladiator.Gameplay
         void OnEnable() => GameLoop.Register(this, TickGroup.Weapons);
         void OnDisable() => GameLoop.Unregister(this);
 
-        public bool Equip(WeaponDef def)
+        /// <summary>Adds `def` at level 1 (null when all slots are full or it's already equipped).</summary>
+        public WeaponInstance Equip(WeaponDef def)
         {
-            if (_weapons.Count >= MaxSlots) return false;
-            _weapons.Add(new WeaponInstance { Def = def, Cooldown = 0.3f });
-            return true;
+            if (def == null || _weapons.Count >= MaxSlots || Find(def) != null) return null;
+            var inst = new WeaponInstance { Def = def, Cooldown = 0.3f };
+            _weapons.Add(inst);
+            return inst;
         }
+
+        public WeaponInstance Find(WeaponDef def)
+        {
+            for (int i = 0; i < _weapons.Count; i++) if (_weapons[i].Def == def) return _weapons[i];
+            return null;
+        }
+
+        /// <summary>Applies `def`'s next level (its `levels` entry) scaled by `magnitude`. Returns the new level.</summary>
+        public int LevelUp(WeaponDef def, float magnitude)
+        {
+            var w = Find(def);
+            if (w == null) return 0;
+            if (w.Level >= def.MaxLevel) return w.Level;
+            var mods = def.levels[w.Level - 1].mods;
+            if (mods != null) for (int m = 0; m < mods.Length; m++) w.Local.Add(mods[m], magnitude);
+            w.Level++;
+            return w.Level;
+        }
+
+        // ---------- effective numbers ----------
+        public float Damage(WeaponInstance w) => w.Def.damage * w.Local[StatId.Damage] * DamageMul;
+        public float CooldownOf(WeaponInstance w) => w.Def.cooldown / Mathf.Max(0.1f, w.Local[StatId.AttackSpeed] * AttackSpeedMul);
+        public float AreaOf(WeaponInstance w) => w.Local[StatId.Area] * RangeMul;
+        public int AmountOf(WeaponInstance w) => Mathf.Max(1, w.Def.amount + (int)w.Local[StatId.Amount] + (int)PlayerStat(StatId.Amount, 0f));
+        public int PierceOf(WeaponInstance w) => w.Def.pierce < 0 ? -1 : w.Def.pierce + (int)w.Local[StatId.Pierce] + (int)PlayerStat(StatId.Pierce, 0f);
+        public float SpeedOf(WeaponInstance w) => w.Def.speed * w.Local[StatId.ProjectileSpeed] * PlayerStat(StatId.ProjectileSpeed, 1f);
+        float Crit(WeaponInstance w) => w.Def.critChance + w.Local[StatId.CritChance] + CritBonus;
+        float CritMul(WeaponInstance w) => w.Def.critMultiplier + w.Local[StatId.CritDamage] + CritDamageBonus;
+        float Knock(WeaponInstance w) => w.Def.knockback * w.Local[StatId.Knockback] * KnockbackMul;
+        float Acquire(WeaponInstance w) => w.Def.acquireRange * AreaOf(w);
 
         public void Tick(float dt, float unscaledDt)
         {
             if (dt <= 0f) return;
             var em = EnemyManager.Instance;
             bool anySwing = false;
-            for (int w = 0; w < _weapons.Count; w++)
+            for (int i = 0; i < _weapons.Count; i++)
             {
-                var inst = _weapons[w];
-                switch (inst.Def.pattern)
+                var w = _weapons[i];
+                TickWeapon(w, em, dt);
+                if (w.SwingT >= 0f && animator != null && !anySwing)
                 {
-                    case WeaponPattern.MeleeArc:
-                        TickMeleeArc(inst, em, dt);
-                        if (inst.SwingT >= 0f && animator != null && !anySwing)
-                        {
-                            anySwing = true;
-                            animator.AttackT = inst.SwingT;
-                            animator.AttackDirection = inst.AimDir;
-                        }
-                        break;
+                    anySwing = true;
+                    animator.AttackT = w.SwingT;
+                    animator.AttackDirection = w.AimDir;
                 }
             }
             if (!anySwing && animator != null) animator.AttackT = -1f;
         }
 
-        void TickMeleeArc(WeaponInstance w, EnemyManager em, float dt)
+        void TickWeapon(WeaponInstance w, EnemyManager em, float dt)
         {
             var d = w.Def;
             w.Cooldown -= dt;
             if (w.SwingT >= 0f)
             {
                 w.SwingT += dt / Mathf.Max(0.01f, d.swingDuration);
-                if (!w.Impacted && w.SwingT * d.swingDuration >= d.windup) { MeleeArcHit(w, em); w.Impacted = true; }
-                if (w.SwingT >= 1f) w.SwingT = -1f;
+                if (!w.Impacted && w.SwingT * d.swingDuration >= d.windup) { Impact(w, em); w.Impacted = true; }
+                if (w.SwingT >= 1f)
+                {
+                    w.SwingT = -1f;
+                    // Arc/Thrust Amount: the extra attacks follow right away at whoever is nearest now
+                    if (w.BurstLeft > 0 && em != null) { w.BurstLeft--; StartSwing(w, em); }
+                }
                 return;
             }
             if (w.Cooldown > 0f || em == null) return;
+            if (!StartSwing(w, em)) return;
+            w.Cooldown = CooldownOf(w);
+            bool melee = d.pattern == WeaponPattern.MeleeArc || d.pattern == WeaponPattern.Thrust;
+            w.BurstLeft = melee ? AmountOf(w) - 1 : 0;
+        }
+
+        bool StartSwing(WeaponInstance w, EnemyManager em)
+        {
+            var d = w.Def;
             Vector3 origin = transform.position;
-            if (!em.TryGetNearest(origin, d.acquireRange * RangeMul, out int target)) return;
+            if (!em.TryGetNearest(origin, Acquire(w), out int target)) return false;
             Vector3 aim = em.GetPosition(target) - origin;
             aim.y = 0f;
             w.AimDir = aim.sqrMagnitude > 1e-4f ? aim.normalized : transform.forward;
             w.SwingT = 0f;
             w.Impacted = false;
-            w.Cooldown = d.cooldown / Mathf.Max(0.1f, AttackSpeedMul);
             Swings++;
-            if (slashFx != null)
-                slashFx.Play(origin + Vector3.up * 0.75f, w.AimDir, d.range * RangeMul, d.arcDegrees, d.swingDuration);
+            float area = AreaOf(w);
+            if (d.pattern == WeaponPattern.MeleeArc)
+            {
+                if (slashFx != null) slashFx.Play(origin + Vector3.up * 0.75f, w.AimDir, d.range * area, d.arcDegrees, d.swingDuration);
+            }
+            else if (d.pattern == WeaponPattern.Thrust)
+            {
+                var pp = PlayerProjectiles.Instance;
+                if (pp != null) pp.Thrust(w.AimDir, d.range * area, d.swingDuration, MeshOf(w, pp), d.meshScale * Mathf.Sqrt(area));
+                if (slashFx != null) slashFx.Play(origin + Vector3.up * 0.9f, w.AimDir, d.range * area, 10f, d.swingDuration * 0.8f);
+            }
+            return true;
         }
 
-        void MeleeArcHit(WeaponInstance w, EnemyManager em)
+        int MeshOf(WeaponInstance w, PlayerProjectiles pp)
+        {
+            if (w.Mesh == -2) w.Mesh = pp.RegisterMesh(w.Def.mesh);
+            return w.Mesh;
+        }
+
+        void Impact(WeaponInstance w, EnemyManager em)
+        {
+            if (em == null) return;
+            switch (w.Def.pattern)
+            {
+                case WeaponPattern.MeleeArc: ArcHit(w, em); break;
+                case WeaponPattern.Thrust: ThrustHit(w, em); break;
+                case WeaponPattern.Projectile: Volley(w, em, returning: false); break;
+                case WeaponPattern.Returning: Volley(w, em, returning: true); break;
+            }
+        }
+
+        DamageInfo Hit(WeaponInstance w, EnemyManager em, int i, Vector3 dir, DamageFlags kind)
+        {
+            bool crit = GameRandom.Chance(Crit(w));
+            return new DamageInfo
+            {
+                Amount = Damage(w) * (crit ? CritMul(w) : 1f),
+                Flags = kind | (crit ? DamageFlags.Crit : 0),
+                Point = em.GetPosition(i),
+                Direction = dir,
+                Knockback = Knock(w),
+                SourceId = w.Def.RuntimeId,
+            };
+        }
+
+        void ArcHit(WeaponInstance w, EnemyManager em)
         {
             var d = w.Def;
             Vector3 origin = transform.position;
-            float range = d.range * RangeMul;
+            float range = d.range * AreaOf(w);
             float halfArc = d.arcDegrees * 0.5f;
             int n = em.QueryAlive(origin, range, _hits);
-            int sourceId = d.RuntimeId;
             for (int k = 0; k < n; k++)
             {
                 int i = _hits[k];
@@ -125,19 +217,100 @@ namespace Gladiator.Gameplay
                 to.y = 0f;
                 float dist = to.magnitude;
                 if (dist > 0.7f && Vector3.Angle(w.AimDir, to) > halfArc) continue; // point-blank always connects
-                bool crit = GameRandom.Chance(d.critChance + CritBonus);
-                var info = new DamageInfo
-                {
-                    Amount = d.damage * DamageMul * (crit ? d.critMultiplier + CritDamageBonus : 1f),
-                    Flags = DamageFlags.Melee | (crit ? DamageFlags.Crit : 0),
-                    Point = em.GetPosition(i),
-                    Direction = dist > 1e-3f ? to / dist : w.AimDir,
-                    Knockback = d.knockback * KnockbackMul,
-                    SourceId = sourceId,
-                };
-                em.ApplyDamage(i, info);
+                em.ApplyDamage(i, Hit(w, em, i, dist > 1e-3f ? to / dist : w.AimDir, DamageFlags.Melee));
                 Hits++;
             }
+        }
+
+        /// <summary>Everything in a line from the player along the aim: length = range × area, width = width × √area.</summary>
+        void ThrustHit(WeaponInstance w, EnemyManager em)
+        {
+            var d = w.Def;
+            float area = AreaOf(w);
+            float length = d.range * area, half = d.width * 0.5f * Mathf.Sqrt(area);
+            Vector3 origin = transform.position;
+            Vector3 aim = w.AimDir;
+            int n = em.QueryAlive(origin + aim * (length * 0.5f), length * 0.5f + half + 1f, _hits);
+            for (int k = 0; k < n; k++)
+            {
+                int i = _hits[k];
+                Vector3 to = em.GetPosition(i) - origin;
+                to.y = 0f;
+                float r = em.GetRadius(i);
+                float along = Vector3.Dot(to, aim);
+                if (along < -0.4f || along > length + r) continue;
+                float side = (to - aim * along).magnitude;
+                if (side > half + r) continue;
+                em.ApplyDamage(i, Hit(w, em, i, aim, DamageFlags.Melee));
+                Hits++;
+            }
+        }
+
+        /// <summary>Throws AmountOf(w) projectiles at the nearest distinct enemies; extra shots fan out around them.</summary>
+        void Volley(WeaponInstance w, EnemyManager em, bool returning)
+        {
+            var pp = PlayerProjectiles.Instance;
+            if (pp == null) return;
+            var d = w.Def;
+            Vector3 origin = transform.position;
+            int amount = Mathf.Min(AmountOf(w), _targets.Length);
+            int found = NearestTargets(em, origin, Acquire(w), amount);
+            float area = AreaOf(w);
+            var shot = new ShotParams
+            {
+                Speed = SpeedOf(w),
+                Range = returning ? d.range * area : d.range,
+                Radius = d.width * (returning ? Mathf.Sqrt(area) : area),
+                Damage = Damage(w),
+                CritChance = Crit(w),
+                CritMultiplier = CritMul(w),
+                Knockback = Knock(w),
+                Scale = d.meshScale * (returning ? Mathf.Sqrt(area) : 1f),
+                Pierce = PierceOf(w),
+                SourceId = d.RuntimeId,
+                Mesh = MeshOf(w, pp),
+            };
+            Vector3 from = origin + Vector3.up * pp.flightHeight;
+            for (int k = 0; k < amount; k++)
+            {
+                Vector3 dir = w.AimDir;
+                if (found > 0)
+                {
+                    Vector3 to = em.GetPosition(_targets[k % found]) - origin;
+                    to.y = 0f;
+                    if (to.sqrMagnitude > 1e-4f) dir = to.normalized;
+                }
+                if (found == 0 || k >= found)
+                {
+                    int extra = found == 0 ? k : k - found + 1;
+                    float ang = volleySpread * ((extra + 1) / 2) * (extra % 2 == 0 ? 1f : -1f);
+                    dir = Quaternion.Euler(0f, ang, 0f) * dir;
+                }
+                if (returning) pp.FireReturning(from, dir, shot);
+                else pp.FireStraight(from, dir, shot);
+            }
+        }
+
+        /// <summary>Fills _targets with up to `max` nearest alive enemies within `range` (partial selection, no allocation).</summary>
+        int NearestTargets(EnemyManager em, Vector3 origin, float range, int max)
+        {
+            int n = em.QueryAlive(origin, range, _hits);
+            int found = 0;
+            for (int pick = 0; pick < max && pick < n; pick++)
+            {
+                int best = -1;
+                float bestD = float.MaxValue;
+                for (int k = pick; k < n; k++)
+                {
+                    Vector3 to = em.GetPosition(_hits[k]) - origin;
+                    float dd = to.x * to.x + to.z * to.z;
+                    if (dd < bestD) { bestD = dd; best = k; }
+                }
+                if (best < 0) break;
+                (_hits[pick], _hits[best]) = (_hits[best], _hits[pick]);
+                _targets[found++] = _hits[pick];
+            }
+            return found;
         }
     }
 }

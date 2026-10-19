@@ -117,6 +117,10 @@ namespace Gladiator.EditorTools
             proj.feedback = feedback;
             proj.burst = pop;
 
+            var shots = new GameObject("PlayerProjectiles").AddComponent<PlayerProjectiles>();
+            shots.transform.SetParent(systems, false);
+            shots.material = em.bodyMaterial;
+
             var zones = new GameObject("HazardZones").AddComponent<HazardZones>();
             zones.transform.SetParent(systems, false);
 

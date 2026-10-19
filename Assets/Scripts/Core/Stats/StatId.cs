@@ -8,19 +8,19 @@ namespace Gladiator.Core
     {
         MaxHp, HpRegen, Armor, MoveSpeed, Damage, AttackSpeed, CritChance, CritDamage, Area,
         Amount, ProjectileSpeed, Duration, Knockback, PickupRange, XpGain, GoldGain, Luck,
-        Rerolls, Banishes, ExtraJumps,
+        Rerolls, Banishes, ExtraJumps, Pierce,
     }
 
     /// <summary>Defaults and display rules per stat.</summary>
     public static class StatInfo
     {
-        public const int Count = 20;
+        public const int Count = 21;
 
         static readonly string[] Names =
         {
             "Max HP", "HP Regen/s", "Armor", "Move Speed", "Damage", "Attack Speed", "Crit Chance", "Crit Damage", "Area",
             "Projectiles", "Projectile Speed", "Duration", "Knockback", "Pickup Range", "XP Gain", "Gold Gain", "Luck",
-            "Rerolls", "Banishes", "Air Jumps",
+            "Rerolls", "Banishes", "Air Jumps", "Pierce",
         };
 
         public static string Name(StatId s) => Names[(int)s];
@@ -42,6 +42,6 @@ namespace Gladiator.Core
 
         /// <summary>Whole-number stats: card rarity doesn't scale them (a Rare can't give 1.8 air jumps).</summary>
         public static bool IsInteger(StatId s) =>
-            s is StatId.Amount or StatId.Rerolls or StatId.Banishes or StatId.ExtraJumps;
+            s is StatId.Amount or StatId.Rerolls or StatId.Banishes or StatId.ExtraJumps or StatId.Pierce;
     }
 }

@@ -14,6 +14,7 @@ namespace Gladiator.Gameplay
 
         PlayerStats _stats;
         PlayerHealth _health;
+        WeaponSystem _weapons;
 
         public BuildState State { get; } = new BuildState();
         public PlayerStats Stats => _stats;
@@ -25,6 +26,24 @@ namespace Gladiator.Gameplay
         {
             _stats = GetComponent<PlayerStats>();
             _health = GetComponent<PlayerHealth>();
+            _weapons = GetComponent<WeaponSystem>();
+        }
+
+        // The starting weapon is owned at level 1, so its level-up cards come up and it fills a weapon slot.
+        void Start()
+        {
+            if (_weapons == null || catalog == null) return;
+            foreach (var w in _weapons.Weapons)
+            {
+                var card = FindWeaponCard(w.Def);
+                if (card != null && State.LevelOf(card) == 0) State.Take(card, Rarity.Common, null, config);
+            }
+        }
+
+        public UpgradeDef FindWeaponCard(WeaponDef weapon)
+        {
+            foreach (var u in catalog.upgrades) if (u != null && u.kind == UpgradeKind.Weapon && u.weapon == weapon) return u;
+            return null;
         }
 
         /// <summary>Applies one card. Returns the upgrade's new level (0 for a consumable).</summary>
@@ -40,6 +59,11 @@ namespace Gladiator.Gameplay
             }
             float oldMax = _health != null ? _health.MaxHp : 0f;
             int level = State.Take(d, card.Rarity, _stats.Block, config);
+            if (d.kind == UpgradeKind.Weapon && d.weapon != null && _weapons != null)
+            {
+                if (level == 1) _weapons.Equip(d.weapon);
+                else _weapons.LevelUp(d.weapon, config.Magnitude(card.Rarity));
+            }
             if (_health != null && !Mathf.Approximately(oldMax, _health.MaxHp)) _health.OnMaxHpChanged(oldMax);
             return level;
         }

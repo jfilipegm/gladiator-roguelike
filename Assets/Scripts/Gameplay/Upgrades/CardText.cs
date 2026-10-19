@@ -26,6 +26,19 @@ namespace Gladiator.Gameplay
                 return;
             }
             float scale = config.Magnitude(o.Rarity);
+            if (d.kind == UpgradeKind.Weapon && d.weapon != null)
+            {
+                if (o.Level <= 1) { t.Append(d.weapon.description); return; }
+                int step = o.Level - 2;
+                if (d.weapon.levels == null || step >= d.weapon.levels.Length) return;
+                var mods = d.weapon.levels[step].mods;
+                for (int i = 0; mods != null && i < mods.Length; i++)
+                {
+                    if (i > 0) t.Append('\n');
+                    Mod(mods[i], scale, t);
+                }
+                return;
+            }
             for (int i = 0; i < d.perLevel.Length; i++)
             {
                 if (i > 0) t.Append('\n');

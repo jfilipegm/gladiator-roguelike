@@ -440,6 +440,8 @@ namespace Gladiator.Gameplay
 
         void Kill(int i, in DamageInfo info, bool allowBlast)
         {
+            // Once only: OnHit hooks (sparks, bursts) can kill this enemy re-entrantly before ApplyDamage's own check.
+            if (!_active[i]) return;
             _active[i] = false;
             _dying[i] = feedback != null ? feedback.deathPopTime : 0.1f;
             AliveCount--;

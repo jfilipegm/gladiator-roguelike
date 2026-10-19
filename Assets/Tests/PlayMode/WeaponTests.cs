@@ -172,5 +172,33 @@ namespace Gladiator.Tests
             try { Assert.IsNull(_weapons.Equip(extra), "no fifth weapon"); }
             finally { Object.Destroy(extra); }
         }
+
+        /// <summary>Regression (found by the M3.5 perf run): an OnHit hook killing the same enemy re-entrantly (a spark,
+        /// a burst) killed it twice, so the alive count drifted negative and the Director overfilled the pools.</summary>
+        [UnityTest, Timeout(60000)]
+        public IEnumerator ReentrantKill_FromAnOnHitHook_CountsOnce()
+        {
+            yield return Boot();
+            yield return new WaitForSeconds(0.2f);
+            int before = _em.AliveCount, kills = 0;
+            int i = Place(0f, 6f);
+            yield return null;
+            Assert.AreEqual(before + 1, _em.AliveCount);
+            bool inHook = false;
+            EventHandler<HitEvent> hook = (in HitEvent e) =>
+            {
+                if (inHook || e.Index != i) return;
+                inHook = true;
+                _em.ApplyDamage(i, new DamageInfo { Amount = 1e6f, Flags = DamageFlags.Proc }); // kills it inside the event
+                inHook = false;
+            };
+            EventHandler<KillEvent> counter = (in KillEvent e) => kills++;
+            GameEvents.OnHit.Subscribe(hook);
+            GameEvents.OnKill.Subscribe(counter);
+            try { _em.ApplyDamage(i, new DamageInfo { Amount = 1e6f, Flags = DamageFlags.Melee }); }
+            finally { GameEvents.OnHit.Unsubscribe(hook); GameEvents.OnKill.Unsubscribe(counter); }
+            Assert.AreEqual(before, _em.AliveCount, "one enemy died once");
+            Assert.AreEqual(1, kills, "one kill event");
+        }
     }
 }

@@ -116,7 +116,9 @@ namespace Gladiator.Core
             long heap0 = UnityEngine.Profiling.Profiler.GetMonoUsedSizeLong();
             FrameHeapStart = heap0;
             TimeController.Update();
-            float dt = UnityEngine.Time.deltaTime;
+            // A pause pushed this frame (e.g. by a scene's Awake during a load) only changes timeScale after Unity has
+            // scaled this frame's deltaTime, so gate it here too: not one frame of gameplay time while paused.
+            float dt = TimeController.IsPaused ? 0f : UnityEngine.Time.deltaTime;
             float udt = UnityEngine.Time.unscaledDeltaTime;
             using (GameplayMarker.Auto())
             {

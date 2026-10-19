@@ -15,13 +15,17 @@ MonoBehaviour:
   id: weapon_chakram
   displayName: Chakram
   glyph: CK
+  icon: {fileID: 2800000, guid: 13ceaa4af4e914da3ab8c2724bbfa51d, type: 3}
+  iconRow: 5
   kind: 1
   tags: 0
   weight: 8
   maxLevel: 8
   minRarity: 0
   maxRarity: 3
+  requiresAny: []
   weapon: {fileID: 11400000, guid: 52b6167044e7c723e99ce10035796ec0, type: 2}
   perLevel: []
+  effects: []
   healFraction: 0
   gold: 0

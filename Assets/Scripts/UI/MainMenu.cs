@@ -37,6 +37,10 @@ namespace Gladiator.UI
         public Locked[] locked = Array.Empty<Locked>();
         public string title = "GLADIATOR";
         public string subtitle = "from the pit to the pantheon";
+        [Tooltip("The gladiator standing in the diorama: swapped for the picked one's model.")]
+        public Transform hero;
+        [Tooltip("Palette material for the swapped models (they import without materials).")]
+        public Material heroMaterial;
 
         static readonly Color Gold = new Color(1f, 0.84f, 0.3f);
         static readonly Color Soft = new Color(1f, 1f, 1f, 0.75f);
@@ -53,6 +57,7 @@ namespace Gladiator.UI
         GladiatorDef[] _available = Array.Empty<GladiatorDef>();
         Image[] _cardBorders = Array.Empty<Image>();
         int _pick;
+        readonly System.Collections.Generic.Dictionary<GameObject, GameObject> _heroModels = new System.Collections.Generic.Dictionary<GameObject, GameObject>();
 
         /// <summary>Earned: no unlock, or its unlock is in the save.</summary>
         public static bool IsAvailable(GladiatorDef g) => g != null && (g.unlock == null || MetaProgress.IsUnlocked(g.unlock));
@@ -267,6 +272,24 @@ namespace Gladiator.UI
         {
             for (int i = 0; i < _cardBorders.Length; i++)
                 _cardBorders[i].color = i == _pick ? Gold : new Color(0.55f, 0.48f, 0.3f, 0.9f);
+            ShowHero(Selected);
+        }
+
+        /// <summary>The diorama shows whoever is picked (the scene's own hero is the Nobody, hidden once another stands in).</summary>
+        void ShowHero(GladiatorDef g)
+        {
+            if (hero == null || g == null || g.model == null) return;
+            if (!_heroModels.TryGetValue(g.model, out var shown))
+            {
+                shown = Instantiate(g.model, hero.parent, false);
+                shown.name = "Hero_" + g.id;
+                shown.transform.SetPositionAndRotation(hero.position, hero.rotation);
+                if (heroMaterial != null)
+                    foreach (var r in shown.GetComponentsInChildren<Renderer>(true)) r.sharedMaterial = heroMaterial;
+                _heroModels[g.model] = shown;
+            }
+            hero.gameObject.SetActive(false);
+            foreach (var kv in _heroModels) kv.Value.SetActive(kv.Value == shown);
         }
 
         static string StatsLine(GladiatorDef g)
@@ -279,6 +302,7 @@ namespace Gladiator.UI
         {
             var mid = new Vector2(0.5f, 0.5f);
             border = UiFactory.Image("Card", root, open ? Gold : new Color(0.3f, 0.3f, 0.34f, 0.9f), mid, mid, new Vector2(x, 20), new Vector2(w, 520), PixelIcons.White);
+            border.raycastTarget = open; // the card's button needs the hit (UiFactory images ignore the pointer)
             var inner = UiFactory.Image("Inner", border.transform, CardColor, mid, mid, Vector2.zero, new Vector2(w - 10, 510), PixelIcons.White);
             inner.raycastTarget = false; // clicks reach the border's button
             return inner.transform;

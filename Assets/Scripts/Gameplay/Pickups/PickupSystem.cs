@@ -145,8 +145,6 @@ namespace Gladiator.Gameplay
             if (_player == null && Player.Main != null) { _player = Player.Main.transform; _stats = Player.Main.GetComponent<PlayerStats>(); }
             var em = EnemyManager.Instance;
             var height = em != null ? em.Height : null;
-            Vector3 arenaC = em != null ? em.arenaCenter : Vector3.zero;
-            float arenaR = em != null ? em.arenaRadius - 0.3f : float.MaxValue;
             var run = RunState.Current;
             Vector3 target = _player != null ? _player.position + Vector3.up * 0.8f : Vector3.zero;
             float magnet = config.magnetRadius * (_stats != null ? _stats.PickupRange : DevSettings.PickupRangeMul);
@@ -182,8 +180,7 @@ namespace Gladiator.Gameplay
                     v.y -= 20f * dt;
                     p += v * dt;
                     // never pop out of the arena (the fence line is solid for everything)
-                    float ax = p.x - arenaC.x, az = p.z - arenaC.z, a2 = ax * ax + az * az;
-                    if (a2 > arenaR * arenaR) { float k = arenaR / Mathf.Sqrt(a2); p.x = arenaC.x + ax * k; p.z = arenaC.z + az * k; v.x = 0f; v.z = 0f; }
+                    if (em != null && em.ClampInside(ref p, 0.3f)) { v.x = 0f; v.z = 0f; }
                     float ground = (height != null ? height.Sample(p.x, p.z) : 0f) + hoverHeight;
                     if (p.y < ground)
                     {

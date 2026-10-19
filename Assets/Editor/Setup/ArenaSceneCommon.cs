@@ -13,12 +13,13 @@ namespace Gladiator.EditorTools
     {
         const string Models = "Assets/Art/Models/";
 
-        public static void AddLook(Vector3 sunEuler)
+        public static void AddLook(Vector3 sunEuler, Vector2 fog = default)
         {
             var sun = SceneSetupUtil.DirectionalLight("Sun", sunEuler, new Color(1f, 0.94f, 0.82f), 1.3f);
             var look = new GameObject("EnvironmentLighting").AddComponent<EnvironmentLighting>();
             look.skybox = AssetDatabase.LoadAssetAtPath<Material>(LookSetup.SkyMat);
             look.sun = sun;
+            if (fog.y > fog.x && fog.x > 0f) { look.fogStart = fog.x; look.fogEnd = fog.y; }
             look.Apply();
             var vol = new GameObject("PostVolume").AddComponent<Volume>();
             vol.isGlobal = true;

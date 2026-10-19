@@ -109,7 +109,7 @@ namespace Gladiator.EditorTools
                 case "sfx_fight": { var b = new Buf(0.9f); Tone(b, 0, 0.9f, 220, 220, 0.6f, 0.005f, 0.35f, 2); Tone(b, 0, 0.9f, 330, 330, 0.5f, 0.005f, 0.35f, 2); Tone(b, 0, 0.9f, 440, 440, 0.4f, 0.005f, 0.35f, 2); Noise(b, 0, 0.3f, 0.6f, 0.002f, 0.1f, 0.3f, 0.05f, 40); return Finish(b, 0.8f); }
                 case "sfx_victory": { var b = new Buf(1.4f); float[] f = { 392f, 523.3f, 659.3f, 784f }; for (int k = 0; k < 4; k++) Tone(b, k * 0.12f, 1.4f - k * 0.12f, f[k], f[k], 0.45f, 0.005f, 0.45f, 2); return Finish(b, 0.75f); }
                 case "sfx_death": { var b = new Buf(1.2f); Tone(b, 0, 1.2f, 220, 110, 0.6f, 0.01f, 0.5f, 2); Tone(b, 0.15f, 1.05f, 207.7f, 98f, 0.5f, 0.01f, 0.5f, 2); return Finish(b, 0.7f); }
-                case "sfx_cheer": { var b = new Buf(2.0f); Noise(b, 0, 2f, 1f, 0.35f, 0.7f, 0.12f, 0.06f, 41); Noise(b, 0.05f, 1.9f, 0.5f, 0.3f, 0.6f, 0.35f, 0.2f, 42, true); return Finish(b, 0.7f); }
+                case "sfx_cheer": return CrowdSynth.Shot(CrowdSynth.Mood.Cheer, 2.6f, 303); // a burst of real-sounding shouts (playtest)
                 // Phase 5.1 (Favor): a gift whooshing out of the stands, its landing, the crowd booing a dull show
                 case "sfx_giftthrow": { var b = new Buf(0.6f); Noise(b, 0, 0.6f, 0.8f, 0.15f, 0.25f, 0.05f, 0.4f, 43, true); Tone(b, 0.05f, 0.5f, 420, 880, 0.25f, 0.05f, 0.2f); return Finish(b, 0.6f); }
                 case "sfx_giftland": { var b = new Buf(0.7f); Tone(b, 0, 0.2f, 110, 60, 0.8f, 0.002f, 0.07f); Noise(b, 0, 0.12f, 0.5f, 0.001f, 0.04f, 0.2f, 0.05f, 44); float[] f = { 1318.5f, 1568f, 2093f }; for (int k = 0; k < 3; k++) Tone(b, 0.08f + k * 0.06f, 0.45f, f[k], f[k], 0.25f, 0.002f, 0.15f, 1); return Finish(b, 0.6f); }
@@ -145,8 +145,11 @@ namespace Gladiator.EditorTools
                     return Finish(b, 0.65f);
                 }
                 case "sfx_bomb": { var b = new Buf(0.45f); Noise(b, 0, 0.45f, 0.9f, 0.002f, 0.14f, 0.35f, 0.03f, 66); Tone(b, 0, 0.35f, 150, 50, 0.9f, 0.002f, 0.1f); return Finish(b, 0.75f); }
-                case "sfx_boo": { var b = new Buf(1.6f); Noise(b, 0, 1.6f, 0.9f, 0.25f, 0.6f, 0.06f, 0.03f, 45); Tone(b, 0, 1.6f, 150, 120, 0.5f, 0.2f, 0.6f, 2, 0.03f); Tone(b, 0, 1.6f, 180, 140, 0.35f, 0.25f, 0.6f, 2, 0.04f); return Finish(b, 0.7f); }
-                case "amb_crowd": return CrowdLoop();
+                case "sfx_boo": return CrowdSynth.Shot(CrowdSynth.Mood.Boo, 1.9f, 404);
+                // the crowd (playtest fix: the old pulsed-noise loop sounded like a steam train): a talking murmur and an
+                // excited roar, crossfaded at runtime by CrowdExcitement
+                case "amb_crowd": return CrowdSynth.Loop(CrowdSynth.Mood.Murmur, 16f, 101);
+                case "amb_crowd_roar": return CrowdSynth.Loop(CrowdSynth.Mood.Roar, 12f, 202);
                 default: throw new ArgumentException("unknown sound " + name);
             }
         }
@@ -157,41 +160,14 @@ namespace Gladiator.EditorTools
             "sfx_player_hurt", "sfx_gem", "sfx_coin", "sfx_levelup", "sfx_card", "sfx_pick", "sfx_chest", "sfx_altar",
             "sfx_explosion", "sfx_slam", "sfx_spark", "sfx_fire_pot", "sfx_boss_roar", "sfx_horn", "sfx_gate",
             "sfx_announce", "sfx_fight", "sfx_victory", "sfx_death", "sfx_cheer", "sfx_giftthrow", "sfx_giftland", "sfx_boo", "sfx_cackle", "sfx_snare", "sfx_rattle", "sfx_bomb", "sfx_bloodrite", "sfx_splinter", "sfx_spikes",
-            "amb_crowd",
+            "amb_crowd", "amb_crowd_roar",
         };
 
-        /// <summary>A 4 s seamless murmur: low-passed noise with slow swells, crossfaded end into start.</summary>
-        static float[] CrowdLoop()
-        {
-            float len = 4f, xf = 0.5f;
-            var b = new Buf(len + xf);
-            var rng = new System.Random(77);
-            float y1 = 0f, y2 = 0f;
-            for (int i = 0; i < b.N; i++)
-            {
-                float t = b.T(i);
-                float x = (float)(rng.NextDouble() * 2.0 - 1.0);
-                y1 += 0.06f * (x - y1);   // body
-                y2 += 0.25f * (x - y2);   // chatter
-                float swell = 0.7f + 0.3f * Mathf.Sin(t * 2f * Mathf.PI * 0.5f) * Mathf.Sin(t * 2f * Mathf.PI * 0.37f + 1f);
-                float chatter = 0.5f + 0.5f * Mathf.Sin(t * 2f * Mathf.PI * 3.1f) * Mathf.Sin(t * 2f * Mathf.PI * 4.7f);
-                b.S[i] = (y1 * 1.4f + (y2 - y1) * 0.5f * chatter) * swell;
-            }
-            int n = (int)(len * Rate), x0 = (int)(xf * Rate);
-            var o = new Buf(len);
-            for (int i = 0; i < n; i++)
-            {
-                float v = b.S[i];
-                if (i < x0) { float k = i / (float)x0; v = v * k + b.S[n + i] * (1f - k); }
-                o.S[i] = v;
-            }
-            float peak = 1e-4f;
-            for (int i = 0; i < n; i++) peak = Mathf.Max(peak, Mathf.Abs(o.S[i]));
-            for (int i = 0; i < n; i++) o.S[i] = o.S[i] / peak * 0.6f;
-            return o.S;
-        }
+        /// <summary>The crowd sounds are stereo (voices spread across the stands); everything else is mono.</summary>
+        public static int Channels(string name) => name.StartsWith("amb_") || name == "sfx_cheer" || name == "sfx_boo" ? 2 : 1;
 
-        public static void WriteWav(string path, float[] samples)
+        /// <summary>16-bit PCM; stereo samples are interleaved L/R.</summary>
+        public static void WriteWav(string path, float[] samples, int channels = 1)
         {
             Directory.CreateDirectory(Path.GetDirectoryName(path));
             using (var w = new BinaryWriter(File.Create(path)))
@@ -200,7 +176,7 @@ namespace Gladiator.EditorTools
                 w.Write(new[] { (byte)'R', (byte)'I', (byte)'F', (byte)'F' });
                 w.Write(36 + bytes);
                 w.Write(new[] { (byte)'W', (byte)'A', (byte)'V', (byte)'E', (byte)'f', (byte)'m', (byte)'t', (byte)' ' });
-                w.Write(16); w.Write((short)1); w.Write((short)1); w.Write(Rate); w.Write(Rate * 2); w.Write((short)2); w.Write((short)16);
+                w.Write(16); w.Write((short)1); w.Write((short)channels); w.Write(Rate); w.Write(Rate * 2 * channels); w.Write((short)(2 * channels)); w.Write((short)16);
                 w.Write(new[] { (byte)'d', (byte)'a', (byte)'t', (byte)'a' });
                 w.Write(bytes);
                 foreach (var s in samples) w.Write((short)Mathf.RoundToInt(Mathf.Clamp(s, -1f, 1f) * 32767f));

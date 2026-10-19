@@ -356,6 +356,7 @@ MonoBehaviour:
     priority: 4
     crowdBus: 0
   crowdLoop: {fileID: 8300000, guid: 969b18638588b710c80f8caa8ca24694, type: 3}
+  crowdRoar: {fileID: 8300000, guid: 9d00fb7deb7d5d846bc2ce7b730946c9, type: 3}
   mixer: {fileID: 24100000, guid: 339af0a7a793a8dcf8f612d6f2e728e3, type: 2}
   sfxGroup: {fileID: 1347008738550868248, guid: 339af0a7a793a8dcf8f612d6f2e728e3, type: 2}
   crowdGroup: {fileID: -6020315501132435674, guid: 339af0a7a793a8dcf8f612d6f2e728e3, type: 2}
@@ -365,3 +366,9 @@ MonoBehaviour:
   maxPan: 0.6
   crowdQuiet: 0.18
   crowdLoud: 0.75
+  crowdMurmurFight: 0.3
+  crowdRoarFrom: 0.18
+  crowdCalmPitch: 0.88
+  crowdExcitedPitch: 0.06
+  crowdRise: 1.6
+  crowdFall: 0.35

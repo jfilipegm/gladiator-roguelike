@@ -23,9 +23,9 @@ namespace Gladiator.EditorTools
         [MenuItem("Gladiator/Setup/Audio/Generate Sounds + Bank")]
         public static SfxBank CreateOrUpdate()
         {
-            foreach (var n in SfxSynth.All) SfxSynth.WriteWav(SfxDir + n + ".wav", SfxSynth.Make(n));
+            foreach (var n in SfxSynth.All) SfxSynth.WriteWav(SfxDir + n + ".wav", SfxSynth.Make(n), SfxSynth.Channels(n));
             AssetDatabase.Refresh();
-            foreach (var n in SfxSynth.All) Configure(SfxDir + n + ".wav", n.StartsWith("amb_"));
+            foreach (var n in SfxSynth.All) Configure(SfxDir + n + ".wav", n.StartsWith("amb_"), SfxSynth.Channels(n) == 1);
 
             var bank = PlayerSetup.EnsureAsset<SfxBank>(BankPath);
             var mixer = MixerSetup.Ensure(MixerPath);
@@ -45,6 +45,7 @@ namespace Gladiator.EditorTools
             list.Sort((a, b) => a.id.CompareTo(b.id));
             bank.entries = list.ToArray();
             bank.crowdLoop = Clip("amb_crowd");
+            bank.crowdRoar = Clip("amb_crowd_roar");
             EditorUtility.SetDirty(bank);
             PlayerSetup.EnsureAsset<AnnouncerConfig>(AnnouncerPath);
             AssetDatabase.SaveAssets();
@@ -53,11 +54,11 @@ namespace Gladiator.EditorTools
 
         static AudioClip Clip(string file) => AssetDatabase.LoadAssetAtPath<AudioClip>(SfxDir + file + ".wav");
 
-        static void Configure(string path, bool loop)
+        static void Configure(string path, bool loop, bool mono)
         {
             var imp = AssetImporter.GetAtPath(path) as AudioImporter;
             if (imp == null) return;
-            imp.forceToMono = true;
+            imp.forceToMono = mono;
             imp.loadInBackground = false;
             var s = imp.defaultSampleSettings;
             s.loadType = loop ? AudioClipLoadType.CompressedInMemory : AudioClipLoadType.DecompressOnLoad;

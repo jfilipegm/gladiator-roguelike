@@ -42,6 +42,7 @@ namespace Gladiator.Gameplay
                 b.seed = CommandLine.GetInt("-seed", b.seed);
                 b.godMode = !CommandLine.Has("-mortal");
                 b.timeless = !CommandLine.Has("-timed");
+                b.traceEvery = CommandLine.GetFloat("-botTrace", 0f);
                 Object.DontDestroyOnLoad(go);
                 // -mix: the debug crowd spawns every enemy type from the catalog, with occasional elites
                 var admin = AdminController.Instance;

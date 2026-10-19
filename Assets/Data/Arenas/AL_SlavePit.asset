@@ -14,430 +14,1562 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.ArenaLayoutDef
   id: slave_pit
   displayName: The Slave Pit
+  tier: 0
+  spawnTable: {fileID: 0}
+  enemyHpMul: 1
+  playerDamageTakenMul: 1
   center: {x: 0, y: 0, z: 0}
-  radius: 20.4
-  playerSpawn: {x: 0, y: 0.1, z: -8}
+  radius: 41
+  aspect: 0.8292683
+  boundary:
+  - {x: 0, y: 36.3, z: -180, w: 6.8722343}
+  - {x: 5.5911565, y: 35.694603, z: -173.7391, w: 6.8543234}
+  - {x: 11.088324, y: 34.78337, z: -167.41286, w: 6.801539}
+  - {x: 16.268476, y: 32.902943, z: -160.95645, w: 6.7167163}
+  - {x: 21.260134, y: 30.851564, z: -154.30663, w: 6.604539}
+  - {x: 25.89121, y: 28.272858, z: -147.40356, w: 6.4714556}
+  - {x: 30.082596, y: 25.209671, z: -140.19443, w: 6.3255258}
+  - {x: 35.012814, y: 22.864607, z: -132.63864, w: 6.1761484}
+  - {x: 38.263657, y: 18.809835, z: -124.715004, w: 6.033623}
+  - {x: 40.86254, y: 14.417658, z: -116.42996, w: 5.908491}
+  - {x: 42.75848, y: 9.762708, z: -107.82462, w: 5.810647}
+  - {x: 43.912506, y: 4.927328, z: -98.97756, w: 5.7482867}
+  - {x: 43.1, y: -0.0000015875976, z: -90, w: 5.726862}
+  - {x: 42.72721, y: -4.74007, z: -81.02244, w: 5.7482867}
+  - {x: 41.616085, y: -9.395381, z: -72.17538, w: 5.810647}
+  - {x: 39.698418, y: -13.839023, z: -63.57004, w: 5.9084916}
+  - {x: 37.19506, y: -18.069496, z: -55.284992, w: 6.033623}
+  - {x: 34.277172, y: -22.187235, z: -47.361366, w: 6.1761484}
+  - {x: 30.338669, y: -25.516958, z: -39.805573, w: 6.3255258}
+  - {x: 26.106699, y: -28.609852, z: -32.59644, w: 6.4714556}
+  - {x: 21.476912, y: -31.302128, z: -25.693382, w: 6.604539}
+  - {x: 16.268478, y: -32.902943, z: -19.043549, w: 6.7167163}
+  - {x: 11.001158, y: -34.392982, z: -12.587153, w: 6.801539}
+  - {x: 5.5475388, y: -35.29699, z: -6.2609105, w: 6.8543224}
+  - {x: -0.000003839317, y: -37.3, z: 0.0000041741305, w: 6.8722343}
+  - {x: -5.732932, y: -36.98685, z: 6.2609076, w: 6.8543224}
+  - {x: -11.371628, y: -36.052124, z: 12.58715, w: 6.801539}
+  - {x: -16.823164, y: -34.509903, z: 19.043547, w: 6.7167163}
+  - {x: -21.997175, y: -32.38348, z: 25.693378, w: 6.604539}
+  - {x: -26.106697, y: -28.609854, z: 32.596436, w: 6.4714565}
+  - {x: -30.338667, y: -25.51696, z: 39.80557, w: 6.3255258}
+  - {x: -34.27717, y: -22.187237, z: 47.361362, w: 6.1761484}
+  - {x: -37.195065, y: -18.06949, z: 55.285004, w: 6.033623}
+  - {x: -39.698418, y: -13.839028, z: 63.570034, w: 5.9084916}
+  - {x: -41.616085, y: -9.395379, z: 72.175385, w: 5.810647}
+  - {x: -42.727207, y: -4.7400765, z: 81.02242, w: 5.7482867}
+  - {x: -43.1, y: 0.00000043311167, z: 90, w: 5.726862}
+  - {x: -42.72721, y: 4.74006, z: 98.97754, w: 5.7482867}
+  - {x: -41.140083, y: 9.242328, z: 107.82462, w: 5.8106465}
+  - {x: -39.340225, y: 13.660989, z: 116.42998, w: 5.9084916}
+  - {x: -36.86627, y: 17.841694, z: 124.715, w: 6.033623}
+  - {x: -33.76222, y: 21.713078, z: 132.63864, w: 6.1761484}
+  - {x: -31.170914, y: 26.515642, z: 140.19441, w: 6.3255253}
+  - {x: -26.80703, y: 29.705086, z: 147.40356, w: 6.4714565}
+  - {x: -21.997185, y: 32.38348, z: 154.30661, w: 6.604539}
+  - {x: -16.823164, y: 34.509907, z: 160.95645, w: 6.7167163}
+  - {x: -11.088334, y: 34.783367, z: 167.41284, w: 6.801539}
+  - {x: -5.5911574, y: 35.694603, z: 173.7391, w: 6.8543234}
+  fog: {x: 45, y: 230}
+  playerSpawn: {x: 0, y: 0.1, z: -12}
   playerYaw: 0
   maxAlive: 300
   sunEuler: {x: 36, y: -40, z: 0}
   boss: {fileID: 11400000, guid: a371ea03d5b6dfdc58859b5691e51df4, type: 2}
   bossGate: 0
   pieces:
-  - model: Environment/SM_PitFloor
+  - model: Environment/SM_PitYard
     role: 0
     position: {x: 0, y: 0, z: 0}
     yaw: 0
     scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_PitRim
+  - model: Environment/SM_PitSurrounds
     role: 3
     position: {x: 0, y: 0, z: 0}
     yaw: 0
     scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_PitWall_4m
+  - model: Environment/SM_YardPalisade
     role: 1
-    position: {x: 6.3862624, y: 0, z: 21.052689}
-    yaw: 196.875
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_Palisade_4m
-    role: 3
-    position: {x: 6.6039762, y: 2.35, z: 21.770393}
-    yaw: 196.875
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_PitWall_4m
+    position: {x: 5.514817, y: 0, z: 34.99878}
+    yaw: -173.7391
+    scale: {x: 1.1624931, y: 1, z: 1}
+  - model: Environment/SM_YardPalisade
     role: 1
-    position: {x: 10.3707285, y: 0, z: 19.402267}
-    yaw: 208.125
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_PitWall_4m
+    position: {x: 10.935777, y: 0, z: 34.100193}
+    yaw: -167.41286
+    scale: {x: 1.153541, y: 1, z: 1}
+  - model: Environment/SM_YardPlatformB
     role: 1
-    position: {x: 13.956654, y: 0, z: 17.00623}
-    yaw: 219.375
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_PitWall_4m
+    position: {x: 16.203218, y: 0, z: 32.71389}
+    yaw: -160.95645
+    scale: {x: 1.139155, y: 1, z: 1}
+  - model: Environment/SM_YardPlatform
     role: 1
-    position: {x: 17.00623, y: 0, z: 13.956652}
-    yaw: 230.625
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_Palisade_4m
-    role: 3
-    position: {x: 17.585987, y: 2.35, z: 14.432447}
-    yaw: 230.625
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_PitWall_4m
+    position: {x: 21.173422, y: 0, z: 30.671339}
+    yaw: -154.30663
+    scale: {x: 1.1201298, y: 1, z: 1}
+  - model: Environment/SM_YardPlatformB
     role: 1
-    position: {x: 19.402267, y: 0, z: 10.370727}
-    yaw: 241.875
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_PitWall_4m
+    position: {x: 25.783466, y: 0, z: 28.10436}
+    yaw: -147.40356
+    scale: {x: 1.0975589, y: 1, z: 1}
+  - model: Environment/SM_YardPlatform
     role: 1
-    position: {x: 21.052689, y: 0, z: 6.386262}
-    yaw: 253.125
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_PitWall_4m
+    position: {x: 29.954557, y: 0, z: 25.056026}
+    yaw: -140.19443
+    scale: {x: 1.0728091, y: 1, z: 1}
+  - model: Environment/SM_YardBerm
+    role: 0
+    position: {x: 33.32084, y: 0, z: 21.30665}
+    yaw: -132.63864
+    scale: {x: 1.0474747, y: 1, z: 1}
+  - model: Environment/SM_YardBerm
+    role: 0
+    position: {x: 36.37307, y: 0, z: 17.499998}
+    yaw: -124.715004
+    scale: {x: 1.0233024, y: 1, z: 1}
+  - model: Environment/SM_YardBerm
+    role: 0
+    position: {x: 38.80294, y: 0, z: 13.39392}
+    yaw: -116.42996
+    scale: {x: 1.00208, y: 1, z: 1}
+  - model: Environment/SM_YardBerm
+    role: 0
+    position: {x: 40.568886, y: 0, z: 9.058667}
+    yaw: -107.82462
+    scale: {x: 0.9854857, y: 1, z: 1}
+  - model: Environment/SM_YardBerm
+    role: 0
+    position: {x: 41.640682, y: 0, z: 4.5684185}
+    yaw: -98.97756
+    scale: {x: 0.9749094, y: 1, z: 1}
+  - model: Environment/SM_YardFence
     role: 1
-    position: {x: 21.894064, y: 0, z: 2.1563768}
-    yaw: 264.375
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_Palisade_4m
-    role: 3
-    position: {x: 22.640451, y: 2.35, z: 2.2298899}
-    yaw: 264.375
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_PitWall_4m
+    position: {x: 42.8, y: 0, z: -0.0000015718615}
+    yaw: -90
+    scale: {x: 0.97127575, y: 1, z: 1}
+  - model: Environment/SM_YardFence
     role: 1
-    position: {x: 21.894064, y: 0, z: -2.156379}
-    yaw: 275.625
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_PitWall_4m
+    position: {x: 42.430885, y: 0, z: -4.693256}
+    yaw: -81.02244
+    scale: {x: 0.9749094, y: 1, z: 1}
+  - model: Environment/SM_YardFence
     role: 1
-    position: {x: 21.052687, y: 0, z: -6.386264}
-    yaw: 286.875
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_PitWall_4m
+    position: {x: 41.330482, y: 0, z: -9.30355}
+    yaw: -72.17538
+    scale: {x: 0.9854857, y: 1, z: 1}
+  - model: Environment/SM_YardPalisade
     role: 1
-    position: {x: 19.402267, y: 0, z: -10.37073}
-    yaw: 298.125
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_Palisade_4m
-    role: 3
-    position: {x: 20.063707, y: 2.35, z: -10.7242775}
-    yaw: 298.125
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_PitWall_4m
+    position: {x: 39.071583, y: 0, z: -13.52745}
+    yaw: -63.57004
+    scale: {x: 1.0020801, y: 1, z: 1}
+  - model: Environment/SM_YardPalisade
     role: 1
-    position: {x: 17.006231, y: 0, z: -13.956652}
-    yaw: 309.375
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_PitWall_4m
+    position: {x: 36.619663, y: 0, z: -17.67085}
+    yaw: -55.284992
+    scale: {x: 1.0233024, y: 1, z: 1}
+  - model: Environment/SM_YardPalisade
     role: 1
-    position: {x: 13.956652, y: 0, z: -17.006231}
-    yaw: 320.625
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_PitWall_4m
+    position: {x: 29.89054, y: 0, z: -24.979204}
+    yaw: -39.805573
+    scale: {x: 1.0728091, y: 1, z: 1}
+  - model: Environment/SM_YardPalisade
     role: 1
-    position: {x: 10.370726, y: 0, z: -19.40227}
-    yaw: 331.875
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_Palisade_4m
-    role: 3
-    position: {x: 10.724274, y: 2.35, z: -20.063711}
-    yaw: 331.875
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_PitWall_4m
+    position: {x: 25.729595, y: 0, z: -28.020113}
+    yaw: -32.59644
+    scale: {x: 1.0975589, y: 1, z: 1}
+  - model: Environment/SM_YardFence
     role: 1
-    position: {x: 6.386264, y: 0, z: -21.052689}
-    yaw: 343.125
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_PitWall_4m
+    position: {x: 21.346846, y: 0, z: -31.03179}
+    yaw: -25.693382
+    scale: {x: 1.1201298, y: 1, z: 1}
+  - model: Environment/SM_YardPlatformB
     role: 1
-    position: {x: 2.1563761, y: 0, z: -21.894064}
-    yaw: 354.375
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_PitWall_4m
+    position: {x: 16.20322, y: 0, z: -32.71389}
+    yaw: -19.043549
+    scale: {x: 1.139155, y: 1, z: 1}
+  - model: Environment/SM_YardPlatform
     role: 1
-    position: {x: -2.15638, y: 0, z: -21.894064}
-    yaw: 365.625
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_Palisade_4m
-    role: 3
-    position: {x: -2.2298927, y: 2.35, z: -22.640451}
-    yaw: 365.625
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_PitWall_4m
+    position: {x: 10.957573, y: 0, z: -34.19779}
+    yaw: -12.587153
+    scale: {x: 1.153541, y: 1, z: 1}
+  - model: Environment/SM_YardPlatformB
     role: 1
-    position: {x: -6.386267, y: 0, z: -21.052687}
-    yaw: 376.875
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_PitWall_4m
+    position: {x: 5.5257277, y: 0, z: -35.098183}
+    yaw: -6.2609105
+    scale: {x: 1.162493, y: 1, z: 1}
+  - model: Environment/SM_YardBerm
+    role: 0
+    position: {x: -0.0000036717565, y: 0, z: -35}
+    yaw: 0.0000041741305
+    scale: {x: 1.1655309, y: 1, z: 1}
+  - model: Environment/SM_YardBerm
+    role: 0
+    position: {x: -5.482103, y: 0, z: -34.70057}
+    yaw: 6.2609076
+    scale: {x: 1.162493, y: 1, z: 1}
+  - model: Environment/SM_YardBerm
+    role: 0
+    position: {x: -10.870401, y: 0, z: -33.807404}
+    yaw: 12.58715
+    scale: {x: 1.153541, y: 1, z: 1}
+  - model: Environment/SM_YardBerm
+    role: 0
+    position: {x: -16.072704, y: 0, z: -32.33578}
+    yaw: 19.043547
+    scale: {x: 1.139155, y: 1, z: 1}
+  - model: Environment/SM_YardBerm
+    role: 0
+    position: {x: -20.999998, y: 0, z: -30.310888}
+    yaw: 25.693378
+    scale: {x: 1.1201298, y: 1, z: 1}
+  - model: Environment/SM_YardPalisade
     role: 1
-    position: {x: -10.370729, y: 0, z: -19.402267}
-    yaw: 388.125
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_PitWall_4m
+    position: {x: -25.729593, y: 0, z: -28.020115}
+    yaw: 32.596436
+    scale: {x: 1.097559, y: 1, z: 1}
+  - model: Environment/SM_YardPalisade
     role: 1
-    position: {x: -17.00623, y: 0, z: -13.956654}
-    yaw: 410.625
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_PitWall_4m
+    position: {x: -29.890537, y: 0, z: -24.979206}
+    yaw: 39.80557
+    scale: {x: 1.0728091, y: 1, z: 1}
+  - model: Environment/SM_YardPalisade
     role: 1
-    position: {x: -19.402267, y: 0, z: -10.370728}
-    yaw: 421.875
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_PitWall_4m
+    position: {x: -36.619667, y: 0, z: -17.670845}
+    yaw: 55.285004
+    scale: {x: 1.0233024, y: 1, z: 1}
+  - model: Environment/SM_YardPalisade
     role: 1
-    position: {x: -21.052689, y: 0, z: -6.38626}
-    yaw: 433.125
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_Palisade_4m
-    role: 3
-    position: {x: -21.770393, y: 2.35, z: -6.6039734}
-    yaw: 433.125
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_PitWall_4m
+    position: {x: -39.071583, y: 0, z: -13.527456}
+    yaw: 63.570034
+    scale: {x: 1.0020801, y: 1, z: 1}
+  - model: Environment/SM_YardFence
     role: 1
-    position: {x: -21.894064, y: 0, z: -2.1563725}
-    yaw: 444.375
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_PitWall_4m
+    position: {x: -41.330482, y: 0, z: -9.303548}
+    yaw: 72.175385
+    scale: {x: 0.9854857, y: 1, z: 1}
+  - model: Environment/SM_YardFence
     role: 1
-    position: {x: -21.894064, y: 0, z: 2.1563835}
-    yaw: 455.62503
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_PitWall_4m
+    position: {x: -42.43088, y: 0, z: -4.693262}
+    yaw: 81.02242
+    scale: {x: 0.9749094, y: 1, z: 1}
+  - model: Environment/SM_YardFence
     role: 1
-    position: {x: -21.052685, y: 0, z: 6.3862705}
-    yaw: 466.87503
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_Palisade_4m
-    role: 3
-    position: {x: -21.77039, y: 2.35, z: 6.6039844}
-    yaw: 466.87503
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_PitWall_4m
+    position: {x: -42.8, y: 0, z: 0.0000004288187}
+    yaw: 90
+    scale: {x: 0.97127575, y: 1, z: 1}
+  - model: Environment/SM_YardFence
     role: 1
-    position: {x: -19.402267, y: 0, z: 10.370728}
-    yaw: 478.125
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_PitWall_4m
+    position: {x: -42.430885, y: 0, z: 4.693246}
+    yaw: 98.97754
+    scale: {x: 0.9749094, y: 1, z: 1}
+  - model: Environment/SM_YardPlatform
     role: 1
-    position: {x: -17.00623, y: 0, z: 13.956654}
-    yaw: 489.375
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_PitWall_4m
+    position: {x: -40.949684, y: 0, z: 9.1811075}
+    yaw: 107.82462
+    scale: {x: 0.98548555, y: 1, z: 1}
+  - model: Environment/SM_YardPlatformB
     role: 1
-    position: {x: -13.95665, y: 0, z: 17.006231}
-    yaw: 500.625
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_Palisade_4m
-    role: 3
-    position: {x: -14.432445, y: 2.35, z: 17.58599}
-    yaw: 500.625
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_PitWall_4m
+    position: {x: -39.16113, y: 0, z: 13.571968}
+    yaw: 116.42998
+    scale: {x: 1.0020801, y: 1, z: 1}
+  - model: Environment/SM_YardPlatform
     role: 1
-    position: {x: -10.370724, y: 0, z: 19.40227}
-    yaw: 511.87503
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_PitWall_4m
+    position: {x: -36.701866, y: 0, z: 17.727795}
+    yaw: 124.715
+    scale: {x: 1.0233024, y: 1, z: 1}
+  - model: Environment/SM_YardPlatformB
     role: 1
-    position: {x: -6.3862567, y: 0, z: 21.052689}
-    yaw: 523.125
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_PitWall_4m
+    position: {x: -33.61509, y: 0, z: 21.577602}
+    yaw: 132.63864
+    scale: {x: 1.0474747, y: 1, z: 1}
+  - model: Environment/SM_YardBerm
+    role: 0
+    position: {x: -29.69849, y: 0, z: 24.748734}
+    yaw: 140.19441
+    scale: {x: 1.072809, y: 1, z: 1}
+  - model: Environment/SM_YardBerm
+    role: 0
+    position: {x: -25.567978, y: 0, z: 27.767368}
+    yaw: 147.40356
+    scale: {x: 1.097559, y: 1, z: 1}
+  - model: Environment/SM_YardBerm
+    role: 0
+    position: {x: -21.000008, y: 0, z: 30.310886}
+    yaw: 154.30661
+    scale: {x: 1.1201298, y: 1, z: 1}
+  - model: Environment/SM_YardBerm
+    role: 0
+    position: {x: -16.072704, y: 0, z: 32.335785}
+    yaw: 160.95645
+    scale: {x: 1.139155, y: 1, z: 1}
+  - model: Environment/SM_YardPalisade
     role: 1
-    position: {x: -2.156369, y: 0, z: 21.894066}
-    yaw: 534.375
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_Palisade_4m
-    role: 3
-    position: {x: -2.2298815, y: 2.35, z: 22.640453}
-    yaw: 534.375
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_Stand_4m
-    role: 3
-    position: {x: 14.568842, y: 2.4, z: 20.806461}
-    yaw: 215
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_Stand_4m
-    role: 3
-    position: {x: 25.014116, y: 2.4, z: 4.410665}
-    yaw: 260
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_Stand_4m
-    role: 3
-    position: {x: 19.45753, y: 2.4, z: -16.326805}
-    yaw: 310
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_Stand_4m
-    role: 3
-    position: {x: 6.574006, y: 2.4, z: -24.534515}
-    yaw: 345
-    scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_Stand_4m
-    role: 3
-    position: {x: -23.868193, y: 2.4, z: 8.68731}
-    yaw: 470
-    scale: {x: 1, y: 1, z: 1}
+    position: {x: -10.935787, y: 0, z: 34.10019}
+    yaw: 167.41284
+    scale: {x: 1.153541, y: 1, z: 1}
+  - model: Environment/SM_YardPalisade
+    role: 1
+    position: {x: -5.514818, y: 0, z: 34.99878}
+    yaw: 173.7391
+    scale: {x: 1.1624931, y: 1, z: 1}
   - model: Environment/SM_Terrace_A
     role: 0
-    position: {x: -12.5, y: 0, z: 6}
+    position: {x: -22, y: 0, z: 16}
     yaw: 20
     scale: {x: 1, y: 1, z: 1}
   - model: Environment/SM_DirtRamp
     role: 0
-    position: {x: -5.828729, y: 0, z: 2.7977898}
-    yaw: 115.64101
+    position: {x: -16.015352, y: 0, z: 11.64753}
+    yaw: 126.027374
     scale: {x: 1, y: 1, z: 1}
   - model: Environment/SM_Terrace_A
     role: 0
-    position: {x: 12.5, y: 0, z: -7}
+    position: {x: 12, y: 0, z: 25}
+    yaw: 150
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_DirtRamp
+    role: 0
+    position: {x: 8.79779, y: 0, z: 18.328728}
+    yaw: -154.359
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_Terrace_A
+    role: 0
+    position: {x: 20, y: 0, z: -18}
     yaw: -30
     scale: {x: 1, y: 1, z: 1}
   - model: Environment/SM_DirtRamp
     role: 0
-    position: {x: 6.0434546, y: 0, z: -3.3843346}
-    yaw: -60.75117
+    position: {x: 14.499622, y: 0, z: -13.049662}
+    yaw: -48.012787
     scale: {x: 1, y: 1, z: 1}
   - model: Environment/SM_Terrace_A
     role: 0
-    position: {x: -4, y: 0, z: -15.5}
-    yaw: 75
+    position: {x: -30, y: 0, z: -14}
+    yaw: 40
     scale: {x: 1, y: 1, z: 1}
   - model: Environment/SM_DirtRamp
     role: 0
-    position: {x: -2.1509027, y: 0, z: -8.334747}
-    yaw: 14.470294
+    position: {x: -23.294245, y: 0, z: -10.870647}
+    yaw: 64.98311
     scale: {x: 1, y: 1, z: 1}
   - model: Environment/SM_Mound_A
     role: 0
-    position: {x: -2.5, y: 0, z: 5}
+    position: {x: -8, y: 0, z: 12}
     yaw: 15
     scale: {x: 1, y: 1, z: 1}
   - model: Environment/SM_Mound_B
     role: 0
-    position: {x: 7.5, y: 0, z: 8.5}
+    position: {x: 9, y: 0, z: -6}
     yaw: 40
     scale: {x: 1, y: 1, z: 1}
   - model: Environment/SM_Mound_A
     role: 0
-    position: {x: 9, y: 0, z: -14.5}
+    position: {x: -12, y: 0, z: 2}
     yaw: 70
     scale: {x: 1.2, y: 0.7, z: 1.2}
-  - model: Environment/PR_Cage
-    role: 2
-    position: {x: -17.5, y: 0, z: -3}
-    yaw: 25
+  - model: Environment/SM_Mound_B
+    role: 0
+    position: {x: 4, y: 0, z: -28}
+    yaw: 120
+    scale: {x: 0.9, y: 0.8, z: 0.9}
+  - model: Environment/PR_SparringRing
+    role: 3
+    position: {x: 0, y: 0, z: 4}
+    yaw: 0
     scale: {x: 1, y: 1, z: 1}
-  - model: Environment/PR_Cage
+  - model: Environment/PR_LogBench
     role: 2
-    position: {x: 17, y: 0, z: 4}
+    position: {x: 5.5, y: 0, z: 9.5}
+    yaw: 30
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/PR_TrainingPost
+    role: 2
+    position: {x: 13.5, y: 0, z: 11}
+    yaw: 10
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/PR_TrainingPost
+    role: 2
+    position: {x: 17, y: 0, z: 10}
     yaw: -15
     scale: {x: 1, y: 1, z: 1}
+  - model: Environment/PR_TrainingPost
+    role: 2
+    position: {x: 20.5, y: 0, z: 12}
+    yaw: 25
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/PR_StrawDummy
+    role: 2
+    position: {x: 15, y: 0, z: 16}
+    yaw: 200
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/PR_StrawDummy
+    role: 2
+    position: {x: 19.5, y: 0, z: 17}
+    yaw: 220
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/PR_WeaponRack
+    role: 2
+    position: {x: 23.5, y: 0, z: 19.5}
+    yaw: 220
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/PR_LogBench
+    role: 2
+    position: {x: 11, y: 0, z: 16.5}
+    yaw: 70
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/PR_TrainingPost
+    role: 2
+    position: {x: -20, y: 0, z: -8}
+    yaw: 0
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/PR_StrawDummy
+    role: 2
+    position: {x: -23.5, y: 0, z: -5.5}
+    yaw: 120
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/PR_StrawDummy
+    role: 2
+    position: {x: -17, y: 0, z: -11}
+    yaw: 300
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/PR_Trough
+    role: 2
+    position: {x: 31, y: 0, z: 3}
+    yaw: 80
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/PR_Wheelbarrow
+    role: 2
+    position: {x: 27.5, y: 0, z: -2}
+    yaw: 30
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/PR_HayBales
+    role: 2
+    position: {x: 33, y: 0, z: -4.5}
+    yaw: 100
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/PR_Sacks
+    role: 2
+    position: {x: 30, y: 0, z: 8}
+    yaw: 10
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/PR_Barrel
+    role: 2
+    position: {x: 33.5, y: 0, z: 6.5}
+    yaw: 0
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/PR_ChoppingBlock
+    role: 2
+    position: {x: -30, y: 0, z: 6}
+    yaw: 20
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/PR_Shed
+    role: 1
+    position: {x: -40.004345, y: 0, z: -2.282604}
+    yaw: 85.20342
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/PR_Wheelbarrow
+    role: 2
+    position: {x: -33, y: 0, z: 1}
+    yaw: 140
+    scale: {x: 1, y: 1, z: 1}
   - model: Environment/PR_Cage
     role: 2
-    position: {x: -8, y: 0, z: 17.5}
-    yaw: 60
+    position: {x: 12.037836, y: 0, z: -29.812103}
+    yaw: -0.15049839
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/PR_Cage
+    role: 2
+    position: {x: 2.0497663, y: 0, z: -31.555271}
+    yaw: -12.500702
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/PR_Cage
+    role: 2
+    position: {x: -10.740087, y: 0, z: -30.142735}
+    yaw: 18.439075
     scale: {x: 1, y: 1, z: 1}
   - model: Environment/PR_ChainPost
     role: 2
-    position: {x: 5, y: 0, z: 17.5}
+    position: {x: 6, y: 0, z: -24}
     yaw: 120
     scale: {x: 1, y: 1, z: 1}
   - model: Environment/PR_ChainPost
     role: 2
-    position: {x: -16.5, y: 0, z: -10}
+    position: {x: -7, y: 0, z: -23}
     yaw: 30
     scale: {x: 1, y: 1, z: 1}
   - model: Environment/PR_ChainPost
     role: 2
-    position: {x: 15, y: 0, z: 12}
+    position: {x: -28, y: 0, z: -20}
     yaw: 210
     scale: {x: 1, y: 1, z: 1}
   - model: Environment/PR_ChainPost
     role: 2
-    position: {x: 1.5, y: 0, z: -19}
+    position: {x: 26, y: 0, z: 22}
     yaw: 0
     scale: {x: 1, y: 1, z: 1}
   - model: Environment/PR_Crate
     role: 2
-    position: {x: 3.2, y: 0, z: 19.2}
+    position: {x: 6.8280134, y: 0, z: 31.302265}
     yaw: 12
     scale: {x: 1, y: 1, z: 1}
   - model: Environment/PR_Crate
     role: 2
-    position: {x: -12.8, y: 0, z: -14.6}
+    position: {x: 33.405388, y: 0, z: -16.15479}
     yaw: -20
     scale: {x: 1, y: 1, z: 1}
   - model: Environment/PR_Barrel
     role: 2
-    position: {x: -11.7, y: 0, z: -15.8}
+    position: {x: 35.33282, y: 0, z: -13.928643}
+    yaw: 0
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/PR_Crate
+    role: 2
+    position: {x: -33.742687, y: 0, z: -15.677613}
+    yaw: 35
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/PR_Barrel
+    role: 2
+    position: {x: -35.795998, y: 0, z: -13.522013}
+    yaw: 0
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/PR_Sacks
+    role: 2
+    position: {x: -4.1284447, y: 0, z: 31.819708}
+    yaw: 60
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/PR_Brazier
+    role: 2
+    position: {x: 20.778662, y: 0, z: 26.843431}
     yaw: 0
     scale: {x: 1, y: 1, z: 1}
   - model: Environment/PR_Brazier
     role: 2
-    position: {x: -2.6, y: 0, z: 19.6}
+    position: {x: 38.23124, y: 0, z: -5.4152575}
     yaw: 0
     scale: {x: 1, y: 1, z: 1}
   - model: Environment/PR_Brazier
     role: 2
-    position: {x: -14.8, y: 0, z: -11.2}
+    position: {x: -17.816938, y: 0, z: -28.23975}
     yaw: 0
     scale: {x: 1, y: 1, z: 1}
+  - model: Environment/PR_Brazier
+    role: 2
+    position: {x: -33.742687, y: 0, z: 15.677613}
+    yaw: 0
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_Hut
+    role: 3
+    position: {x: -23.54523, y: -0.02964488, z: -46.634354}
+    yaw: 348.5
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_Hut
+    role: 3
+    position: {x: -36.185787, y: 0.3256137, z: -49.399456}
+    yaw: 365.5
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_Hut
+    role: 3
+    position: {x: -18.084284, y: 0.2792728, z: -60.87745}
+    yaw: 333.2
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_Hut
+    role: 3
+    position: {x: -37.10607, y: -0.021793818, z: -38.00813}
+    yaw: 377.40002
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_Hut
+    role: 3
+    position: {x: -35.740868, y: 1.3020543, z: -60.94921}
+    yaw: 357
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_Hut
+    role: 3
+    position: {x: -9.910031, y: -0.04460358, z: -52.27704}
+    yaw: 323
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_Longhouse
+    role: 3
+    position: {x: 22.115238, y: 0.0039528906, z: 51.405937}
+    yaw: 200
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_Longhouse
+    role: 3
+    position: {x: -22.753418, y: 0.16108826, z: 53.301384}
+    yaw: 160
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_Tent
+    role: 3
+    position: {x: 31.145966, y: -0.012624685, z: -40.762318}
+    yaw: 333.5
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_Tent
+    role: 3
+    position: {x: 27.819908, y: 0.015800599, z: -49.18857}
+    yaw: 349.6
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_Tent
+    role: 3
+    position: {x: 18.138115, y: -0.0030779243, z: -45.329597}
+    yaw: 368
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_Tent
+    role: 3
+    position: {x: 41.307278, y: 0.089707285, z: -43.607224}
+    yaw: 317.4
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_Tent
+    role: 3
+    position: {x: 12.04618, y: -0.022272611, z: -52.94394}
+    yaw: 386.4
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_Watchtower
+    role: 3
+    position: {x: 6.5432043, y: 0.021529239, z: 40.618652}
+    yaw: 180
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_Watchtower
+    role: 3
+    position: {x: 42.12703, y: 0.007745065, z: -21.486465}
+    yaw: 300
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_Watchtower
+    role: 3
+    position: {x: -44.173595, y: 0.025342483, z: -18.209856}
+    yaw: 60
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_Cart
+    role: 3
+    position: {x: 4.674981, y: 0.2593024, z: 64.86394}
+    yaw: 175
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_Cart
+    role: 3
+    position: {x: -54.310276, y: 0.13618578, z: -36.80107}
+    yaw: 40
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_Cart
+    role: 3
+    position: {x: 54.723133, y: 0.7305895, z: -45.202866}
+    yaw: 300
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_Rock
+    role: 3
+    position: {x: -21.2848, y: 1.3974783, z: 69.21488}
+    yaw: 305.64572
+    scale: {x: 2.1586092, y: 2.1586092, z: 2.1586092}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -38.685593, y: 4.2515116, z: -90.67627}
+    yaw: 264.7063
+    scale: {x: 0.91500926, y: 0.91500926, z: 0.91500926}
+  - model: Environment/SM_TreeOak
+    role: 3
+    position: {x: -51.56461, y: 0.025977958, z: 3.3967814}
+    yaw: 335.61285
+    scale: {x: 0.802644, y: 0.802644, z: 0.802644}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 51.78855, y: 0.025145259, z: 1.0629586}
+    yaw: 33.767437
+    scale: {x: 1.2076081, y: 1.2076081, z: 1.2076081}
+  - model: Environment/SM_TreeOak
+    role: 3
+    position: {x: -93.330574, y: 2.6871836, z: 41.079975}
+    yaw: 39.026886
+    scale: {x: 1.1088586, y: 1.1088586, z: 1.1088586}
+  - model: Environment/SM_TreeOak
+    role: 3
+    position: {x: 93.66821, y: 2.567834, z: 50.881523}
+    yaw: 238.85376
+    scale: {x: 1.0671016, y: 1.0671016, z: 1.0671016}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -49.789433, y: 0.029678714, z: -10.568991}
+    yaw: 102.4216
+    scale: {x: 0.8268642, y: 0.8268642, z: 0.8268642}
+  - model: Environment/SM_TreeOak
+    role: 3
+    position: {x: 110.00362, y: 6.8786044, z: -57.057518}
+    yaw: 134.49783
+    scale: {x: 0.9525926, y: 0.9525926, z: 0.9525926}
+  - model: Environment/SM_Rock
+    role: 3
+    position: {x: 53.539604, y: -0.0110841915, z: 14.108833}
+    yaw: 6.555036
+    scale: {x: 1.5906136, y: 1.5906136, z: 1.5906136}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 36.083214, y: 1.7539878, z: -75.22832}
+    yaw: 150.06953
+    scale: {x: 1.1640962, y: 1.1640962, z: 1.1640962}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -54.245575, y: 0.002336558, z: -3.784421}
+    yaw: 113.557144
+    scale: {x: 0.9531922, y: 0.9531922, z: 0.9531922}
+  - model: Environment/SM_TreeOak
+    role: 3
+    position: {x: -49.54252, y: 0.014521766, z: -16.279907}
+    yaw: 219.15268
+    scale: {x: 1.2825986, y: 1.2825986, z: 1.2825986}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -101.63863, y: 5.492077, z: 81.487885}
+    yaw: 319.24594
+    scale: {x: 0.9412155, y: 0.9412155, z: 0.9412155}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -83.84416, y: 3.8238652, z: -52.989998}
+    yaw: 37.635727
+    scale: {x: 0.9149252, y: 0.9149252, z: 0.9149252}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -95.74576, y: 3.5973797, z: 64.47761}
+    yaw: 122.76883
+    scale: {x: 0.91791636, y: 0.91791636, z: 0.91791636}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -47.735622, y: 0.018645745, z: -18.91691}
+    yaw: 42.520138
+    scale: {x: 1.0976384, y: 1.0976384, z: 1.0976384}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -32.66345, y: -0.039747484, z: 43.443127}
+    yaw: 129.56769
+    scale: {x: 0.90411294, y: 0.90411294, z: 0.90411294}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -88.59783, y: 8.766823, z: -88.84854}
+    yaw: 350.72766
+    scale: {x: 1.1778172, y: 1.1778172, z: 1.1778172}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -70.53665, y: 0.7903133, z: -41.495884}
+    yaw: 260.8345
+    scale: {x: 0.9042967, y: 0.9042967, z: 0.9042967}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 44.74429, y: 0.030422162, z: -21.39319}
+    yaw: 16.775387
+    scale: {x: 0.84537596, y: 0.84537596, z: 0.84537596}
+  - model: Environment/SM_Rock
+    role: 3
+    position: {x: -35.73931, y: 5.8701553, z: -130.22978}
+    yaw: 223.78629
+    scale: {x: 1.8054842, y: 1.8054842, z: 1.8054842}
+  - model: Environment/SM_Bush
+    role: 3
+    position: {x: 66.44486, y: 3.098821, z: -72.42957}
+    yaw: 7.784807
+    scale: {x: 0.9511027, y: 0.9511027, z: 0.9511027}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -89.264595, y: 1.1944709, z: -3.0941396}
+    yaw: 329.9
+    scale: {x: 1.0580561, y: 1.0580561, z: 1.0580561}
+  - model: Environment/SM_TreeOak
+    role: 3
+    position: {x: -57.62187, y: 2.9619136, z: 70.0636}
+    yaw: 279.94202
+    scale: {x: 0.8090671, y: 0.8090671, z: 0.8090671}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 61.58191, y: 0.1033207, z: 9.625115}
+    yaw: 27.30161
+    scale: {x: 1.0874515, y: 1.0874515, z: 1.0874515}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -49.29854, y: 0.030197475, z: -11.93227}
+    yaw: 298.50647
+    scale: {x: 0.8423044, y: 0.8423044, z: 0.8423044}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -34.82859, y: 0.12807274, z: 47.97415}
+    yaw: 178.50024
+    scale: {x: 1.2430847, y: 1.2430847, z: 1.2430847}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 56.38436, y: 0.06866649, z: 27.078981}
+    yaw: 346.08704
+    scale: {x: 1.2190317, y: 1.2190317, z: 1.2190317}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 13.403599, y: 2.8946168, z: 81.04972}
+    yaw: 66.777596
+    scale: {x: 1.2925843, y: 1.2925843, z: 1.2925843}
+  - model: Environment/SM_TreeOak
+    role: 3
+    position: {x: -45.202377, y: 1.9473832, z: 66.2159}
+    yaw: 48.909786
+    scale: {x: 1.0034239, y: 1.0034239, z: 1.0034239}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -41.833046, y: 0.078128874, z: 41.60347}
+    yaw: 72.313866
+    scale: {x: 1.1298351, y: 1.1298351, z: 1.1298351}
+  - model: Environment/SM_Rock
+    role: 3
+    position: {x: -86.73106, y: 1.7873498, z: 12.450922}
+    yaw: 247.94415
+    scale: {x: 0.9414226, y: 0.9414226, z: 0.9414226}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -45.18429, y: 4.639366, z: -85.127426}
+    yaw: 88.756355
+    scale: {x: 0.8400295, y: 0.8400295, z: 0.8400295}
+  - model: Environment/SM_TreeOak
+    role: 3
+    position: {x: -37.511517, y: 0.025467295, z: 30.743164}
+    yaw: 106.1038
+    scale: {x: 0.85883486, y: 0.85883486, z: 0.85883486}
+  - model: Environment/SM_TreeOak
+    role: 3
+    position: {x: 12.388517, y: 1.0088, z: -85.1397}
+    yaw: 298.45078
+    scale: {x: 1.2999128, y: 1.2999128, z: 1.2999128}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -89.02055, y: 1.2152375, z: 0.107287645}
+    yaw: 232.81735
+    scale: {x: 0.9484734, y: 0.9484734, z: 0.9484734}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -62.51235, y: 0.032206696, z: 3.9337654}
+    yaw: 318.29492
+    scale: {x: 0.94267374, y: 0.94267374, z: 0.94267374}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 2.1113842, y: 1.4278142, z: -109.0282}
+    yaw: 126.45453
+    scale: {x: 1.0035287, y: 1.0035287, z: 1.0035287}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 28.662437, y: 1.1606224, z: -73.10733}
+    yaw: 150.49847
+    scale: {x: 0.9503186, y: 0.9503186, z: 0.9503186}
+  - model: Environment/SM_TreeOak
+    role: 3
+    position: {x: -35.50623, y: -0.018285554, z: 43.24537}
+    yaw: 115.319626
+    scale: {x: 0.82741624, y: 0.82741624, z: 0.82741624}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 52.132744, y: -0.028941268, z: 27.097166}
+    yaw: 84.695
+    scale: {x: 0.91001517, y: 0.91001517, z: 0.91001517}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 53.365757, y: -0.03590864, z: 21.621496}
+    yaw: 271.59354
+    scale: {x: 0.85367537, y: 0.85367537, z: 0.85367537}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 62.094112, y: 0.06743054, z: -4.3953}
+    yaw: 219.29451
+    scale: {x: 1.2899191, y: 1.2899191, z: 1.2899191}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 10.854477, y: 0.61020494, z: -77.38655}
+    yaw: 358.67148
+    scale: {x: 1.2425308, y: 1.2425308, z: 1.2425308}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 75.20924, y: 1.2626104, z: 10.113777}
+    yaw: 71.76914
+    scale: {x: 0.9180514, y: 0.9180514, z: 0.9180514}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 11.722376, y: 0.3129228, z: -66.60771}
+    yaw: 122.355415
+    scale: {x: 0.935768, y: 0.935768, z: 0.935768}
+  - model: Environment/SM_TreeOak
+    role: 3
+    position: {x: -42.838215, y: 3.2765412, z: -72.80139}
+    yaw: 285.8295
+    scale: {x: 1.0282212, y: 1.0282212, z: 1.0282212}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -120.2378, y: 2.9283369, z: -18.311867}
+    yaw: 120.58871
+    scale: {x: 0.8641604, y: 0.8641604, z: 0.8641604}
+  - model: Environment/SM_TreeOak
+    role: 3
+    position: {x: 109.28017, y: 5.8571825, z: 8.047898}
+    yaw: 313.64923
+    scale: {x: 0.8054188, y: 0.8054188, z: 0.8054188}
+  - model: Environment/SM_Bush
+    role: 3
+    position: {x: -125.63237, y: 3.0787761, z: -3.0744667}
+    yaw: 356.15726
+    scale: {x: 1.1473209, y: 1.1473209, z: 1.1473209}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 64.41926, y: 0.1982825, z: -1.1250336}
+    yaw: 241.90335
+    scale: {x: 1.0186439, y: 1.0186439, z: 1.0186439}
+  - model: Environment/SM_TreeOak
+    role: 3
+    position: {x: -49.948574, y: -0.00012041256, z: 19.330143}
+    yaw: 280.67776
+    scale: {x: 1.072694, y: 1.072694, z: 1.072694}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 39.810844, y: 0.61723536, z: -57.907646}
+    yaw: 57.249516
+    scale: {x: 0.80820745, y: 0.80820745, z: 0.80820745}
+  - model: Environment/SM_TreeOak
+    role: 3
+    position: {x: -76.47742, y: 1.3234884, z: 28.877102}
+    yaw: 10.842173
+    scale: {x: 0.844368, y: 0.844368, z: 0.844368}
+  - model: Environment/SM_Rock
+    role: 3
+    position: {x: -76.28256, y: 1.295282, z: 27.541447}
+    yaw: 248.7719
+    scale: {x: 0.98103184, y: 0.98103184, z: 0.98103184}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 8.913597, y: 1.0832211, z: -90.63263}
+    yaw: 299.4272
+    scale: {x: 0.8748399, y: 0.8748399, z: 0.8748399}
+  - model: Environment/SM_TreeOak
+    role: 3
+    position: {x: 108.02168, y: 5.7006116, z: 15.492738}
+    yaw: 201.70871
+    scale: {x: 1.06265, y: 1.06265, z: 1.06265}
+  - model: Environment/SM_TreeOak
+    role: 3
+    position: {x: -60.73862, y: 0.4138373, z: -30.608587}
+    yaw: 125.478676
+    scale: {x: 1.0853987, y: 1.0853987, z: 1.0853987}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -1.1019607, y: 1.6832522, z: -120.21272}
+    yaw: 315.56763
+    scale: {x: 1.1003714, y: 1.1003714, z: 1.1003714}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 13.7822275, y: 1.050688, z: 67.79852}
+    yaw: 255.24261
+    scale: {x: 1.1557133, y: 1.1557133, z: 1.1557133}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -69.04227, y: 6.074342, z: 95.863976}
+    yaw: 104.15379
+    scale: {x: 0.8634148, y: 0.8634148, z: 0.8634148}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 48.887497, y: 0.028177869, z: 13.831795}
+    yaw: 201.064
+    scale: {x: 0.98783857, y: 0.98783857, z: 0.98783857}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -47.631348, y: -0.02135361, z: 33.089127}
+    yaw: 326.16525
+    scale: {x: 1.1401774, y: 1.1401774, z: 1.1401774}
+  - model: Environment/SM_Bush
+    role: 3
+    position: {x: -75.428246, y: 2.2024336, z: 53.85283}
+    yaw: 312.74496
+    scale: {x: 1.2130206, y: 1.2130206, z: 1.2130206}
+  - model: Environment/SM_TreeOak
+    role: 3
+    position: {x: 52.910587, y: -0.024362791, z: -26.879593}
+    yaw: 122.56101
+    scale: {x: 1.0460916, y: 1.0460916, z: 1.0460916}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -73.71187, y: 0.45386702, z: -15.778793}
+    yaw: 334.65573
+    scale: {x: 0.92160475, y: 0.92160475, z: 0.92160475}
+  - model: Environment/SM_Bush
+    role: 3
+    position: {x: 68.61531, y: 0.35408816, z: -9.770048}
+    yaw: 250.31606
+    scale: {x: 1.1637564, y: 1.1637564, z: 1.1637564}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -29.878334, y: 0.4235113, z: 58.425026}
+    yaw: 133.62819
+    scale: {x: 0.8536194, y: 0.8536194, z: 0.8536194}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 44.321144, y: 4.347226, z: -112.79021}
+    yaw: 64.7817
+    scale: {x: 0.8546991, y: 0.8546991, z: 0.8546991}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -76.7529, y: 1.0254613, z: 16.048512}
+    yaw: 72.09074
+    scale: {x: 0.8096883, y: 0.8096883, z: 0.8096883}
+  - model: Environment/SM_Bush
+    role: 3
+    position: {x: 37.681324, y: 0.23822413, z: -51.17444}
+    yaw: 167.8166
+    scale: {x: 1.0866522, y: 1.0866522, z: 1.0866522}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 57.541824, y: 0.12386826, z: 28.926361}
+    yaw: 178.81671
+    scale: {x: 0.8530891, y: 0.8530891, z: 0.8530891}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 111.76315, y: 6.474653, z: 12.457774}
+    yaw: 48.949493
+    scale: {x: 0.9556703, y: 0.9556703, z: 0.9556703}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -34.822132, y: 3.8921344, z: -94.32713}
+    yaw: 86.69007
+    scale: {x: 0.8746936, y: 0.8746936, z: 0.8746936}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 63.456432, y: 0.1327528, z: -11.041635}
+    yaw: 328.89917
+    scale: {x: 0.9687684, y: 0.9687684, z: 0.9687684}
+  - model: Environment/SM_TreeOak
+    role: 3
+    position: {x: -46.27649, y: 0.02135856, z: 20.861073}
+    yaw: 59.336143
+    scale: {x: 0.833536, y: 0.833536, z: 0.833536}
+  - model: Environment/SM_TreeOak
+    role: 3
+    position: {x: 51.324776, y: 0.02426808, z: -6.6438255}
+    yaw: 1.1591964
+    scale: {x: 0.8055469, y: 0.8055469, z: 0.8055469}
+  - model: Environment/SM_TreeOak
+    role: 3
+    position: {x: -100.423416, y: 5.4447412, z: -47.469555}
+    yaw: 254.89299
+    scale: {x: 1.2906355, y: 1.2906355, z: 1.2906355}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 51.53772, y: 6.298957, z: 130.5446}
+    yaw: 152.6102
+    scale: {x: 0.98725617, y: 0.98725617, z: 0.98725617}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 118.26883, y: 7.0023475, z: 19.781658}
+    yaw: 121.88237
+    scale: {x: 1.1973898, y: 1.1973898, z: 1.1973898}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 122.10225, y: 5.689665, z: -24.13681}
+    yaw: 252.33298
+    scale: {x: 1.0048151, y: 1.0048151, z: 1.0048151}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -47.608234, y: 0.051862296, z: 35.873596}
+    yaw: 206.45915
+    scale: {x: 1.0976334, y: 1.0976334, z: 1.0976334}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 62.18589, y: 0.19243088, z: 17.14589}
+    yaw: 257.11282
+    scale: {x: 1.0134289, y: 1.0134289, z: 1.0134289}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -66.55475, y: 0.58157796, z: -26.587627}
+    yaw: 168.72655
+    scale: {x: 0.8700789, y: 0.8700789, z: 0.8700789}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -60.766747, y: 0.17285284, z: -22.802086}
+    yaw: 50.288677
+    scale: {x: 1.12571, y: 1.12571, z: 1.12571}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 54.2066, y: -0.00037394464, z: -6.582356}
+    yaw: 200.74847
+    scale: {x: 0.8465665, y: 0.8465665, z: 0.8465665}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -86.50538, y: 2.224362, z: -28.725094}
+    yaw: 49.65727
+    scale: {x: 1.2938828, y: 1.2938828, z: 1.2938828}
+  - model: Environment/SM_Rock
+    role: 3
+    position: {x: 51.8596, y: 0.024499182, z: 1.147954}
+    yaw: 151.87794
+    scale: {x: 0.9026833, y: 0.9026833, z: 0.9026833}
+  - model: Environment/SM_Rock
+    role: 3
+    position: {x: 11.636133, y: 1.8837664, z: -105.67778}
+    yaw: 351.58377
+    scale: {x: 2.0269592, y: 2.0269592, z: 2.0269592}
+  - model: Environment/SM_TreeOak
+    role: 3
+    position: {x: -31.482779, y: 0.026244503, z: 46.839386}
+    yaw: 89.094635
+    scale: {x: 0.8830333, y: 0.8830333, z: 0.8830333}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -46.366028, y: 0.06047519, z: 37.395027}
+    yaw: 239.70128
+    scale: {x: 1.1616269, y: 1.1616269, z: 1.1616269}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -109.43415, y: 4.463831, z: 67.68599}
+    yaw: 208.11313
+    scale: {x: 1.0015428, y: 1.0015428, z: 1.0015428}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 47.904446, y: 0.03150088, z: 15.185028}
+    yaw: 142.26094
+    scale: {x: 1.1543076, y: 1.1543076, z: 1.1543076}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -45.480858, y: -0.034869168, z: 32.492783}
+    yaw: 71.08014
+    scale: {x: 0.9421003, y: 0.9421003, z: 0.9421003}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 17.554409, y: 0.81916183, z: -71.98186}
+    yaw: 134.58185
+    scale: {x: 1.2428575, y: 1.2428575, z: 1.2428575}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 46.267563, y: 2.0988197, z: -75.69305}
+    yaw: 149.42612
+    scale: {x: 1.2061465, y: 1.2061465, z: 1.2061465}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 102.31189, y: 3.739601, z: 33.744617}
+    yaw: 170.39297
+    scale: {x: 1.2655165, y: 1.2655165, z: 1.2655165}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 52.463295, y: 2.1117074, z: -72.61423}
+    yaw: 164.68246
+    scale: {x: 1.0005442, y: 1.0005442, z: 1.0005442}
+  - model: Environment/SM_Bush
+    role: 3
+    position: {x: -40.627247, y: 0.027421158, z: 27.284187}
+    yaw: 158.05917
+    scale: {x: 0.93844414, y: 0.93844414, z: 0.93844414}
+  - model: Environment/SM_TreeOak
+    role: 3
+    position: {x: -94.3008, y: 1.598221, z: 1.745116}
+    yaw: 352.7021
+    scale: {x: 1.1223309, y: 1.1223309, z: 1.1223309}
+  - model: Environment/SM_TreeOak
+    role: 3
+    position: {x: -48.055027, y: 0.031157237, z: -14.929327}
+    yaw: 231.76556
+    scale: {x: 0.8121624, y: 0.8121624, z: 0.8121624}
+  - model: Environment/SM_Rock
+    role: 3
+    position: {x: -56.30116, y: -0.02150973, z: -8.58703}
+    yaw: 174.46553
+    scale: {x: 1.1755981, y: 1.1755981, z: 1.1755981}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -36.583843, y: 1.1119183, z: 62.407425}
+    yaw: 192.74571
+    scale: {x: 0.9754976, y: 0.9754976, z: 0.9754976}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -15.53624, y: 6.955928, z: 107.56972}
+    yaw: 82.058365
+    scale: {x: 1.0244961, y: 1.0244961, z: 1.0244961}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -47.788025, y: 0.39784813, z: 46.369286}
+    yaw: 256.5457
+    scale: {x: 1.1507922, y: 1.1507922, z: 1.1507922}
+  - model: Environment/SM_TreeOak
+    role: 3
+    position: {x: 74.955505, y: 1.1069735, z: 4.708064}
+    yaw: 128.09215
+    scale: {x: 1.1943433, y: 1.1943433, z: 1.1943433}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 40.570236, y: 0.5853009, z: 68.07311}
+    yaw: 54.9285
+    scale: {x: 1.2062144, y: 1.2062144, z: 1.2062144}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -58.26355, y: -0.031115528, z: 0.48894042}
+    yaw: 73.19483
+    scale: {x: 1.2602636, y: 1.2602636, z: 1.2602636}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -75.17912, y: 0.7544267, z: 10.675804}
+    yaw: 130.3402
+    scale: {x: 0.91527265, y: 0.91527265, z: 0.91527265}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 72.77547, y: 1.8745196, z: 75.14355}
+    yaw: 277.2091
+    scale: {x: 0.8513646, y: 0.8513646, z: 0.8513646}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 47.054554, y: 6.703067, z: 129.80002}
+    yaw: 63.579052
+    scale: {x: 1.2450668, y: 1.2450668, z: 1.2450668}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 106.30071, y: 5.1544914, z: 23.031109}
+    yaw: 354.9519
+    scale: {x: 1.0322249, y: 1.0322249, z: 1.0322249}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 91.072266, y: 2.7668545, z: 30.469902}
+    yaw: 340.65387
+    scale: {x: 1.0442693, y: 1.0442693, z: 1.0442693}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 127.03381, y: 6.1572866, z: -20.238844}
+    yaw: 20.260172
+    scale: {x: 1.1421983, y: 1.1421983, z: 1.1421983}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -51.950455, y: 0.022293735, z: -3.7295308}
+    yaw: 40.313763
+    scale: {x: 0.9116334, y: 0.9116334, z: 0.9116334}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 23.172356, y: 0.2037869, z: -57.57267}
+    yaw: 110.26272
+    scale: {x: 1.0525349, y: 1.0525349, z: 1.0525349}
+  - model: Environment/SM_Bush
+    role: 3
+    position: {x: -79.001686, y: 1.6106241, z: 33.134605}
+    yaw: 45.70685
+    scale: {x: 1.2082105, y: 1.2082105, z: 1.2082105}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -47.927643, y: 7.183578, z: -114.9176}
+    yaw: 108.52295
+    scale: {x: 1.2331877, y: 1.2331877, z: 1.2331877}
+  - model: Environment/SM_Bush
+    role: 3
+    position: {x: -81.589905, y: 1.1758986, z: 7.817933}
+    yaw: 101.69218
+    scale: {x: 1.2534654, y: 1.2534654, z: 1.2534654}
+  - model: Environment/SM_TreeOak
+    role: 3
+    position: {x: -106.4677, y: 3.741552, z: 23.308123}
+    yaw: 205.30688
+    scale: {x: 0.89412355, y: 0.89412355, z: 0.89412355}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 4.3049088, y: 0.675742, z: -87.03995}
+    yaw: 20.421734
+    scale: {x: 0.92483807, y: 0.92483807, z: 0.92483807}
+  - model: Environment/SM_TreeOak
+    role: 3
+    position: {x: 88.08659, y: 2.9088113, z: 13.949961}
+    yaw: 355.40805
+    scale: {x: 1.0928686, y: 1.0928686, z: 1.0928686}
+  - model: Environment/SM_Bush
+    role: 3
+    position: {x: 51.151897, y: 0.016739253, z: 11.215874}
+    yaw: 168.4799
+    scale: {x: 1.138136, y: 1.138136, z: 1.138136}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 68.265816, y: 0.8081941, z: 37.23578}
+    yaw: 305.85233
+    scale: {x: 0.8148204, y: 0.8148204, z: 0.8148204}
+  - model: Environment/SM_TreeOak
+    role: 3
+    position: {x: -55.255653, y: 0.28695393, z: 38.87892}
+    yaw: 22.711176
+    scale: {x: 0.8210874, y: 0.8210874, z: 0.8210874}
+  - model: Environment/SM_Bush
+    role: 3
+    position: {x: -44.418262, y: 0.031035539, z: 21.754036}
+    yaw: 293.33347
+    scale: {x: 1.2057467, y: 1.2057467, z: 1.2057467}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 65.23072, y: 0.85683227, z: 44.425583}
+    yaw: 115.62979
+    scale: {x: 0.8803349, y: 0.8803349, z: 0.8803349}
+  - model: Environment/SM_TreeOak
+    role: 3
+    position: {x: 75.07629, y: 1.2160971, z: -21.999321}
+    yaw: 33.21779
+    scale: {x: 1.0253147, y: 1.0253147, z: 1.0253147}
+  - model: Environment/SM_TreeOak
+    role: 3
+    position: {x: 57.928974, y: 4.2579007, z: -98.80709}
+    yaw: 169.3575
+    scale: {x: 0.9606638, y: 0.9606638, z: 0.9606638}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -47.080326, y: 0.009656712, z: 22.115105}
+    yaw: 29.702785
+    scale: {x: 0.9880463, y: 0.9880463, z: 0.9880463}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 53.629402, y: 0.013179537, z: 27.59291}
+    yaw: 49.285206
+    scale: {x: 1.1724473, y: 1.1724473, z: 1.1724473}
+  - model: Environment/SM_TreeOak
+    role: 3
+    position: {x: 75.81825, y: 0.9388285, z: -12.957399}
+    yaw: 292.79688
+    scale: {x: 0.8656162, y: 0.8656162, z: 0.8656162}
+  - model: Environment/SM_TreeOak
+    role: 3
+    position: {x: 36.472004, y: -0.006576456, z: 44.058327}
+    yaw: 256.7381
+    scale: {x: 0.825773, y: 0.825773, z: 0.825773}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -70.32798, y: 0.39159626, z: 12.140776}
+    yaw: 41.686592
+    scale: {x: 1.0737472, y: 1.0737472, z: 1.0737472}
+  - model: Environment/SM_Bush
+    role: 3
+    position: {x: -53.66897, y: -0.028106565, z: 18.99997}
+    yaw: 183.98164
+    scale: {x: 1.1569945, y: 1.1569945, z: 1.1569945}
+  - model: Environment/SM_Bush
+    role: 3
+    position: {x: 72.4642, y: 0.840066, z: 15.099682}
+    yaw: 88.14966
+    scale: {x: 1.1473961, y: 1.1473961, z: 1.1473961}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 54.182404, y: 0.00069506466, z: -6.023289}
+    yaw: 35.780453
+    scale: {x: 1.2094325, y: 1.2094325, z: 1.2094325}
+  - model: Environment/SM_Rock
+    role: 3
+    position: {x: -47.075607, y: 6.2596316, z: -103.62808}
+    yaw: 282.48166
+    scale: {x: 1.6040514, y: 1.6040514, z: 1.6040514}
+  - model: Environment/SM_Bush
+    role: 3
+    position: {x: 70.29809, y: 0.40488404, z: -11.961767}
+    yaw: 210.14568
+    scale: {x: 1.0098197, y: 1.0098197, z: 1.0098197}
+  - model: Environment/SM_TreeOak
+    role: 3
+    position: {x: -54.072914, y: -0.02519681, z: -17.21725}
+    yaw: 151.82806
+    scale: {x: 0.9422014, y: 0.9422014, z: 0.9422014}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 58.07764, y: 0.15254858, z: 31.849829}
+    yaw: 91.17034
+    scale: {x: 1.1433375, y: 1.1433375, z: 1.1433375}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -32.88909, y: 2.693435, z: 79.835815}
+    yaw: 319.7161
+    scale: {x: 1.0636384, y: 1.0636384, z: 1.0636384}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -51.052334, y: -0.044705313, z: 27.317356}
+    yaw: 50.279922
+    scale: {x: 1.2236315, y: 1.2236315, z: 1.2236315}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: -55.676476, y: -0.014799882, z: -7.708826}
+    yaw: 99.05501
+    scale: {x: 0.8393809, y: 0.8393809, z: 0.8393809}
+  - model: Environment/SM_TreeOak
+    role: 3
+    position: {x: -19.002232, y: 2.6481218, z: 78.21669}
+    yaw: 131.4004
+    scale: {x: 0.9986893, y: 0.9986893, z: 0.9986893}
+  - model: Environment/SM_TreeOak
+    role: 3
+    position: {x: -51.580013, y: 0.017804574, z: 9.131344}
+    yaw: 157.65146
+    scale: {x: 0.82760566, y: 0.82760566, z: 0.82760566}
+  - model: Environment/SM_TreeOak
+    role: 3
+    position: {x: -27.732044, y: 1.8997827, z: -72.91289}
+    yaw: 321.25058
+    scale: {x: 1.0230732, y: 1.0230732, z: 1.0230732}
+  - model: Environment/SM_TreeOak
+    role: 3
+    position: {x: -92.8369, y: 3.455776, z: -34.446037}
+    yaw: 157.37032
+    scale: {x: 1.0276493, y: 1.0276493, z: 1.0276493}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 67.38289, y: 0.28809538, z: -13.438852}
+    yaw: 218.84871
+    scale: {x: 0.9655713, y: 0.9655713, z: 0.9655713}
+  - model: Environment/SM_TreePine
+    role: 3
+    position: {x: 47.466183, y: -0.0317605, z: 29.640522}
+    yaw: 46.763317
+    scale: {x: 1.1527756, y: 1.1527756, z: 1.1527756}
+  gateModel: Environment/SM_YardGate
   gates:
-  - position: {x: 2.2151873, y: 0, z: 22.491175}
-    yaw: 185.625
-  - position: {x: -14.337291, y: 0, z: -17.470036}
-    yaw: 399.375
+  - position: {x: 0, y: 0, z: 35.3}
+    yaw: -180
+  - position: {x: 33.54153, y: 0, z: -21.509861}
+    yaw: -47.361366
+  - position: {x: -33.541527, y: 0, z: -21.509863}
+    yaw: 47.361362
   zones:
   - kind: 0
-    position: {x: 3, y: 0, z: -2.5}
-    radius: 2.4
+    position: {x: 5, y: 0, z: -3}
+    radius: 2.6
   - kind: 0
-    position: {x: -8, y: 0, z: -6.5}
+    position: {x: -10, y: 0, z: -14}
+    radius: 2.2
+  - kind: 0
+    position: {x: 14, y: 0, z: 4}
     radius: 2
   - kind: 0
-    position: {x: 9.5, y: 0, z: 2.5}
-    radius: 1.8
+    position: {x: -6, y: 0, z: 18}
+    radius: 2.4
   - kind: 0
-    position: {x: -3.5, y: 0, z: 12}
+    position: {x: -26, y: 0, z: 4}
+    radius: 2
+  - kind: 0
+    position: {x: 8, y: 0, z: -21}
     radius: 2.2
   - kind: 1
-    position: {x: -14, y: 0, z: 13}
+    position: {x: -15, y: 0, z: 9}
     radius: 0.9
   - kind: 1
-    position: {x: 15, y: 0, z: -1.5}
+    position: {x: 17, y: 0, z: -6}
     radius: 0.9
   - kind: 1
-    position: {x: 5.5, y: 0, z: -12.5}
+    position: {x: -4, y: 0, z: -20}
+    radius: 0.9
+  - kind: 1
+    position: {x: 24, y: 0, z: 9}
     radius: 0.9
   crowd:
-  - center: {x: 14.568842, y: 3.8000002, z: 20.806461}
-    size: {x: 3.4, y: 1.5}
-    yaw: 215
-    count: 5
-  - center: {x: 25.014116, y: 3.8000002, z: 4.410665}
-    size: {x: 3.4, y: 1.5}
-    yaw: 260
-    count: 5
-  - center: {x: 19.45753, y: 3.8000002, z: -16.326805}
-    size: {x: 3.4, y: 1.5}
-    yaw: 310
-    count: 5
-  - center: {x: 6.574006, y: 3.8000002, z: -24.534515}
-    size: {x: 3.4, y: 1.5}
-    yaw: 345
-    count: 5
-  - center: {x: -23.868193, y: 3.8000002, z: 8.68731}
-    size: {x: 3.4, y: 1.5}
-    yaw: 470
-    count: 5
-  - center: {x: 20.268349, y: 2.4, z: 12.665071}
-    size: {x: 4.5, y: 1.2}
-    yaw: 238
-    count: 5
-  - center: {x: -21.660757, y: 2.4, z: -10.1005745}
-    size: {x: 4.5, y: 1.2}
-    yaw: 425
-    count: 5
-  - center: {x: -15.362627, y: 2.4, z: 18.308458}
-    size: {x: 4.5, y: 1.2}
-    yaw: 500
-    count: 5
+  - center: {x: 16.708963, y: 2.4, z: 34.179058}
+    size: {x: 4.2, y: 2}
+    yaw: -160.95645
+    count: 6
+  - center: {x: 21.845432, y: 2.4, z: 32.068085}
+    size: {x: 4.2, y: 2}
+    yaw: -154.30663
+    count: 6
+  - center: {x: 26.61848, y: 2.4, z: 29.410213}
+    size: {x: 4.2, y: 2}
+    yaw: -147.40356
+    count: 6
+  - center: {x: 30.946844, y: 2.4, z: 26.246769}
+    size: {x: 4.2, y: 2}
+    yaw: -140.19443
+    count: 6
+  - center: {x: 38.510258, y: 1.95, z: 18.980684}
+    size: {x: 3.6, y: 0.6}
+    yaw: -124.715004
+    count: 3
+  - center: {x: 43.04408, y: 1.95, z: 9.854539}
+    size: {x: 3.6, y: 0.6}
+    yaw: -107.82462
+    count: 3
+  - center: {x: 43.9, y: 0.25, z: -0.0000016295605}
+    size: {x: 3.6, y: 0.8}
+    yaw: -90
+    count: 3
+  - center: {x: 43.51741, y: 0.25, z: -4.864908}
+    size: {x: 3.6, y: 0.8}
+    yaw: -81.02244
+    count: 3
+  - center: {x: 42.37768, y: 0.25, z: -9.6402645}
+    size: {x: 3.6, y: 0.8}
+    yaw: -72.17538
+    count: 3
+  - center: {x: 21.823757, y: 0.25, z: -32.02303}
+    size: {x: 3.6, y: 0.8}
+    yaw: -25.693382
+    count: 3
+  - center: {x: 16.708965, y: 2.4, z: -34.179058}
+    size: {x: 4.2, y: 2}
+    yaw: -19.043549
+    count: 6
+  - center: {x: 11.295356, y: 2.4, z: -35.710537}
+    size: {x: 4.2, y: 2}
+    yaw: -12.587153
+    count: 6
+  - center: {x: 5.6947646, y: 2.4, z: -36.63894}
+    size: {x: 4.2, y: 2}
+    yaw: -6.2609105
+    count: 6
+  - center: {x: -0.0000038611724, y: 1.95, z: -37.6}
+    size: {x: 3.6, y: 0.6}
+    yaw: 0.0000041741305
+    count: 3
+  - center: {x: -11.437005, y: 1.95, z: -36.344913}
+    size: {x: 3.6, y: 0.6}
+    yaw: 12.58715
+    count: 3
+  - center: {x: -22.127241, y: 1.95, z: -32.65382}
+    size: {x: 3.6, y: 0.6}
+    yaw: 25.693378
+    count: 3
+  - center: {x: -42.37768, y: 0.25, z: -9.640263}
+    size: {x: 3.6, y: 0.8}
+    yaw: 72.175385
+    count: 3
+  - center: {x: -43.517406, y: 0.25, z: -4.864915}
+    size: {x: 3.6, y: 0.8}
+    yaw: 81.02242
+    count: 3
+  - center: {x: -43.9, y: 0.25, z: 0.00000044455953}
+    size: {x: 3.6, y: 0.8}
+    yaw: 90
+    count: 3
+  - center: {x: -43.51741, y: 0.25, z: 4.8648977}
+    size: {x: 3.6, y: 0.8}
+    yaw: 98.97754
+    count: 3
+  - center: {x: -42.42528, y: 2.4, z: 9.655569}
+    size: {x: 4.2, y: 2}
+    yaw: 107.82462
+    count: 6
+  - center: {x: -40.54912, y: 2.4, z: 14.261879}
+    size: {x: 4.2, y: 2}
+    yaw: 116.42998
+    count: 6
+  - center: {x: -37.97596, y: 2.4, z: 18.610512}
+    size: {x: 4.2, y: 2}
+    yaw: 124.715
+    count: 6
+  - center: {x: -34.755333, y: 2.4, z: 22.62753}
+    size: {x: 4.2, y: 2}
+    yaw: 132.63864
+    count: 6
+  - center: {x: -31.36297, y: 1.95, z: 26.746109}
+    size: {x: 3.6, y: 0.6}
+    yaw: 140.19441
+    count: 3
+  - center: {x: -22.12725, y: 1.95, z: 32.653816}
+    size: {x: 3.6, y: 0.6}
+    yaw: 154.30661
+    count: 3
   chestAnchors:
-  - {x: -6.5, y: 0, z: -2}
-  - {x: 6, y: 0, z: -6}
-  - {x: 15.5, y: 0, z: 7}
-  - {x: -15, y: 0, z: 0}
-  - {x: 0.5, y: 0, z: 9.5}
-  - {x: -9, y: 0, z: 13}
-  - {x: 11, y: 0, z: 14.5}
-  - {x: 13, y: 0, z: -14}
-  - {x: -9.5, y: 0, z: -12}
-  - {x: 1, y: 0, z: -12}
+  - {x: -8, y: 0, z: -4}
+  - {x: 8, y: 0, z: -9}
+  - {x: 20, y: 0, z: 6}
+  - {x: -18, y: 0, z: 2}
+  - {x: 2, y: 0, z: 14}
+  - {x: -12, y: 0, z: 24}
+  - {x: 10, y: 0, z: 28}
+  - {x: 28, y: 0, z: -14}
+  - {x: -27, y: 0, z: -6}
+  - {x: -2, y: 0, z: -28}
+  - {x: 34, y: 0, z: -1}
+  - {x: -34, y: 0, z: 9}
+  - {x: 16, y: 0, z: -26}
+  - {x: -20, y: 0, z: -24}
+  - {x: 21, y: 0, z: 22}
   altarAnchors:
-  - {x: -12.5, y: 1.3, z: 6}
-  - {x: 12.5, y: 1.3, z: -7}
+  - {x: -22, y: 1.3, z: 16}
+  - {x: 20, y: 1.3, z: -18}
   secretSpots:
-  - {x: 1.2, y: 0, z: 18.4}
-  - {x: -10, y: 0, z: -15.6}
-  - {x: 16.4, y: 0, z: 6.6}
+  - {x: 9.59112, y: 0, z: 31.218899}
+  - {x: -4.1109853, y: 0, z: -31.62047}
+  - {x: 29, y: 0, z: 10}
+  barricades: []
+  braziers: []
+  spikeTraps: []

@@ -15,15 +15,20 @@ MonoBehaviour:
   id: greedy
   displayName: Greedy Hands
   glyph: GH
+  icon: {fileID: 2800000, guid: 13ceaa4af4e914da3ab8c2724bbfa51d, type: 3}
+  iconRow: 13
   kind: 0
   tags: 1024
   weight: 10
   maxLevel: 5
   minRarity: 0
   maxRarity: 3
+  requiresAny: []
+  weapon: {fileID: 0}
   perLevel:
   - stat: 13
     op: 1
     value: 0.25
+  effects: []
   healFraction: 0
   gold: 0

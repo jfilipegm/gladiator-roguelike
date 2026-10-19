@@ -22,7 +22,7 @@ A 3D horde-survival roguelike in the Megabonk mould. An unknown pit fighter clim
 Chunky low-poly, flat-shaded, saturated; tiny point-filtered palette texture (one material per palette family, ≤ 8 in a scene). Chibi proportions (head ≈ 35–40 % of height), oversized weapons. Rigid-part procedural animation (no skeletons). Light fog, mild bloom/vignette/grade, short-range real shadows + blob shadows for enemies.
 
 ## Arenas (each changes rules, not just paint)
-1. **Slave Pit** — tight irregular dirt pit, mud (slow), mounds, small fires, sparse locals. Boss **Gorm, the Pit Master** (chain flail + whip, summons guards, burns the fence in phase 2). *← slice*
+1. **Slave Pit** — an 84 × 70 m oval stockade where slaves are worked and drilled (palisade, patched fences, dirt embankments, onlooker platforms), mud (slow), mounds, terraces, small fires, ~110 locals. Boss **Gorm, the Pit Master** (chain flail + whip, summons guards, burns the fence in phase 2). *← slice*
 2. Provincial Pit — barricades, braziers, spike traps, 3 gates. Boss: Provincial Champion.
 3. Stone Amphitheater — pillars block line of sight, elites, assassins. Boss: Beast Lord.
 4. Grand Arena — timed gates, fire jets, blades. Boss: Gilded Patron.

@@ -15,15 +15,20 @@ MonoBehaviour:
   id: long_reach
   displayName: Long Reach
   glyph: LR
+  icon: {fileID: 2800000, guid: 13ceaa4af4e914da3ab8c2724bbfa51d, type: 3}
+  iconRow: 17
   kind: 0
   tags: 32
   weight: 10
   maxLevel: 5
   minRarity: 0
   maxRarity: 3
+  requiresAny: []
+  weapon: {fileID: 0}
   perLevel:
   - stat: 8
     op: 1
     value: 0.1
+  effects: []
   healFraction: 0
   gold: 0

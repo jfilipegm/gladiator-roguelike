@@ -50,6 +50,8 @@ namespace Gladiator.UI
         readonly Image[] _tileInner = new Image[StripTiles];
         readonly TextMeshProUGUI[] _tileGlyph = new TextMeshProUGUI[StripTiles];
         readonly TextMeshProUGUI[] _tileLevel = new TextMeshProUGUI[StripTiles];
+        readonly UpgradeIconView[] _tileIcon = new UpgradeIconView[StripTiles]; // playtest: icons, not letters
+        UpgradeIconView _loanIcon;
         int _lastBuildVersion = -1;
         PlayerBuild _build;
         static readonly Color TileInner = new Color(0.1f, 0.12f, 0.15f, 0.92f);
@@ -136,6 +138,7 @@ namespace Gladiator.UI
             _loanInner = UiFactory.Image("Inner", _loanBorder.transform, Color.clear, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(44, 44), PixelIcons.White);
             _loanInner.type = Image.Type.Filled;
             _loanInner.fillMethod = Image.FillMethod.Vertical;
+            _loanIcon = new UpgradeIconView(_loanBorder.transform, "Icon", new Vector2(0.5f, 0.5f), Vector2.zero, 40f, lively: false);
             _loanGlyph = UiFactory.Text("Glyph", _loanBorder.transform, "", 22, Color.white, TextAlignmentOptions.Center, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 4), new Vector2(44, 30), font, fontMaterial);
             _loanTime = UiFactory.Text("Time", _loanBorder.transform, "", 16, FavorHot, TextAlignmentOptions.BottomRight, new Vector2(1, 0), new Vector2(1, 0), new Vector2(-2, 0), new Vector2(30, 20), font, fontMaterial);
             PreSize(_loanGlyph, "WWWW");
@@ -147,6 +150,7 @@ namespace Gladiator.UI
                 var pos = i < WeaponTiles ? new Vector2(24 + i * 58, -122) : new Vector2(24 + (i - WeaponTiles) * 58, -180);
                 _tileBorder[i] = UiFactory.Image("Tile" + i, canvas, Color.clear, tl, tl, pos, new Vector2(52, 52), PixelIcons.White);
                 var inner = _tileInner[i] = UiFactory.Image("Inner", _tileBorder[i].transform, Color.clear, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(44, 44), PixelIcons.White);
+                _tileIcon[i] = new UpgradeIconView(inner.transform, "Icon", new Vector2(0.5f, 0.5f), Vector2.zero, 40f, lively: false);
                 _tileGlyph[i] = UiFactory.Text("Glyph", inner.transform, "", 22, Color.white, TextAlignmentOptions.Center, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 4), new Vector2(44, 30), font, fontMaterial);
                 _tileLevel[i] = UiFactory.Text("Level", inner.transform, "", 16, Gold, TextAlignmentOptions.BottomRight, new Vector2(1, 0), new Vector2(1, 0), new Vector2(-2, 0), new Vector2(30, 20), font, fontMaterial);
                 PreSize(_tileGlyph[i], "WWWW");
@@ -325,10 +329,16 @@ namespace Gladiator.UI
             _announceT = 0f;
         }
 
+        /// <summary>Tests: the icon in build-strip tile `i` (weapons 0-3, Boons 4-9).</summary>
+        public UpgradeIconView TileIcon(int i) => _tileIcon[i];
+
         public void Tick(float dt, float unscaledDt)
         {
             var run = RunState.Current;
             var player = Player.Main;
+            float now = Time.unscaledTime;
+            for (int i = 0; i < StripTiles; i++) _tileIcon[i].Tick(now); // a rare shine; frames change a few times a minute
+            _loanIcon.Tick(now);
             if (run != null)
             {
                 _xpFill.fillAmount = run.Xp01;
@@ -457,7 +467,8 @@ namespace Gladiator.UI
                 var card = def != null && _build != null ? _build.FindWeaponCard(def) : null;
                 _loanBorder.color = def != null ? FavorColor : Color.clear;
                 _loanInner.color = def != null ? WeaponTileInner : Color.clear;
-                _loanGlyph.text = card != null ? card.glyph : "";
+                if (card != null && _loanIcon.Set(card, FavorColor)) _loanGlyph.text = "";
+                else { _loanIcon.Clear(); _loanGlyph.text = card != null ? card.glyph : ""; }
                 _lastLoanSecond = -1;
                 if (def == null) _loanTime.text = "";
             }
@@ -539,9 +550,10 @@ namespace Gladiator.UI
             {
                 var o = state.GetOwned(i);
                 if (o.Def.kind != kind) continue;
-                _tileBorder[k].color = _build.config.RarityColor(o.BestRarity);
+                var rarity = _build.config.RarityColor(o.BestRarity);
+                _tileBorder[k].color = rarity;
                 _tileInner[k].color = inner;
-                _tileGlyph[k].text = o.Def.glyph;
+                _tileGlyph[k].text = _tileIcon[k].Set(o.Def, rarity, k * 0.137f) ? "" : o.Def.glyph;
                 _tileLevel[k].SetText("{0}", o.Level);
                 k++;
             }
@@ -550,6 +562,7 @@ namespace Gladiator.UI
                 _tileBorder[k].color = Color.clear;
                 _tileInner[k].color = Color.clear;
                 _tileGlyph[k].text = "";
+                _tileIcon[k].Clear();
                 _tileLevel[k].text = "";
             }
         }

@@ -15,12 +15,17 @@ MonoBehaviour:
   id: coin_purse
   displayName: Coin Purse
   glyph: CP
+  icon: {fileID: 2800000, guid: 13ceaa4af4e914da3ab8c2724bbfa51d, type: 3}
+  iconRow: 10
   kind: 2
   tags: 0
   weight: 0
   maxLevel: 1
   minRarity: 0
   maxRarity: 0
+  requiresAny: []
+  weapon: {fileID: 0}
   perLevel: []
+  effects: []
   healFraction: 0
   gold: 15

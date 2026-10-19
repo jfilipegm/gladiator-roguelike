@@ -4,9 +4,28 @@ Each arena changes gameplay, not just textures (CLAUDE.md §6.2). An arena = an 
 crowd, anchors, its spawn table, its boss) built into a scene by `ArenaBuilder`, plus a `RunDef` the menu offers.
 One arena per run (DECISIONS, Q1): the climb happens across runs, through unlocks.
 
-## 1. The Slave Pit (built, slice)
-~42 m dirt pit, earthen walls, 2 gates, 3 terraces with ramps, mounds, mud (slows), fire pits, cages; ~40 locals.
-Boss: Gorm, the Pit Master. Layout: `SlavePitLayout.cs` → `AL_SlavePit`.
+## 1. The Slave Pit (built, slice; rebuilt after the producer's playtest)
+**Playtest rebuild (v0.5.x):** the producer found the old ~42 m round pit too small, read it as "a wooden bowl", and
+fell off the map (the rim around the pit ended in the void). Now an **84 × 70 m oval stockade on open ground**:
+- **Boundary:** 48 sections around the oval, each facing the yard: log **palisade** runs with three log **gates**
+  (north, south-east, south-west), **patched fences** (old dark boards, new pale ones, a broken one, a brace, rope),
+  **dirt embankments** with a wattle fence on the crest, and **plank platforms** of onlookers. Behind every section an
+  **invisible wall** 27 m tall that only the player collides with (`ArenaLayoutDef.boundary`, Props layer): no number
+  of air jumps gets you out.
+- **A working yard:** a drill yard (training posts, straw dummies, a practice weapon rack, benches), a sparring ring
+  of stones, a work corner (water trough, wheelbarrow, hay, sacks, barrel), a woodpile, a lean-to tool shed, cages and
+  chain posts by the south wall, crates and barrels by the gates; trodden paths from the gates and worn drill circles in
+  the floor. Four earth terraces with ramps, four mounds, six mud patches, four fire pits.
+- **Outside (never reachable):** rolling dry grassland rising into hills that fade into the fog, ~150 trees, bushes and
+  rocks, the slaves' huts, the slavers' longhouses and tents, three watchtowers, carts on the roads from the gates.
+- **~110 locals:** on the platforms, leaning on the fences from outside, on the embankment crests.
+- **The arena's shape is data:** `ArenaLayoutDef.aspect` (Z ÷ X; 1 = round) makes the play area an ellipse for the
+  enemies, the spawn ring, pickups, chests, gifts, the boss and Gorm's phase-2 fire ring (`BossDef.fireRingInset`
+  follows the edge). Fog per arena (`ArenaLayoutDef.fog`: 45-230 m here).
+Boss: Gorm, the Pit Master (enters through the north gate). Layout: `SlavePitLayout.cs` → `AL_SlavePit`; models:
+`BlenderSrc/environment/slave_pit_yard.py` (`part=enclosure|ground|props|outside`). Tests: `SlavePitTests` (built from
+the layout, mud, fire, gates, nobody leaves) and `SlavePitEnclosureTests` (closed at every bearing and height, the
+player can't get out over a fence or the berm, the oval keeps enemies in).
 
 ## 2. The Provincial Pit (Phase 5.4, v0.5.0)
 **Player feels:** "People notice me." A real arena at last, small and provincial: a stone foundation with wooden

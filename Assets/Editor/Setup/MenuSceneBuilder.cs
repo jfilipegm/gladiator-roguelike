@@ -61,6 +61,9 @@ namespace Gladiator.EditorTools
             menu.font = font;
             menu.fontMaterial = fontMat;
             menu.run = run;
+            menu.hero = hero.transform; // swapped for the picked gladiator
+            menu.heroMaterial = charMat;
+            foreach (var t in hero.GetComponentsInChildren<Transform>(true)) GameObjectUtility.SetStaticEditorFlags(t.gameObject, 0);
             menu.runs = ProvincialPitSetup.AllRuns(); // arena select (Phase 5.4)
             menu.meta = MetaSetup.Load();
             GladiatorSetup.CreateOrUpdate();

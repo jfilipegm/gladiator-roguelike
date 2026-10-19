@@ -13,7 +13,8 @@ namespace Gladiator.Tests
     /// Phase 5.2 (docs/GLADIATORS.md): the Pit Goblin spawns with its own model, capsule, stats, Bomb Satchel and
     /// traits; bombs land on the thickest group and blast its radius (never the player); snares hold and bleed the first
     /// enemy through and expire; Scavenger lends on its timer but never cuts a gift loan short; the rattling crate
-    /// rattles only when you're near, breaks and saves the flag; the flag unlocks the goblin on the select screen.
+    /// rattles only when you're near, breaks and saves the flag; the flag unlocks the goblin on the select screen, and a
+    /// mouse click on its card picks it (playtest bug: the cards ignored the pointer) and puts it in the diorama.
     /// </summary>
     public class GoblinPlayTests
     {
@@ -247,6 +248,51 @@ namespace Gladiator.Tests
                 "unlocked: the satchel is in everyone's pool now");
             Assert.IsNull(RattlingCrate.Instance != null && RattlingCrate.Instance.State == RattlingCrate.Phase.Waiting ? RattlingCrate.Instance : null,
                 "once found, the crate stops appearing");
+        }
+        /// <summary>Playtest bug (v0.5.0): the gladiator cards ignored the mouse, so the goblin could be unlocked yet never
+        /// picked. A pointer raycast at the card's centre must land on the card's own button, and the click picks it.</summary>
+        [UnityTest, Timeout(60000)]
+        public IEnumerator ClickingTheGoblinsCard_PicksIt_AndTheDioramaShowsIt()
+        {
+            SaveSandbox.Wipe();
+            MetaProgress.SetFlag("rattling_crate");
+            var op = SceneManager.LoadSceneAsync(GameSession.MenuScene, LoadSceneMode.Single);
+            while (!op.isDone) yield return null;
+            yield return null;
+            var menu = Object.FindAnyObjectByType<Gladiator.UI.MainMenu>();
+            menu.GetType().GetMethod("OpenSelect", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).Invoke(menu, null);
+            yield return null;
+            Assert.AreNotSame(Goblin, menu.Selected, "the Nobody starts picked");
+
+            // open cards carry a button, in the order of the menu's earned gladiators
+            var available = (GladiatorDef[])menu.GetType().GetField("_available", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(menu);
+            int index = System.Array.IndexOf(available, Goblin);
+            Assert.GreaterOrEqual(index, 0, "the goblin's card is on the select screen");
+            var cards = new System.Collections.Generic.List<UnityEngine.UI.Button>();
+            foreach (var b in menu.transform.Find("MenuCanvas/Select").GetComponentsInChildren<UnityEngine.UI.Button>())
+                if (b.name == "Card") cards.Add(b);
+            Assert.AreEqual(available.Length, cards.Count);
+            var goblinCard = cards[index];
+            var es = UnityEngine.EventSystems.EventSystem.current;
+            var rt = (RectTransform)goblinCard.transform;
+            var corners = new Vector3[4];
+            rt.GetWorldCorners(corners);
+            Vector2 centre = (corners[0] + corners[2]) * 0.5f; // screen-space overlay canvas: world = screen pixels
+            var ped = new UnityEngine.EventSystems.PointerEventData(es) { position = centre, button = UnityEngine.EventSystems.PointerEventData.InputButton.Left };
+            var hits = new System.Collections.Generic.List<UnityEngine.EventSystems.RaycastResult>();
+            es.RaycastAll(ped, hits);
+            Assert.Greater(hits.Count, 0, "the card takes the pointer");
+            var handler = UnityEngine.EventSystems.ExecuteEvents.GetEventHandler<UnityEngine.EventSystems.IPointerClickHandler>(hits[0].gameObject);
+            Assert.AreSame(goblinCard.gameObject, handler, "the top hit is the card's button (nothing in front of it eats the click)");
+            UnityEngine.EventSystems.ExecuteEvents.Execute(handler, ped, UnityEngine.EventSystems.ExecuteEvents.pointerClickHandler);
+            yield return null;
+            Assert.AreSame(Goblin, menu.Selected, "one click picks the goblin");
+            Assert.IsNotNull(menu.hero, "the diorama has a hero to swap");
+            Assert.IsFalse(menu.hero.gameObject.activeSelf, "the Nobody steps aside");
+            var shown = menu.hero.parent.Find("Hero_pit_goblin");
+            Assert.IsNotNull(shown, "the goblin stands in the diorama");
+            Assert.IsTrue(shown.gameObject.activeSelf);
+            SaveSandbox.Wipe(); // later tests expect a fresh save
         }
     }
 }

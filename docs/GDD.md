@@ -49,7 +49,7 @@ Renown per run gates arena tiers and cosmetics. Unlocks are **content, never fla
 Starter **The Nobody** (rusty gladius + scrap shield; *Underdog*: bonus damage/XP when outnumbered). After the slice, in order: Pit Goblin, Blood Knight, then the rest (Murder Machine, Beastmaster, Thunder Champion, Ashen Oracle, Golden Idol, Net-Weaver, Asterion).
 
 ## Crowd & Favor
-Slice (built): `CrowdExcitement` 0–1 from kills, elite kills, near-death and boss beats → crowd shader, crowd loop volume/pitch, cheers on spikes; the announcer calls kill streaks (KILLING SPREE! → MASSACRE! → BLOODBATH! → UNSTOPPABLE!), close calls and the crowd's roar. Phase 5: Favor thresholds → gifts (amphorae, gold shower, a temp weapon); kiting → Arena Master whims.
+Slice (built): `CrowdExcitement` 0–1 from kills, elite kills, near-death and boss beats → crowd shader, crowd loop volume/pitch, cheers on spikes; the announcer calls kill streaks (KILLING SPREE! → MASSACRE! → BLOODBATH! → UNSTOPPABLE!), close calls and the crowd's roar. **Favor (built, Phase 5.1, `docs/FAVOR.md`):** a slower meter fed by announced streaks, elite kills, variety, style kills (sliding/airborne), close calls, no-hit stretches and the boss's beats; full → the crowd throws a gift (healing amphora, gold shower, laurel of XP, a weapon in the sand for 30 s) and the next threshold is ×1.25. A dull show (few kills for the horde's size, nobody near, for a while) bores the crowd: the Arena Master opens the gate nearest the player or sends a champion with a 20 s bounty.
 
 ## Open questions
 | # | Question | Status |

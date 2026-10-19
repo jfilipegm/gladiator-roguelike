@@ -56,6 +56,8 @@ def pouch(name):
         parts.append(c)
     bpy.context.view_layer.update()
     K.join(parts, name + "_Mesh")
+    for v in bpy.data.objects[name + "_Mesh"].data.vertices:  # iteration 2: read as small next to the others at 10 m
+        v.co *= 1.35
     return root
 
 

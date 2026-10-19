@@ -4,7 +4,7 @@ CLAUDE.md §6.9: the crowd rewards a good show with gifts and punishes a dull on
 
 ## Favor meter
 - **The bar:** 0 → 100. When it fills, the crowd throws a gift, the bar empties, and the next threshold is ×1.25 higher. So gifts come regularly but don't snowball.
-- **On the HUD:** a thin gold bar with a laurel, under the XP bar, labelled FAVOR. It pulses when it's close to full.
+- **On the HUD:** a gold bar with a pixel laurel at the top right, under your level. It pulses gold-white above 85 %.
 
 | Source | Favor (start values, all in `FavorConfig`) |
 |---|---|
@@ -26,7 +26,7 @@ The style row is my addition: movement is a power source (§5), so the crowd sho
 |---|---|---|
 | **Healing Amphora** | Heals 30 % of max HP. | 1, or ×3 below 50 % HP |
 | **Gold Shower** | 20 coins burst out in a ring. | 1 |
-| **Weapon in the Sand** | A random pool weapon you don't own, at level 4, for 30 s. It doesn't take a slot and shows on the HUD with a countdown. | 0.8 |
+| **Weapon in the Sand** | A random unlocked pool weapon you don't own, at level 4, for 30 s. It doesn't take a slot. On the HUD it gets a gold-bordered tile after your weapon row, draining as it runs out, with the seconds left. | 0.8 |
 | **Laurel** | XP worth 40 % of the current level. | 0.6 |
 
 ## Whims (when the show gets dull)

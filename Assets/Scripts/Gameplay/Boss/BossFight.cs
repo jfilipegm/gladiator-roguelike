@@ -61,6 +61,7 @@ namespace Gladiator.Gameplay
                     if (_t < cameraBeat && _rig != null && controller.Alive) TurnCamera(unscaledDt);
                     if (controller.Defeated)
                     {
+                        run.MarkBossDefeated(boss.id);
                         Current = Stage.Falling;
                         _t = 0f;
                         TimeController.SlowMotion = fallSlowMo;

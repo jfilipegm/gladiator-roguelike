@@ -5,10 +5,10 @@ using UnityEngine.SceneManagement;
 namespace Gladiator.Gameplay
 {
     /// <summary>
-    /// How a run ends (slice placeholder for M3.5's full flow). Player death or the timer reaching 0:00 (unless
-    /// DevSettings.Timeless) ends the run → a short beat (death: slow motion + collapse; survived: every enemy
-    /// pops) → the game pauses and the end screen (UI reads ScreenShown/Outcome) offers Retry / Quit.
-    /// Once Gorm exists, the timer summons him instead and "Survived" moves to after the boss.
+    /// How a run ends. Player death, the timer reaching 0:00 in an arena without a boss (unless DevSettings.Timeless),
+    /// or the boss falling ends the run → the run is recorded in the save (Renown, records, unlocks: MetaProgress) →
+    /// a short beat (death: slow motion + collapse; victory: every enemy pops) → the game pauses and the end screen
+    /// (UI reads ScreenShown/Outcome/Rewards) offers Retry / Main Menu.
     /// </summary>
     public sealed class RunEndController : MonoBehaviour, ITickable
     {
@@ -18,6 +18,8 @@ namespace Gladiator.Gameplay
         public PlayerHealth health;
         public PlayerPartAnimator animator;
         public DeathPopFx burst;
+        [Tooltip("Meta progression (Renown, unlocks). None = this scene's runs aren't recorded.")]
+        public MetaConfig meta;
         [Tooltip("Real-time seconds of the death beat before the end screen.")]
         public float deathBeat = 1.6f;
         [Range(0.05f, 1f)] public float deathSlowMotion = 0.3f;
@@ -28,6 +30,8 @@ namespace Gladiator.Gameplay
         public Phase CurrentPhase { get; private set; }
         public bool ScreenShown => CurrentPhase == Phase.Screen;
         public RunOutcome Outcome => run != null ? run.Outcome : RunOutcome.None;
+        /// <summary>What this run earned (null when it isn't recorded).</summary>
+        public RunRewards Rewards { get; private set; }
 
         float _beatLeft;
         bool _blockedInput, _paused;
@@ -68,6 +72,7 @@ namespace Gladiator.Gameplay
         {
             if (CurrentPhase != Phase.Playing) return;
             CurrentPhase = Phase.Beat;
+            if (meta != null && run != null) Rewards = MetaProgress.CommitRun(Summary(e), meta);
             if (Player.Main != null && !_blockedInput) { Player.Main.BlockInput(); _blockedInput = true; }
             Vector3 at = health != null ? health.transform.position + Vector3.up * 0.9f : Vector3.zero;
             if (e.Outcome == RunOutcome.Died)
@@ -88,6 +93,30 @@ namespace Gladiator.Gameplay
                 if (boons != null) boons.Clear(); // no bursts from the corpses KillAll just made
                 if (burst != null) burst.Burst(at, 40, 8f, 0.22f, new Color(1f, 0.86f, 0.4f), new Color(0.43f, 0.95f, 1f));
             }
+        }
+
+        RunSummary Summary(in RunEndEvent e)
+        {
+            var s = new RunSummary
+            {
+                Outcome = e.Outcome, Elapsed = e.Elapsed, Kills = run.Kills, GoldEarned = run.GoldEarned, Level = run.Level,
+                ArenaIndex = GameSession.ArenaIndex, BossDefeated = run.BossDefeated,
+            };
+            var p = Player.Main;
+            if (p == null) return s;
+            var stats = p.GetComponent<PlayerStats>();
+            if (stats != null && stats.gladiator != null) s.GladiatorId = stats.gladiator.id;
+            var ws = p.GetComponent<WeaponSystem>();
+            if (ws != null)
+            {
+                s.Weapons = new WeaponKills[ws.Weapons.Count];
+                for (int k = 0; k < s.Weapons.Length; k++)
+                {
+                    var def = ws.Weapons[k].Def;
+                    s.Weapons[k] = new WeaponKills { Id = def.id, Kills = run.KillsBy(def.RuntimeId) };
+                }
+            }
+            return s;
         }
 
         void ShowScreen()

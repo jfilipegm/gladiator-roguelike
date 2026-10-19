@@ -11,6 +11,8 @@ namespace Gladiator.Gameplay
     {
         public UpgradeConfig config;
         public UpgradeCatalog catalog;
+        [Tooltip("Meta progression: upgrades held back by unearned unlocks are never offered this run.")]
+        public MetaConfig meta;
 
         PlayerStats _stats;
         PlayerHealth _health;
@@ -27,6 +29,9 @@ namespace Gladiator.Gameplay
             _stats = GetComponent<PlayerStats>();
             _health = GetComponent<PlayerHealth>();
             _weapons = GetComponent<WeaponSystem>();
+            if (meta != null && catalog != null)
+                foreach (var u in catalog.upgrades)
+                    if (MetaProgress.IsLocked(u, meta)) State.Lock(u);
         }
 
         // The starting weapon is owned at level 1, so its level-up cards come up and it fills a weapon slot.

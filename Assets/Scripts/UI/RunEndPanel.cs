@@ -8,8 +8,9 @@ using UnityEngine.UI;
 namespace Gladiator.UI
 {
     /// <summary>
-    /// End-of-run screen (slice placeholder for M3.5): "YOU DIED" (orange-red) or "SURVIVED!" (gold), the run's
-    /// stats, Retry (button / R / Enter / gamepad South) and Quit. Shown while RunEndController.ScreenShown.
+    /// End-of-run screen: "YOU DIED" (orange-red), "SURVIVED!" or "VICTORY!" (gold), the run's stats, the Renown it
+    /// earned, any unlock it earned (gold banner), Retry (button / R / Enter / gamepad South) and Main Menu.
+    /// Shown while RunEndController.ScreenShown.
     /// </summary>
     public sealed class RunEndPanel : MonoBehaviour, ITickable
     {
@@ -21,7 +22,7 @@ namespace Gladiator.UI
         static readonly Color Soft = new Color(1f, 1f, 1f, 0.75f);
 
         GameObject _root;
-        TextMeshProUGUI _title, _subtitle, _note, _time, _level, _kills, _gold, _damage, _boss;
+        TextMeshProUGUI _title, _subtitle, _note, _time, _level, _kills, _gold, _damage, _boss, _renown, _unlock;
         bool _shown;
         float _shownAt;
 
@@ -37,24 +38,27 @@ namespace Gladiator.UI
             _subtitle = UiFactory.Text("Subtitle", canvas, "", 36, Soft, TextAlignmentOptions.Center, mid, mid, new Vector2(0, 205), new Vector2(1400, 50), font, fontMaterial);
             _subtitle.fontStyle = FontStyles.Normal;
 
-            var card = UiFactory.Image("Stats", canvas, new Color(0.08f, 0.1f, 0.14f, 0.95f), mid, mid, new Vector2(0, -17), new Vector2(620, 354), PixelIcons.White);
+            var card = UiFactory.Image("Stats", canvas, new Color(0.08f, 0.1f, 0.14f, 0.95f), mid, mid, new Vector2(0, -44), new Vector2(620, 408), PixelIcons.White);
             _time = StatRow(card.transform, "Time survived", 0);
             _level = StatRow(card.transform, "Level", 1);
             _kills = StatRow(card.transform, "Kills", 2);
             _gold = StatRow(card.transform, "Gold", 3);
             _damage = StatRow(card.transform, "Damage dealt", 4);
             _boss = StatRow(card.transform, "Gorm", 5);
+            _renown = StatRow(card.transform, "Renown", 6);
+            _renown.color = Gold;
+            _unlock = UiFactory.Text("Unlock", canvas, "", 34, Gold, TextAlignmentOptions.Center, mid, mid, new Vector2(0, -290), new Vector2(1400, 50), font, fontMaterial);
 
-            UiFactory.Button("Retry", canvas, "Retry  [R]", mid, mid, new Vector2(-140, -220), new Vector2(250, 70), font, fontMaterial, OnRetry, 32f);
-            UiFactory.Button("Quit", canvas, "Main Menu  [M]", mid, mid, new Vector2(140, -220), new Vector2(250, 70), font, fontMaterial, OnQuit, 32f);
-            _note = UiFactory.Text("Note", canvas, "", 22, new Color(1f, 1f, 1f, 0.45f), TextAlignmentOptions.Center, mid, mid, new Vector2(0, -300), new Vector2(1400, 40), font, fontMaterial);
+            UiFactory.Button("Retry", canvas, "Retry  [R]", mid, mid, new Vector2(-140, -365), new Vector2(250, 70), font, fontMaterial, OnRetry, 32f);
+            UiFactory.Button("Quit", canvas, "Main Menu  [M]", mid, mid, new Vector2(140, -365), new Vector2(250, 70), font, fontMaterial, OnQuit, 32f);
+            _note = UiFactory.Text("Note", canvas, "", 22, new Color(1f, 1f, 1f, 0.45f), TextAlignmentOptions.Center, mid, mid, new Vector2(0, -430), new Vector2(1400, 40), font, fontMaterial);
             _note.fontStyle = FontStyles.Normal;
             _root.SetActive(false);
         }
 
         TextMeshProUGUI StatRow(Transform card, string label, int row)
         {
-            float y = 139f - row * 54f;
+            float y = 166f - row * 54f;
             var mid = new Vector2(0.5f, 0.5f);
             var l = UiFactory.Text(label, card, label, 32, Soft, TextAlignmentOptions.Left, mid, mid, new Vector2(-110, y), new Vector2(340, 50), font, fontMaterial);
             l.fontStyle = FontStyles.Normal;
@@ -107,6 +111,11 @@ namespace Gladiator.UI
             if (boss == null || run == null || !run.TimerDone) _boss.text = "not reached";
             else if (boss.Defeated) _boss.text = "DEFEATED";
             else _boss.SetText("{0}% left", Mathf.Round(boss.Hp01 * 100f));
+            var rewards = c.Rewards;
+            if (rewards == null) { _renown.text = "not recorded"; _unlock.text = ""; return; }
+            _renown.SetText("+{0}  ({1})", (float)rewards.Renown, (float)rewards.RenownTotal);
+            _unlock.text = rewards.NewUnlocks.Count == 0 ? ""
+                : "UNLOCKED: " + rewards.NewUnlocks[0].displayName.ToUpperInvariant() + "  —  now in the level-up pool";
         }
 
         void OnRetry() { if (_shown) RunEndController.Instance?.Retry(); }

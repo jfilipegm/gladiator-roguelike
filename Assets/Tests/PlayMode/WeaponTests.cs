@@ -173,6 +173,25 @@ namespace Gladiator.Tests
             finally { Object.Destroy(extra); }
         }
 
+        [UnityTest, Timeout(60000)]
+        public IEnumerator Flail_OrbitHitsAllAround_NotBeyond_AndKeepsHitting()
+        {
+            yield return Boot();
+            var flail = Load("WP_GormsFlail");
+            Assert.IsNotNull(flail, "the M3.6 unlock weapon exists");
+            Assert.AreEqual(WeaponPattern.Orbit, flail.pattern);
+            Assert.IsNotNull(_weapons.Equip(flail));
+            float r = flail.range;
+            int left = Place(-r, 0f), right = Place(r, 0f), behind = Place(0f, -r), ahead = Place(0f, r);
+            int far = Place(r + 4f, 0f);
+            yield return WaitUntil(() => Hurt(left) && Hurt(right) && Hurt(behind) && Hurt(ahead), 5f);
+            Assert.IsTrue(Hurt(left) && Hurt(right) && Hurt(behind) && Hurt(ahead), "the balls sweep the whole circle");
+            Assert.IsFalse(Hurt(far), "nothing beyond the chain");
+            float hp = _em.GetHp(left);
+            yield return new WaitForSeconds(2.5f);
+            Assert.Less(_em.GetHp(left), hp, "it keeps hitting on every pass");
+        }
+
         /// <summary>Regression (found by the M3.5 perf run): an OnHit hook killing the same enemy re-entrantly (a spark,
         /// a burst) killed it twice, so the alive count drifted negative and the Director overfilled the pools.</summary>
         [UnityTest, Timeout(60000)]

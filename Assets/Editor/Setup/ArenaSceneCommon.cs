@@ -195,6 +195,7 @@ namespace Gladiator.EditorTools
             end.health = player.GetComponent<PlayerHealth>();
             end.animator = player.GetComponent<PlayerPartAnimator>();
             end.burst = lvl.burst;
+            end.meta = MetaSetup.Load();
             var endPanel = new GameObject("RunEndPanel").AddComponent<Gladiator.UI.RunEndPanel>();
             endPanel.transform.SetParent(root, false);
             endPanel.font = font; endPanel.fontMaterial = fontMat;

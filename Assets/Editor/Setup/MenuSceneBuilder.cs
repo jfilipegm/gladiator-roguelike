@@ -61,6 +61,7 @@ namespace Gladiator.EditorTools
             menu.font = font;
             menu.fontMaterial = fontMat;
             menu.run = run;
+            menu.meta = MetaSetup.Load();
             menu.gladiators = nobody != null ? new[] { nobody } : new GladiatorDef[0];
             menu.locked = new[]
             {

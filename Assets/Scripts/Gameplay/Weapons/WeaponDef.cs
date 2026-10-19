@@ -4,13 +4,14 @@ using UnityEngine;
 
 namespace Gladiator.Gameplay
 {
-    /// <summary>Attack patterns that weapon data composes (CLAUDE.md §6.8). The slice implements the first four marked.</summary>
+    /// <summary>Attack patterns that weapon data composes (CLAUDE.md §6.8). Implemented: MeleeArc, Thrust, Projectile, Returning, Orbit.</summary>
     public enum WeaponPattern { MeleeArc, Thrust, MultiHit, GroundSlam, Projectile, Returning, Orbit, Chain, Summon }
 
     /// <summary>
     /// A weapon as data. Its numbers are the level-1 base; each level 2-8 adds `levels[level-2].mods` to that weapon only
     /// (scaled by the card's rarity, like Boons), and the player's stats multiply everything on top.
-    /// Implemented patterns: MeleeArc (Gladius), Thrust (Spear), Projectile (Javelins), Returning (Chakram).
+    /// Implemented patterns: MeleeArc (Gladius), Thrust (Spear), Projectile (Javelins), Returning (Chakram), Orbit (Gorm's
+    /// Flail: range = orbit radius, width = ball radius, speed = m/s along the circle, cooldown = re-hit interval per enemy).
     /// </summary>
     [CreateAssetMenu(menuName = "Gladiator/Weapon", fileName = "WP_")]
     public sealed class WeaponDef : ScriptableObject

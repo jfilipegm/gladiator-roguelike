@@ -126,13 +126,15 @@ namespace Gladiator.EditorTools
         }
 
         public const string WeaponDir = "Assets/Data/Weapons/";
+        /// <summary>The M3.6 unlock: kept out of the pool until Gorm falls (UL_GormsFlail, MetaSetup).</summary>
+        public const string FlailCardPath = Dir + "UP_W_GormsFlail.asset";
         const string WeaponModels = "Assets/Art/Models/Weapons/";
 
         static WeaponDef.Level L(params StatMod[] mods) => new WeaponDef.Level { mods = mods };
         static StatMod Pct(StatId s, float v) => new StatMod(s, ModOp.Percent, v);
         static StatMod Add(StatId s, float v) => new StatMod(s, ModOp.Flat, v);
 
-        /// <summary>The slice's four weapons (CLAUDE.md §6.8: different patterns, not reskins) and their cards.</summary>
+        /// <summary>The slice's weapons (CLAUDE.md §6.8: different patterns, not reskins) and their cards. Gorm's Flail is the M3.6 unlock.</summary>
         static void CreateWeapons()
         {
             // Gladius exists since M1.2 (designer-owned): only give it a level table if it has none.
@@ -180,10 +182,24 @@ namespace Gladiator.EditorTools
                 };
             });
 
+            var flail = Weapon("WP_GormsFlail", "gorms_flail", "Gorm's Flail", "Spiked balls whirl around you, smashing whatever they pass. Gorm won't be needing it.", WeaponPattern.Orbit, w =>
+            {
+                // range = orbit radius, width = ball radius, speed = m/s along the circle, cooldown = re-hit interval per enemy
+                w.damage = 12f; w.critChance = 0.08f; w.knockback = 8f; w.cooldown = 0.55f; w.swingDuration = 0.2f; w.windup = 0f;
+                w.range = 2.6f; w.width = 0.6f; w.acquireRange = 0f; w.amount = 2; w.speed = 9f; w.pierce = -1;
+                w.mesh = Mesh("WP_FlailBall"); w.meshScale = 1.3f;
+                w.levels = new[]
+                {
+                    L(Pct(StatId.Damage, 0.2f)), L(Add(StatId.Amount, 1f)), L(Pct(StatId.Area, 0.15f)), L(Pct(StatId.ProjectileSpeed, 0.25f)),
+                    L(Pct(StatId.Damage, 0.25f)), L(Add(StatId.Amount, 1f)), L(Pct(StatId.Area, 0.15f), Pct(StatId.Damage, 0.2f)),
+                };
+            });
+
             WeaponCard("UP_W_Gladius", gladius, "GL");
             WeaponCard("UP_W_Spear", spear, "SP");
             WeaponCard("UP_W_Javelins", javelins, "JV");
             WeaponCard("UP_W_Chakram", chakram, "CK");
+            WeaponCard("UP_W_GormsFlail", flail, "FL");
         }
 
         static Mesh Mesh(string model) => AssetDatabase.LoadAssetAtPath<Mesh>(WeaponModels + model + ".fbx");

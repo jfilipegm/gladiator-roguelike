@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee3588c7086109acdb436fa638393d2b, type: 3}
+  m_Name: MetaConfig
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.MetaConfig
+  renownPerMinute: 4
+  renownPerHundredKills: 2
+  renownPerBoss: 40
+  renownForVictory: 20
+  deeperArenaBonus: 0.5
+  unlocks:
+  - {fileID: 11400000, guid: 9e5f9aa05ad8cf94eb4fe91cde0346e7, type: 2}

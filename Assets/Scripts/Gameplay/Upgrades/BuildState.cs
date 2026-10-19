@@ -45,6 +45,11 @@ namespace Gladiator.Gameplay
 
         public bool IsBanished(UpgradeDef d) => _banished.Contains(d);
 
+        // Meta locks (M3.6): upgrades an unearned unlock holds back. Set once per run; Clear() keeps them.
+        readonly List<UpgradeDef> _locked = new List<UpgradeDef>(4);
+        public void Lock(UpgradeDef d) { if (d != null && !_locked.Contains(d)) _locked.Add(d); }
+        public bool IsLocked(UpgradeDef d) => _locked.Contains(d);
+
         public void Banish(UpgradeDef d)
         {
             if (d != null && !_banished.Contains(d)) _banished.Add(d);

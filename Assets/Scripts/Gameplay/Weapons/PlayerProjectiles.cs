@@ -44,6 +44,8 @@ namespace Gladiator.Gameplay
         public float thrustStreakWidth = 0.45f;
         [Tooltip("Boon sparks: bolt width (m) and how long one stays on screen (s).")]
         public float boltWidth = 0.2f, boltLife = 0.14f;
+        [Tooltip("Orbit weapons (flail balls): motion streak behind each ball, width and length (m).")]
+        public float orbitStreakWidth = 0.3f, orbitStreakLength = 1.4f;
 
         const int MaxMeshes = 8;
 
@@ -64,6 +66,12 @@ namespace Gladiator.Gameplay
         readonly Vector3[] _boltFrom = new Vector3[MaxBolts], _boltTo = new Vector3[MaxBolts];
         readonly float[] _boltT = new float[MaxBolts];
         int _boltCount;
+        const int MaxOrbiters = 16;
+        readonly Vector3[] _orbPos = new Vector3[MaxOrbiters], _orbTravel = new Vector3[MaxOrbiters];
+        readonly Quaternion[] _orbRot = new Quaternion[MaxOrbiters];
+        readonly float[] _orbScale = new float[MaxOrbiters];
+        readonly int[] _orbMesh = new int[MaxOrbiters];
+        int _orbCount;
         RenderParams _streakRp;
         Matrix4x4[][] _matrices;
         int[] _batch, _lastBatch;
@@ -231,8 +239,35 @@ namespace Gladiator.Gameplay
             _boltT[_boltCount++] = boltLife;
         }
 
+        /// <summary>Draws one orbiting weapon piece this frame (a flail ball) with a streak behind it along `travel`.
+        /// WeaponSystem calls it every gameplay frame, before this system's tick.</summary>
+        public void Orbiter(int mesh, Vector3 pos, Quaternion rot, float scale, Vector3 travel)
+        {
+            if (_orbCount >= MaxOrbiters) return;
+            _orbMesh[_orbCount] = mesh;
+            _orbPos[_orbCount] = pos;
+            _orbRot[_orbCount] = rot;
+            _orbScale[_orbCount] = scale;
+            _orbTravel[_orbCount++] = travel;
+        }
+
+        void AddOrbiters()
+        {
+            for (int o = 0; o < _orbCount; o++)
+            {
+                int m = _orbMesh[o];
+                if (m >= 0 && m < _meshCount && _batch[m] < _matrices[m].Length)
+                    _matrices[m][_batch[m]++] = Matrix4x4.TRS(_orbPos[o], _orbRot[o], Vector3.one * _orbScale[o]);
+                if (_streaks != null && _streakBatch < _streaks.Length && _orbTravel[o].sqrMagnitude > 1e-4f)
+                    _streaks[_streakBatch++] = Matrix4x4.TRS(_orbPos[o], Quaternion.LookRotation(_orbTravel[o], Vector3.up),
+                        new Vector3(orbitStreakWidth, orbitStreakWidth, orbitStreakLength));
+            }
+            _orbCount = 0;
+        }
+
         public void Clear()
         {
+            _orbCount = 0;
             _boltCount = 0;
             for (int i = 0; i < _high; i++) _used[i] = false;
             _high = _count = 0;
@@ -258,6 +293,7 @@ namespace Gladiator.Gameplay
                 }
                 AddMatrix(i);
             }
+            AddOrbiters();
             StepBolts(dt);
             Draw(false);
         }

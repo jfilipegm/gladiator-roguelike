@@ -9,8 +9,9 @@ using UnityEngine.UI;
 namespace Gladiator.UI
 {
     /// <summary>
-    /// Main menu → gladiator select → the run (M3.5). Built in code over the menu diorama. The slice has one gladiator;
-    /// locked ones show as dark silhouettes with a cryptic hint (the Codex in M3.6 owns the real unlock state).
+    /// Main menu → gladiator select → the run (M3.5), and the Codex (M3.6: records, unlocks, gladiators; CodexPanel).
+    /// Built in code over the menu diorama. The slice has one gladiator; locked ones show as dark silhouettes with a
+    /// cryptic hint. Renown from the save shows in the corner.
     /// Mouse, keyboard (Enter / Esc / arrows) and gamepad (South / East / d-pad). Under -bot the run starts at once.
     /// </summary>
     public sealed class MainMenu : MonoBehaviour
@@ -25,6 +26,7 @@ namespace Gladiator.UI
         public TMP_FontAsset font;
         public Material fontMaterial;
         public RunDef run;
+        public MetaConfig meta;
         public GladiatorDef[] gladiators = Array.Empty<GladiatorDef>();
         public Locked[] locked = Array.Empty<Locked>();
         public string title = "GLADIATOR";
@@ -34,10 +36,12 @@ namespace Gladiator.UI
         static readonly Color Soft = new Color(1f, 1f, 1f, 0.75f);
         static readonly Color CardColor = new Color(0.08f, 0.1f, 0.14f, 0.94f);
 
-        CanvasGroup _menu, _select;
+        enum Screen { Menu, Select, Codex }
+
+        CanvasGroup _menu, _select, _codex;
         Button[] _menuButtons;
         int _focus;
-        bool _selecting;
+        Screen _screen;
         Image[] _menuFrames;
 
         void Awake()
@@ -45,9 +49,13 @@ namespace Gladiator.UI
             var canvas = UiFactory.Canvas("MenuCanvas", transform, UiSortOrder.Menus).transform;
             _menu = Group("Menu", canvas);
             _select = Group("Select", canvas);
+            _codex = Group("Codex", canvas);
             BuildMenu(_menu.transform);
             BuildSelect(_select.transform);
-            Show(false);
+            var dim = UiFactory.Image("Dim", _codex.transform, new Color(0.02f, 0.02f, 0.04f, 0.8f), Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, PixelIcons.White);
+            UiFactory.Stretch(dim.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            new CodexPanel(font, fontMaterial).Build(_codex.transform, MetaProgress.Data, meta, gladiators, locked, CloseCodex);
+            Show(Screen.Menu);
         }
 
         void Start()
@@ -77,10 +85,9 @@ namespace Gladiator.UI
             _menuButtons = new[]
             {
                 UiFactory.Button("Play", root, "PLAY", left, left, new Vector2(110, 10), new Vector2(360, 76), font, fontMaterial, OpenSelect, 40f),
-                UiFactory.Button("Codex", root, "CODEX  (soon)", left, left, new Vector2(110, -82), new Vector2(360, 76), font, fontMaterial, () => { }, 34f),
+                UiFactory.Button("Codex", root, "CODEX", left, left, new Vector2(110, -82), new Vector2(360, 76), font, fontMaterial, OpenCodex, 40f),
                 UiFactory.Button("Quit", root, "QUIT", left, left, new Vector2(110, -174), new Vector2(360, 76), font, fontMaterial, Quit, 40f),
             };
-            _menuButtons[1].interactable = false;
             _menuFrames = new Image[_menuButtons.Length];
             for (int i = 0; i < _menuButtons.Length; i++)
             {
@@ -90,6 +97,12 @@ namespace Gladiator.UI
             }
             var hint = UiFactory.Text("Keys", root, "Enter / A: select     Esc / B: back", 24, new Color(1f, 1f, 1f, 0.45f), TextAlignmentOptions.Left, new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(116, 40), new Vector2(900, 34), font, fontMaterial);
             hint.fontStyle = FontStyles.Normal;
+            var save = MetaProgress.Data;
+            var corner = new Vector2(1f, 1f);
+            var renown = UiFactory.Text("Renown", root, "RENOWN  " + save.renown, 34, Gold, TextAlignmentOptions.Right, corner, corner, new Vector2(-60, -60), new Vector2(600, 50), font, fontMaterial);
+            renown.fontStyle = FontStyles.Bold;
+            if (save.runs > 0)
+                UiFactory.Text("Runs", root, save.runs + (save.runs == 1 ? " run  ·  " : " runs  ·  ") + save.victories + (save.victories == 1 ? " victory" : " victories"), 24, Soft, TextAlignmentOptions.Right, corner, corner, new Vector2(-60, -102), new Vector2(600, 36), font, fontMaterial).fontStyle = FontStyles.Normal;
         }
 
         void BuildSelect(Transform root)
@@ -150,11 +163,12 @@ namespace Gladiator.UI
             return t;
         }
 
-        void Show(bool selecting)
+        void Show(Screen screen)
         {
-            _selecting = selecting;
-            Set(_menu, !selecting);
-            Set(_select, selecting);
+            _screen = screen;
+            Set(_menu, screen == Screen.Menu);
+            Set(_select, screen == Screen.Select);
+            Set(_codex, screen == Screen.Codex);
         }
 
         static void Set(CanvasGroup g, bool on)
@@ -163,8 +177,10 @@ namespace Gladiator.UI
             g.interactable = g.blocksRaycasts = on;
         }
 
-        void OpenSelect() => Show(true);
-        void CloseSelect() => Show(false);
+        void OpenSelect() => Show(Screen.Select);
+        void CloseSelect() => Show(Screen.Menu);
+        void OpenCodex() => Show(Screen.Codex);
+        void CloseCodex() => Show(Screen.Menu);
 
         void StartRun()
         {
@@ -188,10 +204,15 @@ namespace Gladiator.UI
             bool back = (kb != null && kb.escapeKey.wasPressedThisFrame) || (pad != null && pad.buttonEast.wasPressedThisFrame);
             bool up = (kb != null && (kb.upArrowKey.wasPressedThisFrame || kb.wKey.wasPressedThisFrame)) || (pad != null && pad.dpad.up.wasPressedThisFrame);
             bool down = (kb != null && (kb.downArrowKey.wasPressedThisFrame || kb.sKey.wasPressedThisFrame)) || (pad != null && pad.dpad.down.wasPressedThisFrame);
-            if (_selecting)
+            if (_screen == Screen.Select)
             {
                 if (confirm) StartRun();
                 else if (back) CloseSelect();
+                return;
+            }
+            if (_screen == Screen.Codex)
+            {
+                if (confirm || back) CloseCodex();
                 return;
             }
             if (up) _focus = (_focus + _menuButtons.Length - 1) % _menuButtons.Length;

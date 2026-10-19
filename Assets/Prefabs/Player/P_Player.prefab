@@ -207,6 +207,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.PlayerBuild
   config: {fileID: 11400000, guid: a75b64ea525751d30a96d0df7879d523, type: 2}
   catalog: {fileID: 11400000, guid: e93cb754957a0d6b3b06acc9f47ac07a, type: 2}
+  meta: {fileID: 11400000, guid: d3c066395bc477ef18241ea9ca6a686c, type: 2}
 --- !u!114 &6343050640776242577
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -273,6 +274,8 @@ MonoBehaviour:
   animator: {fileID: 4759577533021436214}
   slashFx: {fileID: 0}
   volleySpread: 12
+  orbitHeight: 0.8
+  orbitRoll: 540
 --- !u!1001 &601906944168044144
 PrefabInstance:
   m_ObjectHideFlags: 0

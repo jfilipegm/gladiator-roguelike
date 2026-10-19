@@ -17,6 +17,10 @@ namespace Gladiator.Gameplay
         public int BurstLeft;
         public int Mesh = -2; // -2 = not registered yet
         public Vector3 AimDir = Vector3.forward;
+        /// <summary>Orbit: angle of the first ball (radians) and the weapon's own clock for re-hit intervals.</summary>
+        public float Phase, Clock;
+        /// <summary>Orbit: per enemy slot, the Clock time it can be hit again (allocated once, on first use).</summary>
+        public float[] NextHit;
 
         /// <summary>Reuses this slot object for `def` at level 1 (slots are allocated once, so equipping is GC-free).</summary>
         internal void Init(WeaponDef def)
@@ -30,6 +34,8 @@ namespace Gladiator.Gameplay
             BurstLeft = 0;
             Mesh = -2;
             AimDir = Vector3.forward;
+            Phase = Clock = 0f;
+            if (NextHit != null) System.Array.Clear(NextHit, 0, NextHit.Length);
         }
     }
 
@@ -38,7 +44,8 @@ namespace Gladiator.Gameplay
     /// enemy spatial hash (never Physics.Overlap), damage through EnemyManager.ApplyDamage. Up to 4 slots.
     /// Every weapon runs the same timeline (acquire → wind-up → impact → cooldown); the impact is the pattern:
     /// MeleeArc (arc hit around the aim), Thrust (line hit + spear visual), Projectile (javelin volley at the nearest
-    /// enemies), Returning (chakram out and back). Numbers = weapon base × its level modifiers × player stats.
+    /// enemies), Returning (chakram out and back). Orbit (Gorm's Flail) has no timeline: its balls always circle the
+    /// player and hit whatever they pass, each enemy at most once per cooldown. Numbers = weapon base × its level modifiers × player stats.
     /// </summary>
     public sealed class WeaponSystem : MonoBehaviour, ITickable
     {
@@ -49,6 +56,11 @@ namespace Gladiator.Gameplay
         public SlashFx slashFx;
         [Tooltip("Degrees between extra projectiles when a volley has more shots than targets.")]
         public float volleySpread = 12f;
+        [Tooltip("Orbit weapons: height of the balls above the player's feet (m).")]
+        public float orbitHeight = 0.8f;
+        [Tooltip("Orbit weapons: spin of each ball around its chain (deg/s), for show.")]
+        public float orbitRoll = 540f;
+        const int MaxOrbiters = 8;
 
         PlayerStats _stats;
 
@@ -147,6 +159,7 @@ namespace Gladiator.Gameplay
         void TickWeapon(WeaponInstance w, EnemyManager em, float dt)
         {
             var d = w.Def;
+            if (d.pattern == WeaponPattern.Orbit) { TickOrbit(w, em, dt); return; }
             w.Cooldown -= dt;
             if (w.SwingT >= 0f)
             {
@@ -308,6 +321,50 @@ namespace Gladiator.Gameplay
                 }
                 if (returning) pp.FireReturning(from, dir, shot);
                 else pp.FireStraight(from, dir, shot);
+            }
+        }
+
+        /// <summary>
+        /// AmountOf(w) balls evenly spaced on a circle of radius range × area around the player, moving at SpeedOf(w) m/s
+        /// along it. Each ball hits enemies its circle (width × √area) touches; an enemy is hit at most once per
+        /// CooldownOf(w) by this weapon, and knocked outward.
+        /// </summary>
+        void TickOrbit(WeaponInstance w, EnemyManager em, float dt)
+        {
+            var d = w.Def;
+            float area = AreaOf(w);
+            float radius = Mathf.Max(0.5f, d.range * area);
+            float hitR = d.width * Mathf.Sqrt(area);
+            int n = Mathf.Min(AmountOf(w), MaxOrbiters);
+            w.Clock += dt;
+            w.Phase = Mathf.Repeat(w.Phase + SpeedOf(w) / radius * dt, Mathf.PI * 2f);
+            if (em != null && (w.NextHit == null || w.NextHit.Length < em.capacity)) w.NextHit = new float[em.capacity];
+            var pp = PlayerProjectiles.Instance;
+            int mesh = pp != null ? MeshOf(w, pp) : -1;
+            float interval = CooldownOf(w), scale = d.meshScale * Mathf.Sqrt(area);
+            Vector3 centre = transform.position + Vector3.up * orbitHeight;
+            for (int b = 0; b < n; b++)
+            {
+                float a = w.Phase + b * (Mathf.PI * 2f / n);
+                var outward = new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a));
+                Vector3 pos = centre + outward * radius;
+                if (em != null)
+                {
+                    int k = em.QueryAlive(pos, hitR, _hits);
+                    for (int j = 0; j < k; j++)
+                    {
+                        int i = _hits[j];
+                        if (w.NextHit[i] > w.Clock) continue;
+                        w.NextHit[i] = w.Clock + interval;
+                        em.ApplyDamage(i, Hit(w, em, i, outward, DamageFlags.Melee));
+                        Hits++;
+                    }
+                }
+                if (pp != null)
+                {
+                    var rot = Quaternion.LookRotation(outward, Vector3.up) * Quaternion.Euler(0f, 0f, w.Clock * orbitRoll);
+                    pp.Orbiter(mesh, pos, rot, scale, new Vector3(-outward.z, 0f, outward.x));
+                }
             }
         }
 

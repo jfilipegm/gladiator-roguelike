@@ -16,5 +16,11 @@ Good ideas that are **not** in the current phase. Pull from here only when a pha
 - **Status icons over enemies** (tiny pips above the head) if the puffs + coloured numbers don't read at Gate 2.
 - **Status effects on the player** (enemy Burn/Slow/Root) — fire patches are their own system today.
 
+## Meta progression (after the slice)
+- **Renown purchases** — an `UnlockCondition` kind "costs N Renown" bought in the Codex (only some unlocks, CLAUDE.md §6.6); arena tiers and cosmetics gated by Renown.
+- **Codex discovery** — seen-enemy / seen-boss entries, "NEW" markers on fresh unlocks, secrets found in the arenas (the rattling crate → Pit Goblin).
+- **Unlock banner beat** — a dedicated "UNLOCKED!" moment (crowd roar, reveal of the weapon model) instead of one gold line on the end screen.
+- **Per-gladiator records** (best time / wins per gladiator) once there's more than one.
+
 ## Art / audio
 - **Upgrade icons** — cards and the HUD build strip show 2-letter glyphs (`UpgradeDef.glyph`); procedural pixel icons per Boon/weapon in the Phase 4 juice pass.

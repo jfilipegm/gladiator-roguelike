@@ -19,6 +19,10 @@ namespace Gladiator.Gameplay
         public float XpToNext => config.XpForLevel(Level);
         public float Xp01 => Mathf.Clamp01(Xp / Mathf.Max(1f, XpToNext));
         public int Gold { get; private set; }
+        /// <summary>All gold picked up this run (Gold minus what chests cost is what's left).</summary>
+        public int GoldEarned { get; private set; }
+        /// <summary>BossDef.id of the boss beaten this run (null = none yet).</summary>
+        public string BossDefeated { get; private set; }
         public int Kills { get; private set; }
         public float DamageDealt { get; private set; }
         public int PendingLevelUps { get; set; }
@@ -46,7 +50,29 @@ namespace Gladiator.Gameplay
             if (Current == this) Current = null;
         }
 
-        void OnKill(in KillEvent e) { if (!Ended) Kills++; }
+        // Kills per source (weapon RuntimeId) for "kill N with weapon W" unlocks: a fixed table, no allocation.
+        const int MaxSources = 16;
+        readonly int[] _sourceIds = new int[MaxSources];
+        readonly int[] _sourceKills = new int[MaxSources];
+        int _sourceCount;
+
+        void OnKill(in KillEvent e)
+        {
+            if (Ended) return;
+            Kills++;
+            for (int k = 0; k < _sourceCount; k++)
+                if (_sourceIds[k] == e.SourceId) { _sourceKills[k]++; return; }
+            if (_sourceCount < MaxSources) { _sourceIds[_sourceCount] = e.SourceId; _sourceKills[_sourceCount++] = 1; }
+        }
+
+        public int KillsBy(int sourceId)
+        {
+            for (int k = 0; k < _sourceCount; k++) if (_sourceIds[k] == sourceId) return _sourceKills[k];
+            return 0;
+        }
+
+        /// <summary>The boss of this arena died (BossFight). Recorded even if the player dies afterwards.</summary>
+        public void MarkBossDefeated(string bossId) { if (!Ended && !string.IsNullOrEmpty(bossId)) BossDefeated = bossId; }
         void OnHit(in HitEvent e) { if (!Ended) DamageDealt += e.Damage; }
 
         public void Tick(float dt, float unscaledDt)
@@ -86,7 +112,12 @@ namespace Gladiator.Gameplay
             }
         }
 
-        public void AddGold(int amount) { if (!Ended) Gold += amount; }
+        public void AddGold(int amount)
+        {
+            if (Ended) return;
+            Gold += amount;
+            if (amount > 0) GoldEarned += amount;
+        }
 
         /// <summary>Pays `amount` if there's enough (chests). False = not enough gold, nothing spent.</summary>
         public bool SpendGold(int amount)

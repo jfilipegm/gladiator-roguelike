@@ -90,6 +90,7 @@ namespace Gladiator.Gameplay
         /// <summary>Swings gate i open for `seconds`.</summary>
         public void Open(int i, float seconds)
         {
+            if (!IsOpen(i)) SfxPlayer.Play(SfxId.Gate, Position(i));
             if (i < 0 || i >= gates.Length) return;
             _openUntil[i] = Mathf.Max(_openUntil[i], _clock + seconds);
         }

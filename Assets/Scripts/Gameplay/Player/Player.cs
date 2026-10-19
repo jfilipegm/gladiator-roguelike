@@ -63,8 +63,8 @@ namespace Gladiator.Gameplay
 
             var frame = _source.Read();
 
-            if (frame.PausePressed && !IsBotControlled && (InputEnabled || _paused)) SetPaused(!_paused); // screens that block input own Esc
-            if (_paused && !IsBotControlled && UnityEngine.InputSystem.Mouse.current != null &&
+            if (frame.PausePressed && !IsBotControlled && !GameOptions.PanelOwnsInput && (InputEnabled || _paused)) SetPaused(!_paused); // screens that block input own Esc
+            if (_paused && !IsBotControlled && !GameOptions.PanelOwnsInput && UnityEngine.InputSystem.Mouse.current != null &&
                 UnityEngine.InputSystem.Mouse.current.leftButton.wasPressedThisFrame)
                 SetPaused(false);
 

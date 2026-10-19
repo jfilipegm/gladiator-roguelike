@@ -21,6 +21,8 @@ namespace Gladiator.Gameplay
         [Tooltip("Floor while the player is below this fraction of max HP (the crowd smells blood).")]
         [Range(0f, 1f)] public float nearDeathHp = 0.25f;
         [Range(0f, 1f)] public float nearDeathFloor = 0.6f;
+        [Tooltip("A spike at least this far above the current level gets a cheer.")]
+        [Range(0f, 1f)] public float cheerJump = 0.2f;
 
         static readonly int ExcitementId = Shader.PropertyToID("_CrowdExcitement");
         PlayerHealth _health;
@@ -51,7 +53,12 @@ namespace Gladiator.Gameplay
         void OnKill(in KillEvent e) => _value = Mathf.Min(1f, _value + (e.Elite ? perEliteKill : perKill));
 
         /// <summary>Boss entrance, boss kill, big moments: jump straight to at least `level`.</summary>
-        public void Spike(float level) => _value = Mathf.Max(_value, Mathf.Clamp01(level));
+        public void Spike(float level)
+        {
+            level = Mathf.Clamp01(level);
+            if (level - _value >= cheerJump) SfxPlayer.Play2D(SfxId.Cheer, Mathf.Lerp(0.6f, 1f, level));
+            _value = Mathf.Max(_value, level);
+        }
 
         public void Tick(float dt, float unscaledDt)
         {

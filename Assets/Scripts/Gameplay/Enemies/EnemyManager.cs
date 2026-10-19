@@ -496,6 +496,7 @@ namespace Gladiator.Gameplay
         void Detonate(Vector3 pos, float radius, float toPlayer, float toEnemies, Vector3 player)
         {
             if (deathPop != null) deathPop.Burst(pos + Vector3.up * 0.5f, 26, 7.5f, 0.2f, blastColorA, blastColorB);
+            SfxPlayer.Play(SfxId.Explosion, pos);
             Vector3 d = player - pos;
             float pd = new Vector2(d.x, d.z).magnitude;
             ScreenShake.Add(pd < radius * 3f ? 0.35f : 0.12f);
@@ -811,6 +812,7 @@ namespace Gladiator.Gameplay
         {
             float r = def.attackRadius * _scale[i];
             if (deathPop != null) deathPop.Burst(p + Vector3.up * 0.15f, 16, 5f, 0.16f, slamDustA, slamDustB);
+            SfxPlayer.Play(SfxId.Slam, p, 0.8f);
             if (dist < 12f) ScreenShake.Add(dist < r * 1.5f ? 0.3f : 0.12f);
             bool grounded = _playerMotor == null || _playerMotor.IsGrounded;
             float dy = player.y - p.y;

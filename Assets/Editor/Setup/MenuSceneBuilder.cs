@@ -69,6 +69,9 @@ namespace Gladiator.EditorTools
                 new Gladiator.UI.MainMenu.Locked { name = "The Pit Goblin", hint = "Something rattles in a crate in the Slave Pit." },
                 new Gladiator.UI.MainMenu.Locked { name = "The Blood Knight", hint = "Reach the Stone Amphitheater." },
             };
+            var options = new GameObject("OptionsPanel").AddComponent<Gladiator.UI.OptionsPanel>();
+            options.font = font; options.fontMaterial = fontMat;
+            new GameObject("SfxPlayer").AddComponent<SfxPlayer>().bank = AssetDatabase.LoadAssetAtPath<SfxBank>(AudioSetup.BankPath);
             new GameObject("EventSystem", typeof(UnityEngine.EventSystems.EventSystem), typeof(UnityEngine.InputSystem.UI.InputSystemUIInputModule));
 
             SceneSetupUtil.SaveScene(scene, GameSession.MenuScene);

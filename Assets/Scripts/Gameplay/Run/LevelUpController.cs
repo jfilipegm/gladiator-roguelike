@@ -133,6 +133,7 @@ namespace Gladiator.Gameplay
             if (!IsOpen || index < 0 || index >= ChoiceCount) return;
             build.Take(Offers[index]);
             TimesChosen++;
+            SfxPlayer.Play2D(SfxId.Pick);
             Finish();
         }
 
@@ -144,6 +145,7 @@ namespace Gladiator.Gameplay
             int n = ChoiceCount;
             ChoiceCount = RollAll(n);
             OffersVersion++;
+            SfxPlayer.Play2D(SfxId.Card);
             return true;
         }
 
@@ -155,6 +157,7 @@ namespace Gladiator.Gameplay
             if (d == null || d.kind == UpgradeKind.Consumable) return false;
             build.State.BanishesUsed++;
             build.State.Banish(d);
+            SfxPlayer.Play2D(SfxId.Card);
             ChoiceCount = _roller.Replace(build.catalog.upgrades, build.catalog.fallbacks, build.State, build.config, Luck, Offers, ChoiceCount, index);
             OffersVersion++;
             if (ChoiceCount == 0) Skip();

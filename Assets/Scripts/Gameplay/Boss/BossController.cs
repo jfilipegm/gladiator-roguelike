@@ -143,6 +143,7 @@ namespace Gladiator.Gameplay
             {
                 _em.SetInvulnerable(_slot, true);
                 Enter(State.Enraging, def.enrageRoar);
+                SfxPlayer.Play2D(SfxId.BossRoar);
                 GameEvents.OnAnnounce.Raise(new AnnounceEvent { Text = BurnText, Color = Danger, Seconds = 2.2f });
                 if (CrowdExcitement.Instance != null) CrowdExcitement.Instance.Spike(1f);
                 ScreenShake.Add(0.45f);
@@ -155,6 +156,7 @@ namespace Gladiator.Gameplay
                     if (u >= 1f || Flat(_entryEnd - _pos).sqrMagnitude < 0.3f)
                     {
                         Enter(State.Roaring, entranceRoar);
+                        SfxPlayer.Play2D(SfxId.BossRoar);
                         ScreenShake.Add(0.4f);
                         if (CrowdExcitement.Instance != null) CrowdExcitement.Instance.Spike(0.9f);
                     }
@@ -351,6 +353,7 @@ namespace Gladiator.Gameplay
                     if (d.sqrMagnitude < reach * reach && feet < def.sweepJumpClear)
                         HitPlayer(def.sweepDamage, d.sqrMagnitude > 1e-4f ? d.normalized : _aim, def.sweepKnockback);
                     if (burst != null) burst.Burst(_pos + Vector3.up * 0.4f, 24, 9f, 0.25f, new Color(0.55f, 0.42f, 0.3f), Danger);
+                    SfxPlayer.Play(SfxId.Slam, _pos);
                     ScreenShake.Add(0.2f);
                     break;
                 }
@@ -365,6 +368,7 @@ namespace Gladiator.Gameplay
                         if (_motor != null) _motor.Slow(def.whipSlow, def.whipSlowSeconds);
                     }
                     if (burst != null) burst.Burst(_pos + _aim * def.whipLength + Vector3.up * 0.3f, 8, 4f, 0.15f, Danger, Color.white);
+                    SfxPlayer.Play(SfxId.Crit, _pos + _aim * (def.whipLength * 0.5f));
                     break;
                 }
                 case BossAttack.Slam:
@@ -375,6 +379,7 @@ namespace Gladiator.Gameplay
                     if (d.sqrMagnitude < reach * reach && feet < 0.6f)
                         HitPlayer(def.slamDamage, d.sqrMagnitude > 1e-4f ? d.normalized : _aim, 7f);
                     if (burst != null) burst.Burst(_target + Vector3.up * 0.2f, 28, 8f, 0.28f, new Color(0.5f, 0.38f, 0.28f), Danger);
+                    SfxPlayer.Play(SfxId.Slam, _target);
                     ScreenShake.Add(0.35f);
                     if (_phase == 2 && HazardZones.Instance != null)
                         HazardZones.Instance.Add(_target, def.slamFire.x, def.slamFire.y, def.slamFire.z);
@@ -416,6 +421,7 @@ namespace Gladiator.Gameplay
                     }
                     if (wall)
                     {
+                        SfxPlayer.Play(SfxId.Slam, _pos);
                         ScreenShake.Add(0.3f);
                         if (_em.deathPop != null) _em.deathPop.Burst(_pos + _aim * def.enemy.radius + Vector3.up * 0.8f, 18, 6f, 0.22f, new Color(0.5f, 0.38f, 0.28f), Color.white);
                         Enter(State.Stunned, def.chargeStun);
@@ -465,6 +471,7 @@ namespace Gladiator.Gameplay
             _guardsT = 0f;
             var gates = ArenaGates.Instance;
             if (def.guards == null || def.guards.Length == 0) return;
+            SfxPlayer.Play2D(SfxId.Horn);
             int n = GameRandom.Range(def.guardCount.x, def.guardCount.y + 1);
             for (int k = 0; k < n; k++)
             {

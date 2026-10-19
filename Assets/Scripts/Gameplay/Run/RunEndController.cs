@@ -79,12 +79,14 @@ namespace Gladiator.Gameplay
             {
                 _beatLeft = deathBeat;
                 TimeController.SlowMotion = deathSlowMotion;
+                SfxPlayer.Play2D(SfxId.Death);
                 if (animator != null) animator.Dead = true;
                 if (burst != null) burst.Burst(at, 36, 6f, 0.22f, new Color(1f, 0.33f, 0.2f), new Color(0.35f, 0.05f, 0.08f));
             }
             else
             {
                 _beatLeft = survivedBeat;
+                SfxPlayer.Play2D(SfxId.Victory);
                 if (EnemyManager.Instance != null) EnemyManager.Instance.KillAll(); // the arena falls silent
                 if (EnemyProjectiles.Instance != null) EnemyProjectiles.Instance.Clear();
                 if (HazardZones.Instance != null) HazardZones.Instance.Clear();

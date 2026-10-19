@@ -229,6 +229,7 @@ namespace Gladiator.Gameplay
                 s.State = State.Opening;
                 s.T = 0f;
                 lvl.QueueReward(PickSource.Chest, config.chestFloor);
+                SfxPlayer.Play(SfxId.Chest, s.Pos);
                 if (burst != null) burst.Burst(s.Pos + Vector3.up * 0.8f, 24, 6f, 0.2f, new Color(1f, 0.86f, 0.4f), Color.white);
                 if (_respawnT <= 0f) _respawnT = config.respawnDelay;
             }
@@ -244,6 +245,7 @@ namespace Gladiator.Gameplay
                 AltarsUsed++;
                 s.State = State.Spent;
                 lvl.QueueReward(PickSource.Altar, config.altarFloor);
+                SfxPlayer.Play(SfxId.Altar, s.Pos);
                 if (burst != null) burst.Burst(s.Pos + Vector3.up * 1.1f, 30, 5f, 0.22f, altarRing, new Color(0.35f, 0.05f, 0.1f));
             }
             return true;

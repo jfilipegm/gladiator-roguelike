@@ -1,0 +1,277 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 101153ef2015055b79b9433a0a106af8, type: 3}
+  m_Name: SfxBank
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.SfxBank
+  entries:
+  - id: 0
+    clip: {fileID: 8300000, guid: 966b77cd203b22a439a76a36aad591b4, type: 3}
+    volume: 0.35
+    pitchJitter: 0.12
+    minInterval: 0.05
+    maxVoices: 3
+    positional: 1
+    priority: 1
+    crowdBus: 0
+  - id: 1
+    clip: {fileID: 8300000, guid: b35590d6006ab73d1a8d99929e998cdf, type: 3}
+    volume: 0.4
+    pitchJitter: 0.1
+    minInterval: 0.05
+    maxVoices: 2
+    positional: 1
+    priority: 1
+    crowdBus: 0
+  - id: 2
+    clip: {fileID: 8300000, guid: e5e6cba28a2795572bceb752a711e04a, type: 3}
+    volume: 0.35
+    pitchJitter: 0.12
+    minInterval: 0.05
+    maxVoices: 3
+    positional: 1
+    priority: 1
+    crowdBus: 0
+  - id: 3
+    clip: {fileID: 8300000, guid: 4244359bb8ea8d12da920681364256d3, type: 3}
+    volume: 0.45
+    pitchJitter: 0.15
+    minInterval: 0.035
+    maxVoices: 5
+    positional: 1
+    priority: 1
+    crowdBus: 0
+  - id: 4
+    clip: {fileID: 8300000, guid: 7feb504b93e017a52a899ba52cc9897e, type: 3}
+    volume: 0.55
+    pitchJitter: 0.08
+    minInterval: 0.06
+    maxVoices: 3
+    positional: 1
+    priority: 3
+    crowdBus: 0
+  - id: 5
+    clip: {fileID: 8300000, guid: 1b836cc85253e0c0db7db546bc9fcd06, type: 3}
+    volume: 0.4
+    pitchJitter: 0.1
+    minInterval: 0.08
+    maxVoices: 2
+    positional: 1
+    priority: 2
+    crowdBus: 0
+  - id: 6
+    clip: {fileID: 8300000, guid: 044bb384fbc6f315ea34822cd3bcbd6d, type: 3}
+    volume: 0.35
+    pitchJitter: 0.2
+    minInterval: 0.03
+    maxVoices: 5
+    positional: 1
+    priority: 1
+    crowdBus: 0
+  - id: 7
+    clip: {fileID: 8300000, guid: e99842cfe4deb4d5e89f20d2d1b52719, type: 3}
+    volume: 0.8
+    pitchJitter: 0.05
+    minInterval: 0.1
+    maxVoices: 2
+    positional: 1
+    priority: 6
+    crowdBus: 0
+  - id: 8
+    clip: {fileID: 8300000, guid: bb792432bdf3bbeecbbbe51cd201a00e, type: 3}
+    volume: 0.7
+    pitchJitter: 0.08
+    minInterval: 0.15
+    maxVoices: 1
+    positional: 0
+    priority: 8
+    crowdBus: 0
+  - id: 9
+    clip: {fileID: 8300000, guid: 9e34b0c4b66b0ad9f9af7568c2e415fa, type: 3}
+    volume: 0.22
+    pitchJitter: 0.15
+    minInterval: 0.025
+    maxVoices: 4
+    positional: 0
+    priority: 0
+    crowdBus: 0
+  - id: 10
+    clip: {fileID: 8300000, guid: 81bca42427ca9f32085566234e3b300a, type: 3}
+    volume: 0.35
+    pitchJitter: 0.05
+    minInterval: 0.05
+    maxVoices: 2
+    positional: 0
+    priority: 2
+    crowdBus: 0
+  - id: 11
+    clip: {fileID: 8300000, guid: 21cf7d3434a3729eab72499661b8e116, type: 3}
+    volume: 0.6
+    pitchJitter: 0
+    minInterval: 0.3
+    maxVoices: 1
+    positional: 0
+    priority: 9
+    crowdBus: 0
+  - id: 12
+    clip: {fileID: 8300000, guid: 7d71ee250005b053f9a628e2747453f1, type: 3}
+    volume: 0.4
+    pitchJitter: 0.05
+    minInterval: 0.03
+    maxVoices: 2
+    positional: 0
+    priority: 7
+    crowdBus: 0
+  - id: 13
+    clip: {fileID: 8300000, guid: b4cd5dd909810fd43ab45958c7626401, type: 3}
+    volume: 0.55
+    pitchJitter: 0
+    minInterval: 0.1
+    maxVoices: 1
+    positional: 0
+    priority: 9
+    crowdBus: 0
+  - id: 14
+    clip: {fileID: 8300000, guid: d93ad6ade9d4eb39eb3839d8f7fec85f, type: 3}
+    volume: 0.7
+    pitchJitter: 0
+    minInterval: 0.3
+    maxVoices: 1
+    positional: 1
+    priority: 8
+    crowdBus: 0
+  - id: 15
+    clip: {fileID: 8300000, guid: c7895127e27e1ffac8e2052442e7a0a2, type: 3}
+    volume: 0.75
+    pitchJitter: 0
+    minInterval: 0.3
+    maxVoices: 1
+    positional: 1
+    priority: 8
+    crowdBus: 0
+  - id: 16
+    clip: {fileID: 8300000, guid: 4d852c94f3de1eb4481a7117886beb27, type: 3}
+    volume: 0.7
+    pitchJitter: 0.1
+    minInterval: 0.06
+    maxVoices: 3
+    positional: 1
+    priority: 5
+    crowdBus: 0
+  - id: 17
+    clip: {fileID: 8300000, guid: 8dcb2c7dc1400b0eda0c704d8392c346, type: 3}
+    volume: 0.75
+    pitchJitter: 0.08
+    minInterval: 0.08
+    maxVoices: 2
+    positional: 1
+    priority: 6
+    crowdBus: 0
+  - id: 18
+    clip: {fileID: 8300000, guid: b1d7ad6a83d1a26c8bda0cc21f43039a, type: 3}
+    volume: 0.3
+    pitchJitter: 0.2
+    minInterval: 0.04
+    maxVoices: 3
+    positional: 1
+    priority: 1
+    crowdBus: 0
+  - id: 19
+    clip: {fileID: 8300000, guid: 569b69506c78f560fa06c855d12a87ee, type: 3}
+    volume: 0.5
+    pitchJitter: 0.1
+    minInterval: 0.1
+    maxVoices: 2
+    positional: 1
+    priority: 3
+    crowdBus: 0
+  - id: 20
+    clip: {fileID: 8300000, guid: 1d6426dd547e8b0a09e20ea166e957d9, type: 3}
+    volume: 1
+    pitchJitter: 0
+    minInterval: 1
+    maxVoices: 1
+    positional: 0
+    priority: 10
+    crowdBus: 0
+  - id: 21
+    clip: {fileID: 8300000, guid: f85343e143c6c7af7991e43e16f7c17f, type: 3}
+    volume: 0.7
+    pitchJitter: 0
+    minInterval: 1
+    maxVoices: 1
+    positional: 0
+    priority: 9
+    crowdBus: 0
+  - id: 22
+    clip: {fileID: 8300000, guid: 623759e558eae04a3bb21b292bb12f9b, type: 3}
+    volume: 0.6
+    pitchJitter: 0
+    minInterval: 0.5
+    maxVoices: 2
+    positional: 1
+    priority: 7
+    crowdBus: 0
+  - id: 23
+    clip: {fileID: 8300000, guid: 165d204f8549ae4d786ef071cd14d8e6, type: 3}
+    volume: 0.5
+    pitchJitter: 0
+    minInterval: 0.8
+    maxVoices: 1
+    positional: 0
+    priority: 8
+    crowdBus: 0
+  - id: 24
+    clip: {fileID: 8300000, guid: 3f441e925ecdd2d658f4ef1a487a3762, type: 3}
+    volume: 0.8
+    pitchJitter: 0
+    minInterval: 1
+    maxVoices: 1
+    positional: 0
+    priority: 10
+    crowdBus: 0
+  - id: 25
+    clip: {fileID: 8300000, guid: 6ebaf4ad90d5a04d9bdc7b3377d190a8, type: 3}
+    volume: 0.8
+    pitchJitter: 0
+    minInterval: 1
+    maxVoices: 1
+    positional: 0
+    priority: 10
+    crowdBus: 0
+  - id: 26
+    clip: {fileID: 8300000, guid: 0c473fe71edb12caf8e59ca381ba4991, type: 3}
+    volume: 0.8
+    pitchJitter: 0
+    minInterval: 1
+    maxVoices: 1
+    positional: 0
+    priority: 10
+    crowdBus: 0
+  - id: 27
+    clip: {fileID: 8300000, guid: 9dbb74d312763a258bf2e4f696254fad, type: 3}
+    volume: 0.6
+    pitchJitter: 0.06
+    minInterval: 1.2
+    maxVoices: 2
+    positional: 0
+    priority: 5
+    crowdBus: 1
+  crowdLoop: {fileID: 8300000, guid: 969b18638588b710c80f8caa8ca24694, type: 3}
+  mixer: {fileID: 24100000, guid: 339af0a7a793a8dcf8f612d6f2e728e3, type: 2}
+  sfxGroup: {fileID: 1347008738550868248, guid: 339af0a7a793a8dcf8f612d6f2e728e3, type: 2}
+  crowdGroup: {fileID: -6020315501132435674, guid: 339af0a7a793a8dcf8f612d6f2e728e3, type: 2}
+  musicGroup: {fileID: -816280246266722273, guid: 339af0a7a793a8dcf8f612d6f2e728e3, type: 2}
+  fullVolumeDistance: 8
+  silentDistance: 40
+  maxPan: 0.6
+  crowdQuiet: 0.18
+  crowdLoud: 0.75

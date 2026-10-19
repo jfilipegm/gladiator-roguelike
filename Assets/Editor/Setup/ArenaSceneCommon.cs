@@ -200,6 +200,17 @@ namespace Gladiator.EditorTools
             endPanel.transform.SetParent(root, false);
             endPanel.font = font; endPanel.fontMaterial = fontMat;
 
+            // Phase 4: sound (pooled voices + crowd loop), the crowd announcer, the options screen (pause → O).
+            var sfx = new GameObject("SfxPlayer").AddComponent<SfxPlayer>();
+            sfx.transform.SetParent(root, false);
+            sfx.bank = AssetDatabase.LoadAssetAtPath<SfxBank>(AudioSetup.BankPath);
+            var announcer = new GameObject("CrowdAnnouncer").AddComponent<CrowdAnnouncer>();
+            announcer.transform.SetParent(root, false);
+            announcer.config = AssetDatabase.LoadAssetAtPath<AnnouncerConfig>(AudioSetup.AnnouncerPath);
+            var options = new GameObject("OptionsPanel").AddComponent<Gladiator.UI.OptionsPanel>();
+            options.transform.SetParent(root, false);
+            options.font = font; options.fontMaterial = fontMat;
+
             // Admin / test tools (F1; Editor and development builds).
             var admin = new GameObject("AdminController").AddComponent<AdminController>();
             admin.transform.SetParent(root, false);

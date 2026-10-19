@@ -36,7 +36,7 @@ namespace Gladiator.Gameplay
             _decollider = vcam.GetComponent<CinemachineDecollider>();
             _yaw = player != null ? player.transform.eulerAngles.y : 0f;
             _pitch = config.startPitch;
-            _fov = config.baseFov;
+            _fov = GameOptions.Data.fov;
             ApplyConfig();
         }
 
@@ -59,9 +59,11 @@ namespace Gladiator.Gameplay
 #endif
             var c = config;
             var input = player.Input;
-            float inv = c.invertY ? -1f : 1f;
-            _yaw += input.LookMouse.x * c.mouseSensitivity + input.LookStick.x * c.stickYawSpeed * unscaledDt;
-            _pitch -= inv * (input.LookMouse.y * c.mouseSensitivity + input.LookStick.y * c.stickPitchSpeed * unscaledDt);
+            var opt = GameOptions.Data; // the player's options multiply the designer's tuning
+            float inv = c.invertY != opt.invertY ? -1f : 1f;
+            float sens = opt.lookSensitivity;
+            _yaw += sens * (input.LookMouse.x * c.mouseSensitivity + input.LookStick.x * c.stickYawSpeed * unscaledDt);
+            _pitch -= inv * sens * (input.LookMouse.y * c.mouseSensitivity + input.LookStick.y * c.stickPitchSpeed * unscaledDt);
             _pitch = Mathf.Clamp(_pitch, c.minPitch, c.maxPitch);
             if (_yaw > 360f || _yaw < -360f) _yaw %= 360f;
 
@@ -74,7 +76,7 @@ namespace Gladiator.Gameplay
             // Speed FOV kick (slides/slide-jumps feel fast).
             float speed = motor != null ? motor.HorizontalSpeed : 0f;
             float t = Mathf.InverseLerp(c.speedFovRange.x, c.speedFovRange.y, speed);
-            float targetFov = c.baseFov + c.speedFovKick * t * t;
+            float targetFov = opt.fov + c.speedFovKick * t * t;
             _fov = Mathf.Lerp(_fov, targetFov, 1f - Mathf.Exp(-c.fovSharpness * unscaledDt));
             var lens = vcam.Lens;
             lens.FieldOfView = _fov;

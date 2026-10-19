@@ -57,6 +57,7 @@ namespace Gladiator.Gameplay
                     if (_paused) { TimeController.PopPause(); _paused = false; }
                     Current = Stage.Fight;
                     T = 0f;
+                    SfxPlayer.Play2D(SfxId.Fight);
                     if (CrowdExcitement.Instance != null) CrowdExcitement.Instance.Spike(0.6f);
                 }
             }

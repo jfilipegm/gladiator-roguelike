@@ -195,6 +195,7 @@ namespace Gladiator.Gameplay
                     {
                         if (HazardZones.Instance != null)
                             HazardZones.Instance.Add(_to[i], _zoneRadius[i], _zoneTime[i], _zoneDps[i]);
+                            SfxPlayer.Play(SfxId.FirePot, _to[i]);
                         if (burst != null) burst.Burst(_to[i] + Vector3.up * 0.2f, 10, 4f, 0.13f, fireColor, new Color(1f, 0.85f, 0.4f));
                         Free(i);
                         continue;

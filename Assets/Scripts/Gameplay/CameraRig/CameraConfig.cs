@@ -29,6 +29,7 @@ namespace Gladiator.Gameplay
         public Vector3 followDamping = new Vector3(0.05f, 0.12f, 0.05f);
 
         [Header("Lens")]
+        [Tooltip("Reference only: the resting FOV is the player's option (GameOptions, default 62, 50–90).")]
         public float baseFov = 62f;
         [Tooltip("Extra FOV at slideMaxSpeed (speed feel).")]
         public float speedFovKick = 12f;

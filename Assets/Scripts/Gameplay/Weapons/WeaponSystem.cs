@@ -195,11 +195,13 @@ namespace Gladiator.Gameplay
             if (d.pattern == WeaponPattern.MeleeArc)
             {
                 if (slashFx != null) slashFx.Play(origin + Vector3.up * 0.75f, w.AimDir, d.range * area, d.arcDegrees, d.swingDuration);
+                SfxPlayer.Play(SfxId.Swing, origin);
             }
             else if (d.pattern == WeaponPattern.Thrust)
             {
                 var pp = PlayerProjectiles.Instance;
                 if (pp != null) pp.Thrust(w.AimDir, d.range * area, d.swingDuration, MeshOf(w, pp), d.meshScale * Mathf.Sqrt(area));
+                SfxPlayer.Play(SfxId.Thrust, origin);
             }
             return true;
         }
@@ -304,6 +306,7 @@ namespace Gladiator.Gameplay
                 Mesh = MeshOf(w, pp),
             };
             Vector3 from = origin + Vector3.up * pp.flightHeight;
+            SfxPlayer.Play(SfxId.Throw, origin);
             for (int k = 0; k < amount; k++)
             {
                 Vector3 dir = w.AimDir;

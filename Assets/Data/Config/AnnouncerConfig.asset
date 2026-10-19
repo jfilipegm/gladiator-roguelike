@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d506402ed3968ed1093c12bab902a570, type: 3}
+  m_Name: AnnouncerConfig
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.AnnouncerConfig
+  window: 4
+  streaks:
+  - kills: 40
+    text: KILLING SPREE!
+    crowd: 0.55
+  - kills: 80
+    text: MASSACRE!
+    crowd: 0.7
+  - kills: 140
+    text: BLOODBATH!
+    crowd: 0.85
+  - kills: 220
+    text: UNSTOPPABLE!
+    crowd: 1
+  streakCooldown: 20
+  minGap: 6
+  closeCallLow: 0.15
+  closeCallRecovered: 0.4
+  closeCallText: STILL STANDING!
+  closeCallCooldown: 30
+  roarAt: 0.95
+  roarText: THE CROWD ROARS!
+  roarCooldown: 45
+  color: {r: 1, g: 0.84, b: 0.3, a: 1}
+  seconds: 1.8

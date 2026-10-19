@@ -155,7 +155,7 @@ namespace Gladiator.UI
             _bossName = UiFactory.Text("BossName", bossRoot.transform, "", 30, new Color(1f, 0.9f, 0.8f), TextAlignmentOptions.Center, top, top, new Vector2(0, -112), new Vector2(900, 36), font, fontMaterial);
             PreSize(_bossName, "GORM, THE PIT MASTER OF THE SLAVE PITS");
             _bossFill = UiFactory.Bar("BossBar", bossRoot.transform, new Color(0.08f, 0.05f, 0.06f, 0.85f), BossRed, top, top, new Vector2(0, -150), new Vector2(760, 26));
-            _pause = UiFactory.Text("Pause", canvas, "PAUSED\n<size=36>click to resume  ·  Q: main menu</size>", 90, Color.white, TextAlignmentOptions.Center, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(900, 260), font, fontMaterial);
+            _pause = UiFactory.Text("Pause", canvas, "PAUSED\n<size=36>click to resume  ·  O: options  ·  Q: main menu</size>", 90, Color.white, TextAlignmentOptions.Center, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(900, 260), font, fontMaterial);
             _pause.textWrappingMode = TextWrappingModes.Normal;
             _pause.alpha = 0f;
             _debug = UiFactory.Text("Debug", canvas, "", 20, new Color(1f, 1f, 1f, 0.75f), TextAlignmentOptions.BottomLeft, Vector2.zero, Vector2.zero, new Vector2(16, 12), new Vector2(900, 30), font, fontMaterial);
@@ -302,8 +302,12 @@ namespace Gladiator.UI
             DrawInteractables(run);
             DrawBoss(run);
             DrawIntro(unscaledDt);
-            if (player != null && player.IsPaused && Keyboard.current != null && Keyboard.current.qKey.wasPressedThisFrame)
-                GameSession.ToMenu();
+            if (player != null && player.IsPaused && !OptionsPanel.IsOpen && Keyboard.current != null)
+            {
+                if (Keyboard.current.qKey.wasPressedThisFrame) GameSession.ToMenu();
+                else if (Keyboard.current.oKey.wasPressedThisFrame && OptionsPanel.Instance != null) OptionsPanel.Instance.Open();
+            }
+            if (OptionsPanel.IsOpen && _pause.alpha > 0f) _pause.alpha = 0f;
 
             // Dev switches in effect (so a test never silently runs with God mode on). Rebuilt only when they change.
             int tags = (DevSettings.GodMode ? 1 : 0) | (DevSettings.Timeless ? 2 : 0) | (DevSettings.AnyBuff ? 4 : 0) |

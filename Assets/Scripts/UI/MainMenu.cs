@@ -86,7 +86,8 @@ namespace Gladiator.UI
             {
                 UiFactory.Button("Play", root, "PLAY", left, left, new Vector2(110, 10), new Vector2(360, 76), font, fontMaterial, OpenSelect, 40f),
                 UiFactory.Button("Codex", root, "CODEX", left, left, new Vector2(110, -82), new Vector2(360, 76), font, fontMaterial, OpenCodex, 40f),
-                UiFactory.Button("Quit", root, "QUIT", left, left, new Vector2(110, -174), new Vector2(360, 76), font, fontMaterial, Quit, 40f),
+                UiFactory.Button("Options", root, "OPTIONS", left, left, new Vector2(110, -174), new Vector2(360, 76), font, fontMaterial, OpenOptions, 40f),
+                UiFactory.Button("Quit", root, "QUIT", left, left, new Vector2(110, -266), new Vector2(360, 76), font, fontMaterial, Quit, 40f),
             };
             _menuFrames = new Image[_menuButtons.Length];
             for (int i = 0; i < _menuButtons.Length; i++)
@@ -177,13 +178,15 @@ namespace Gladiator.UI
             g.interactable = g.blocksRaycasts = on;
         }
 
-        void OpenSelect() => Show(Screen.Select);
+        void OpenSelect() { SfxPlayer.Play2D(SfxId.Card); Show(Screen.Select); }
         void CloseSelect() => Show(Screen.Menu);
-        void OpenCodex() => Show(Screen.Codex);
+        void OpenCodex() { SfxPlayer.Play2D(SfxId.Card); Show(Screen.Codex); }
+        void OpenOptions() { SfxPlayer.Play2D(SfxId.Card); if (OptionsPanel.Instance != null) OptionsPanel.Instance.Open(); }
         void CloseCodex() => Show(Screen.Menu);
 
         void StartRun()
         {
+            SfxPlayer.Play2D(SfxId.Pick);
             GameSession.StartRun(gladiators.Length > 0 ? gladiators[0] : null, run);
         }
 
@@ -198,6 +201,7 @@ namespace Gladiator.UI
 
         void Update()
         {
+            if (GameOptions.PanelOwnsInput) return;
             var kb = Keyboard.current;
             var pad = Gamepad.current;
             bool confirm = (kb != null && (kb.enterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame)) || (pad != null && pad.buttonSouth.wasPressedThisFrame);

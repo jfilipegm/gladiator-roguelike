@@ -25,6 +25,15 @@ namespace Gladiator.Gameplay
         AudioSource _crowd;
         Transform _cam;
 
+        [Header("Gem pickup chain")]
+        [Tooltip("Pitch added per gem picked up in a row.")]
+        public float gemChainStep = 0.025f;
+        public float gemChainMaxPitch = 0.6f;
+        [Tooltip("Seconds without a gem that reset the chain.")]
+        public float gemChainGap = 0.35f;
+        int _gemChain;
+        float _lastGem = -9f;
+
         public int Played { get; private set; }
 
         public static void Play(SfxId id, Vector3 position, float volume = 1f)
@@ -126,13 +135,21 @@ namespace Gladiator.Gameplay
         void OnCrit(in HitEvent e) => PlayAt(SfxId.Crit, e.Position, true, 1f);
         void OnKill(in KillEvent e) => PlayAt(e.Elite ? SfxId.EliteKill : SfxId.Kill, e.Position, true, 1f);
         void OnDamaged(in DamagedEvent e) => PlayAt(SfxId.PlayerHurt, e.Position, false, 1f);
-        void OnPickup(in PickupEvent e) => PlayAt(e.Kind == (int)PickupSystem.Kind.Gold ? SfxId.Coin : SfxId.Gem, e.Position, false, 1f);
+        void OnPickup(in PickupEvent e)
+        {
+            if (e.Kind == (int)PickupSystem.Kind.Gold) { PlayAt(SfxId.Coin, e.Position, false, 1f); return; }
+            // a vacuumed stream of gems climbs in pitch (resets after a short gap)
+            float now = Time.unscaledTime;
+            _gemChain = now - _lastGem < gemChainGap ? _gemChain + 1 : 0;
+            _lastGem = now;
+            PlayAt(SfxId.Gem, e.Position, false, 1f, 1f + Mathf.Min(gemChainMaxPitch, _gemChain * gemChainStep));
+        }
         void OnLevelUp(in LevelUpEvent e) => PlayAt(SfxId.LevelUp, Vector3.zero, false, 1f);
         void OnAnnounce(in AnnounceEvent e) => PlayAt(SfxId.Announce, Vector3.zero, false, 1f);
         void OnDirector(in DirectorEvent e) => PlayAt(e.Kind == DirectorEventKind.Swarm ? SfxId.Horn : SfxId.Announce, e.Position, false, 1f);
 
         // ---------- voices ----------
-        void PlayAt(SfxId id, Vector3 position, bool positional, float volume)
+        void PlayAt(SfxId id, Vector3 position, bool positional, float volume, float pitch = 1f)
         {
             if (_src == null) return;
             var e = _byId[(int)id];
@@ -161,7 +178,7 @@ namespace Gladiator.Gameplay
             src.Stop();
             src.clip = e.clip;
             src.volume = v;
-            src.pitch = 1f + (e.pitchJitter > 0f ? Random.Range(-e.pitchJitter, e.pitchJitter) : 0f);
+            src.pitch = pitch != 1f ? pitch : 1f + (e.pitchJitter > 0f ? Random.Range(-e.pitchJitter, e.pitchJitter) : 0f);
             src.panStereo = pan;
             src.outputAudioMixerGroup = e.crowdBus ? bank.crowdGroup : bank.sfxGroup;
             src.Play();

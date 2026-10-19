@@ -100,7 +100,7 @@ namespace Gladiator.UI
             _subtitle.text = died
                 ? (RunState.Current != null && RunState.Current.TimerDone ? "Gorm drags you off by the chain." : "The crowd wanted more.")
                 : bossDown ? "The Pit Master lies in the dirt. The crowd chants a name: yours." : "The pit falls silent.";
-            _note.text = "Admin menu: F1 (God mode, buffs, spawns, \"Timer to 0:10\" for the boss)";
+            _note.text = Debug.isDebugBuild ? "Admin menu: F1 (God mode, buffs, spawns, \"Timer to 0:10\" for the boss)" : "";
             float t = run != null ? run.Elapsed : 0f;
             _time.SetText("{0}:{1:00}", Mathf.Floor(t / 60f), Mathf.Floor(t % 60f));
             _level.SetText("{0}", run != null ? run.Level : 0);

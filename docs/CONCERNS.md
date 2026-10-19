@@ -31,7 +31,16 @@ Slingers and Fire-Pot Throwers keep 6–11 m away, so a melee build rarely reach
 Every Boon step (+12 % damage, +10 % attack speed, +20 max HP…), the rarity odds (62/26/10/2) and magnitudes (×1/1.4/1.8/2.5) are starting values, not tuned. With 11 stat-only Boons and one weapon, picks feel like small number bumps until M2.5 (weapons and weapon levels) and M2.6 (behaviour Boons) give choices real texture.
 **Proposal:** keep everything in `UpgradeConfig` / `UP_*` assets (done), and judge it at Gate 2. The admin panel's UPGRADES column gives any Boon at any rarity without waiting for it to roll.
 
-## C8 — Builds max out by minute 6 (NEW in M2.7)
+## C8 — Builds max out by minute 6 (TUNED in Phase 4 — judge at Gate 2)
 The 8-minute bot run (M2.7) reached **level 38** with 6,279 kills and opened 6 chests: 43 picks for 10 slots (4 weapons up to 8, 6 Boons up to 5), so the build is complete around 6:00 and the last minutes offer only filler cards (heal / gold). The XP curve (`ProgressionConfig`) was set for M1.3's single weapon; four weapons and synergies kill far faster, so XP floods in.
 **Proposal:** in the Phase 4 balance pass, steepen the level curve so a strong 8-minute run ends around level 25–30 (build nearly, not fully, complete when Gorm arrives), and re-check with the bot's end-of-run summary (level, kills, chests). Not changed now: the curve should be tuned against Arena 1 and Gorm, not the test arena.
+**Phase 4:** curve steepened to `5 + 5·(L−1)^1.6`; the 10-minute bot run now ends at level 27 (7,895 kills, 7 chests) with 6 weapon/Boon slots still short of max. Judge the pacing in the playtest: if the middle minutes feel slow, lower the exponent to 1.5.
+
+## C9 — Placeholder audio is unheard (NEW in Phase 4)
+Every sound is synthesised and its volume, pitch jitter and repeat limit are first guesses. I can verify that sounds play, are rate-limited and route through the mixer, but not how they sound or balance against each other.
+**Proposal:** at Gate 2, note the 2–3 worst offenders (too loud / grating / missing); levels live in `Assets/Data/Audio/SfxBank.asset`, the crowd loop's range in the same asset (`crowdQuiet`/`crowdLoud`). Real audio stays a later task.
+
+## C10 — Announcer frequency depends on kill rate (NEW in Phase 4)
+The kill-streak ladder (40 / 80 / 140 / 220 kills in 4 s) was set against the bot's kill rates (~15–25 kills/s late in a run). A weaker build hears few lines; a monster build hears one every ~6–20 s.
+**Proposal:** judge in the playtest; everything is in `Assets/Data/Config/AnnouncerConfig.asset` (thresholds, window, minimum gap, ladder reset).
 

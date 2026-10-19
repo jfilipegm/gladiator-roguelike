@@ -45,6 +45,17 @@ namespace Gladiator.Gameplay
         public Color playerDamageColor = new Color(1f, 0.33f, 0.2f);
 
         [Header("Screen shake (trauma 0..1; scaled by the options slider)")]
+        [Header("Player hurt (screen edges, orange-red)")]
+        [Tooltip("Edge flash opacity when the player is hit (scaled up for big hits).")]
+        [Range(0f, 1f)] public float hurtFlashAlpha = 0.32f;
+        [Tooltip("Seconds for the flash to fade.")]
+        public float hurtFlashTime = 0.4f;
+        [Tooltip("Below this HP fraction the edges pulse.")]
+        [Range(0f, 1f)] public float lowHpThreshold = 0.3f;
+        [Range(0f, 1f)] public float lowHpPulseAlpha = 0.2f;
+        [Tooltip("Pulses per second (a slow heartbeat).")]
+        public float lowHpPulseRate = 1.2f;
+
         public float shakeOnCrit = 0.12f;
         public float shakeOnPlayerHit = 0.35f;
         public float shakeOnKill = 0f;

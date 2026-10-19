@@ -164,6 +164,7 @@ namespace Gladiator.UI
             // frame's huge delta fires the first debug update before anything renders, and TMP then grew its
             // character array one char at a time (~12 KB per growth) as the line got longer.
             PreSize(_debug, "88888 fps   88888 enemies   88888 pickups   F1 admin");
+            if (!Debug.isDebugBuild) showDebug = false; // F3 shows the fps line in release builds
             PreSize(_hpText, "8888 / 8888");
             PreSize(_gold, "88888888");
             PreSize(_kills, "88888888");
@@ -349,7 +350,8 @@ namespace Gladiator.UI
             _debugT += unscaledDt;
             if (_debugT >= 0.5f)
             {
-                if (showDebug) _debug.SetText("{0} fps   {1} enemies   {2} pickups   F1 admin", Mathf.Round(_frames / _debugT), DevCounters.Enemies, DevCounters.Pickups);
+                if (showDebug && Debug.isDebugBuild) _debug.SetText("{0} fps   {1} enemies   {2} pickups   F1 admin", Mathf.Round(_frames / _debugT), DevCounters.Enemies, DevCounters.Pickups);
+                else if (showDebug) _debug.SetText("{0} fps", Mathf.Round(_frames / _debugT)); // release builds have no admin panel
                 else _debug.SetText("");
                 _frames = 0;
                 _debugT = 0f;

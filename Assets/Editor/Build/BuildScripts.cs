@@ -12,6 +12,7 @@ namespace Gladiator.EditorTools
     public static class BuildScripts
     {
         public const string DevOutput = "Builds/LinuxDev/Gladiator.x86_64";
+        public const string ReleaseOutput = "Builds/Linux/Gladiator.x86_64";
 
         public static void ConfigurePlayer()
         {
@@ -30,6 +31,10 @@ namespace Gladiator.EditorTools
         /// <summary>Main menu first (-bot / -stress jump straight into the run), then Arena 1, then the dev test arena.</summary>
         [MenuItem("Gladiator/Build/Linux Development Build")]
         public static string BuildLinuxDev() => Build(new[] { Gladiator.Gameplay.GameSession.MenuScene, ArenaBuilder.SlavePitScene, TestArenaScene.ScenePath }, DevOutput, BuildOptions.Development);
+
+        /// <summary>The playtest build: what a player gets (menu + the Slave Pit, no admin panel, no dev overlay).</summary>
+        [MenuItem("Gladiator/Build/Linux Release Build")]
+        public static string BuildLinuxRelease() => Build(new[] { Gladiator.Gameplay.GameSession.MenuScene, ArenaBuilder.SlavePitScene }, ReleaseOutput, BuildOptions.None);
 
         public static string Build(string[] scenes, string output, BuildOptions options)
         {

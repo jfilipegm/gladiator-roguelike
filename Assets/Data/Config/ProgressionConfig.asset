@@ -13,14 +13,14 @@ MonoBehaviour:
   m_Name: ProgressionConfig
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.ProgressionConfig
   baseXp: 5
-  perLevelXp: 4
-  exponent: 1.35
+  perLevelXp: 5
+  exponent: 1.6
   magnetRadius: 2.2
   collectRadius: 0.7
+  magnetDelay: 0.25
   vacuumStartSpeed: 6
   vacuumAcceleration: 40
   gemTierValues: {x: 1, y: 5, z: 25}
   goldPerCoin: 1
   maxPickups: 700
   runDuration: 480
-  cardsPerLevelUp: 3

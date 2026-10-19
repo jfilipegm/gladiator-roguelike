@@ -43,17 +43,17 @@ Tier 1 (slice): Starving Convict (swarmer), Pit Cur (fast), Shield Thug (frontal
 
 ## Meta
 Renown per run gates arena tiers and cosmetics. Unlocks are **content, never flat stats**: gladiators, weapons entering the pool, arenas, modifiers, cosmetics. Conditions are pluggable (defeat boss, reach arena, survive T, kills with weapon, win with gladiator, lifetime gold, secret discovery, Renown purchase). A Codex shows locked gladiators as silhouettes with cryptic hints.
-**Slice:** save file + Renown + one unlock (beating Gorm adds a weapon to the pool).
+**Slice (built):** versioned save, Renown per run (time, kills, boss, victory, arena depth), Codex screen (records, unlocks, gladiator silhouettes), and one unlock: beating Gorm adds **Gorm's Flail** (orbiting spiked balls) to the level-up pool.
 
 ## Gladiators
 Starter **The Nobody** (rusty gladius + scrap shield; *Underdog*: bonus damage/XP when outnumbered). After the slice, in order: Pit Goblin, Blood Knight, then the rest (Murder Machine, Beastmaster, Thunder Champion, Ashen Oracle, Golden Idol, Net-Weaver, Asterion).
 
 ## Crowd & Favor
-Slice: `CrowdExcitement` 0–1 from kill rate, near-death and boss events → crowd shader, crowd loop, announcer. Phase 5: Favor thresholds → gifts (amphorae, gold shower, a temp weapon); kiting → Arena Master whims.
+Slice (built): `CrowdExcitement` 0–1 from kills, elite kills, near-death and boss beats → crowd shader, crowd loop volume/pitch, cheers on spikes; the announcer calls kill streaks (KILLING SPREE! → MASSACRE! → BLOODBATH! → UNSTOPPABLE!), close calls and the crowd's roar. Phase 5: Favor thresholds → gifts (amphorae, gold shower, a temp weapon); kiting → Arena Master whims.
 
 ## Open questions
 | # | Question | Status |
 |---|---|---|
 | Q1 | Run structure: one arena per run, or a chain of arenas? | Open — `RunDef` is a list of `ArenaDef`s, so both are data. Decide after Gate 2. |
-| Q2 | Slave Pit floor size vs. enemy count (see CONCERNS C1) | Open — decide with real numbers after M2.3. |
-| Q3 | Sprint: separate button, or always-run + slide as the speed tool? | Proposed: always-run (Megabonk-like), slide/jump give the speed. Re-check at Gate 1. |
+| Q2 | Slave Pit floor size vs. enemy count (see CONCERNS C1) | Built at 42 m with a 300 cap (perf holds at 241 fps). Judge readability at Gate 2; the cap is `AL_SlavePit.maxAlive`. |
+| Q3 | Sprint: separate button, or always-run + slide as the speed tool? | Kept: always-run, slide/jump give the speed (Gate 1 asked for no feel changes). |

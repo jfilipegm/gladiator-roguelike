@@ -18,6 +18,7 @@ MonoBehaviour:
   hitRecoilTime: 0.18
   hitStopOnCrit: 0.035
   hitStopOnElite: 0.06
+  eliteHitStopInterval: 0.35
   hitStopOnPlayerHit: 0.05
   deathPopTime: 0.12
   deathPopParticles: 9
@@ -29,9 +30,17 @@ MonoBehaviour:
   numberRise: 1.4
   numberScale: 1
   critNumberScale: 1.55
+  statusNumberScale: 0.72
   numberColor: {r: 1, g: 1, b: 1, a: 1}
   critNumberColor: {r: 1, g: 0.82, b: 0.29, a: 1}
+  blockedNumberColor: {r: 0.62, g: 0.66, b: 0.7, a: 1}
+  blockedNumberScale: 0.8
   playerDamageColor: {r: 1, g: 0.33, b: 0.2, a: 1}
+  hurtFlashAlpha: 0.32
+  hurtFlashTime: 0.4
+  lowHpThreshold: 0.3
+  lowHpPulseAlpha: 0.2
+  lowHpPulseRate: 1.2
   shakeOnCrit: 0.12
   shakeOnPlayerHit: 0.35
   shakeOnKill: 0

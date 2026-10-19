@@ -133,10 +133,14 @@ namespace Gladiator.UI
             return img;
         }
 
-        /// <summary>Grow every TMP buffer once with longer text than will ever show, so opening never allocates.</summary>
+        /// <summary>
+        /// Grow every TMP buffer once with longer text than will ever show, so opening never allocates. The text holds
+        /// every character the cards use, so the dynamic font atlas has all its glyphs before the first level-up.
+        /// </summary>
         void Presize()
         {
-            const string Long = "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW";
+            const string Long = "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 0123456789 " +
+                                "+-%×°·—–…!?.,:;'()[]/&#\"<>=_ ’ WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW";
             foreach (var c in _cards)
             {
                 foreach (var t in new[] { c.Rarity, c.Kind, c.Title, c.Desc })

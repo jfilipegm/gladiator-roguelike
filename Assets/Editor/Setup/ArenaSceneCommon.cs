@@ -207,6 +207,9 @@ namespace Gladiator.EditorTools
             var announcer = new GameObject("CrowdAnnouncer").AddComponent<CrowdAnnouncer>();
             announcer.transform.SetParent(root, false);
             announcer.config = AssetDatabase.LoadAssetAtPath<AnnouncerConfig>(AudioSetup.AnnouncerPath);
+            var hurt = new GameObject("HurtOverlay").AddComponent<Gladiator.UI.HurtOverlay>();
+            hurt.transform.SetParent(root, false);
+            hurt.feedback = AssetDatabase.LoadAssetAtPath<HitFeedbackConfig>(CombatSetup.FeedbackPath);
             var options = new GameObject("OptionsPanel").AddComponent<Gladiator.UI.OptionsPanel>();
             options.transform.SetParent(root, false);
             options.font = font; options.fontMaterial = fontMat;

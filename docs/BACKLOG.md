@@ -16,6 +16,10 @@ Good ideas that are **not** in the current phase. Pull from here only when a pha
 - **Status icons over enemies** (tiny pips above the head) if the puffs + coloured numbers don't read at Gate 2.
 - **Status effects on the player** (enemy Burn/Slow/Root) — fire patches are their own system today.
 
+## Performance
+- **Attribute the first level-up's one-time ~7.5 KB allocation** (UGUI/TMP first use while paused; a hidden pre-draw of the card panel didn't remove it). A Profiler capture that includes that exact frame (`-rawProfile` near the first level-up, analyser frame window) should name it.
+- **Instanced enemy rendering** (C5) only if an arena needs 1,000+ on screen.
+
 ## Meta progression (after the slice)
 - **Renown purchases** — an `UnlockCondition` kind "costs N Renown" bought in the Codex (only some unlocks, CLAUDE.md §6.6); arena tiers and cosmetics gated by Renown.
 - **Codex discovery** — seen-enemy / seen-boss entries, "NEW" markers on fresh unlocks, secrets found in the arenas (the rattling crate → Pit Goblin).

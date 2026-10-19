@@ -47,7 +47,23 @@ namespace Gladiator.EditorTools
 
         /// <summary>The release build for macOS (Mono). Needs the "Mac Build Support (Mono)" module; unsigned (see the release notes).</summary>
         [MenuItem("Gladiator/Build/macOS Release Build")]
-        public static string BuildMacRelease() => Build(ReleaseScenes, MacOutput, BuildOptions.None, BuildTarget.StandaloneOSX);
+        public static string BuildMacRelease()
+        {
+            UseUniversalMacBuild();
+            return Build(ReleaseScenes, MacOutput, BuildOptions.None, BuildTarget.StandaloneOSX);
+        }
+
+        /// <summary>
+        /// One app for Intel and Apple-silicon Macs (the Mac module defaults to Apple silicon only). Set by reflection:
+        /// the setting lives in the Mac module's own assembly, which isn't there when the module isn't installed.
+        /// </summary>
+        static void UseUniversalMacBuild()
+        {
+            var settings = System.Type.GetType("UnityEditor.OSXStandalone.UserBuildSettings, UnityEditor.OSXStandalone.Extensions");
+            var arch = settings?.GetProperty("architecture");
+            if (arch != null) arch.SetValue(null, UnityEditor.Build.OSArchitecture.x64ARM64);
+            else Debug.LogWarning("[Build] couldn't set the macOS architecture; the app may run on Apple silicon only");
+        }
 
         /// <summary>
         /// Every player for a GitHub release (<c>Tools/release</c>): Linux release + dev, Windows and macOS release.

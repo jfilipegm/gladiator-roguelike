@@ -23,6 +23,9 @@ namespace Gladiator.UI
         readonly char[] _timeBuf = new char[8];
         int _lastSecond = -1, _lastLevel = -1, _lastGold = -1, _lastKills = -1, _lastHp = -1, _lastMaxHp = -1;
         float _toastT = 10f, _announceT = 10f, _announceLen = 2f, _debugT;
+        AnnounceKind _announceKind = AnnounceKind.Line;
+        const float ChatterHoldOff = 1f;
+        static bool Chatter(AnnounceKind k) => k == AnnounceKind.Streak || k == AnnounceKind.Roar || k == AnnounceKind.CloseCall;
 
         // boss (M3.4): name + HP bar under the timer, phase-2 notch; the timer reads BOSS
         CanvasGroup _bossGroup;
@@ -73,6 +76,17 @@ namespace Gladiator.UI
         static readonly Color FavorColor = new Color(1f, 0.78f, 0.25f);
         static readonly Color FavorHot = new Color(1f, 0.95f, 0.6f);
 
+        // Blood Knight (Phase 5.3): the Blood meter under the HP bar (drains through a frenzy) + beside it the Bloodlust
+        // bonus, "SLIDE!" when the meter is full, "FRENZY" during the Rite. Hidden for other gladiators.
+        Image _bloodFill;
+        GameObject _bloodRoot;
+        TextMeshProUGUI _bloodText;
+        int _bloodKey = int.MinValue;
+        BloodRite _riteShown;
+        Bloodlust _lust;
+        static readonly Color BloodColor = new Color(0.9f, 0.16f, 0.36f);
+        static readonly Color BloodHot = new Color(1f, 0.78f, 0.84f);
+
         static readonly Color XpColor = new Color(0.31f, 0.89f, 0.82f);
         static readonly Color HpColor = new Color(0.88f, 0.2f, 0.17f);
         static readonly Color Gold = new Color(1f, 0.84f, 0.3f);
@@ -99,6 +113,14 @@ namespace Gladiator.UI
             UiFactory.Image("HpIcon", canvas, Color.white, tl, tl, new Vector2(24, -32), new Vector2(34, 34), PixelIcons.Heart);
             _hpFill = UiFactory.Bar("HpBar", canvas, new Color(0.08f, 0.05f, 0.06f, 0.8f), HpColor, tl, tl, new Vector2(66, -32), new Vector2(340, 34));
             _hpText = UiFactory.Text("HpText", _hpFill.transform.parent, "100 / 100", 24, Color.white, TextAlignmentOptions.Center, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(340, 34), font, fontMaterial);
+
+            _bloodFill = UiFactory.Bar("BloodBar", canvas, new Color(0.08f, 0.03f, 0.05f, 0.8f), BloodColor, tl, tl, new Vector2(66, -68), new Vector2(340, 12));
+            _bloodFill.fillAmount = 0f;
+            _bloodRoot = _bloodFill.transform.parent.gameObject;
+            _bloodText = UiFactory.Text("BloodText", canvas, "", 20, BloodColor, TextAlignmentOptions.Left, tl, tl, new Vector2(414, -60), new Vector2(170, 28), font, fontMaterial);
+            PreSize(_bloodText, "+100% DMG");
+            _bloodRoot.SetActive(false);
+            _bloodText.gameObject.SetActive(false);
 
             UiFactory.Image("GoldIcon", canvas, Color.white, tl, tl, new Vector2(26, -82), new Vector2(30, 30), PixelIcons.Coin);
             _gold = UiFactory.Text("Gold", canvas, "0", 32, Gold, TextAlignmentOptions.Left, tl, tl, new Vector2(66, -78), new Vector2(150, 40), font, fontMaterial);
@@ -227,6 +249,10 @@ namespace Gladiator.UI
 
         void OnAnnounce(in AnnounceEvent e)
         {
+            // Crowd chatter (streaks, roars, close calls) comes constantly in a big fight: it never cuts another line
+            // (a Rite, a boss beat, a gift) off in its first second, or the player never reads it.
+            if (Chatter(e.Kind) && !Chatter(_announceKind) && _announceT < ChatterHoldOff && _announce.alpha > 0f) return;
+            _announceKind = e.Kind;
             _announce.text = e.Text; // constant strings only: no allocation
             var c = e.Color;
             c.a = 1f;
@@ -291,6 +317,7 @@ namespace Gladiator.UI
         void OnDirector(in DirectorEvent e)
         {
             _announceLen = 2f;
+            _announceKind = AnnounceKind.Line;
             _announce.text = e.Kind == DirectorEventKind.Swarm ? SwarmText : EliteText;
             var c = e.Color;
             c.a = 1f;
@@ -327,6 +354,7 @@ namespace Gladiator.UI
 
             DrawInteractables(run);
             DrawFavor(unscaledDt);
+            DrawBlood(unscaledDt);
             DrawBoss(run);
             DrawIntro(unscaledDt);
             if (player != null && player.IsPaused && !OptionsPanel.IsOpen && Keyboard.current != null)
@@ -382,6 +410,32 @@ namespace Gladiator.UI
                 _frames = 0;
                 _debugT = 0f;
             }
+        }
+
+        /// <summary>The Blood Knight's meter and its label (only while a BloodRite exists).</summary>
+        void DrawBlood(float unscaledDt)
+        {
+            var rite = BloodRite.Instance;
+            bool on = rite != null && rite.trait != null;
+            if (_bloodRoot.activeSelf != on) { _bloodRoot.SetActive(on); _bloodText.gameObject.SetActive(on); }
+            if (!on) return;
+            if (_riteShown != rite) { _riteShown = rite; _lust = rite.GetComponent<Bloodlust>(); _bloodKey = int.MinValue; }
+            float target = rite.Frenzied ? rite.FrenzyLeft / Mathf.Max(0.01f, rite.trait.frenzySeconds) : rite.Fill01;
+            _bloodFill.fillAmount = Mathf.MoveTowards(_bloodFill.fillAmount, target, unscaledDt * 2f);
+            bool hot = rite.Full || rite.Frenzied;
+            _bloodFill.color = hot ? Color.Lerp(BloodColor, BloodHot, 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * (rite.Frenzied ? 14f : 8f))) : BloodColor;
+
+            int pct = _lust != null ? Mathf.RoundToInt(_lust.Bonus * 100f) : 0;
+            int key = rite.Frenzied ? -2 : rite.Full ? -1 : pct;
+            if (key != _bloodKey)
+            {
+                _bloodKey = key;
+                if (key == -2) _bloodText.SetText("FRENZY");
+                else if (key == -1) _bloodText.SetText("SLIDE!");
+                else if (key > 0) _bloodText.SetText("+{0}% DMG", key);
+                else _bloodText.SetText("");
+            }
+            _bloodText.color = key == -1 ? Color.Lerp(BloodColor, BloodHot, 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 8f)) : BloodColor;
         }
 
         /// <summary>The Favor bar (pulses gold-white when a gift is close) and the loaned weapon's tile + seconds left.</summary>

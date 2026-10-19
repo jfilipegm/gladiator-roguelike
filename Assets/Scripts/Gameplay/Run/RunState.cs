@@ -72,7 +72,15 @@ namespace Gladiator.Gameplay
         }
 
         /// <summary>The boss of this arena died (BossFight). Recorded even if the player dies afterwards.</summary>
-        public void MarkBossDefeated(string bossId) { if (!Ended && !string.IsNullOrEmpty(bossId)) BossDefeated = bossId; }
+        /// <summary>The player's HP fraction when the boss fell (1 = none fell; unlock "beat X below N % HP").</summary>
+        public float BossDefeatedHp01 { get; private set; } = 1f;
+
+        public void MarkBossDefeated(string bossId, float playerHp01 = 1f)
+        {
+            if (Ended || string.IsNullOrEmpty(bossId)) return;
+            BossDefeated = bossId;
+            BossDefeatedHp01 = Mathf.Clamp01(playerHp01);
+        }
         void OnHit(in HitEvent e) { if (!Ended) DamageDealt += e.Damage; }
 
         public void Tick(float dt, float unscaledDt)

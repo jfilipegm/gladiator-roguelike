@@ -20,6 +20,9 @@ MonoBehaviour:
   critChance: 0.06
   critMultiplier: 2
   knockback: 7
+  onHitStatus: {fileID: 0}
+  onHitStatusPower: 0.1
+  onHitStacks: 1
   cooldown: 1.6
   swingDuration: 0.28
   windup: 0.12

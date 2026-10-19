@@ -138,6 +138,10 @@ namespace Gladiator.Gameplay
             var snares = player.GetComponent<SnareLayer>();
             if (snares != null) sb.Append(" snares ").Append(snares.Snapped).Append('/').Append(snares.Placed);
             if (PlayerProjectiles.Instance != null && PlayerProjectiles.Instance.Blasts > 0) sb.Append(" bombs ").Append(PlayerProjectiles.Instance.Blasts);
+            var rite = player.GetComponent<BloodRite>();
+            if (rite != null) sb.Append(" rites ").Append(rite.Rites).Append(" (paid ").Append(rite.HpPaid.ToString("0")).Append(" HP)");
+            var thirst = player.GetComponent<Bloodthirst>();
+            if (thirst != null) sb.Append(" kill-healed ").Append(thirst.Healed.ToString("0")).Append(" HP");
             sb.Append(" | hitstops ").Append(TimeController.HitStopCount).Append(" (").Append(TimeController.HitStopSeconds.ToString("0.0")).Append(" s)");
             if (run != null) sb.Append(" | outcome ").Append(run.Outcome).Append(" at ").Append(run.Elapsed.ToString("0"));
             Debug.Log(sb.ToString());

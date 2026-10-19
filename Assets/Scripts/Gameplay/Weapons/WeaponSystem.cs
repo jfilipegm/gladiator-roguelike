@@ -274,6 +274,17 @@ namespace Gladiator.Gameplay
             };
         }
 
+        /// <summary>A melee hit: damage, then the weapon's on-hit status if the enemy survived it.</summary>
+        void Strike(WeaponInstance w, EnemyManager em, int i, in DamageInfo info)
+        {
+            int uid = em.GetUid(i);
+            em.ApplyDamage(i, info);
+            Hits++;
+            var d = w.Def;
+            if (d.onHitStatus != null && em.IsAlive(i) && em.GetUid(i) == uid)
+                em.ApplyStatus(i, d.onHitStatus, info.Amount * d.onHitStatusPower, d.onHitStacks);
+        }
+
         void ArcHit(WeaponInstance w, EnemyManager em)
         {
             var d = w.Def;
@@ -288,8 +299,7 @@ namespace Gladiator.Gameplay
                 to.y = 0f;
                 float dist = to.magnitude;
                 if (dist > 0.7f && Vector3.Angle(w.AimDir, to) > halfArc) continue; // point-blank always connects
-                em.ApplyDamage(i, Hit(w, em, i, dist > 1e-3f ? to / dist : w.AimDir, DamageFlags.Melee));
-                Hits++;
+                Strike(w, em, i, Hit(w, em, i, dist > 1e-3f ? to / dist : w.AimDir, DamageFlags.Melee));
             }
         }
 
@@ -312,8 +322,7 @@ namespace Gladiator.Gameplay
                 if (along < -0.4f || along > length + r) continue;
                 float side = (to - aim * along).magnitude;
                 if (side > half + r) continue;
-                em.ApplyDamage(i, Hit(w, em, i, aim, DamageFlags.Melee));
-                Hits++;
+                Strike(w, em, i, Hit(w, em, i, aim, DamageFlags.Melee));
             }
         }
 

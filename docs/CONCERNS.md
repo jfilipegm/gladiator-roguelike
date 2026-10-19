@@ -48,3 +48,7 @@ The kill-streak ladder (40 / 80 / 140 / 220 kills in 4 s) was set against the bo
 ## C11 — Gorm's fight length swings with the build (NEW at Gate 2)
 Three bot runs against the same 9,000 HP Gorm: a level-47 build did 21 % in 20 s (M3.4), a level-40 build left him at 63 % after ~2 minutes (M3.6), and the final level-28 build (Phase 4) killed him ~40 s after the 8:00 mark, entrance and reward included, before his first guard wave. A strong human build could skip half his moves; a weak one faces a long slog.
 **Proposal:** judge in the Gate 2 playtest. If he melts, raise `EN_Gorm.maxHp` to ~15,000 and bring the first guard wave forward. If the swing is still wide, cap the damage he takes per second (e.g. 4 % HP/s) so every fight shows both phases and the guards.
+
+## C12 — The Blood Knight's kill heals may make him unkillable mid-run (NEW in Phase 5.3)
+The 10-minute bot run (God mode, so it couldn't die) healed 3,900 HP from kills: about 7 HP/s on average, i.e. the 6 HP/s cap nearly every second, doubled during his 27 Rites. With 120 max HP, that's a full heal every ~17 s while the horde is thick. The halved "other healing" doesn't matter when kills do all the work. On the other hand, Bloodlust wants him at low HP, so a knight who is always full also never hits his hardest.
+**Proposal:** judge in the playtest. If he never feels in danger, lower `TR_Bloodthirst.maxHealPerSecond` to ~3–4 and/or `frenzyHealMul` to 1.5. If he dies to the first swarm, raise `healPerKill` (it matters early, when kills are slow), not the cap.

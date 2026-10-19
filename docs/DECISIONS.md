@@ -243,3 +243,14 @@ One line each: what, and why. Newest at the bottom of each section.
 - **Bombs use player colours** (a cyan-white landing ring and fuse ring) **and never hurt the player**: they are the player's weapon, so they must not look like the orange-red threats.
 - **Scavenger waits while another loan is out** (a crowd's weapon in the sand): a timer must never take away the crowd's gift.
 - **`GameSession.Clear()`**: a test that starts a run as the goblin leaked the choice into the next fixture (the movement test ran as a goblin at 112 % speed).
+
+### Phase 5.3 — The Blood Knight (third gladiator)
+- **Interim unlock: beat Gorm below 30 % HP** (§6.7 says "Reach Arena 3"): with one arena the knight could never be unlocked or playtested. The new `DefeatBossBelowHp` condition fits the knight (he's strongest when nearly dead) and is data, so the asset can move to `ReachArena` once more arenas exist (BACKLOG).
+- **The Rite is triggered by a slide with a full meter**, not a new button: the game has no ability key, and the goblin already proved slide-triggered abilities. It's the knight's one deliberate choice: when to pay HP.
+- **The Rite's HP cost is paid, not taken as damage** (`PlayerHealth.Spend`): it never kills (floors at 1 HP), and it doesn't flash, shake, hit-stop or count as a Favor close call or more Blood.
+- **His blood effects reuse the Bleed crimson-pink, never orange-red**: orange-red means "this hurts you" (§5).
+- **Kill heals are capped (6 HP/s)**: with 300 enemies, uncapped heal-on-kill would make him immortal at peak. All other healing is halved so the identity is "lives on kills", not "heals from everything".
+- **Weapon on-hit status is weapon data** (`WeaponDef.onHitStatus`, melee patterns only for now): the greatsword's bleed is content, and later weapons (a net that roots) reuse it.
+
+- **Crowd chatter waits a second before replacing another announcer line** (found while staging the Rite): the HUD shows one line at a time and the last one wins, so in a fight the streak and roar lines replaced "BLOOD RITE!" within a frame. Streak, Roar and CloseCall lines now never cut another kind of line off in its first second. Boss beats, gifts and the goblin's crate lines benefit too.
+- **The knight holds the greatsword low and forward, not over the shoulder**: the animator's swing was made for forward blades (the gladius), so a backward blade would swing wrong. The run cycle keeps the sword arm still (`weaponArmSwingScale` 0.25).

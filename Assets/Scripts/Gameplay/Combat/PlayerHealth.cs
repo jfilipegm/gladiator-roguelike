@@ -25,6 +25,10 @@ namespace Gladiator.Gameplay
         public bool IsInvulnerable => Time.time < _invulnerableUntil;
         public int Deaths { get; private set; }
         public float DamageTaken { get; private set; }
+        /// <summary>Scales regen and Heal (the Blood Knight's Bloodthirst halves it); HealUnscaled ignores it.</summary>
+        public float HealingMul { get; set; } = 1f;
+        /// <summary>HP paid on purpose (Spend: the Blood Rite), not counted as damage taken.</summary>
+        public float HpSpent { get; private set; }
 
         float _invulnerableUntil;
 
@@ -41,16 +45,35 @@ namespace Gladiator.Gameplay
         {
             if (dt <= 0f || IsDead || _stats == null) return;
             float regen = _stats.Get(StatId.HpRegen);
-            if (regen > 0f && Hp < MaxHp) Hp = Mathf.Min(MaxHp, Hp + regen * dt);
+            if (regen > 0f && Hp < MaxHp) Hp = Mathf.Min(MaxHp, Hp + regen * HealingMul * dt);
         }
 
-        public void Heal(float amount)
+        /// <summary>Heals `amount` × HealingMul (amphorae, healing cards, admin). Returns the HP actually gained.</summary>
+        public float Heal(float amount) => HealUnscaled(amount * HealingMul);
+
+        /// <summary>Heals ignoring HealingMul (a gladiator's own healing, e.g. Bloodthirst). Returns the HP gained.</summary>
+        public float HealUnscaled(float amount)
         {
-            if (IsDead) return;
+            if (IsDead || amount <= 0f) return 0f;
+            float before = Hp;
             Hp = Mathf.Min(MaxHp, Hp + amount);
+            return Hp - before;
         }
 
-        public void HealFull() => Heal(MaxHp);
+        /// <summary>
+        /// Pays up to `amount` HP on purpose (the Blood Rite): never below `floor` HP, no invulnerability, no
+        /// OnDamaged (no hurt flash, shake or Favor close call). Returns the HP paid.
+        /// </summary>
+        public float Spend(float amount, float floor = 1f)
+        {
+            if (IsDead || amount <= 0f) return 0f;
+            float paid = Mathf.Clamp(Hp - floor, 0f, amount);
+            Hp -= paid;
+            HpSpent += paid;
+            return paid;
+        }
+
+        public void HealFull() => HealUnscaled(MaxHp);
 
         /// <summary>Call after an upgrade changed MaxHp: a raise also heals by the same amount, a cut only clamps.</summary>
         public void OnMaxHpChanged(float oldMaxHp)

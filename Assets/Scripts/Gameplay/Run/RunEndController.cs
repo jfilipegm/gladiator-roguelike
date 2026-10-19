@@ -102,7 +102,7 @@ namespace Gladiator.Gameplay
             var s = new RunSummary
             {
                 Outcome = e.Outcome, Elapsed = e.Elapsed, Kills = run.Kills, GoldEarned = run.GoldEarned, Level = run.Level,
-                ArenaIndex = GameSession.ArenaIndex, BossDefeated = run.BossDefeated,
+                ArenaIndex = GameSession.ArenaIndex, BossDefeated = run.BossDefeated, BossDefeatedHp01 = run.BossDefeatedHp01,
             };
             var p = Player.Main;
             if (p == null) return s;

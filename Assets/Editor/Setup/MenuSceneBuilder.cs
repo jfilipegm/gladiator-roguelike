@@ -67,7 +67,6 @@ namespace Gladiator.EditorTools
             menu.locked = new[] // not built as data yet
             {
                 new Gladiator.UI.MainMenu.Locked { name = "The Murder Machine", hint = "Gorm keeps something chained below the pit." },
-                new Gladiator.UI.MainMenu.Locked { name = "The Blood Knight", hint = "Reach the Stone Amphitheater." },
             };
             var options = new GameObject("OptionsPanel").AddComponent<Gladiator.UI.OptionsPanel>();
             options.font = font; options.fontMaterial = fontMat;

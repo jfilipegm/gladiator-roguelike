@@ -328,6 +328,15 @@ MonoBehaviour:
     positional: 1
     priority: 4
     crowdBus: 0
+  - id: 35
+    clip: {fileID: 8300000, guid: ebaf65945cf389e1980dfb4edeb9890b, type: 3}
+    volume: 0.85
+    pitchJitter: 0
+    minInterval: 1
+    maxVoices: 1
+    positional: 0
+    priority: 9
+    crowdBus: 0
   crowdLoop: {fileID: 8300000, guid: 969b18638588b710c80f8caa8ca24694, type: 3}
   mixer: {fileID: 24100000, guid: 339af0a7a793a8dcf8f612d6f2e728e3, type: 2}
   sfxGroup: {fileID: 1347008738550868248, guid: 339af0a7a793a8dcf8f612d6f2e728e3, type: 2}

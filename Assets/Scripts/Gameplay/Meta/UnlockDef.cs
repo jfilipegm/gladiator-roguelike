@@ -15,6 +15,7 @@ namespace Gladiator.Gameplay
         LifetimeGold,     // amount
         LifetimeRenown,   // amount
         Flag,             // id = a secret / discovery flag set by the world (the rattling crate…)
+        DefeatBossBelowHp, // id = BossDef.id, amount = HP fraction (0.3 = beaten with less than 30 % HP left)
     }
 
     [Serializable]

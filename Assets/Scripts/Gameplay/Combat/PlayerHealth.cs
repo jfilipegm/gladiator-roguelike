@@ -101,7 +101,8 @@ namespace Gladiator.Gameplay
             float floor = DevSettings.GodMode ? 1f : 0f;
             float before = Hp;
             float armor = _stats != null ? Mathf.Clamp(_stats.Get(StatId.Armor), 0f, maxArmor) : 0f;
-            float amount = info.Amount * (1f - armor);
+            float arena = RunState.Current != null ? RunState.Current.playerDamageTakenMul : 1f; // the arena's difficulty
+            float amount = info.Amount * arena * (1f - armor);
             Hp = Mathf.Max(floor, Hp - amount);
             DamageTaken += before - Hp;
             if (!status) _invulnerableUntil = Time.time + invulnerableTime;

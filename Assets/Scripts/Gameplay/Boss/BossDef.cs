@@ -3,9 +3,10 @@ using UnityEngine;
 namespace Gladiator.Gameplay
 {
     /// <summary>
-    /// A boss's tuning (docs/BOSSES.md). The body (HP, radius, model) is its EnemyDef (behaviour Scripted); this holds
-    /// movement, each attack's wind-up / damage / size, the guards it calls, phase 2 and the reward. Every number here
-    /// is a starting guess for the Gate 2 playtest.
+    /// A boss's tuning (docs/BOSSES.md). The body (HP, radius, model, shield arc) is its EnemyDef (behaviour Scripted);
+    /// this holds his words, which attacks he uses in each phase, movement, each attack's wind-up / damage / size, the
+    /// guards he calls, what phase 2 does to the arena and the reward. Every number here is a starting guess for a
+    /// playtest. Defaults are Gorm's, so his asset predates most of these fields.
     /// </summary>
     [CreateAssetMenu(menuName = "Gladiator/Boss", fileName = "BD_")]
     public sealed class BossDef : ScriptableObject
@@ -15,6 +16,16 @@ namespace Gladiator.Gameplay
         public string title = "THE PIT MASTER";
         [Tooltip("Its body: HP, radius, model. Behaviour must be Scripted.")]
         public EnemyDef enemy;
+
+        [Header("Words")]
+        public string enterText = "THE PIT MASTER ENTERS!";
+        public string fallText = "GORM FALLS!";
+        public string guardsText = "GORM CALLS HIS GUARDS!";
+        public string phase2Text = "\"BURN IT!\"";
+
+        [Header("Attacks he picks from, per phase")]
+        public BossAttack[] phase1Attacks = { BossAttack.Sweep, BossAttack.Whip, BossAttack.Slam };
+        public BossAttack[] phase2Attacks = { BossAttack.Sweep, BossAttack.Whip, BossAttack.Slam, BossAttack.Charge };
 
         [Header("Movement")]
         public float moveSpeed = 3f;
@@ -51,21 +62,49 @@ namespace Gladiator.Gameplay
         [Tooltip("Phase 2: the slam leaves burning ground (radius, seconds, dps).")]
         public Vector3 slamFire = new Vector3(2.2f, 4f, 10f);
 
-        [Header("Charge (phase 2) — sidestep the lane")]
+        [Header("Shield Bash (near) — get out of the cone")]
+        public float bashRange = 4f;
+        [Tooltip("Width of the cone (deg).")]
+        public float bashAngle = 100f;
+        public float bashWindup = 0.7f;
+        public float bashDamage = 22f;
+        public float bashKnockback = 11f;
+
+        [Header("Gladius Flurry (near-mid) — step aside each thrust")]
+        public float flurryLength = 6f;
+        public float flurryWidth = 1.1f;
+        [Tooltip("Each thrust's own lane telegraph (s); he re-aims between thrusts.")]
+        public float flurryWindup = 0.35f;
+        public float flurryDamage = 12f;
+        [Tooltip("Thrusts per flurry in phase 1 / phase 2.")]
+        public Vector2Int flurryThrusts = new Vector2Int(3, 5);
+
+        [Header("Charge — sidestep the lane")]
         public float chargeWindup = 0.9f;
         public float chargeSpeed = 16f;
         public float chargeLength = 14f;
+        [Tooltip("Lane width (m); 0 = his body's width.")]
+        public float chargeWidth = 0f;
         public float chargeDamage = 24f;
         public float chargeKnockback = 12f;
+        [Tooltip("Stunned this long when the charge hits a wall or pillar (s).")]
         public float chargeStun = 1f;
+        [Tooltip("While stunned his guard is down: damage he takes is multiplied by this.")]
+        public float stunDamageTakenMul = 1f;
+        [Tooltip("Charges in a row in phase 1 / phase 2 (he re-aims between them).")]
+        public Vector2Int chargeRepeats = new Vector2Int(1, 1);
 
         [Header("Call the Guards")]
         public float guardsEvery = 22f;
         public EnemyDef[] guards = System.Array.Empty<EnemyDef>();
         public Vector2Int guardCount = new Vector2Int(6, 10);
 
-        [Header("Phase 2 — Burn it!")]
+        [Header("Phase 2")]
         [Range(0.1f, 0.95f)] public float phase2At = 0.55f;
+        [Tooltip("Phase 2 lights a ring of burning ground along the wall foot (Gorm: \"Burn it!\").")]
+        public bool phase2FireRing = true;
+        [Tooltip("Phase 2's roar fires every spike trap in the arena at once (the Champion).")]
+        public bool phase2SpikeVolley;
         [Tooltip("Attack wind-ups and recovery are this much faster.")]
         public float enrageSpeed = 1.3f;
         public float enrageRoar = 1.5f;

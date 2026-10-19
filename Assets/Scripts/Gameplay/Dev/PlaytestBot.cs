@@ -130,7 +130,7 @@ namespace Gladiator.Gameplay
             var boss = BossController.Active;
             if (boss != null)
                 sb.Append(" | boss ").Append(boss.Defeated ? "DEFEATED" : "alive").Append(" hp ").Append((boss.Hp01 * 100f).ToString("0")).Append("% phase ")
-                  .Append(boss.Phase).Append(" attacks ").Append(boss.AttacksDone).Append(" guardWaves ").Append(boss.GuardWaves);
+                  .Append(boss.Phase).Append(" attacks ").Append(boss.AttacksDone).Append(" guardWaves ").Append(boss.GuardWaves).Append(" stuns ").Append(boss.Stuns);
             var loadout = player.GetComponent<GladiatorLoadout>();
             if (loadout != null && loadout.Current != null) sb.Append(" | as ").Append(loadout.Current.id);
             var scav = player.GetComponent<Scavenger>();

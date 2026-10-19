@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2a180a432490fcd38f28c2658e635ef, type: 3}
+  m_Name: RD_ProvincialPit
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.RunDef
+  id: provincial_pit
+  description: "A real arena: sand, stone and stands full of townsfolk. Three gates, barricades, spike traps that hurt everyone. Tougher enemies, more Renown (\xD71.5)."
+  unlock: {fileID: 11400000, guid: dea2cf75470bda931a339283f13062da, type: 2}
+  arenas:
+  - displayName: THE PROVINCIAL PIT
+    scenePath: Assets/Scenes/Arenas/ProvincialPit.unity

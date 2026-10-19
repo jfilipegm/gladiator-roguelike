@@ -5,7 +5,7 @@ namespace Gladiator.Gameplay
 {
     /// <summary>
     /// Every enemy projectile, one central tick (CLAUDE.md §4: pooled, stepped centrally, no physics). Two kinds:
-    /// straight shots (Slinger stone: hits the player's capsule, stopped by walls and the ground) and lobs (Fire-Pot:
+    /// straight shots (Slinger stone, Shield Archer arrow: hits the player's capsule, stopped by walls and the ground) and lobs (Fire-Pot:
     /// ballistic arc onto a marked spot whose telegraph fills during the flight, then a fire patch). Struct-of-arrays,
     /// fixed capacity, instanced draw with the shared palette material. Zero allocation in steady state.
     /// </summary>
@@ -19,6 +19,8 @@ namespace Gladiator.Gameplay
         public Material material;
         public Mesh stoneMesh;
         public Mesh potMesh;
+        [Tooltip("Shield Archer arrow (points along +Z, drawn along its velocity).")]
+        public Mesh arrowMesh;
         public float stoneScale = 1f;
         public float potScale = 1f;
         [Tooltip("Player capsule used for hits: radius, and the segment from feet+bottom to feet+top.")]
@@ -33,12 +35,12 @@ namespace Gladiator.Gameplay
         Kind[] _kind;
         Vector3[] _pos, _vel, _from, _to;
         float[] _t, _dur, _radius, _damage, _apex, _zoneRadius, _zoneTime, _zoneDps, _spin;
-        bool[] _used;
+        bool[] _used, _arrow;
         int _high, _count;
 
         Transform _player;
         PlayerHealth _health;
-        Matrix4x4[] _stoneM, _potM;
+        Matrix4x4[] _stoneM, _potM, _arrowM;
         RenderParams _rp;
 
         public int Count => _count;
@@ -52,7 +54,9 @@ namespace Gladiator.Gameplay
             _apex = new float[capacity]; _zoneRadius = new float[capacity]; _zoneTime = new float[capacity]; _zoneDps = new float[capacity];
             _spin = new float[capacity];
             _used = new bool[capacity];
+            _arrow = new bool[capacity];
             _stoneM = new Matrix4x4[capacity];
+            _arrowM = new Matrix4x4[capacity];
             _potM = new Matrix4x4[capacity];
             _rp = new RenderParams(material)
             {
@@ -96,11 +100,13 @@ namespace Gladiator.Gameplay
             _high = _count = 0;
         }
 
-        /// <summary>Straight shot from `from` toward `target` (aimed once — no homing). Returns the slot or -1.</summary>
-        public int FireStraight(Vector3 from, Vector3 target, float speed, float damage, float radius, float range)
+        /// <summary>Straight shot from `from` toward `target` (aimed once — no homing). `arrow` draws the Shield Archer's
+        /// arrow along the flight instead of a tumbling stone. Returns the slot or -1.</summary>
+        public int FireStraight(Vector3 from, Vector3 target, float speed, float damage, float radius, float range, bool arrow = false)
         {
             int i = Alloc();
             if (i < 0) return -1;
+            _arrow[i] = arrow;
             Vector3 d = target - from;
             float len = d.magnitude;
             _kind[i] = Kind.Straight;
@@ -122,6 +128,7 @@ namespace Gladiator.Gameplay
             var em = EnemyManager.Instance;
             if (em != null && em.Height != null) target.y = em.Height.Sample(target.x, target.z);
             _kind[i] = Kind.Lob;
+            _arrow[i] = false;
             _pos[i] = _from[i] = from;
             _to[i] = target;
             _vel[i] = Vector3.zero;
@@ -136,12 +143,12 @@ namespace Gladiator.Gameplay
             return i;
         }
 
-        int _lastStones, _lastPots;
+        int _lastStones, _lastPots, _lastArrows;
 
         public void Tick(float dt, float unscaledDt)
         {
             if (_high == 0) return;
-            if (dt <= 0f) { Draw(_lastStones, _lastPots); return; } // paused: keep them on screen
+            if (dt <= 0f) { Draw(_lastStones, _lastPots, _lastArrows); return; } // paused: keep them on screen
             if (_player == null && Player.Main != null)
             {
                 _player = Player.Main.transform;
@@ -154,7 +161,7 @@ namespace Gladiator.Gameplay
             var shadows = BlobShadowRenderer.Instance;
             Vector3 pp = _player != null ? _player.position : new Vector3(0f, -1000f, 0f);
             Vector3 segA = pp + Vector3.up * playerBottom, segB = pp + Vector3.up * playerTop;
-            int stones = 0, pots = 0;
+            int stones = 0, pots = 0, arrows = 0;
 
             for (int i = 0; i < _high; i++)
             {
@@ -182,7 +189,8 @@ namespace Gladiator.Gameplay
                         continue;
                     }
                     if (shadows != null) shadows.Add(p, ground, 0.45f);
-                    _stoneM[stones++] = Matrix4x4.TRS(p, Quaternion.Euler(_spin[i], _spin[i] * 0.7f, 0f), Vector3.one * stoneScale);
+                    if (_arrow[i]) _arrowM[arrows++] = Matrix4x4.TRS(p, Quaternion.LookRotation(_vel[i]), Vector3.one);
+                    else _stoneM[stones++] = Matrix4x4.TRS(p, Quaternion.Euler(_spin[i], _spin[i] * 0.7f, 0f), Vector3.one * stoneScale);
                 }
                 else
                 {
@@ -208,12 +216,14 @@ namespace Gladiator.Gameplay
 
             _lastStones = stones;
             _lastPots = pots;
-            Draw(stones, pots);
+            _lastArrows = arrows;
+            Draw(stones, pots, arrows);
         }
 
-        void Draw(int stones, int pots)
+        void Draw(int stones, int pots, int arrows)
         {
             if (material == null) return;
+            if (arrows > 0 && arrowMesh != null) Graphics.RenderMeshInstanced(_rp, arrowMesh, 0, _arrowM, arrows);
             if (stones > 0 && stoneMesh != null) Graphics.RenderMeshInstanced(_rp, stoneMesh, 0, _stoneM, stones);
             if (pots > 0 && potMesh != null) Graphics.RenderMeshInstanced(_rp, potMesh, 0, _potM, pots);
         }
@@ -230,5 +240,6 @@ namespace Gladiator.Gameplay
         // ---- test / debug access ----
         public bool IsActive(int i) => i >= 0 && i < _high && _used[i];
         public Vector3 GetPosition(int i) => _pos[i];
+        public bool IsArrow(int i) => _arrow[i];
     }
 }

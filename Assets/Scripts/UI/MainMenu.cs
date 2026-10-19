@@ -9,12 +9,13 @@ using UnityEngine.UI;
 namespace Gladiator.UI
 {
     /// <summary>
-    /// Main menu → gladiator select → the run (M3.5), and the Codex (M3.6: records, unlocks, gladiators; CodexPanel).
+    /// Main menu → gladiator select → arena select (Phase 5.4, only when two or more arenas are earned) → the run
+    /// (M3.5), and the Codex (M3.6: records, unlocks, gladiators; CodexPanel).
     /// Built in code over the menu diorama. Every GladiatorDef gets a card: earned ones can be picked (click, or
     /// left/right), locked ones show as a dark silhouette with their unlock's hint; `locked` lists gladiators that don't
     /// exist as data yet. Renown from the save shows in the corner.
     /// Mouse, keyboard (Enter / Esc / arrows) and gamepad (South / East / d-pad). Under -bot the run starts at once
-    /// (`-gladiator &lt;id&gt;` picks who, earned or not).
+    /// (`-gladiator &lt;id&gt;` picks who and `-arena &lt;run id&gt;` where, earned or not).
     /// </summary>
     public sealed class MainMenu : MonoBehaviour
     {
@@ -27,7 +28,10 @@ namespace Gladiator.UI
 
         public TMP_FontAsset font;
         public Material fontMaterial;
+        [Tooltip("The default run (the Slave Pit) when `runs` is empty.")]
         public RunDef run;
+        [Tooltip("Every arena the menu can offer, in ladder order. Locked ones show their unlock's hint.")]
+        public RunDef[] runs = Array.Empty<RunDef>();
         public MetaConfig meta;
         public GladiatorDef[] gladiators = Array.Empty<GladiatorDef>();
         public Locked[] locked = Array.Empty<Locked>();
@@ -38,9 +42,12 @@ namespace Gladiator.UI
         static readonly Color Soft = new Color(1f, 1f, 1f, 0.75f);
         static readonly Color CardColor = new Color(0.08f, 0.1f, 0.14f, 0.94f);
 
-        enum Screen { Menu, Select, Codex }
+        enum Screen { Menu, Select, Arena, Codex }
 
-        CanvasGroup _menu, _select, _codex;
+        CanvasGroup _menu, _select, _arena, _codex;
+        RunDef[] _openRuns = Array.Empty<RunDef>();
+        Image[] _runBorders = Array.Empty<Image>();
+        int _runPick;
         Button[] _menuButtons;
         int _focus;
         GladiatorDef[] _available = Array.Empty<GladiatorDef>();
@@ -49,6 +56,13 @@ namespace Gladiator.UI
 
         /// <summary>Earned: no unlock, or its unlock is in the save.</summary>
         public static bool IsAvailable(GladiatorDef g) => g != null && (g.unlock == null || MetaProgress.IsUnlocked(g.unlock));
+        public static bool IsAvailable(RunDef r) => r != null && (r.unlock == null || MetaProgress.IsUnlocked(r.unlock));
+
+        /// <summary>The arena FIGHT! starts in.</summary>
+        public RunDef SelectedRun => _openRuns.Length > 0 ? _openRuns[Mathf.Clamp(_runPick, 0, _openRuns.Length - 1)] : run;
+        /// <summary>True when FIGHT! on the gladiator screen goes on to the arena screen (two or more arenas earned).</summary>
+        public bool AsksForArena => _openRuns.Length > 1;
+        RunDef[] AllRuns => runs != null && runs.Length > 0 ? runs : new[] { run };
 
         /// <summary>The gladiator FIGHT! starts with.</summary>
         public GladiatorDef Selected => _available.Length > 0 ? _available[Mathf.Clamp(_pick, 0, _available.Length - 1)] : null;
@@ -61,9 +75,11 @@ namespace Gladiator.UI
             var canvas = UiFactory.Canvas("MenuCanvas", transform, UiSortOrder.Menus).transform;
             _menu = Group("Menu", canvas);
             _select = Group("Select", canvas);
+            _arena = Group("Arena", canvas);
             _codex = Group("Codex", canvas);
             BuildMenu(_menu.transform);
             BuildSelect(_select.transform);
+            BuildArena(_arena.transform);
             var dim = UiFactory.Image("Dim", _codex.transform, new Color(0.02f, 0.02f, 0.04f, 0.8f), Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, PixelIcons.White);
             UiFactory.Stretch(dim.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             new CodexPanel(font, fontMaterial).Build(_codex.transform, MetaProgress.Data, meta, gladiators, locked, CloseCodex);
@@ -161,6 +177,66 @@ namespace Gladiator.UI
             UiFactory.Button("Back", root, "BACK", mid, mid, new Vector2(-200, -380), new Vector2(220, 80), font, fontMaterial, CloseSelect, 34f);
         }
 
+        void BuildArena(Transform root)
+        {
+            var mid = new Vector2(0.5f, 0.5f);
+            UiFactory.Text("Header", root, "CHOOSE YOUR ARENA", 64, Gold, TextAlignmentOptions.Center, mid, mid, new Vector2(0, 360), new Vector2(1400, 90), font, fontMaterial);
+            var all = AllRuns;
+            int open = 0, n = 0;
+            foreach (var r in all) if (r != null) { n++; if (IsAvailable(r)) open++; }
+            _openRuns = new RunDef[open];
+            _runBorders = new Image[open];
+            float w = 420f, gap = 40f, x0 = -(n - 1) * (w + gap) * 0.5f;
+            int k = 0, a = 0;
+            foreach (var r in all)
+            {
+                if (r == null) continue;
+                float x = x0 + k++ * (w + gap);
+                if (!IsAvailable(r)) { LockedCard(root, x, w, r.unlock != null ? r.unlock.hint : "???"); continue; }
+                int index = a;
+                var card = Card(root, x, w, true, out var border);
+                var hit = border.gameObject.AddComponent<Button>();
+                hit.transition = Selectable.Transition.None;
+                hit.onClick.AddListener(() => ChooseArena(index));
+                _openRuns[a] = r;
+                _runBorders[a++] = border;
+                var title = Line(card, r.DisplayName.ToUpperInvariant(), 36, Gold, 205);
+                title.textWrappingMode = TextWrappingModes.NoWrap;
+                title.enableAutoSizing = true;
+                title.fontSizeMin = 20f;
+                title.fontSizeMax = 36f;
+                Line(card, r.description, 25, Soft, 20, 300f).fontStyle = FontStyles.Normal;
+            }
+            // the last arena played this session stays picked
+            _runPick = 0;
+            for (int i = 0; i < _openRuns.Length; i++) if (_openRuns[i] == GameSession.Run) _runPick = i;
+            RefreshRunPick();
+            UiFactory.Button("Fight", root, "FIGHT!", mid, mid, new Vector2(140, -380), new Vector2(300, 80), font, fontMaterial, Launch, 44f);
+            UiFactory.Button("Back", root, "BACK", mid, mid, new Vector2(-200, -380), new Vector2(220, 80), font, fontMaterial, BackToSelect, 34f);
+        }
+
+        /// <summary>Picks arena `r` if it's earned (tests). False if it's locked or unknown.</summary>
+        public bool PickArena(RunDef r)
+        {
+            for (int i = 0; i < _openRuns.Length; i++)
+                if (_openRuns[i] == r) { _runPick = i; RefreshRunPick(); return true; }
+            return false;
+        }
+
+        void ChooseArena(int index)
+        {
+            if (index == _runPick) { Launch(); return; }
+            _runPick = index;
+            SfxPlayer.Play2D(SfxId.Card);
+            RefreshRunPick();
+        }
+
+        void RefreshRunPick()
+        {
+            for (int i = 0; i < _runBorders.Length; i++)
+                _runBorders[i].color = i == _runPick ? Gold : new Color(0.55f, 0.48f, 0.3f, 0.9f);
+        }
+
         void LockedCard(Transform root, float x, float w, string hint)
         {
             var mid = new Vector2(0.5f, 0.5f);
@@ -221,6 +297,7 @@ namespace Gladiator.UI
             _screen = screen;
             Set(_menu, screen == Screen.Menu);
             Set(_select, screen == Screen.Select);
+            Set(_arena, screen == Screen.Arena);
             Set(_codex, screen == Screen.Codex);
         }
 
@@ -232,18 +309,37 @@ namespace Gladiator.UI
 
         void OpenSelect() { SfxPlayer.Play2D(SfxId.Card); Show(Screen.Select); }
         void CloseSelect() => Show(Screen.Menu);
+        void BackToSelect() => Show(Screen.Select);
         void OpenCodex() { SfxPlayer.Play2D(SfxId.Card); Show(Screen.Codex); }
         void OpenOptions() { SfxPlayer.Play2D(SfxId.Card); if (OptionsPanel.Instance != null) OptionsPanel.Instance.Open(); }
         void CloseCodex() => Show(Screen.Menu);
 
+        /// <summary>FIGHT! on the gladiator screen: on to the arena screen when there's a choice, else straight in.
+        /// Bot and perf runs always go straight in.</summary>
         void StartRun()
+        {
+            bool bot = CommandLine.Has("-bot") || CommandLine.Has("-stress");
+            if (!bot && AsksForArena && _screen != Screen.Arena)
+            {
+                SfxPlayer.Play2D(SfxId.Card);
+                Show(Screen.Arena);
+                return;
+            }
+            Launch();
+        }
+
+        void Launch()
         {
             SfxPlayer.Play2D(SfxId.Pick);
             var g = Selected;
             string wanted = CommandLine.Get("-gladiator");
             if (!string.IsNullOrEmpty(wanted)) // bot / perf runs: anyone, earned or not
                 foreach (var d in gladiators) if (d != null && d.id == wanted) g = d;
-            GameSession.StartRun(g, run);
+            var r = SelectedRun;
+            string arena = CommandLine.Get("-arena");
+            if (!string.IsNullOrEmpty(arena))
+                foreach (var d in AllRuns) if (d != null && d.id == arena) r = d;
+            GameSession.StartRun(g, r);
         }
 
         void Quit()
@@ -276,6 +372,20 @@ namespace Gladiator.UI
                 }
                 if (confirm) StartRun();
                 else if (back) CloseSelect();
+                return;
+            }
+            if (_screen == Screen.Arena)
+            {
+                bool left = (kb != null && (kb.leftArrowKey.wasPressedThisFrame || kb.aKey.wasPressedThisFrame)) || (pad != null && pad.dpad.left.wasPressedThisFrame);
+                bool right = (kb != null && (kb.rightArrowKey.wasPressedThisFrame || kb.dKey.wasPressedThisFrame)) || (pad != null && pad.dpad.right.wasPressedThisFrame);
+                if (_openRuns.Length > 1 && (left || right))
+                {
+                    _runPick = (_runPick + (right ? 1 : _openRuns.Length - 1)) % _openRuns.Length;
+                    SfxPlayer.Play2D(SfxId.Card);
+                    RefreshRunPick();
+                }
+                if (confirm) Launch();
+                else if (back) BackToSelect();
                 return;
             }
             if (_screen == Screen.Codex)

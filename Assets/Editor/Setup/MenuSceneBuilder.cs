@@ -61,6 +61,7 @@ namespace Gladiator.EditorTools
             menu.font = font;
             menu.fontMaterial = fontMat;
             menu.run = run;
+            menu.runs = ProvincialPitSetup.AllRuns(); // arena select (Phase 5.4)
             menu.meta = MetaSetup.Load();
             GladiatorSetup.CreateOrUpdate();
             menu.gladiators = GladiatorSetup.All(); // locked ones show their unlock's hint

@@ -17,3 +17,20 @@ interaction, ≥ 2 phases, a memorable entrance, personality.
 10. **Defeat:** slow-mo, a big death pop, the crowd goes wild, "GORM FALLS!", then a pick of 3 Rare-or-better upgrades (the Pit Master's hoard) and the victory screen. First kill unlocks the reward from M3.6.
 
 **Tunables (`BossDef BD_Gorm`):** HP, move speeds per phase, every attack's wind-up / damage / size / cooldown / weight, guard interval and counts, phase threshold, fire ring radius and dps, enrage speed multiplier.
+
+## The Provincial Champion (Arena 2 — Provincial Pit)
+
+1. **Who:** the town's undefeated hero, a murmillo who has never fought anyone from outside the province. Proud, loud, plays to the crowd. He thinks you're a fluke.
+2. **Silhouette:** broad and armoured (~2.6 m), a **huge curved tower shield** (scutum) on the left arm that covers him from shin to chin, a fish-crested murmillo helm with a tall red crest, a short gladius. Nothing else carries a door-sized shield.
+3. **Entrance (timer hits 0:00):** the horde is dragged off, the crowd chants, "THE CHAMPION OF THE PROVINCE!", the camera turns to the north gate, he walks in banging his gladius on the shield, raises it to the crowd (shake, crowd spike). ~4 s; the player keeps control.
+4. **Shield Wall (passive):** his shield blocks 90 % of hits from the front (a 140° arc). The fight is about getting to his side or back, or making him turn: bleed and burn ticks ignore the shield, and a blast that lands beside or behind him isn't blocked (one in front of him is, like the Shield Thug's).
+5. **Shield Bash (near):** a short orange-red cone (4 m, 100°) in front of him fills over 0.7 s, then he slams the shield forward: damage + big knockback. Get behind him or out of the cone.
+6. **Gladius Flurry (near-mid):** three quick thrusts down a narrow lane (6 m) toward you, each with its own 0.35 s lane telegraph, re-aiming between them. Step sideways each time.
+7. **Shield Charge (any range):** a wide lane (2.4 m) toward you fills over 1.0 s, then he charges 18 m behind his shield. He **smashes every barricade** in the lane and topples braziers (burning ground). If he hits a **pillar or the wall** he's **stunned 2 s with his shield down** (no block, takes +50 % damage). Lure him into the stone.
+8. **Call the Guards (every ~25 s):** "TO ME, BROTHERS!": two gates open, 4–6 Shield Archers and Shield Thugs pour in.
+9. **Phase 2 — "For the province!" (at 50 % HP):** roars (invulnerable 1.5 s), the crowd throws him a second gladius, and every spike trap fires at once on his roar. Attacks 25 % faster, the Charge comes twice in a row (re-aiming between), and the Flurry has five thrusts.
+10. **Arena interaction and defeat:** barricades (smashed by charges), pillars and walls (stun him), braziers (burning ground), spike traps (phase-2 volley; they hurt him too, 1/4 damage), gates (guards). Defeat: slow-mo, "THE CHAMPION FALLS!", the crowd goes silent then wild, a pick of 3 Rare-or-better upgrades, victory screen.
+
+**Built (Phase 5.4):** all ten points except the crowd throwing him a second gladius (BACKLOG). Body `EN_Champion` (13,000 HP, 540 tris), tuning `BD_Champion`. The boss bar reads "THE PROVINCIAL CHAMPION, UNDEFEATED".
+
+**Tunables (`BossDef BD_Champion`):** HP, speeds, block arc and reduction, every attack's wind-up / damage / size / weight, charge stun and damage bonus, guard interval and counts, phase threshold, phase-2 speed-up, the flurry count per phase.

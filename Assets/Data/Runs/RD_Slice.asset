@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: RD_Slice
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.RunDef
   id: slice
+  description: A dirt pit under the city. Mud, fire pits, two gates, and the Pit Master who owns it all.
+  unlock: {fileID: 0}
   arenas:
   - displayName: THE SLAVE PIT
     scenePath: Assets/Scenes/Arenas/SlavePit.unity

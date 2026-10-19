@@ -126,6 +126,24 @@ namespace Gladiator.EditorTools
                     Tone(b, 0.3f, 0.6f, 98, 147, 0.32f, 0.12f, 0.2f, 2, 0.05f);
                     return Finish(b, 0.8f);
                 }
+                case "sfx_splinter":
+                {
+                    // a crack, then wood clattering down
+                    var b = new Buf(0.6f);
+                    Noise(b, 0f, 0.12f, 1f, 0.001f, 0.06f, 0.6f, 0.2f, 81, true);
+                    Tone(b, 0f, 0.1f, 180, 90, 0.6f, 0.002f, 0.05f);
+                    for (int k = 0; k < 5; k++) Noise(b, 0.12f + k * 0.08f, 0.07f, 0.45f - k * 0.06f, 0.002f, 0.04f, 0.35f, 0.15f, 82 + k, true);
+                    return Finish(b, 0.75f);
+                }
+                case "sfx_spikes":
+                {
+                    // iron shooting up through a grate: a scrape and a ring
+                    var b = new Buf(0.4f);
+                    Noise(b, 0f, 0.08f, 0.9f, 0.001f, 0.05f, 0.8f, 0.4f, 91, true);
+                    Tone(b, 0.01f, 0.35f, 1250, 1180, 0.28f, 0.002f, 0.2f, 0, 0.01f);
+                    Tone(b, 0.01f, 0.3f, 1870, 1800, 0.15f, 0.002f, 0.15f);
+                    return Finish(b, 0.65f);
+                }
                 case "sfx_bomb": { var b = new Buf(0.45f); Noise(b, 0, 0.45f, 0.9f, 0.002f, 0.14f, 0.35f, 0.03f, 66); Tone(b, 0, 0.35f, 150, 50, 0.9f, 0.002f, 0.1f); return Finish(b, 0.75f); }
                 case "sfx_boo": { var b = new Buf(1.6f); Noise(b, 0, 1.6f, 0.9f, 0.25f, 0.6f, 0.06f, 0.03f, 45); Tone(b, 0, 1.6f, 150, 120, 0.5f, 0.2f, 0.6f, 2, 0.03f); Tone(b, 0, 1.6f, 180, 140, 0.35f, 0.25f, 0.6f, 2, 0.04f); return Finish(b, 0.7f); }
                 case "amb_crowd": return CrowdLoop();
@@ -138,7 +156,7 @@ namespace Gladiator.EditorTools
             "sfx_swing", "sfx_thrust", "sfx_throw", "sfx_hit", "sfx_crit", "sfx_blocked", "sfx_kill", "sfx_elite_kill",
             "sfx_player_hurt", "sfx_gem", "sfx_coin", "sfx_levelup", "sfx_card", "sfx_pick", "sfx_chest", "sfx_altar",
             "sfx_explosion", "sfx_slam", "sfx_spark", "sfx_fire_pot", "sfx_boss_roar", "sfx_horn", "sfx_gate",
-            "sfx_announce", "sfx_fight", "sfx_victory", "sfx_death", "sfx_cheer", "sfx_giftthrow", "sfx_giftland", "sfx_boo", "sfx_cackle", "sfx_snare", "sfx_rattle", "sfx_bomb", "sfx_bloodrite",
+            "sfx_announce", "sfx_fight", "sfx_victory", "sfx_death", "sfx_cheer", "sfx_giftthrow", "sfx_giftland", "sfx_boo", "sfx_cackle", "sfx_snare", "sfx_rattle", "sfx_bomb", "sfx_bloodrite", "sfx_splinter", "sfx_spikes",
             "amb_crowd",
         };
 

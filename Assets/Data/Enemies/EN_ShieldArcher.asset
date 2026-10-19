@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 664674991ec87df7291301f37fcc64ac, type: 3}
+  m_Name: EN_ShieldArcher
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.EnemyDef
+  id: shieldarcher
+  displayName: Shield Archer
+  model: {fileID: 919132149155446097, guid: 941601336ebd6ab85b34d50f25091dad, type: 3}
+  anim: {fileID: 11400000, guid: 13cb1487eb00393ca8898bf49cbdecec, type: 2}
+  scale: 1
+  maxHp: 30
+  moveSpeed: 2.8
+  speedJitter: 0.15
+  acceleration: 14
+  radius: 0.42
+  knockbackTaken: 0.5
+  contactDamage: 6
+  contactInterval: 0.9
+  behaviour: 7
+  windup: 0.9
+  attackCooldown: 3
+  attackRange: 16
+  attackDamage: 12
+  attackRadius: 2.5
+  recover: 0.7
+  turnRate: 160
+  lungeSpeed: 13
+  lungeTime: 0.28
+  blockArc: 110
+  blockReduction: 0.85
+  keepDistance: {x: 8, y: 13}
+  projectileSpeed: 24
+  lobTime: 0.95
+  projectileRadius: 0.2
+  aimLockTime: 0.3
+  zoneDuration: 3.5
+  zoneDps: 10
+  dashSpeed: 18
+  dashLength: 7
+  flankRadius: 5.5
+  flankTimeout: 4
+  xp: 4
+  goldChance: 0.1
+  prewarm: 16

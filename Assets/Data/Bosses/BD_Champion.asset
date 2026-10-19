@@ -1,0 +1,80 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d4c6ea183ef480c5acde212f0835f1d, type: 3}
+  m_Name: BD_Champion
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.BossDef
+  id: champion
+  displayName: THE PROVINCIAL CHAMPION
+  title: UNDEFEATED
+  enemy: {fileID: 11400000, guid: a1fd40a55ef7c1818ae59788a7dab6f8, type: 2}
+  enterText: THE CHAMPION OF THE PROVINCE!
+  fallText: THE CHAMPION FALLS!
+  guardsText: '"TO ME, BROTHERS!"'
+  phase2Text: '"FOR THE PROVINCE!"'
+  phase1Attacks: 050604y
+  phase2Attacks: 050604y
+  moveSpeed: 3.2
+  enragedMoveSpeed: 3.8
+  turnRate: 110
+  contactDamage: 12
+  contactInterval: 0.8
+  recover: 0.6
+  sweepRadius: 5.5
+  sweepWindup: 1.1
+  sweepDamage: 28
+  sweepKnockback: 9
+  sweepJumpClear: 0.7
+  whipLength: 12
+  whipWidth: 1.2
+  whipWindup: 0.7
+  whipDamage: 18
+  whipSlow: 0.55
+  whipSlowSeconds: 2
+  slamRadius: 2.6
+  slamWindup: 1
+  slamDamage: 30
+  slamTrack: 0.6
+  slamFire: {x: 2.2, y: 4, z: 10}
+  bashRange: 4
+  bashAngle: 100
+  bashWindup: 0.7
+  bashDamage: 22
+  bashKnockback: 11
+  flurryLength: 6
+  flurryWidth: 1.1
+  flurryWindup: 0.35
+  flurryDamage: 12
+  flurryThrusts: {x: 3, y: 5}
+  chargeWindup: 1
+  chargeSpeed: 16
+  chargeLength: 18
+  chargeWidth: 2.4
+  chargeDamage: 26
+  chargeKnockback: 13
+  chargeStun: 2
+  stunDamageTakenMul: 1.5
+  chargeRepeats: {x: 1, y: 2}
+  guardsEvery: 25
+  guards:
+  - {fileID: 11400000, guid: 48e7ab87ef6d1dcc493c937e44e6fcd9, type: 2}
+  - {fileID: 11400000, guid: 729da0abfb08161378f0ed030335efd6, type: 2}
+  guardCount: {x: 4, y: 6}
+  phase2At: 0.5
+  phase2FireRing: 0
+  phase2SpikeVolley: 1
+  enrageSpeed: 1.25
+  enrageRoar: 1.5
+  fireRingRadius: 19.3
+  fireRingSpacing: 2.4
+  fireRingPatch: 1.5
+  fireRingDps: 12
+  rewardFloor: 2

@@ -18,6 +18,9 @@ namespace Gladiator.EditorTools
         const string SpectatorModel = "Assets/Art/Models/Environment/CH_Spectator.fbx";
         const string MudModel = "Environment/PR_MudPatch";
         const string FireModel = "Environment/PR_FirePit";
+        const string BarricadeModel = "Environment/PR_Barricade";
+        const string SpikeGrateModel = "Environment/PR_SpikeGrate";
+        const string SpikesModel = "Environment/PR_Spikes";
 
         [MenuItem("Gladiator/Arenas/Build Slave Pit")]
         public static string BuildSlavePit()
@@ -45,7 +48,31 @@ namespace Gladiator.EditorTools
             var gateRoots = new List<Transform>();
             var gatesRoot = new GameObject("Gates").transform;
             gatesRoot.SetParent(env, false);
-            foreach (var g in layout.gates) gateRoots.Add(PlaceGate(g, gatesRoot));
+            string gateModel = string.IsNullOrEmpty(layout.gateModel) ? "Environment/SM_PitGate" : layout.gateModel;
+            foreach (var g in layout.gates) gateRoots.Add(PlaceGate(g, gatesRoot, gateModel));
+
+            // breakables (Phase 5.4): placed before the bake so their obstacles are baked too (switched off when broken)
+            var barricades = new List<Transform>();
+            var braziers = new List<Transform>();
+            if (layout.barricades.Length > 0 || layout.braziers.Length > 0)
+            {
+                var breakRoot = new GameObject("Breakables").transform;
+                breakRoot.SetParent(env, false);
+                foreach (var b in layout.barricades)
+                {
+                    var go = ArenaSceneCommon.PlaceProp(BarricadeModel, breakRoot, new Vector3(b.x, b.y, b.z), b.w);
+                    UnStatic(go);
+                    barricades.Add(go.transform);
+                }
+                foreach (var b in layout.braziers)
+                {
+                    var go = ArenaSceneCommon.PlaceProp("Environment/PR_Brazier", breakRoot, b, 0f);
+                    AddFireLight(go);
+                    UnStatic(go);
+                    braziers.Add(go.transform);
+                }
+            }
+            foreach (var t in layout.spikeTraps) ArenaSceneCommon.PlaceDecor(SpikeGrateModel, env, t, 0f);
 
             var mud = new List<Vector3>();
             var fires = new List<Vector4>();
@@ -82,6 +109,21 @@ namespace Gladiator.EditorTools
             var mudZones = new GameObject("MudZones").AddComponent<MudZones>();
             mudZones.transform.SetParent(arena, false);
             mudZones.circles = mud.ToArray();
+            if (barricades.Count > 0 || braziers.Count > 0)
+            {
+                var br = new GameObject("ArenaBreakables").AddComponent<ArenaBreakables>();
+                br.transform.SetParent(arena, false);
+                br.barricades = barricades.ToArray();
+                br.braziers = braziers.ToArray();
+            }
+            if (layout.spikeTraps.Length > 0)
+            {
+                var traps = new GameObject("SpikeTraps").AddComponent<SpikeTraps>();
+                traps.transform.SetParent(arena, false);
+                traps.traps = layout.spikeTraps;
+                traps.spikesMesh = FirstMesh("Assets/Art/Models/" + SpikesModel + ".fbx");
+                traps.material = AssetDatabase.LoadAssetAtPath<Material>(LookSetup.EnvMat);
+            }
             var firePits = new GameObject("FirePits").AddComponent<ArenaFirePits>();
             firePits.transform.SetParent(arena, false);
             firePits.pits = fires.ToArray();
@@ -110,7 +152,20 @@ namespace Gladiator.EditorTools
             }
 
             var director = Object.FindAnyObjectByType<Director>();
-            if (director != null) director.maxAliveOverride = layout.maxAlive;
+            if (director != null)
+            {
+                director.maxAliveOverride = layout.maxAlive;
+                if (layout.spawnTable != null) director.table = layout.spawnTable;
+            }
+            // the arena's tier and difficulty (Phase 5.4)
+            var runState = Object.FindAnyObjectByType<RunState>();
+            if (runState != null)
+            {
+                runState.arenaTier = layout.tier;
+                // on the run, not the player: the player is a prefab instance, and a field set on it here isn't saved
+                runState.playerDamageTakenMul = layout.playerDamageTakenMul > 0f ? layout.playerDamageTakenMul : 1f;
+            }
+            enemies.hpMul = layout.enemyHpMul > 0f ? layout.enemyHpMul : 1f;
             var props = Object.FindAnyObjectByType<Interactables>();
             if (props != null) { props.chestAnchors = layout.chestAnchors; props.altarAnchors = layout.altarAnchors; }
             if (layout.secretSpots != null && layout.secretSpots.Length > 0)
@@ -146,20 +201,28 @@ namespace Gladiator.EditorTools
                 case PieceRole.Prop: go = ArenaSceneCommon.PlaceProp(p.model, parent, p.position, p.yaw, scale); break;
                 default: go = ArenaSceneCommon.PlaceDecor(p.model, parent, p.position, p.yaw, scale); break;
             }
-            if (p.model.EndsWith("PR_Brazier"))
-            {
-                var l = new GameObject("FireLight").AddComponent<Light>();
-                l.transform.SetParent(go.transform, false);
-                l.transform.localPosition = new Vector3(0, 1.6f, 0);
-                l.type = LightType.Point; l.color = new Color(1f, 0.6f, 0.25f); l.range = 6f; l.intensity = 3f; l.shadows = LightShadows.None;
-            }
+            if (p.model.EndsWith("PR_Brazier")) AddFireLight(go);
+        }
+
+        static void AddFireLight(GameObject go)
+        {
+            var l = new GameObject("FireLight").AddComponent<Light>();
+            l.transform.SetParent(go.transform, false);
+            l.transform.localPosition = new Vector3(0, 1.6f, 0);
+            l.type = LightType.Point; l.color = new Color(1f, 0.6f, 0.25f); l.range = 6f; l.intensity = 3f; l.shadows = LightShadows.None;
+        }
+
+        /// <summary>Breakables are switched off at runtime: they can't be static-batched.</summary>
+        static void UnStatic(GameObject go)
+        {
+            foreach (var t in go.GetComponentsInChildren<Transform>(true)) GameObjectUtility.SetStaticEditorFlags(t.gameObject, 0);
         }
 
         /// <summary>Gate frame as solid geometry; the doors are visual only (they swing) and an invisible wall behind
         /// them keeps the player in when they're open.</summary>
-        static Transform PlaceGate(in ArenaLayoutDef.Gate g, Transform parent)
+        static Transform PlaceGate(in ArenaLayoutDef.Gate g, Transform parent, string model)
         {
-            var go = ArenaSceneCommon.PlaceSolid("Environment/SM_PitGate", parent, g.position, g.yaw);
+            var go = ArenaSceneCommon.PlaceSolid(model, parent, g.position, g.yaw);
             foreach (var t in go.GetComponentsInChildren<Transform>(true))
             {
                 if (t.name != "DoorL" && t.name != "DoorR") continue;

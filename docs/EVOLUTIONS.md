@@ -13,11 +13,11 @@ Taking the card swaps the weapon for its evolved form **in the same slot**. Slot
 | Weapon (tags) | Catalyst | Evolution | What changes (twist) |
 |---|---|---|---|
 | Rusty Gladius (CRIT) | Lucky Cut | **Champion's Gladius** (CRIT) | **Echo:** every swing is followed 0.12 s later by a mirrored second arc; +10 % crit chance |
-| Pit Spear (HEAVY) | Long Reach | **Impaler** (HEAVY) | 1.5× reach; every enemy run through is **Rooted** 0.8 s |
+| Pit Spear (HEAVY) | Long Reach | **Impaler** (HEAVY) | 1.5× reach; every enemy run through is **Rooted** (2 s, `SE_Root`) |
 | Javelins | Static Charge | **Thunderbolts** (LIGHTNING) | **Chain:** each javelin hit arcs to 3 more enemies within 6 m and Shocks them |
-| Chakram | Quick Hands | **Twin Moons** | **Echo:** a second disc follows 0.25 s later on the mirrored side; +1 pierce |
+| Chakram | Quick Hands | **Twin Moons** | **Echo:** a second disc follows 0.25 s later on the mirrored side; +20 % damage (the chakram already pierces everything) |
 | Bomb Satchel (FIRE, HEAVY) | Kindling | **Fire-Pot Barrage** (FIRE, HEAVY) | **Ground:** each blast leaves burning ground (2.4 m, 3 s) that Burns whatever walks in |
-| Gorm's Flail (HEAVY) | Brute Force | **Chain of Ruin** (HEAVY) | +1 ball, 1.3× size; every hit **Slows** 40 % for 1.5 s |
+| Gorm's Flail (HEAVY) | Brute Force | **Chain of Ruin** (HEAVY) | +1 ball, 1.3× size; every hit **Slows** 40 % (2 s, `SE_Slow`) |
 | Crimson Greatsword (BLOOD, HEAVY) | Open Wounds | **Sanguine Reaver** (BLOOD, HEAVY) | **Echo:** a wider blood cleave follows 0.25 s later; 2 Bleed stacks per hit |
 
 **Generic twists (code), composed by `WeaponDef` data:**
@@ -37,7 +37,7 @@ Taking the card swaps the weapon for its evolved form **in the same slot**. Slot
 | LIGHTNING | Static Charge, Conductive Oil, Thunderbolts | **Storm Front:** every 4th hit forks to 3 enemies within 6 m and Shocks them | existing `ChainSpark` (data) |
 | CRIT | Lucky Cut, Serrated Edge, Rusty Gladius | **Executioner:** a crit on a non-boss enemy below 20 % HP kills it outright | new effect `ExecuteOnCrit` |
 | HEAVY | Brute Force, Long Reach, Spear, Flail, Bomb Satchel, Greatsword | **Juggernaut:** +20 % area, +40 % knockback, +10 % damage | stat mods (data) |
-| DEFENSE | Iron Hide, Second Wind, Thick Skin | **Bulwark:** +3 armor, +15 % max HP, +0.5 HP/s | stat mods (data) |
+| DEFENSE | Iron Hide, Second Wind, Thick Skin | **Bulwark:** +8 % armor, +15 % max HP, +0.5 HP/s | stat mods (data) |
 
 Movement, XP and Gold have only 1–2 carriers. Their synergies wait until there are more Boons with those tags (BACKLOG). Lightning reaches 3 only through the evolved Thunderbolts, which makes it a late-run goal on purpose.
 

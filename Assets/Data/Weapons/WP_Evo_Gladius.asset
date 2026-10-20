@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 39f0cecc993934a19800cd9b6e8df985, type: 3}
+  m_Name: WP_Evo_Gladius
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.WeaponDef
+  id: champions_gladius
+  displayName: Champion's Gladius
+  description: Every arc is answered by a second one behind you.
+  pattern: 0
+  damage: 15
+  critChance: 0.22
+  critMultiplier: 2
+  knockback: 6
+  onHitStatus: {fileID: 0}
+  onHitStatusPower: 0.1
+  onHitStacks: 1
+  cooldown: 0.8
+  swingDuration: 0.2
+  windup: 0.06
+  range: 2.6
+  arcDegrees: 150
+  width: 0.5
+  acquireRange: 3.2
+  amount: 1
+  speed: 16
+  pierce: 0
+  mesh: {fileID: 0}
+  meshScale: 1
+  flightTime: 0.6
+  fuse: 0.4
+  arcHeight: 2.2
+  echoDelay: 0.12
+  echoAngle: 180
+  echoScale: 1
+  hitEffects: []
+  levels: []

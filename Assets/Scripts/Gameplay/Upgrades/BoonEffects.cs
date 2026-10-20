@@ -283,7 +283,7 @@ namespace Gladiator.Gameplay
             {
                 int i = _query[q];
                 if (!em.IsAlive(i)) continue;
-                em.ApplyStatus(i, a.E.status, burst.StatusPower, 1); // pass the fire on first: the hit may kill it, chaining
+                em.ApplyStatus(i, a.E.status, burst.StatusPower, Mathf.Max(1, a.E.stacks)); // pass it on first: the hit may kill it, chaining
                 em.ApplyDamage(i, new DamageInfo { Amount = damage, Flags = DamageFlags.Proc | DamageFlags.Area, Point = burst.Pos, SourceId = a.Source });
             }
             if (em.deathPop != null) em.deathPop.Burst(burst.Pos + Vector3.up * 0.6f, 10, 5f, 0.22f, burstColorA, burstColorB);

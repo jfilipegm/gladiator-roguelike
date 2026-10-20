@@ -26,6 +26,7 @@ namespace Gladiator.EditorTools
         {
             var layout = AmphitheaterLayout.Ensure();
             EnsureEnemies();
+            if (layout.boss == null) { layout.boss = BossSetup.EnsureBeastLord(); layout.bossGate = 0; EditorUtility.SetDirty(layout); } // the great gate
             var table = EnsureTable();
             if (layout.spawnTable == null) { layout.spawnTable = table; EditorUtility.SetDirty(layout); }
             var boar = AssetDatabase.LoadAssetAtPath<EnemyDef>(BoarPath);

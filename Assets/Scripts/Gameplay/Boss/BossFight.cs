@@ -61,6 +61,7 @@ namespace Gladiator.Gameplay
                     {
                         var hp = Player.Main != null ? Player.Main.GetComponent<PlayerHealth>() : null;
                         run.MarkBossDefeated(boss.id, hp != null ? hp.Hp01 : 1f);
+                        if (boss.scatterOnDefeat && EnemyManager.Instance != null) EnemyManager.Instance.DespawnAll(); // the beasts scatter
                         Current = Stage.Falling;
                         _t = 0f;
                         TimeController.SlowMotion = fallSlowMo;

@@ -44,7 +44,7 @@ namespace Gladiator.Gameplay
         float[] _nextOut = System.Array.Empty<float>();
         int[] _left = System.Array.Empty<int>();
         Vector3[] _home = System.Array.Empty<Vector3>();
-        float _nextAuto;
+        float _nextAuto, _rattle;
 
         /// <summary>Cages opened and beasts released this run (tests, bot log).</summary>
         public int Opened { get; private set; }
@@ -107,6 +107,13 @@ namespace Gladiator.Gameplay
             return n;
         }
 
+        /// <summary>Every idle cage's bars rattle for `seconds` without opening (the Beast Lord's entrance).</summary>
+        public void RattleAll(float seconds)
+        {
+            _rattle = seconds;
+            if (cages.Length > 0) SfxPlayer.Play2D(SfxId.Rattle);
+        }
+
         /// <summary>The idle cage nearest `p` (-1 if all are busy).</summary>
         public int NearestIdle(Vector3 p)
         {
@@ -133,9 +140,15 @@ namespace Gladiator.Gameplay
             }
             var tele = TelegraphRenderer.Instance;
             var em = EnemyManager.Instance;
+            if (_rattle > 0f) _rattle -= dt;
             for (int i = 0; i < cages.Length; i++)
             {
-                if (_phase[i] == Phase.Idle) continue;
+                if (_phase[i] == Phase.Idle)
+                {
+                    var b = i < bars.Length ? bars[i] : null;
+                    if (b != null) b.localPosition = _home[i] + (_rattle > 0f ? new Vector3(Mathf.Sin((_rattle + i) * 70f) * 0.05f, 0f, 0f) : Vector3.zero);
+                    continue;
+                }
                 _t[i] += dt;
                 var cage = cages[i];
                 var bar = i < bars.Length ? bars[i] : null;

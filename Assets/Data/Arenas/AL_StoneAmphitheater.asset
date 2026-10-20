@@ -81,7 +81,7 @@ MonoBehaviour:
   maxAlive: 320
   spawnMaxDistance: 55
   sunEuler: {x: 54, y: -25, z: 0}
-  boss: {fileID: 0}
+  boss: {fileID: 11400000, guid: 28be384594f4d0b1f8a414a87ffed25a, type: 2}
   bossGate: 0
   pieces:
   - model: Environment/SM_AmphiFloor

@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.EnemyCatalog
   enemies:
   - {fileID: 11400000, guid: 977754d8957140798a734032f2047210, type: 2}
+  - {fileID: 11400000, guid: 9469a9b236dda0fe692d1f036aad6f3d, type: 2}
   - {fileID: 11400000, guid: dadc94099a6e8005494fa3c710e62faf, type: 2}
   - {fileID: 11400000, guid: a1fd40a55ef7c1818ae59788a7dab6f8, type: 2}
   - {fileID: 11400000, guid: 824754529e64539a08f93ce5ea6b9028, type: 2}

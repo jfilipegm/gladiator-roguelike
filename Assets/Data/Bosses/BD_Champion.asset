@@ -20,6 +20,9 @@ MonoBehaviour:
   fallText: THE CHAMPION FALLS!
   guardsText: '"TO ME, BROTHERS!"'
   phase2Text: '"FOR THE PROVINCE!"'
+  shortName: The Champion
+  deathLine: The Champion salutes the stands over you.
+  victoryLine: The Province's champion is down. The city will hear your name.
   phase1Attacks: 050604y
   phase2Attacks: 050604y
   moveSpeed: 3.2
@@ -63,6 +66,19 @@ MonoBehaviour:
   chargeStun: 2
   stunDamageTakenMul: 1.5
   chargeRepeats: {x: 1, y: 2}
+  pounceRadius: 3.5
+  pounceWindup: 1
+  pounceTrack: 0.7
+  pounceFlight: 0.55
+  pounceHeight: 3
+  pounceRange: 24
+  pounceDamage: 28
+  pounceKnockback: 9
+  pounceRecover: 0.8
+  pounceRepeats: {x: 1, y: 2}
+  beastPack: {x: 0, y: 0}
+  phase2CagePack: 0
+  scatterOnDefeat: 0
   guardsEvery: 25
   guards:
   - {fileID: 11400000, guid: 48e7ab87ef6d1dcc493c937e44e6fcd9, type: 2}
@@ -73,7 +89,7 @@ MonoBehaviour:
   phase2SpikeVolley: 1
   enrageSpeed: 1.25
   enrageRoar: 1.5
-  fireRingRadius: 19.3
+  fireRingInset: 1.1
   fireRingSpacing: 2.4
   fireRingPatch: 1.5
   fireRingDps: 12

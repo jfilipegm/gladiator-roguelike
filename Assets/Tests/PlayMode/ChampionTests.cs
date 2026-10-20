@@ -28,8 +28,6 @@ namespace Gladiator.Tests
 
         BossController Boss => BossController.Active;
 
-        static Vector3 Polar(float deg, float r) => new Vector3(Mathf.Sin(deg * Mathf.Deg2Rad) * r, 0f, Mathf.Cos(deg * Mathf.Deg2Rad) * r);
-
         IEnumerator BootToBoss()
         {
             DevSettings.ResetAll();
@@ -132,10 +130,11 @@ namespace Gladiator.Tests
         {
             yield return BootToBoss();
             var br = ArenaBreakables.Instance;
-            // ProvincialPitLayout: barricade 1 is the north gate's inner one (19°, 15.5 m); the pillar at 35° (12 m) is
-            // just beyond it. Line him up so the lane runs through the barricade into the pillar.
-            Vector3 bar = br.barricades[1].position;
-            Vector3 pillar = Polar(35f, 12f);
+            // ProvincialPitLayout: barricade 8 stands on the west floor at (-24, 3); the pillar toward the west end (-31, 0)
+            // is just beyond it. Line him up so the lane runs through the barricade into the pillar.
+            const int b = 8;
+            Vector3 bar = br.barricades[b].position;
+            Vector3 pillar = new Vector3(-31f, 0f, 0f);
             Vector3 dir = pillar - bar; dir.y = 0f; dir.Normalize();
             Vector3 start = bar - dir * 4f;
             Boss.Warp(start, Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg);
@@ -145,7 +144,7 @@ namespace Gladiator.Tests
             float end = Time.time + 5f;
             while (Time.time < end && Boss.CurrentState != BossController.State.Stunned) yield return null;
             Assert.AreEqual(BossController.State.Stunned, Boss.CurrentState, "the pillar stops him dead");
-            Assert.IsTrue(br.IsBroken(1), "the barricade in his lane is gone");
+            Assert.IsTrue(br.IsBroken(b), "the barricade in his lane is gone");
             Assert.AreEqual(1, Boss.Stuns);
             Assert.IsFalse(Boss.ShieldUp, "guard down while stunned");
             Vector3 fwd = Forward;

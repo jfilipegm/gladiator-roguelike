@@ -27,21 +27,27 @@ Boss: Gorm, the Pit Master (enters through the north gate). Layout: `SlavePitLay
 the layout, mud, fire, gates, nobody leaves) and `SlavePitEnclosureTests` (closed at every bearing and height, the
 player can't get out over a fence or the berm, the oval keeps enemies in).
 
-## 2. The Provincial Pit (Phase 5.4, v0.5.0)
-**Player feels:** "People notice me." A real arena at last, small and provincial: a stone foundation with wooden
+## 2. The Provincial Pit (Phase 5.4, v0.5.0; rebuilt bigger and octagonal for v0.8.0)
+**Player feels:** "People notice me." A real arena at last: a provincial town walled in a stone square, with wooden
 stands full of shouting, betting townsfolk.
+
+**Rebuild (producer, 2026-10-20):** the v0.5.0 pit was a ~49 m circle (≈ 1,900 m²), smaller than the Slave Pit
+(≈ 4,400 m²); every arena must be bigger than the last and not every arena round (`docs/GDD.md`). Now an **elongated
+octagon**: the wall face runs 100 × 70 m with 14 m cut corners (≈ 6,600 m², the play area ≈ 6,400 m², ~1.45× the
+Slave Pit). The play area's outline is data (`ArenaLayoutDef.outline`): `EnemyManager` turns it into a radial edge
+table, so enemies, spawns, pickups, chests, gifts, the bot and the boss all use the octagon.
 
 | | |
 |---|---|
 | **Unlock** | Beat Gorm once (`UL_ProvincialPit`, `DefeatBoss gorm`). Then the menu asks which arena after the gladiator. Locked: *"Beat the Pit Master and the provinces will want you."* |
-| **Size / layout** | ~50 m across (play radius 24.5 m vs 20.4). A sand floor ringed by a **stone foundation wall** (2.4 m) with **wooden stands** on top. **3 gates** (north, south-east, south-west), so enemies come from three sides. |
-| **Vertical variety** | Two raised stone **platforms** (1.2 m) with stairs, one long ramp, and a low central dais. |
-| **Pillars** | Six stone pillars: they block movement, shots and line of sight. The Champion's charge stuns him against one. |
-| **Barricades** | Eight wooden barricades in short lines: they split the floor into lanes and choke points. Enemies walk around them. **The Champion's charge smashes any barricade in its path** (gone for the run), so the arena opens up as the fight goes on. |
-| **Spike traps (new rule)** | Six iron grates in the floor. Every ~7 s each one telegraphs (orange-red, 1 s), then spikes shoot up for 1.2 s. **They hurt everyone**: the player (15) and enemies (40, ×2 for ordinary ones), so luring the horde over a grate is a tactic. Feet above 0.5 m clear them (jump). Traps are staggered so there's always one live. |
-| **Braziers** | Four lit braziers on the stone platforms and by the gates: light and set dressing. If the Champion charges through one, it topples and leaves burning ground for 8 s. |
+| **Size / layout** | 100 × 70 m elongated octagon (corners cut 14 m). A sand floor ringed by a **stone foundation wall** (2.4 m) with **wooden stands** on top and stone piers at the eight corners. **4 gates**, one mid-side (north = the boss's), so enemies come from every side of a bigger floor. |
+| **Vertical variety** | Six raised stone **platforms** (1.2 m): five with stairs, one with a long ramp; a low central dais. |
+| **Pillars** | Ten stone pillars: a colonnade of eight either side of the dais, one toward each end. They block movement, shots and line of sight. The Champion's charge stuns him against one. |
+| **Barricades** | Twelve wooden barricades (a chicane in front of each gate, four on the open floor): they split the floor into lanes and choke points. Enemies walk around them. **The Champion's charge smashes any barricade in its path** (gone for the run), so the arena opens up as the fight goes on. |
+| **Spike traps (new rule)** | Ten iron grates in the floor (one in each gate lane). Every ~7 s each one telegraphs (orange-red, 1 s), then spikes shoot up for 1.2 s. **They hurt everyone**: the player (15) and enemies (40, ×2 for ordinary ones), so luring the horde over a grate is a tactic. Feet above 0.5 m clear them (jump). Traps are staggered so there's always one live. |
+| **Braziers** | Six lit braziers on four platforms and beside the north gate: light and set dressing. If the Champion charges through one, it topples and leaves burning ground for 8 s. |
 | **Enemies** | The Slave Pit's six, with tougher odds, plus two new ones: the **Shield Archer** (shield-protected archer) and the **Assassin** (flanker). Enemies have +25 % HP and +15 % damage here (`ArenaLayoutDef.enemyHpMul / playerDamageTakenMul`). |
-| **Crowd** | ~200 spectators in the stands (instanced, as before). Cheers on streaks; chants when the Champion enters. |
+| **Crowd** | ~400 spectators in the stands (instanced, as before). Cheers on streaks; chants when the Champion enters. |
 | **Palette** | A2 ochre / dry grass for the floor and stands, warm sandstone and grey stone for the foundation, red-and-white banners. Distinct from the Slave Pit's mud browns at a glance. |
 | **Boss** | **The Provincial Champion** (docs/BOSSES.md). |
 | **Renown** | Arena tier 1 (the Slave Pit is 0): Renown × 1.5 (`MetaConfig.deeperArenaBonus`). Reaching it counts for `ReachArena 1` unlocks. |

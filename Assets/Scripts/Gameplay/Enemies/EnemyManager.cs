@@ -42,6 +42,8 @@ namespace Gladiator.Gameplay
         public float arenaRadius = 20f;
         [Tooltip("The arena's shape: an ellipse, arenaRadius along X and arenaRadius × arenaAspect along Z (1 = a circle).")]
         public float arenaAspect = 1f;
+        [Tooltip("The arena's shape when set (ArenaLayoutDef.outline): a polygon in world XZ whose whole edge the centre can see. Replaces the ellipse; arenaRadius is then only the debug spawn ring.")]
+        public Vector2[] arenaOutline = System.Array.Empty<Vector2>();
         public Vector2 boundsMin = new Vector2(-26f, -26f);
         public Vector2 boundsMax = new Vector2(26f, 26f);
         public float gridCellSize = 2f;
@@ -147,6 +149,7 @@ namespace Gladiator.Gameplay
             _grid = new SpatialHashGrid(boundsMin, boundsMax, gridCellSize, capacity);
             _poolRoot = new GameObject("[EnemyPool]").transform;
             _poolRoot.SetParent(transform, false);
+            BuildEdgeTable();
         }
 
         void Start()
@@ -183,18 +186,74 @@ namespace Gladiator.Gameplay
             obstacles = StaticObstacles.FromScene(Layers.SolidMask, 0.5f, height, walkables);
         }
 
-        // ------------------------------------------------------------------ the arena's shape (an ellipse; a circle at aspect 1)
+        // ------------------------------------------------------------------ the arena's shape
+        // An ellipse (a circle at aspect 1), or any outline the centre sees all of (arenaOutline): its edge distance per
+        // angle is tabled once, so every query is a lookup (no per-frame polygon maths).
 
-        /// <summary>Half-extent along Z.</summary>
-        public float ArenaRadiusZ => arenaRadius * arenaAspect;
-        /// <summary>The shorter half-extent: a circle of this radius fits inside.</summary>
-        public float ArenaMinRadius => Mathf.Min(arenaRadius, ArenaRadiusZ);
+        const int EdgeBins = 720;
+        float[] _edge;      // outline: centre → edge distance per bin (null: the ellipse)
+        float _edgeInner;   // outline: the biggest circle round the centre that fits inside
+
+        public bool HasOutline => arenaOutline != null && arenaOutline.Length >= 3;
+
+        /// <summary>Tables the outline's edge (Awake; call again after changing arenaOutline at runtime).</summary>
+        public void BuildEdgeTable()
+        {
+            if (!HasOutline) { _edge = null; return; }
+            if (_edge == null || _edge.Length != EdgeBins + 1) _edge = new float[EdgeBins + 1];
+            float cx = arenaCenter.x, cz = arenaCenter.z;
+            _edgeInner = float.MaxValue;
+            int n = arenaOutline.Length;
+            for (int b = 0; b <= EdgeBins; b++)
+            {
+                float a = b * (Mathf.PI * 2f / EdgeBins);
+                float dx = Mathf.Cos(a), dz = Mathf.Sin(a), best = float.MaxValue;
+                for (int i = 0, j = n - 1; i < n; j = i++)
+                {
+                    // the ray centre + t·d against the edge A + s·(B - A)
+                    float ax = arenaOutline[j].x - cx, az = arenaOutline[j].y - cz;
+                    float ex = arenaOutline[i].x - arenaOutline[j].x, ez = arenaOutline[i].y - arenaOutline[j].y;
+                    float den = dx * ez - dz * ex;
+                    if (Mathf.Abs(den) < 1e-6f) continue;
+                    float t = (ax * ez - az * ex) / den, s = (ax * dz - az * dx) / den;
+                    if (t > 0f && s >= -1e-4f && s <= 1f + 1e-4f && t < best) best = t;
+                }
+                _edge[b] = best < float.MaxValue ? best : arenaRadius;
+            }
+            for (int i = 0, j = n - 1; i < n; j = i++) // the inscribed circle: the nearest edge line
+            {
+                float ax = arenaOutline[j].x - cx, az = arenaOutline[j].y - cz;
+                float ex = arenaOutline[i].x - arenaOutline[j].x, ez = arenaOutline[i].y - arenaOutline[j].y;
+                float len = Mathf.Sqrt(ex * ex + ez * ez);
+                if (len < 1e-4f) continue;
+                _edgeInner = Mathf.Min(_edgeInner, Mathf.Abs(ax * ez - az * ex) / len);
+            }
+        }
+
+        /// <summary>Outline: the centre → edge distance in the direction (dx, dz).</summary>
+        float EdgeRadius(float dx, float dz)
+        {
+            if (_edge == null) BuildEdgeTable();
+            float a = Mathf.Atan2(dz, dx);
+            if (a < 0f) a += Mathf.PI * 2f;
+            float f = a * (EdgeBins / (Mathf.PI * 2f));
+            int i = Mathf.Min((int)f, EdgeBins - 1);
+            return Mathf.Lerp(_edge[i], _edge[i + 1], f - i);
+        }
+
+        /// <summary>Half-extent along Z (the north edge).</summary>
+        public float ArenaRadiusZ => HasOutline ? EdgeRadius(0f, 1f) : arenaRadius * arenaAspect;
+        /// <summary>The biggest circle round the centre that fits inside.</summary>
+        public float ArenaMinRadius => HasOutline ? InnerRadius : Mathf.Min(arenaRadius, ArenaRadiusZ);
+        float InnerRadius { get { if (_edge == null) BuildEdgeTable(); return _edgeInner; } }
 
         /// <summary>How far `p` is toward the edge of the arena shrunk by `margin` (XZ): 1 on that edge, above 1 outside.</summary>
         public float EdgeDistance01(Vector3 p, float margin = 0f)
         {
-            float x = (p.x - arenaCenter.x) / Mathf.Max(0.1f, arenaRadius - margin);
-            float z = (p.z - arenaCenter.z) / Mathf.Max(0.1f, ArenaRadiusZ - margin);
+            float x = p.x - arenaCenter.x, z = p.z - arenaCenter.z;
+            if (HasOutline) return Mathf.Sqrt(x * x + z * z) / Mathf.Max(0.1f, EdgeRadius(x, z) - margin);
+            x /= Mathf.Max(0.1f, arenaRadius - margin);
+            z /= Mathf.Max(0.1f, ArenaRadiusZ - margin);
             return Mathf.Sqrt(x * x + z * z);
         }
 
@@ -209,8 +268,27 @@ namespace Gladiator.Gameplay
         }
 
         /// <summary>The point at `angle` (radians: cos → X, sin → Z) on the edge of the arena shrunk by `inset`.</summary>
-        public Vector3 EdgePoint(float angle, float inset) =>
-            arenaCenter + new Vector3(Mathf.Cos(angle) * Mathf.Max(0.1f, arenaRadius - inset), 0f, Mathf.Sin(angle) * Mathf.Max(0.1f, ArenaRadiusZ - inset));
+        public Vector3 EdgePoint(float angle, float inset)
+        {
+            float c = Mathf.Cos(angle), s = Mathf.Sin(angle);
+            if (HasOutline) return arenaCenter + new Vector3(c, 0f, s) * Mathf.Max(0.1f, EdgeRadius(c, s) - inset);
+            return arenaCenter + new Vector3(c * Mathf.Max(0.1f, arenaRadius - inset), 0f, s * Mathf.Max(0.1f, ArenaRadiusZ - inset));
+        }
+
+        /// <summary>Length of the arena's edge shrunk by `inset` (m).</summary>
+        public float EdgePerimeter(float inset)
+        {
+            const int n = 256;
+            float sum = 0f;
+            Vector3 prev = EdgePoint(0f, inset);
+            for (int k = 1; k <= n; k++)
+            {
+                Vector3 p = EdgePoint(k * Mathf.PI * 2f / n, inset);
+                sum += Vector3.Distance(prev, p);
+                prev = p;
+            }
+            return sum;
+        }
 
         void OnEnable() => GameLoop.Register(this, TickGroup.Enemies);
         void OnDisable() { GameLoop.Unregister(this); if (Instance == this) Instance = null; }
@@ -691,11 +769,23 @@ namespace Gladiator.Gameplay
 
                 _obstacles?.PushOut(ref np, _radius[i]);
 
-                // keep inside the arena (an ellipse)
+                // keep inside the arena (its outline, or the ellipse)
                 float cx = np.x - arenaCenter.x, cz = np.z - arenaCenter.z;
-                float erx = arenaRadius - _radius[i], erz = arenaRadius * arenaAspect - _radius[i];
-                float ux = cx / erx, uz = cz / erz, e2 = ux * ux + uz * uz;
-                if (e2 > 1f) { float k2 = 1f / Mathf.Sqrt(e2); np.x = arenaCenter.x + cx * k2; np.z = arenaCenter.z + cz * k2; }
+                if (_edge != null)
+                {
+                    float d2 = cx * cx + cz * cz, rin = _edgeInner - _radius[i];
+                    if (d2 > rin * rin) // only near the edge: the table lookup needs an atan2
+                    {
+                        float d = Mathf.Sqrt(d2), lim = EdgeRadius(cx, cz) - _radius[i];
+                        if (d > lim) { float k2 = lim / d; np.x = arenaCenter.x + cx * k2; np.z = arenaCenter.z + cz * k2; }
+                    }
+                }
+                else
+                {
+                    float erx = arenaRadius - _radius[i], erz = arenaRadius * arenaAspect - _radius[i];
+                    float ux = cx / erx, uz = cz / erz, e2 = ux * ux + uz * uz;
+                    if (e2 > 1f) { float k2 = 1f / Mathf.Sqrt(e2); np.x = arenaCenter.x + cx * k2; np.z = arenaCenter.z + cz * k2; }
+                }
 
                 // terrain: follow walkable height, but never step up a wall
                 float h0 = p.y;

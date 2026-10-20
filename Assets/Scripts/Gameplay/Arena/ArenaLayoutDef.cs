@@ -87,6 +87,8 @@ namespace Gladiator.Gameplay
         public float radius = 20.5f;
         [Tooltip("Z extent ÷ X extent: 1 = a round arena, below 1 an oval (the playtest Slave Pit).")]
         public float aspect = 1f;
+        [Tooltip("The play area's outline (world XZ, in order around it), where enemies stay: any polygon whose whole edge the centre can see (rectangle, octagon, D-shape...). Empty: the ellipse of radius × aspect.")]
+        public Vector2[] outline = Array.Empty<Vector2>();
         [Tooltip("Invisible walls (x, z, yaw, width) that keep the player in even over a low fence with air jumps; only the player collides with them.")]
         public Vector4[] boundary = Array.Empty<Vector4>();
         [Tooltip("Linear fog start / end (m); zero = the look's default. Big arenas push it out.")]
@@ -122,5 +124,16 @@ namespace Gladiator.Gameplay
         public Vector3[] braziers = Array.Empty<Vector3>();
         [Tooltip("Spike grate centres (y = the floor): they cycle and hurt everyone on them.")]
         public Vector3[] spikeTraps = Array.Empty<Vector3>();
+
+        /// <summary>The play area's floor (m²): the outline's, else the ellipse's. Each arena of the ladder must be bigger
+        /// than the one before it (docs/GDD.md).</summary>
+        public float PlayArea()
+        {
+            if (outline == null || outline.Length < 3) return Mathf.PI * radius * radius * (aspect > 0f ? aspect : 1f);
+            float twice = 0f; // shoelace
+            for (int i = 0, j = outline.Length - 1; i < outline.Length; j = i++)
+                twice += outline[j].x * outline[i].y - outline[i].x * outline[j].y;
+            return Mathf.Abs(twice) * 0.5f;
+        }
     }
 }

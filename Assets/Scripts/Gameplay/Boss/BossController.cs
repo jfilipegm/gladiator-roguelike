@@ -598,11 +598,8 @@ namespace Gladiator.Gameplay
         {
             var zones = HazardZones.Instance;
             if (zones == null) return;
-            // around the arena's edge (an oval in the Slave Pit): Ramanujan's perimeter sets the patch count
-            float rx = _em.arenaRadius - def.fireRingInset, rz = _em.ArenaRadiusZ - def.fireRingInset;
-            float h = (rx - rz) * (rx - rz) / ((rx + rz) * (rx + rz));
-            float perimeter = Mathf.PI * (rx + rz) * (1f + 3f * h / (10f + Mathf.Sqrt(4f - 3f * h)));
-            int n = Mathf.Max(8, Mathf.RoundToInt(perimeter / def.fireRingSpacing));
+            // around the arena's edge (an oval in the Slave Pit): its length sets the patch count
+            int n = Mathf.Max(8, Mathf.RoundToInt(_em.EdgePerimeter(def.fireRingInset) / def.fireRingSpacing));
             for (int k = 0; k < n; k++)
             {
                 var p = _em.EdgePoint(k * Mathf.PI * 2f / n, def.fireRingInset);

@@ -134,42 +134,80 @@ def prov_pillar(name, height=4.2, radius=0.5):
     return K.join(parts, name)
 
 
-def prov_floor(name, radius=26.4, seed=17):
-    """Packed sand disc of 2 m cells: nearly flat (the arena is built, not dug), a little darker at the rim."""
+# the wall's inner face: an elongated octagon, 100 x 70 m with 14 m cut corners (matches ProvincialPitLayout.cs; it is
+# point-symmetric, so the export's 180 deg turn leaves it where Unity expects it)
+HX, HZ, CH = 50.0, 35.0, 14.0
+
+
+def octagon(d=0.0):
+    """The wall face's octagon moved `d` metres outward (corners along their mitres), counter-clockwise from above."""
+    hx, hz, c = HX + d, HZ + d, CH + d * (2.0 - math.sqrt(2.0))
+    return [(hx - c, hz), (-hx + c, hz), (-hx, hz - c), (-hx, -hz + c), (-hx + c, -hz), (hx - c, -hz), (hx, -hz + c), (hx, hz - c)]
+
+
+def wall_distance(x, y):
+    """Distance from (x, y) to the wall line: positive inside the arena, negative behind the wall."""
+    poly = octagon()
+    best = 1e9
+    for i in range(len(poly)):
+        (ax, ay), (bx, by) = poly[i], poly[(i + 1) % len(poly)]
+        ex, ey = bx - ax, by - ay
+        ln = math.hypot(ex, ey)
+        best = min(best, ((x - ax) * -ey + (y - ay) * ex) / ln)  # along the inward normal of a CCW edge: (-ey, ex)
+    return best
+
+
+def prov_floor(name, seed=17):
+    """Packed sand over the octagon in 2 m cells, clipped 1 m behind the wall face (under the wall): nearly flat (the
+    arena is built, not dug), a little higher and darker toward the wall."""
     rng = random.Random(seed)
     bm = bmesh.new()
-    bmesh.ops.create_grid(bm, x_segments=27, y_segments=27, size=27.0)
-    bmesh.ops.delete(bm, geom=[f for f in bm.faces if f.calc_center_median().length > radius], context="FACES")
+    bmesh.ops.create_grid(bm, x_segments=52, y_segments=52, size=52.0)
+    bmesh.ops.delete(bm, geom=[f for f in bm.faces if abs(f.calc_center_median().y) > HZ + 2.0], context="FACES")
     bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
+    poly = octagon(1.0)
+    for i in range(len(poly)):
+        (ax, ay), (bx, by) = poly[i], poly[(i + 1) % len(poly)]
+        out = Vector((by - ay, -(bx - ax), 0.0)).normalized()  # outward normal of a CCW edge
+        geom = bm.verts[:] + bm.edges[:] + bm.faces[:]
+        bmesh.ops.bisect_plane(bm, geom=geom, plane_co=Vector((ax, ay, 0.0)), plane_no=out, clear_outer=True)
     for v in bm.verts:
-        r = v.co.length
-        v.co.z = rng.uniform(-0.03, 0.03) + 0.12 * max(0.0, (r - 22.0) / 4.4)
+        d = wall_distance(v.co.x, v.co.y)
+        v.co.z = rng.uniform(-0.03, 0.03) + 0.12 * max(0.0, min(1.25, (3.5 - d) / 4.4))
     obj = K.object_from_bmesh(name, bm, swatch="sand")
     K.set_swatch_where(obj, "sand_l", lambda c, n: rng.random() < 0.07)  # a few light cells: floors stay low-contrast
-    K.set_swatch_where(obj, "sand_d", lambda c, n: c.length > 21.5 and rng.random() < 0.5)
+    K.set_swatch_where(obj, "sand_d", lambda c, n: wall_distance(c.x, c.y) < 4.0 and rng.random() < 0.5)
     return obj
 
 
-def prov_rim(name, inner=26.3, outer=58.0, height=2.4, segments=40, seed=19):
-    """The ground behind the wall at wall-top height: a paved walkway ring, then dry grass toward the horizon."""
+def prov_rim(name, height=2.4, per_edge=6, seed=19):
+    """The ground behind the wall at wall-top height: a paved walkway along the octagon, then dry grass falling away
+    to a big circle past the fog (the horizon)."""
     rng = random.Random(seed)
-    radii = (inner, inner + 4.0, inner + 10.0, inner + 18.0, outer)
+    offsets = (0.8, 4.8, 10.8, 18.8, 34.0)
     bm = bmesh.new()
     rings = []
-    for k, r in enumerate(radii):
+    for k, d in enumerate(offsets):
+        poly = octagon(d)
         ring = []
-        for i in range(segments):
-            a = i / segments * 2 * math.pi
-            z = height + (rng.uniform(-0.08, 0.12) if k > 1 else 0.0) - 0.04 * max(0.0, r - inner - 12.0)
-            ring.append(bm.verts.new((math.cos(a) * r, math.sin(a) * r, z)))
+        for i in range(len(poly)):
+            (ax, ay), (bx, by) = poly[i], poly[(i + 1) % len(poly)]
+            for s in range(per_edge):
+                t = s / per_edge
+                z = height + (rng.uniform(-0.08, 0.12) if k > 1 else 0.0) - 0.04 * max(0.0, d - 12.0)
+                ring.append(bm.verts.new((ax + (bx - ax) * t, ay + (by - ay) * t, z)))
         rings.append(ring)
-    for k in range(len(radii) - 1):
-        for i in range(segments):
-            j = (i + 1) % segments
+    horizon = 260.0
+    rings.append([bm.verts.new((v.co.x / v.co.xy.length * horizon, v.co.y / v.co.xy.length * horizon,
+                                height - 4.0 + rng.uniform(-0.4, 0.4))) for v in rings[-1]])
+    for k in range(len(rings) - 1):
+        n = len(rings[k])
+        for i in range(n):
+            j = (i + 1) % n
             bm.faces.new((rings[k][i], rings[k + 1][i], rings[k + 1][j], rings[k][j]))
     obj = K.object_from_bmesh(name, bm, swatch="grass_dry")
-    K.set_swatch_where(obj, "stone_grey", lambda c, nn: c.length < inner + 4.0)
-    K.set_swatch_where(obj, "grass_dry_d", lambda c, nn: c.length > inner + 4.0 and rng.random() < 0.35)
+    K.set_swatch_where(obj, "stone_grey", lambda c, nn: wall_distance(c.x, c.y) > -4.8)
+    K.set_swatch_where(obj, "grass_dry_d", lambda c, nn: wall_distance(c.x, c.y) < -4.8 and rng.random() < 0.35)
     return obj
 
 

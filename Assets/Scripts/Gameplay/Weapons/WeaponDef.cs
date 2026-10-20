@@ -81,6 +81,18 @@ namespace Gladiator.Gameplay
         [Tooltip("Lob: height of the arc's apex (m).")]
         public float arcHeight = 2.2f;
 
+        [Header("Echo (evolutions, Phase 5.5)")]
+        [Tooltip("MeleeArc / Thrust / Returning: the attack strikes again this long after its impact (s); 0 = no echo.")]
+        public float echoDelay = 0f;
+        [Tooltip("The echo's direction relative to the first strike (deg): 180 = behind you, 0 = the same way.")]
+        public float echoAngle = 180f;
+        [Tooltip("The echo's size relative to the first strike.")]
+        public float echoScale = 1f;
+
+        [Header("Hit effects (every pattern, Phase 5.5)")]
+        [Tooltip("Run by BoonEffects on this weapon's direct hits only, at potency 1: StatusOnHit (chance 1 = always), ChainSpark, GroundOnHit.")]
+        public BoonEffect[] hitEffects = Array.Empty<BoonEffect>();
+
         [Header("Levels 2-8")]
         public Level[] levels = Array.Empty<Level>();
 

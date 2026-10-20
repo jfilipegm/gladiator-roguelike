@@ -6,6 +6,8 @@ namespace Gladiator.Gameplay
     /// <summary>
     /// Runs the behavioural Boons (M2.6) off the event bus: status on hit / on crit, chain sparks, bursts from dying
     /// statused enemies, slide trails, and the damage bonuses against statused enemies (written into EnemyManager).
+    /// Phase 5.5 adds two more sources of effects, the active tag synergies and the equipped weapons' hit effects
+    /// (filtered to that weapon's own hits), and three kinds: status spread, execute on crit, ground marks on hit.
     /// Effects only react to direct hits — damage from an effect carries DamageFlags.Proc and never procs again — and
     /// bursts are queued and resolved in the tick, so a chain of burning enemies can't recurse. Fixed arrays, no GC.
     /// </summary>
@@ -21,33 +23,41 @@ namespace Gladiator.Gameplay
         [Tooltip("Seconds between a trail mark's status applications.")]
         public float trailTick = 0.3f;
         public int maxBurstsPerFrame = 12;
+        [Tooltip("StatusSpread: most new carriers per spread tick (a field of burning enemies must not spike a frame).")]
+        public int maxSpreadsPerTick = 48;
 
-        struct Active { public BoonEffect E; public float Potency; public int Source; }
+        /// <summary>One running effect. SourceFilter: only hits from this source id trigger it (a weapon's own hit effects); 0 = any hit.</summary>
+        struct Active { public BoonEffect E; public float Potency; public int Source; public int SourceFilter; public int HitCount; }
         struct Burst { public Vector3 Pos; public float StatusPower; public int Fx; }
-        struct Mark { public Vector3 Pos; public float Life, MaxLife; }
+        /// <summary>A slide-trail or ground mark: carries what it applies, so marks outlive a Refresh.</summary>
+        struct Mark { public Vector3 Pos; public float Life, MaxLife, Radius, Dps; public int Stacks; public StatusDef Status; public bool Ground; }
 
-        const int MaxEffects = 24;
+        const int MaxEffects = 32;
         readonly Active[] _fx = new Active[MaxEffects];
-        int _fxCount, _version = -1;
-        int _spark = -1, _hitCounter;
-        bool _anyOnHit, _anyOnCrit, _anyBurst, _anyTrail;
+        int _fxCount, _version = -1, _weaponsVersion = -1;
+        bool _anyOnHit, _anyOnCrit, _anyBurst, _anyTrail, _anySpread;
 
         readonly Burst[] _bursts = new Burst[64];
         int _burstHead, _burstCount;
-        readonly Mark[] _marks = new Mark[48];
+        readonly Mark[] _marks = new Mark[64];
         int _markCount;
-        float _trailClock, _slidDist;
+        float _trailClock, _slidDist, _spreadClock;
         Vector3 _lastSlidePos;
 
         readonly int[] _query = new int[256];
         readonly int[] _struck = new int[16];
+        readonly int[] _spreadTo = new int[128];
+        readonly float[] _spreadPower = new float[128];
 
         PlayerBuild _build;
         PlayerStats _stats;
         PlayerMotor _motor;
+        WeaponSystem _weapons;
 
         public int SparksFired { get; private set; }
         public int BurstsFired { get; private set; }
+        public int Spreads { get; private set; }
+        public int Executions { get; private set; }
         public int MarkCount => _markCount;
 
         void Awake()
@@ -55,6 +65,7 @@ namespace Gladiator.Gameplay
             _build = GetComponent<PlayerBuild>();
             _stats = GetComponent<PlayerStats>();
             _motor = GetComponent<PlayerMotor>();
+            _weapons = GetComponent<WeaponSystem>();
         }
 
         void OnEnable()
@@ -75,40 +86,67 @@ namespace Gladiator.Gameplay
 
         float DamageMul => _stats != null ? _stats.Damage : 1f;
 
-        /// <summary>Re-reads the owned Boons' effects (only when the build changed).</summary>
+        /// <summary>Re-reads the effects of the owned Boons, the active synergies and the equipped weapons (only when they changed).</summary>
         void Refresh()
         {
             var state = _build.State;
             _version = state.Version;
+            _weaponsVersion = WeaponsVersion();
             _fxCount = 0;
-            _spark = -1;
-            _anyOnHit = _anyOnCrit = _anyBurst = _anyTrail = false;
+            _anyOnHit = _anyOnCrit = _anyBurst = _anyTrail = _anySpread = false;
             var em = EnemyManager.Instance;
             if (em != null)
                 for (int k = 0; k < EnemyManager.StatusSlots; k++) em.BonusVsStatus[k] = em.BonusPerStack[k] = 0f;
             for (int i = 0; i < state.OwnedCount; i++)
             {
                 var o = state.GetOwned(i);
-                var list = o.Def.effects;
-                if (list == null) continue;
-                for (int j = 0; j < list.Length && _fxCount < MaxEffects; j++)
-                {
-                    var e = list[j];
-                    _fx[_fxCount] = new Active { E = e, Potency = o.Potency, Source = GameInfo.StableId(o.Def.id) };
-                    int slot = e.status != null ? e.status.Slot : -1;
-                    switch (e.kind)
-                    {
-                        case EffectKind.StatusOnHit: _anyOnHit = true; break;
-                        case EffectKind.StatusOnCrit: _anyOnCrit = true; break;
-                        case EffectKind.BurstOnDeath: _anyBurst = true; break;
-                        case EffectKind.SlideTrail: _anyTrail = true; break;
-                        case EffectKind.ChainSpark: _spark = _fxCount; _anyOnHit = true; break;
-                        case EffectKind.DamagePerStack: if (em != null && slot >= 0) em.BonusPerStack[slot] += e.bonus * o.Potency; break;
-                        case EffectKind.DamageVsStatus: if (em != null && slot >= 0) em.BonusVsStatus[slot] += e.bonus * o.Potency; break;
-                    }
-                    _fxCount++;
-                }
+                Add(em, o.Def.effects, o.Potency, GameInfo.StableId(o.Def.id), 0);
             }
+            for (int i = 0; i < state.SynergyCount; i++)
+            {
+                var syn = state.GetSynergy(i);
+                Add(em, syn.effects, 1f, GameInfo.StableId(syn.id), 0);
+            }
+            if (_weapons != null)
+                for (int i = 0; i < _weapons.Weapons.Count; i++)
+                {
+                    var d = _weapons.Weapons[i].Def;
+                    Add(em, d.hitEffects, 1f, d.RuntimeId, d.RuntimeId); // kills by the weapon's chain/ground count as the weapon's
+                }
+        }
+
+        void Add(EnemyManager em, BoonEffect[] list, float potency, int source, int filter)
+        {
+            if (list == null) return;
+            for (int j = 0; j < list.Length && _fxCount < MaxEffects; j++)
+            {
+                var e = list[j];
+                _fx[_fxCount] = new Active { E = e, Potency = potency, Source = source, SourceFilter = filter };
+                int slot = e.status != null ? e.status.Slot : -1;
+                switch (e.kind)
+                {
+                    case EffectKind.StatusOnHit:
+                    case EffectKind.ChainSpark:
+                    case EffectKind.GroundOnHit: _anyOnHit = true; break;
+                    case EffectKind.StatusOnCrit:
+                    case EffectKind.ExecuteOnCrit: _anyOnCrit = true; break;
+                    case EffectKind.BurstOnDeath: _anyBurst = true; break;
+                    case EffectKind.SlideTrail: _anyTrail = true; break;
+                    case EffectKind.StatusSpread: _anySpread = true; break;
+                    case EffectKind.DamagePerStack: if (em != null && slot >= 0) em.BonusPerStack[slot] += e.bonus * potency; break;
+                    case EffectKind.DamageVsStatus: if (em != null && slot >= 0) em.BonusVsStatus[slot] += e.bonus * potency; break;
+                }
+                _fxCount++;
+            }
+        }
+
+        /// <summary>A cheap fingerprint of the equipped weapons (an evolution swaps a Def without touching the count).</summary>
+        int WeaponsVersion()
+        {
+            if (_weapons == null) return 0;
+            int h = _weapons.Weapons.Count;
+            for (int i = 0; i < _weapons.Weapons.Count; i++) h = h * 31 + _weapons.Weapons[i].Def.RuntimeId;
+            return h;
         }
 
         // ---------- events ----------
@@ -122,14 +160,24 @@ namespace Gladiator.Gameplay
             for (int k = 0; k < _fxCount; k++)
             {
                 ref var a = ref _fx[k];
-                if (a.E.kind != EffectKind.StatusOnHit || !alive) continue;
-                if (GameRandom.Chance(a.E.chance * a.Potency))
-                    em.ApplyStatus(e.Index, a.E.status, e.Damage * a.E.power, Mathf.Max(1, a.E.stacks));
-            }
-            if (_spark >= 0 && ++_hitCounter >= Mathf.Max(1, _fx[_spark].E.everyNth))
-            {
-                _hitCounter = 0;
-                Spark(em, e.Index, e.Position, alive);
+                if (a.SourceFilter != 0 && a.SourceFilter != e.SourceId) continue;
+                switch (a.E.kind)
+                {
+                    case EffectKind.StatusOnHit:
+                        if (alive && GameRandom.Chance(a.E.chance * a.Potency))
+                            em.ApplyStatus(e.Index, a.E.status, e.Damage * a.E.power, Mathf.Max(1, a.E.stacks));
+                        break;
+                    case EffectKind.ChainSpark:
+                        if (++a.HitCount >= Mathf.Max(1, a.E.everyNth))
+                        {
+                            a.HitCount = 0;
+                            Spark(em, k, e.Index, e.Position, alive);
+                        }
+                        break;
+                    case EffectKind.GroundOnHit:
+                        Ground(em, ref a, e.Index);
+                        break;
+                }
             }
         }
 
@@ -143,6 +191,12 @@ namespace Gladiator.Gameplay
                 ref var a = ref _fx[k];
                 if (a.E.kind == EffectKind.StatusOnCrit)
                     em.ApplyStatus(e.Index, a.E.status, a.E.power * a.Potency * DamageMul, Mathf.Max(1, a.E.stacks));
+                else if (a.E.kind == EffectKind.ExecuteOnCrit && em.IsAlive(e.Index))
+                {
+                    var def = em.GetDef(e.Index);
+                    bool boss = def != null && def.behaviour == EnemyBehaviour.Scripted;
+                    if (!boss && em.GetHp(e.Index) <= em.GetMaxHp(e.Index) * a.E.bonus && em.Execute(e.Index, a.Source)) Executions++;
+                }
             }
         }
 
@@ -163,10 +217,10 @@ namespace Gladiator.Gameplay
 
         // ---------- effects ----------
 
-        /// <summary>A spark from enemy `from` jumps to the nearest un-struck enemies, one after another.</summary>
-        void Spark(EnemyManager em, int from, Vector3 fromPos, bool fromAlive)
+        /// <summary>A spark (effect `fx`) from enemy `from` jumps to the nearest un-struck enemies, one after another.</summary>
+        void Spark(EnemyManager em, int fx, int from, Vector3 fromPos, bool fromAlive)
         {
-            ref var a = ref _fx[_spark];
+            ref var a = ref _fx[fx];
             SparksFired++;
             float damage = a.E.power * a.Potency * DamageMul;
             int struck = 0;
@@ -235,34 +289,62 @@ namespace Gladiator.Gameplay
             if (em.deathPop != null) em.deathPop.Burst(burst.Pos + Vector3.up * 0.6f, 10, 5f, 0.22f, burstColorA, burstColorB);
         }
 
-        void TickTrail(EnemyManager em, float dt)
+        /// <summary>Adds a mark (full: the oldest goes first).</summary>
+        void AddMark(in Mark mark)
+        {
+            if (_markCount == _marks.Length)
+            {
+                for (int s = 1; s < _markCount; s++) _marks[s - 1] = _marks[s];
+                _markCount--;
+            }
+            _marks[_markCount++] = mark;
+        }
+
+        Mark MarkFor(in Active a, Vector3 pos, bool ground) => new Mark
+        {
+            Pos = pos, Life = a.E.duration, MaxLife = Mathf.Max(0.1f, a.E.duration), Radius = a.E.radius,
+            Dps = a.E.power * a.Potency * DamageMul, Stacks = Mathf.Max(1, a.E.stacks), Status = a.E.status, Ground = ground,
+        };
+
+        /// <summary>GroundOnHit: a mark where enemy `i` was hit, unless a fresh ground mark already covers that spot (renewed instead).</summary>
+        void Ground(EnemyManager em, ref Active a, int i)
+        {
+            if (a.E.status == null || a.E.radius <= 0f) return;
+            Vector3 p = em.GetPosition(i);
+            float merge = a.E.radius * 0.75f;
+            for (int m = 0; m < _markCount; m++)
+            {
+                ref var mk = ref _marks[m];
+                if (!mk.Ground || mk.Status != a.E.status) continue;
+                if ((mk.Pos.x - p.x) * (mk.Pos.x - p.x) + (mk.Pos.z - p.z) * (mk.Pos.z - p.z) > merge * merge) continue;
+                mk.Life = mk.MaxLife;
+                return;
+            }
+            AddMark(MarkFor(a, p, ground: true));
+        }
+
+        /// <summary>Slide-trail marks while sliding, then every mark (trail or ground) ages and applies its status.</summary>
+        void TickMarks(EnemyManager em, float dt)
         {
             var tele = TelegraphRenderer.Instance;
-            Active trail = default;
-            bool has = false;
-            for (int k = 0; k < _fxCount && !has; k++) if (_fx[k].E.kind == EffectKind.SlideTrail) { trail = _fx[k]; has = true; }
-            if (has && _motor != null && _motor.IsSliding)
+            int trail = -1;
+            for (int k = 0; k < _fxCount && trail < 0; k++) if (_fx[k].E.kind == EffectKind.SlideTrail) trail = k;
+            if (trail >= 0 && _motor != null && _motor.IsSliding)
             {
                 Vector3 p = transform.position;
                 _slidDist += (p - _lastSlidePos).magnitude;
                 if (_slidDist >= trailSpacing || _markCount == 0)
                 {
                     _slidDist = 0f;
-                    if (_markCount == _marks.Length) // full: drop the oldest (front)
-                    {
-                        for (int s = 1; s < _markCount; s++) _marks[s - 1] = _marks[s];
-                        _markCount--;
-                    }
-                    _marks[_markCount++] = new Mark { Pos = p, Life = trail.E.duration, MaxLife = Mathf.Max(0.1f, trail.E.duration) };
+                    AddMark(MarkFor(_fx[trail], p, ground: false));
                 }
             }
             _lastSlidePos = transform.position;
             if (_markCount == 0) return;
 
             _trailClock -= dt;
-            bool apply = _trailClock <= 0f && has;
+            bool apply = _trailClock <= 0f;
             if (apply) _trailClock += trailTick;
-            float dps = trail.E.power * trail.Potency * DamageMul;
             for (int m = 0; m < _markCount; m++)
             {
                 ref var mk = ref _marks[m];
@@ -276,14 +358,51 @@ namespace Gladiator.Gameplay
                 }
                 if (tele != null)
                 {
-                    var c = trailColor;
-                    c.a *= Mathf.Clamp01(mk.Life / mk.MaxLife * 2f);
-                    tele.Circle(mk.Pos, trail.E.radius, 0f, c, TelegraphRenderer.Style.Ring, 0.18f, m * 0.31f);
+                    var c = mk.Ground && mk.Status != null ? mk.Status.color : trailColor;
+                    c.a = (mk.Ground ? 0.75f : trailColor.a) * Mathf.Clamp01(mk.Life / mk.MaxLife * 2f);
+                    tele.Circle(mk.Pos, mk.Radius, 0f, c, TelegraphRenderer.Style.Ring, 0.18f, m * 0.31f);
                 }
-                if (!apply || em == null) continue;
-                int n = em.QueryAlive(mk.Pos, trail.E.radius, _query);
-                for (int q = 0; q < n; q++) em.ApplyStatus(_query[q], trail.E.status, dps, Mathf.Max(1, trail.E.stacks));
+                if (!apply || em == null || mk.Status == null) continue;
+                int n = em.QueryAlive(mk.Pos, mk.Radius, _query);
+                for (int q = 0; q < n; q++) em.ApplyStatus(_query[q], mk.Status, mk.Dps, mk.Stacks);
             }
+        }
+
+        /// <summary>StatusSpread: every carrier passes its status to `count` neighbours without it (collected first, so one tick spreads one step).</summary>
+        void TickSpread(EnemyManager em, float dt)
+        {
+            _spreadClock -= dt;
+            if (_spreadClock > 0f) return;
+            float interval = 1f;
+            int found = 0, cap = Mathf.Min(maxSpreadsPerTick, _spreadTo.Length);
+            for (int k = 0; k < _fxCount; k++)
+            {
+                ref var a = ref _fx[k];
+                if (a.E.kind != EffectKind.StatusSpread || a.E.status == null) continue;
+                interval = Mathf.Max(0.1f, a.E.duration);
+                var kind = a.E.status.kind;
+                for (int i = 0; i < em.HighWater && found < cap; i++)
+                {
+                    if (!em.IsAlive(i) || !em.HasStatus(i, kind)) continue;
+                    int n = em.QueryAlive(em.GetPosition(i), a.E.radius, _query);
+                    int given = 0;
+                    for (int q = 0; q < n && given < Mathf.Max(1, a.E.count) && found < cap; q++)
+                    {
+                        int j = _query[q];
+                        if (j == i || em.HasStatus(j, kind)) continue;
+                        bool queued = false;
+                        for (int f = 0; f < found && !queued; f++) queued = _spreadTo[f] == j;
+                        if (queued) continue;
+                        _spreadTo[found] = j;
+                        _spreadPower[found++] = em.StatusPower(i, kind);
+                        given++;
+                    }
+                }
+                for (int f = 0; f < found; f++) em.ApplyStatus(_spreadTo[f], a.E.status, _spreadPower[f], 1);
+                Spreads += found;
+                found = 0;
+            }
+            _spreadClock = interval;
         }
 
         /// <summary>Drops a trail mark at `pos` as if the player slid there (tests).</summary>
@@ -292,7 +411,7 @@ namespace Gladiator.Gameplay
             for (int k = 0; k < _fxCount; k++)
             {
                 if (_fx[k].E.kind != EffectKind.SlideTrail) continue;
-                if (_markCount < _marks.Length) _marks[_markCount++] = new Mark { Pos = pos, Life = _fx[k].E.duration, MaxLife = _fx[k].E.duration };
+                AddMark(MarkFor(_fx[k], pos, ground: false));
                 return;
             }
         }
@@ -300,7 +419,7 @@ namespace Gladiator.Gameplay
         public void Tick(float dt, float unscaledDt)
         {
             if (_build == null) return;
-            if (_build.State.Version != _version) Refresh();
+            if (_build.State.Version != _version || WeaponsVersion() != _weaponsVersion) Refresh();
             if (dt <= 0f) return;
             var em = EnemyManager.Instance;
             if (em == null) return;
@@ -311,14 +430,16 @@ namespace Gladiator.Gameplay
                 _burstCount--;
                 ResolveBurst(em, burst);
             }
-            if (_anyTrail || _markCount > 0) TickTrail(em, dt);
+            if (_anyTrail || _markCount > 0) TickMarks(em, dt);
+            if (_anySpread) TickSpread(em, dt);
         }
 
         /// <summary>Run end / tests: forget queued bursts and trail marks.</summary>
         public void Clear()
         {
             _burstCount = _burstHead = _markCount = 0;
-            _hitCounter = 0;
+            _spreadClock = 0f;
+            for (int k = 0; k < _fxCount; k++) _fx[k].HitCount = 0;
         }
     }
 }

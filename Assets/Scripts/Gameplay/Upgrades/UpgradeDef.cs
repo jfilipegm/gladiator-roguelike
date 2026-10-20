@@ -48,6 +48,14 @@ namespace Gladiator.Gameplay
         [Header("Effect")]
         [Tooltip("Weapon cards: the weapon equipped at level 1; levels 2+ apply its own level table (max level = its MaxLevel).")]
         public WeaponDef weapon;
+
+        [Header("Evolution (Phase 5.5)")]
+        [Tooltip("Evolution cards: the weapon card this evolves. Offered in the first slot of chest, altar and boss rewards once that weapon is at its max level and the catalyst is owned; taking it swaps the weapon in its slot (docs/EVOLUTIONS.md).")]
+        public UpgradeDef evolvesFrom;
+        [Tooltip("Evolution cards: the Boon that must be owned (any level).")]
+        public UpgradeDef catalyst;
+
+        public bool IsEvolution => evolvesFrom != null;
         [Tooltip("Added to the player's stats each time this is taken, scaled by the card's rarity.")]
         public StatMod[] perLevel = Array.Empty<StatMod>();
         [Tooltip("Behaviour (M2.6): status on hit, sparks, bursts, slide trails… handled by BoonEffects.")]

@@ -484,6 +484,24 @@ namespace Gladiator.Gameplay
             if (_hp[i] <= 0f) Kill(i, info, allowBlast: true);
         }
 
+        /// <summary>
+        /// Kills enemy `i` outright, credited to `sourceId` (Executioner, Phase 5.5). Its damage number shows the HP it had
+        /// left; bosses and invulnerable enemies are the caller's (and this check's) business.
+        /// </summary>
+        public bool Execute(int i, int sourceId)
+        {
+            if (!IsAlive(i) || _invuln[i]) return false;
+            var info = new DamageInfo { Amount = _hp[i], Flags = DamageFlags.Proc | DamageFlags.Crit, Point = _pos[i], SourceId = sourceId };
+            GameEvents.OnHit.Raise(new HitEvent
+            {
+                TargetId = _uid[i], Index = i, Position = _pos[i] + Vector3.up * (1.2f * _scale[i]), Damage = _hp[i], Crit = true,
+                SourceId = sourceId, Elite = _affix[i] != null, Flags = info.Flags,
+            });
+            _hp[i] = 0f;
+            Kill(i, info, allowBlast: true);
+            return true;
+        }
+
         void Kill(int i, in DamageInfo info, bool allowBlast)
         {
             // Once only: OnHit hooks (sparks, bursts) can kill this enemy re-entrantly before ApplyDamage's own check.

@@ -26,8 +26,10 @@ namespace Gladiator.Gameplay
         public static bool IsEligible(UpgradeDef d, BuildState build, UpgradeConfig config)
         {
             if (d == null || d.kind == UpgradeKind.Consumable || d.weight <= 0f || build.IsBanished(d)) return false;
+            if (d.evolvesFrom != null) return false; // evolutions come only through OfferEvolutions
             int level = build.LevelOf(d);
             if (level == 0 && build.IsLocked(d)) return false; // locked = never a new pick; what you hold still levels
+            if (level == 0 && d.kind == UpgradeKind.Weapon && build.IsEvolved(d)) return false; // it lives on as its evolution
             if (level >= d.maxLevel) return false;
             if (level == 0 && d.requiresAny != null && d.requiresAny.Length > 0)
             {
@@ -41,6 +43,17 @@ namespace Gladiator.Gameplay
                 if (build.CountOf(d.kind) >= slots) return false;
             }
             return true;
+        }
+
+        /// <summary>
+        /// Phase 5.5: `d` is an evolution whose weapon is at its max level with the catalyst owned, and it isn't taken,
+        /// banished or held back by meta progression.
+        /// </summary>
+        public static bool IsEvolutionReady(UpgradeDef d, BuildState build)
+        {
+            if (d == null || d.evolvesFrom == null || build.IsBanished(d) || build.IsLocked(d) || build.LevelOf(d) > 0) return false;
+            if (build.LevelOf(d.evolvesFrom) < d.evolvesFrom.maxLevel) return false;
+            return d.catalyst == null || build.LevelOf(d.catalyst) > 0;
         }
 
         public static Rarity RollRarity(UpgradeConfig config, float luck, Rarity min, Rarity max)
@@ -59,13 +72,22 @@ namespace Gladiator.Gameplay
 
         /// <summary>Rarity floor for the cards rolled next (chests: Uncommon, the Blood Altar: Rare). Common = no floor.</summary>
         public Rarity MinRarity = Rarity.Common;
+        /// <summary>Phase 5.5: put a ready evolution in the first slot (chest, altar and boss rewards).</summary>
+        public bool OfferEvolutions;
 
         /// <summary>Fills offers[0..count) with fresh cards. Returns how many were filled (fewer if even fillers run out).</summary>
         public int Roll(IReadOnlyList<UpgradeDef> pool, IReadOnlyList<UpgradeDef> fallbacks, BuildState build,
             UpgradeConfig config, float luck, CardOffer[] offers, int count)
         {
             int filled = 0;
-            for (int i = 0; i < count; i++)
+            if (OfferEvolutions && count > 0 && pool != null)
+                for (int i = 0; i < pool.Count; i++)
+                    if (IsEvolutionReady(pool[i], build))
+                    {
+                        offers[filled++] = new CardOffer { Def = pool[i], Rarity = Rarity.Legendary, Level = 1 };
+                        break; // one per reward; a second ready evolution waits for the next chest
+                    }
+            while (filled < count)
             {
                 if (!TryPick(pool, fallbacks, build, config, luck, offers, filled, -1, out var card)) break;
                 offers[filled++] = card;

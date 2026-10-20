@@ -80,10 +80,69 @@ namespace Gladiator.Gameplay
             return 1;
         }
 
+        /// <summary>Phase 5.5: swaps owned `from` for its evolution `to` in place (same slot and order). False if `from` isn't owned.</summary>
+        public bool Evolve(UpgradeDef from, UpgradeDef to)
+        {
+            for (int i = 0; i < _owned.Count; i++)
+            {
+                if (_owned[i].Def != from) continue;
+                var o = _owned[i];
+                o.Def = to;
+                o.Level = 1;
+                o.BestRarity = Rarity.Legendary;
+                _owned[i] = o;
+                Version++;
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>True if an owned upgrade is the evolution of `baseCard` (its base is never offered again).</summary>
+        public bool IsEvolved(UpgradeDef baseCard)
+        {
+            for (int i = 0; i < _owned.Count; i++) if (_owned[i].Def.evolvesFrom == baseCard) return true;
+            return false;
+        }
+
+        /// <summary>Distinct owned upgrades carrying `tag` (weapons and evolutions included).</summary>
+        public int TagCount(UpgradeTag tag)
+        {
+            int n = 0;
+            for (int i = 0; i < _owned.Count; i++) if ((_owned[i].Def.tags & tag) != 0) n++;
+            return n;
+        }
+
+        // Tag synergies (Phase 5.5): switched on once, never off (owned upgrades never go away).
+        readonly List<TagSynergyDef> _synergies = new List<TagSynergyDef>(8);
+        public int SynergyCount => _synergies.Count;
+        public TagSynergyDef GetSynergy(int i) => _synergies[i];
+        public bool HasSynergy(TagSynergyDef s) => _synergies.Contains(s);
+
+        /// <summary>
+        /// Switches on every synergy in `all` whose tag count is reached and adds its mods to `stats` once. Returns how many
+        /// switched on now (they're the last ones in GetSynergy order).
+        /// </summary>
+        public int UpdateSynergies(IReadOnlyList<TagSynergyDef> all, StatBlock stats)
+        {
+            if (all == null) return 0;
+            int added = 0;
+            for (int i = 0; i < all.Count; i++)
+            {
+                var s = all[i];
+                if (s == null || s.tag == UpgradeTag.None || _synergies.Contains(s) || TagCount(s.tag) < s.count) continue;
+                _synergies.Add(s);
+                if (stats != null && s.mods != null) for (int m = 0; m < s.mods.Length; m++) stats.Add(s.mods[m], 1f);
+                added++;
+            }
+            if (added > 0) Version++;
+            return added;
+        }
+
         public void Clear()
         {
             _owned.Clear();
             _banished.Clear();
+            _synergies.Clear();
             RerollsUsed = BanishesUsed = 0;
             Version++;
         }

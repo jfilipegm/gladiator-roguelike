@@ -159,7 +159,8 @@
     - level 27, 8,441 kills, 7 chests, gifts 4/4; no weapon above level 5, so **0 evolutions**, Juggernaut on; Gorm at 68 % in phase 1 after ~57 s; hit-stops 1,210 = 51 s (C14).
   - **Stress `300 60 -evolved -mix`:** 228 fps avg; at 300 enemies 227 fps (4.40 ms, p95 7.21), gameplay 1.54 / 2.07 ms (budget 4); GC 278 B/s, a 9.5 KB first-panel one-off.
   - **`bot 600 -timed -evolved`** (CSV `Profiling/20261020_113502_bot_SlavePit.csv`): 364 fps avg; ≥ 250 enemies 220 fps (4.55 ms, p95 6.35), gameplay 1.79 / 2.21 ms; 4 evolutions, Wildfire + Bloodbath + Executioner; 886 spreads, 2,033 executions; **Gorm defeated ~20 s after his entrance**, run ended Survived at 8:20 (level 26, 9,673 kills). GC: the 215 KB victory screen + save (game over) and a 9.9 KB first-panel one-off. C16 updated with both boss numbers.
-- **Left:** PR → ask the producer before merging; then `Tools/release 0.6.0` (move the untracked `Assets/_Recovery/` out of Assets first, since the release script refuses untracked files under Assets/, and ask before deleting it) and smoke-run the archives. Untracked `Assets/_Recovery/` (Unity's scene backup from the 01:07 crash) and `mono_crash.*.blob`: never commit them.
+- **PR #8** (https://github.com/jfilipegm/gladiator-roguelike/pull/8) open, waiting for the producer's OK.
+- **Left:** merge #8 only after the producer says so; then `Tools/release 0.6.0` (move the untracked `Assets/_Recovery/` out of Assets first, since the release script refuses untracked files under Assets/, and ask before deleting it) and smoke-run the archives. Untracked `Assets/_Recovery/` (Unity's scene backup from the 01:07 crash) and `mono_crash.*.blob`: never commit them.
 - The Editor crashed while it was being closed (2026-10-20 01:07, GTK cleanup) and was relaunched at about 10:05. It came up ready with no backup-scene dialog.
 
 ## Known issues

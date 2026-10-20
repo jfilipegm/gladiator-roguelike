@@ -110,7 +110,8 @@ namespace Gladiator.Gameplay
             for (int i = 0; i < ups.Length && n < _candidates.Length; i++)
             {
                 var u = ups[i];
-                if (u == null || u.kind != UpgradeKind.Weapon || u.weapon == null) continue;
+                if (u == null || u.kind != UpgradeKind.Weapon || u.weapon == null || u.IsEvolution) continue; // evolutions are earned
+                if (_build.State.IsEvolved(u)) continue; // it lives on in its slot as its evolution
                 if (_build.State.IsLocked(u) || _weapons.Find(u.weapon) != null) continue;
                 _candidates[n++] = u.weapon;
             }

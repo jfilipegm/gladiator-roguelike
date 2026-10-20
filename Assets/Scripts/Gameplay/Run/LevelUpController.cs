@@ -113,6 +113,7 @@ namespace Gladiator.Gameplay
             Floor = floor;
             _roller.MinRarity = floor;
             var c = Config;
+            _roller.OfferEvolutions = c != null && (source == PickSource.LevelUp ? c.evolutionInLevelUps : c.evolutionInRewards);
             int n = c != null ? c.CardCount(Luck, GameRandom.Value) : 3;
             ChoiceCount = RollAll(n);
             OffersVersion++;

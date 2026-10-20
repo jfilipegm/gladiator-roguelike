@@ -10,6 +10,39 @@ namespace Gladiator.Gameplay
     /// </summary>
     static class PlaytestBotBootstrap
     {
+        /// <summary>
+        /// -evolved (Phase 5.5 perf runs): the build of a late run from the first second: up to 4 evolved weapons (each
+        /// base taken to max level, its catalyst, then the evolution), then Pyre and Serrated Edge so Wildfire, Bloodbath
+        /// and Executioner switch on. Cards are taken directly (no eligibility, no meta locks).
+        /// </summary>
+        internal static void EvolvedBuild()
+        {
+            var player = Player.Main;
+            var build = player != null ? player.GetComponent<PlayerBuild>() : null;
+            if (build == null || build.catalog == null) return;
+            var state = build.State;
+            int evolved = 0;
+            foreach (var e in build.catalog.upgrades)
+            {
+                if (evolved >= 4) break;
+                if (e == null || e.evolvesFrom == null || e.evolvesFrom.weapon == null) continue;
+                bool owned = state.LevelOf(e.evolvesFrom) > 0;
+                if (!owned && state.CountOf(UpgradeKind.Weapon) >= build.config.weaponSlots) continue;
+                if (e.catalyst != null && state.LevelOf(e.catalyst) == 0 && state.CountOf(UpgradeKind.Boon) >= build.config.boonSlots) continue;
+                while (state.LevelOf(e.evolvesFrom) < e.evolvesFrom.maxLevel) Take(build, e.evolvesFrom, Rarity.Uncommon);
+                if (e.catalyst != null && state.LevelOf(e.catalyst) == 0) Take(build, e.catalyst, Rarity.Uncommon);
+                Take(build, e, Rarity.Legendary);
+                evolved++;
+            }
+            foreach (var u in build.catalog.upgrades)
+                if (u != null && (u.id == "pyre" || u.id == "serrated_edge") && state.LevelOf(u) == 0 && state.CountOf(UpgradeKind.Boon) < build.config.boonSlots)
+                    Take(build, u, Rarity.Uncommon);
+            Debug.Log($"[PlaytestBot] -evolved: {build.Evolutions} evolutions, {state.SynergyCount} synergies");
+        }
+
+        static void Take(PlayerBuild build, UpgradeDef d, Rarity r) =>
+            build.Take(new CardOffer { Def = d, Rarity = r, Level = build.State.LevelOf(d) + 1 });
+
         static void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
         {
             if (Player.Main == null) return;
@@ -42,6 +75,7 @@ namespace Gladiator.Gameplay
                 b.seed = CommandLine.GetInt("-seed", b.seed);
                 b.godMode = !CommandLine.Has("-mortal");
                 b.timeless = !CommandLine.Has("-timed");
+                b.evolvedBuild = CommandLine.Has("-evolved");
                 b.traceEvery = CommandLine.GetFloat("-botTrace", 0f);
                 Object.DontDestroyOnLoad(go);
                 // -mix: the debug crowd spawns every enemy type from the catalog, with occasional elites

@@ -1,7 +1,7 @@
 # Progress
 
 **Current phase:** Phase 5 — expansion
-**Current milestone:** Phase 5.5 — weapon evolutions + tag-threshold synergies (next; not started). v0.5.0 (the Provincial Pit + the playtest fixes) released 2026-10-20.
+**Current milestone:** Phase 5.5 — weapon evolutions + tag synergies (branch `phase5-evolutions`, built and tested, PR waiting for the producer). v0.5.0 (the Provincial Pit + the playtest fixes) released 2026-10-20.
 **Last updated:** 2026-10-20
 
 **Repository:** https://github.com/jfilipegm/gladiator-roguelike (public, branch `main`, remote `origin`, `.blend` files via Git LFS). Work on a branch per milestone, push as you go, merge through a PR; release every playable build (`Tools/release`).
@@ -112,11 +112,58 @@
 - **PR #6** (https://github.com/jfilipegm/gladiator-roguelike/pull/6) merged (92b8774). Follow-ups left open: a second gladius (BACKLOG), C13, C14.
 - **v0.5.0 released 2026-10-20** (PRs #6 + #7): https://github.com/jfilipegm/gladiator-roguelike/releases/tag/v0.5.0. Linux 40 MB, Linux dev 71 MB, Windows 42 MB, macOS 50 MB (the build log's `errors=1` on the first build is the bridge timeout, as before). Smoke runs of the downloaded archives (`-bot -timed -botSeconds 40`): Linux as the Nobody (64 kills), as the knight (`-gladiator blood_knight`: 57 kills, 47 HP kill-healed), in the Provincial Pit (`-arena provincial_pit`: 74 kills, 5 bombs), and Windows under Wine as the Nobody (55 kills); all v0.5.0, clock ran to 36–37 s, 0 exceptions; their Profiling files deleted. macOS not run.
 
-## Next — Phase 5.5 weapon evolutions + tag-threshold synergies
-- First "Should" item of CLAUDE.md §9 (every "Must" is done: Goblin, Knight, Arena 2, Favor). Start a branch `phase5-evolutions` from `main`, write the spec (which weapons evolve, with which Boon, at which level; which tag thresholds give which bonus) in `docs/GDD.md`/DECISIONS first, then data + code + tests, bump `GameInfo.Version` to 0.6.0, release notes `docs/releases/v0.6.0.md`.
-- The Editor crashed while it was being closed on 2026-10-20 01:07 (GTK window cleanup; left `mono_crash.mem.369056.1.blob` in the repo root, untracked, and `Temp/__Backupscenes/0.backup`). Relaunching may stop on the "Scene Backup Detected" dialog (TOOLING).
+## In progress — Phase 5.5 weapon evolutions + tag synergies (branch `phase5-evolutions`, target v0.6.0)
+- **Spec:** `docs/EVOLUTIONS.md` (7 evolutions, 6 tag synergies, 4 generic weapon twists + 2 new effect kinds), DECISIONS "Phase 5.5", CONCERNS C16.
+- **Steps:**
+  1. Data and plumbing: `UpgradeDef` evolution fields, weapon tags, `TagSynergyDef` + `TagSynergies`, roller/rewards.
+  2. Weapon twists (Echo, status on hit everywhere, Chain, Ground) + effects (`StatusSpread`, `ExecuteOnCrit`).
+  3. The 7 evolved `WeaponDef`s + 6 synergies as assets (Editor setup script).
+  4. UI: card banner + tag chips, HUD hint/pulse, synergy row, announcer.
+  5. Art: `BlenderSrc/weapons/wp_evolved.py`, atlas icons.
+  6. Tests, bot, 10-minute runs, release notes, `GameInfo.Version` 0.6.0.
+- **Done (committed on the branch):**
+  - **Plumbing:**
+    - `UpgradeDef.evolvesFrom/catalyst`;
+    - `UpgradeRoller.IsEvolutionReady` + `OfferEvolutions` (first slot, Legendary; chest/altar/boss only, `UpgradeConfig.evolutionInRewards/InLevelUps`), and a base weapon whose evolution is owned is never offered;
+    - `BuildState.Evolve/IsEvolved/TagCount/UpdateSynergies`;
+    - `PlayerBuild` evolves (same slot, `WeaponSystem.Evolve` keeps level 8 and the level mods), announces, and switches synergies on;
+    - `TagSynergyDef` + `UpgradeCatalog.synergies`.
+  - **Twists:**
+    - `WeaponDef.echoDelay/echoAngle/echoScale` (Echo for MeleeArc/Thrust/Returning);
+    - `WeaponDef.hitEffects` (filtered to that weapon's hits);
+    - `BoonEffects`: several spark chains, marks that carry their own status (slide trail + `GroundOnHit`), `StatusSpread`, `ExecuteOnCrit` (`EnemyManager.Execute`), with synergies and weapon effects as extra effect sources.
+  - **Data:** `EvolutionSetup` (also run by Create Upgrade Data) creates:
+    - 7 `WP_Evo_*` + `UP_E_*`;
+    - weapon-card tags;
+    - 6 `SY_*` synergies.
+  - **UI:**
+    - evolution card "EVOLUTION!" + "Evolves X";
+    - card hints: pairing, "Evolves your X / open a chest!", "TAG n/3: Synergy";
+    - HUD tiles "EVO!" pulsing gold / "EVO";
+    - synergy chips with icons.
+    - Screenshots `p55_evo_cards.png`, `p55_tag_hint.png`, `p55_evolved_fight.png`.
+  - **Art:**
+    - 13 icons in `PixelSrc/upgrade_icons.py` (atlas 40 rows);
+    - 5 evolved models from `BlenderSrc/weapons/wp_evolved.py` (108–160 tris; fire-pot needed 2 iterations), built headless (`Tools/bheadless`) because Blender wasn't open.
+  - **Bot:** takes an evolution card whenever offered, logs evolutions / synergies / sparks / spreads / executions, `-evolved` flag.
+  - **Tests:** EditMode `EvolutionTests` 5 (suite 71/71); PlayMode `EvolutionPlayTests` 6/6 (chest evolution in the same slot, Echo with a plain-gladius control, Thunderbolts chain, Fire-Pot ground, Wildfire, Executioner spares bosses).
+- **Fixes from the full PlayMode run** (d6d69ad): it found 3 failures (110/113):
+  - a real bug: the crowd's Weapon in the Sand and the goblin's Scavenger could lend an **evolved** weapon (no level table, so it came at level 1). Both now skip evolution cards and the base of an evolved weapon; new `GoblinPlayTests.Scavenger_NeverLendsAnEvolution` fails on the old code (it lent the Impaler);
+  - `LevelUpTests` expected a weapon card's text to be its description only (now description + hint lines);
+  - two timing flakes in the long suite, fixed: the Pit Cur's leap is measured by its velocity (`EnemyManager.GetVelocity`), and the Echo test roots its two brutes so the one behind can't become the nearest target.
+- **Verification:** EditMode 71/71; PlayMode 114/114 (incl. `EvolutionPlayTests` 6/6). `GameInfo.Version` 0.6.0, Linux dev build (17 s, 0 errors).
+- **Bot runs (dev build, 2026-10-20), 0 exceptions in all three:**
+  - **Slave Pit, `bot 600 -timed`** (CSV `Profiling/20261020_112353_bot_SlavePit.csv`):
+    - 321 fps avg (3.12 ms, p95 5.98); ≥ 250 enemies 187 fps (5.35 ms, p95 6.95, p99 7.82), gameplay 1.99 / 2.51 ms; max 300;
+    - GC 311 B/s after warm-up, almost all one **85 KB allocation in a paused frame at 77 s** (a card panel open; not seen before; probably the card text growing its buffers for the longer hint text, unconfirmed; Known issues);
+    - level 27, 8,441 kills, 7 chests, gifts 4/4; no weapon above level 5, so **0 evolutions**, Juggernaut on; Gorm at 68 % in phase 1 after ~57 s; hit-stops 1,210 = 51 s (C14).
+  - **Stress `300 60 -evolved -mix`:** 228 fps avg; at 300 enemies 227 fps (4.40 ms, p95 7.21), gameplay 1.54 / 2.07 ms (budget 4); GC 278 B/s, a 9.5 KB first-panel one-off.
+  - **`bot 600 -timed -evolved`** (CSV `Profiling/20261020_113502_bot_SlavePit.csv`): 364 fps avg; ≥ 250 enemies 220 fps (4.55 ms, p95 6.35), gameplay 1.79 / 2.21 ms; 4 evolutions, Wildfire + Bloodbath + Executioner; 886 spreads, 2,033 executions; **Gorm defeated ~20 s after his entrance**, run ended Survived at 8:20 (level 26, 9,673 kills). GC: the 215 KB victory screen + save (game over) and a 9.9 KB first-panel one-off. C16 updated with both boss numbers.
+- **PR #8** (https://github.com/jfilipegm/gladiator-roguelike/pull/8) open, waiting for the producer's OK.
+- **Left:** merge #8 only after the producer says so; then `Tools/release 0.6.0` (move the untracked `Assets/_Recovery/` out of Assets first, since the release script refuses untracked files under Assets/, and ask before deleting it) and smoke-run the archives. Untracked `Assets/_Recovery/` (Unity's scene backup from the 01:07 crash) and `mono_crash.*.blob`: never commit them.
+- The Editor crashed while it was being closed (2026-10-20 01:07, GTK cleanup) and was relaunched at about 10:05. It came up ready with no backup-scene dialog.
 
 ## Known issues
-- **Residual GC (target 0 B/frame, met in steady state):** the first level-up allocates ~7.5 KB once (paused; a hidden pre-draw of the cards didn't remove it; BACKLOG), the boss entrance 1.8 KB, the victory screen + save write ~238 KB (game over). Small first-occurrence allocations (≤ 1.2 KB) in the first minutes.
+- **Residual GC (target 0 B/frame, met in steady state):** one 85 KB allocation once in a paused card panel (v0.6.0 Slave Pit bot run, 77 s; likely the card text's buffers growing for the longer hint lines, unconfirmed); the first level-up allocates ~7.5–9.9 KB once (paused; a hidden pre-draw of the cards didn't remove it; BACKLOG), the boss entrance 1.8 KB, the victory screen + save write ~238 KB (game over). Small first-occurrence allocations (≤ 1.2 KB) in the first minutes.
 - **Standalone perf runs need an unlocked desktop** (a locked KDE session hangs the windowed player; headless `-batchmode` runs are valid for GC only).
 - Editor-only: ~368 B/frame IMGUI `GUI.Repaint` allocation (not ours; absent in players).

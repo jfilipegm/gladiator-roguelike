@@ -76,7 +76,7 @@ namespace Gladiator.Tests
                     else Assert.IsNotEmpty(_panel.CardDescription(i), "an effect Boon describes its effect");
                 }
                 else if (o.Def.kind == UpgradeKind.Weapon && o.Level == 1)
-                    Assert.AreEqual(o.Def.weapon.description, _panel.CardDescription(i), "a new weapon shows its description");
+                    StringAssert.StartsWith(o.Def.weapon.description, _panel.CardDescription(i), "a new weapon shows its description (then its hints)");
             }
             for (int r = 0; r < 2 && boon < 0; r++) // no stat Boon among the cards: reroll for one
             {

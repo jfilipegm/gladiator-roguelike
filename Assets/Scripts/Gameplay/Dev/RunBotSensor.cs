@@ -40,7 +40,13 @@ namespace Gladiator.Gameplay
             return cardCount > 0;
         }
 
-        public void ChooseCard(int index) => ChooseCardHook?.Invoke(index);
+        public void ChooseCard(int index)
+        {
+            // Phase 5.5: an evolution (always the first card when offered) is never passed up
+            var lvl = LevelUpController.Instance;
+            if (lvl != null && lvl.ChoiceCount > 0 && lvl.Offers[0].Def != null && lvl.Offers[0].Def.evolvesFrom != null) index = 0;
+            ChooseCardHook?.Invoke(index);
+        }
 
         public bool TryGetAffordableChest(Vector3 from, float maxDistance, out Vector3 position, out bool inReach)
         {

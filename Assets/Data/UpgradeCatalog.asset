@@ -16,6 +16,13 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 6bac5918f85aadaa0b999bc5c8c73891, type: 2}
   - {fileID: 11400000, guid: 2446dc469c68d506e8cc69857dbb41f1, type: 2}
   - {fileID: 11400000, guid: e9cecf92373d7033f89c4bbc6859a71d, type: 2}
+  - {fileID: 11400000, guid: 8b66a774c0824529ea5a0ee538751cf3, type: 2}
+  - {fileID: 11400000, guid: 34cca5eb2e5f515668e56339f0399816, type: 2}
+  - {fileID: 11400000, guid: b6961b4e73cd30cdf88f880bfdc38391, type: 2}
+  - {fileID: 11400000, guid: 5ffb3dcf7ba3eb04e9edc65ad801381b, type: 2}
+  - {fileID: 11400000, guid: 83599f12fb58e9ea3a73d18c4a03f0a0, type: 2}
+  - {fileID: 11400000, guid: f7f82a47ee2bceda189721a9ae65a310, type: 2}
+  - {fileID: 11400000, guid: aa561440c6af07b0381766c4c9f00313, type: 2}
   - {fileID: 11400000, guid: 8caa2b839fe57ed6aa965293f75da629, type: 2}
   - {fileID: 11400000, guid: 34e644b69e5f4db73a2c30fcedaa2bc9, type: 2}
   - {fileID: 11400000, guid: 40f2c36b39516d957bc4532e3c9b7905, type: 2}
@@ -41,3 +48,10 @@ MonoBehaviour:
   fallbacks:
   - {fileID: 11400000, guid: df8e29555a3296d86aab6f4ddee62772, type: 2}
   - {fileID: 11400000, guid: f0751ff12ce33613aa6e39d318b30d6f, type: 2}
+  synergies:
+  - {fileID: 11400000, guid: fc55ac1f76ef6b7c0aba0ad8f5a7b9fe, type: 2}
+  - {fileID: 11400000, guid: f6f764193931d63009b32973e641511f, type: 2}
+  - {fileID: 11400000, guid: 6d10faee8180c5629bfda7be7b4d3c29, type: 2}
+  - {fileID: 11400000, guid: 617a615ea2297763fa0c444e03c18c24, type: 2}
+  - {fileID: 11400000, guid: f56d0fdbd14615e6282461d9036831f7, type: 2}
+  - {fileID: 11400000, guid: 07edd527ece39d989bac854a0422afd9, type: 2}

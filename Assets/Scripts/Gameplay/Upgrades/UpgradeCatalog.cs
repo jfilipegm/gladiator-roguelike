@@ -13,5 +13,7 @@ namespace Gladiator.Gameplay
         public UpgradeDef[] upgrades = Array.Empty<UpgradeDef>();
         [Tooltip("Consumables offered when the pool runs dry (all slots full and maxed).")]
         public UpgradeDef[] fallbacks = Array.Empty<UpgradeDef>();
+        [Tooltip("Tag synergies (Phase 5.5): listed automatically like the upgrades.")]
+        public TagSynergyDef[] synergies = Array.Empty<TagSynergyDef>();
     }
 }

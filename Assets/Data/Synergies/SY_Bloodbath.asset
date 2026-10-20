@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f39f4ec750d1bae538d064ea8c5b4a43, type: 3}
+  m_Name: SY_Bloodbath
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.TagSynergyDef
+  id: bloodbath
+  displayName: Bloodbath
+  announce: 'BLOOD SYNERGY: BLOODBATH!'
+  description: A bleeding enemy that dies sprays 2 Bleed on everything around it.
+  tag: 4
+  count: 3
+  icon: {fileID: 2800000, guid: 13ceaa4af4e914da3ab8c2724bbfa51d, type: 3}
+  iconRow: 35
+  mods: []
+  effects:
+  - kind: 2
+    status: {fileID: 11400000, guid: 623c093ec11af065695b6f001d1c0e34, type: 2}
+    chance: 0
+    power: 3
+    bonus: 0
+    radius: 2.5
+    duration: 0
+    count: 0
+    stacks: 2
+    everyNth: 0

@@ -21,6 +21,11 @@ namespace Gladiator.Gameplay
         public float Phase, Clock;
         /// <summary>Orbit: per enemy slot, the Clock time it can be hit again (allocated once, on first use).</summary>
         public float[] NextHit;
+        /// <summary>Echo (evolutions): seconds until the second strike (-1 = none pending), its direction, and the size boost while it runs.</summary>
+        public float EchoT = -1f;
+        public Vector3 EchoDir;
+        public float AreaBoost = 1f;
+        public bool InEcho;
 
         /// <summary>Reuses this slot object for `def` at level 1 (slots are allocated once, so equipping is GC-free).</summary>
         internal void Init(WeaponDef def)
@@ -36,6 +41,9 @@ namespace Gladiator.Gameplay
             AimDir = Vector3.forward;
             Phase = Clock = 0f;
             if (NextHit != null) System.Array.Clear(NextHit, 0, NextHit.Length);
+            EchoT = -1f;
+            AreaBoost = 1f;
+            InEcho = false;
         }
     }
 
@@ -87,6 +95,8 @@ namespace Gladiator.Gameplay
         public IReadOnlyList<WeaponInstance> Weapons => _weapons;
         public int Swings { get; private set; }
         public int Hits { get; private set; }
+        /// <summary>Echo strikes fired (evolutions, tests).</summary>
+        public int Echoes { get; private set; }
         /// <summary>The crowd's weapon in the sand (Phase 5.1): fights beside the slots for a while (null = none).</summary>
         public WeaponInstance Temporary => TemporaryLeft > 0f ? _loan : null;
         public float TemporaryLeft { get; private set; }
@@ -121,6 +131,20 @@ namespace Gladiator.Gameplay
         {
             for (int i = 0; i < _weapons.Count; i++) if (_weapons[i].Def == def) return _weapons[i];
             return null;
+        }
+
+        /// <summary>
+        /// Phase 5.5: the weapon `from` becomes its evolution `to` in the same slot. It keeps its level and level modifiers
+        /// (the level-8 numbers); `to` adds its own base numbers and twists. Null if `from` isn't equipped.
+        /// </summary>
+        public WeaponInstance Evolve(WeaponDef from, WeaponDef to)
+        {
+            var w = Find(from);
+            if (w == null || to == null) return null;
+            w.Def = to;
+            w.Mesh = -2;
+            w.EchoT = -1f;
+            return w;
         }
 
         /// <summary>Applies `def`'s next level (its `levels` entry) scaled by `magnitude`. Returns the new level.</summary>
@@ -158,7 +182,7 @@ namespace Gladiator.Gameplay
         // ---------- effective numbers ----------
         public float Damage(WeaponInstance w) => w.Def.damage * w.Local[StatId.Damage] * DamageMul;
         public float CooldownOf(WeaponInstance w) => w.Def.cooldown / Mathf.Max(0.1f, w.Local[StatId.AttackSpeed] * AttackSpeedMul);
-        public float AreaOf(WeaponInstance w) => w.Local[StatId.Area] * RangeMul;
+        public float AreaOf(WeaponInstance w) => w.Local[StatId.Area] * RangeMul * w.AreaBoost;
         public int AmountOf(WeaponInstance w) => Mathf.Max(1, w.Def.amount + (int)w.Local[StatId.Amount] + (int)PlayerStat(StatId.Amount, 0f));
         public int PierceOf(WeaponInstance w) => w.Def.pierce < 0 ? -1 : w.Def.pierce + (int)w.Local[StatId.Pierce] + (int)PlayerStat(StatId.Pierce, 0f);
         public float SpeedOf(WeaponInstance w) => w.Def.speed * w.Local[StatId.ProjectileSpeed] * PlayerStat(StatId.ProjectileSpeed, 1f);
@@ -195,6 +219,11 @@ namespace Gladiator.Gameplay
         {
             var d = w.Def;
             if (d.pattern == WeaponPattern.Orbit) { TickOrbit(w, em, dt); return; }
+            if (w.EchoT >= 0f)
+            {
+                w.EchoT -= dt;
+                if (w.EchoT < 0f && em != null) Echo(w, em);
+            }
             w.Cooldown -= dt;
             if (w.SwingT >= 0f)
             {
@@ -258,6 +287,45 @@ namespace Gladiator.Gameplay
                 case WeaponPattern.Returning: Volley(w, em, returning: true); break;
                 case WeaponPattern.Lob: Lob(w, em); break;
             }
+            var d = w.Def;
+            bool echoes = d.pattern == WeaponPattern.MeleeArc || d.pattern == WeaponPattern.Thrust || d.pattern == WeaponPattern.Returning;
+            if (d.echoDelay > 0f && echoes)
+            {
+                w.EchoT = d.echoDelay;
+                w.EchoDir = Quaternion.Euler(0f, d.echoAngle, 0f) * w.AimDir;
+            }
+        }
+
+        /// <summary>An evolved weapon's second strike: the same impact turned by echoAngle, at echoScale size.</summary>
+        void Echo(WeaponInstance w, EnemyManager em)
+        {
+            var d = w.Def;
+            Vector3 aim = w.AimDir, origin = transform.position;
+            w.AimDir = w.EchoDir;
+            w.AreaBoost = Mathf.Max(0.1f, d.echoScale);
+            w.InEcho = true;
+            float area = AreaOf(w);
+            switch (d.pattern)
+            {
+                case WeaponPattern.MeleeArc:
+                    if (slashFx != null) slashFx.Play(origin + Vector3.up * 0.75f, w.AimDir, d.range * area, d.arcDegrees, d.swingDuration);
+                    SfxPlayer.Play(SfxId.Swing, origin);
+                    ArcHit(w, em);
+                    break;
+                case WeaponPattern.Thrust:
+                    var pp = PlayerProjectiles.Instance;
+                    if (pp != null) pp.Thrust(w.AimDir, d.range * area, d.swingDuration, MeshOf(w, pp), d.meshScale * Mathf.Sqrt(area));
+                    SfxPlayer.Play(SfxId.Thrust, origin);
+                    ThrustHit(w, em);
+                    break;
+                case WeaponPattern.Returning:
+                    Volley(w, em, returning: true, turn: d.echoAngle);
+                    break;
+            }
+            Echoes++;
+            w.InEcho = false;
+            w.AreaBoost = 1f;
+            w.AimDir = aim;
         }
 
         DamageInfo Hit(WeaponInstance w, EnemyManager em, int i, Vector3 dir, DamageFlags kind)
@@ -327,7 +395,7 @@ namespace Gladiator.Gameplay
         }
 
         /// <summary>Throws AmountOf(w) projectiles at the nearest distinct enemies; extra shots fan out around them.</summary>
-        void Volley(WeaponInstance w, EnemyManager em, bool returning)
+        void Volley(WeaponInstance w, EnemyManager em, bool returning, float turn = 0f)
         {
             var pp = PlayerProjectiles.Instance;
             if (pp == null) return;
@@ -367,6 +435,7 @@ namespace Gladiator.Gameplay
                     float ang = volleySpread * ((extra + 1) / 2) * (extra % 2 == 0 ? 1f : -1f);
                     dir = Quaternion.Euler(0f, ang, 0f) * dir;
                 }
+                if (turn != 0f) dir = Quaternion.Euler(0f, turn, 0f) * dir; // an echo: the mirrored side
                 if (returning) pp.FireReturning(from, dir, shot);
                 else pp.FireStraight(from, dir, shot);
             }

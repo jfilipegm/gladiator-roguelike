@@ -53,14 +53,18 @@ namespace Gladiator.UI
 
         /// <summary>Shows `def`'s icon with a `rarity` aura (false if it has none: the caller keeps its letters).
         /// `phase` (0..1) staggers the shine so a row of icons doesn't flash in step.</summary>
-        public bool Set(UpgradeDef def, Color rarity, float phase = 0f)
+        public bool Set(UpgradeDef def, Color rarity, float phase = 0f) =>
+            def != null ? Set(def.icon, def.iconRow, rarity, phase) : SetNone();
+
+        /// <summary>Any atlas row (tag synergies use the same atlas, Phase 5.5).</summary>
+        public bool Set(Texture2D atlas, int row, Color rarity, float phase = 0f)
         {
-            if (def == null || def.icon == null || def.iconRow < 0) { Clear(); return false; }
+            if (atlas == null || row < 0) return SetNone();
             _phase = phase;
-            if (_tex != def.icon || _row != def.iconRow)
+            if (_tex != atlas || _row != row)
             {
-                _tex = def.icon;
-                _row = def.iconRow;
+                _tex = atlas;
+                _row = row;
                 _icon.texture = _tex;
                 _aura.texture = _tex;
                 _iconFrame = _auraFrame = -1;
@@ -70,6 +74,8 @@ namespace Gladiator.UI
             Tick(Time.unscaledTime);
             return true;
         }
+
+        bool SetNone() { Clear(); return false; }
 
         public void Clear()
         {

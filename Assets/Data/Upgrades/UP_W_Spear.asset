@@ -18,13 +18,15 @@ MonoBehaviour:
   icon: {fileID: 2800000, guid: 13ceaa4af4e914da3ab8c2724bbfa51d, type: 3}
   iconRow: 1
   kind: 1
-  tags: 0
+  tags: 32
   weight: 8
   maxLevel: 8
   minRarity: 0
   maxRarity: 3
   requiresAny: []
   weapon: {fileID: 11400000, guid: 1bf02a33eac1be6c3af8b4b114f7b02c, type: 2}
+  evolvesFrom: {fileID: 0}
+  catalyst: {fileID: 0}
   perLevel: []
   effects: []
   healFraction: 0

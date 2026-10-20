@@ -16,6 +16,7 @@ namespace Gladiator.EditorTools
         public const string Dir = "Assets/Data/Upgrades/";
         public const string ConfigPath = "Assets/Data/Config/UpgradeConfig.asset";
         public const string CatalogPath = "Assets/Data/UpgradeCatalog.asset";
+        public const string SynergyDir = "Assets/Data/Synergies/";
         public const string NobodyPath = "Assets/Data/Gladiators/GL_Nobody.asset";
 
         [MenuItem("Gladiator/Setup/Upgrades/Create Upgrade Data")]
@@ -52,6 +53,7 @@ namespace Gladiator.EditorTools
 
             CreateWeapons();
             CreateStatusBoons();
+            EvolutionSetup.CreateOrUpdate(); // Phase 5.5: evolutions, weapon tags, synergies
             IconSetup.Apply(); // pixel icons (playtest pass)
 
             AssetDatabase.SaveAssets();
@@ -270,7 +272,7 @@ namespace Gladiator.EditorTools
         static bool Touches(string[] paths)
         {
             foreach (var p in paths)
-                if (p.EndsWith(".asset") && p != CatalogPath && (p.StartsWith(Dir) || AssetDatabase.GetMainAssetTypeAtPath(p) == typeof(UpgradeDef)))
+                if (p.EndsWith(".asset") && p != CatalogPath && (p.StartsWith(Dir) || p.StartsWith(SynergyDir) || AssetDatabase.GetMainAssetTypeAtPath(p) == typeof(UpgradeDef)))
                     return true;
             return false;
         }
@@ -296,18 +298,28 @@ namespace Gladiator.EditorTools
                 if (d == null) continue;
                 (d.kind == UpgradeKind.Consumable ? fallbacks : pool).Add(d);
             }
-            bool changed = !Same(catalog.upgrades, pool) || !Same(catalog.fallbacks, fallbacks);
+            var synPaths = new List<string>();
+            foreach (var guid in AssetDatabase.FindAssets("t:TagSynergyDef")) synPaths.Add(AssetDatabase.GUIDToAssetPath(guid));
+            synPaths.Sort(System.StringComparer.Ordinal);
+            var synergies = new List<TagSynergyDef>();
+            foreach (var p in synPaths)
+            {
+                var sy = AssetDatabase.LoadAssetAtPath<TagSynergyDef>(p);
+                if (sy != null) synergies.Add(sy);
+            }
+            bool changed = !Same(catalog.upgrades, pool) || !Same(catalog.fallbacks, fallbacks) || !Same(catalog.synergies, synergies);
             if (changed)
             {
                 catalog.upgrades = pool.ToArray();
                 catalog.fallbacks = fallbacks.ToArray();
+                catalog.synergies = synergies.ToArray();
                 EditorUtility.SetDirty(catalog);
                 AssetDatabase.SaveAssetIfDirty(catalog);
             }
             return catalog;
         }
 
-        static bool Same(UpgradeDef[] a, List<UpgradeDef> b)
+        static bool Same<T>(T[] a, List<T> b) where T : Object
         {
             if (a == null || a.Length != b.Count) return false;
             for (int i = 0; i < a.Length; i++) if (a[i] != b[i]) return false;

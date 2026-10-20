@@ -26,6 +26,12 @@ namespace Gladiator.Gameplay
         DamageVsStatus,
         /// <summary>While sliding, leave marks (`radius`, `duration` s) that apply `stacks` of `status` with `power` dps (× player damage).</summary>
         SlideTrail,
+        /// <summary>Phase 5.5 (Wildfire): every `duration` s each enemy with `status` passes it to `count` neighbours within `radius` that don't have it (same power).</summary>
+        StatusSpread,
+        /// <summary>Phase 5.5 (Executioner): a crit on a non-boss enemy left below `bonus` of its max HP kills it.</summary>
+        ExecuteOnCrit,
+        /// <summary>Phase 5.5 (weapon hit effect): a hit leaves a mark like a slide trail's (`radius`, `duration`, `status`, `stacks`, `power` dps × player damage); a hit near a fresh mark renews it instead.</summary>
+        GroundOnHit,
     }
 
     [Serializable]

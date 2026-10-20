@@ -100,6 +100,7 @@ namespace Gladiator.Gameplay
         }
 
         bool Lendable(UpgradeDef u) =>
-            u != null && u.kind == UpgradeKind.Weapon && u.weapon != null && !_build.State.IsLocked(u) && _weapons.Find(u.weapon) == null;
+            u != null && u.kind == UpgradeKind.Weapon && u.weapon != null && !u.IsEvolution && !_build.State.IsEvolved(u) // evolutions are earned
+            && !_build.State.IsLocked(u) && _weapons.Find(u.weapon) == null;
     }
 }

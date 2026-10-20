@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 39f0cecc993934a19800cd9b6e8df985, type: 3}
+  m_Name: WP_Evo_BombSatchel
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.WeaponDef
+  id: fire_pot_barrage
+  displayName: Fire-Pot Barrage
+  description: Every blast leaves the sand burning.
+  pattern: 9
+  damage: 16.800001
+  critChance: 0.06
+  critMultiplier: 2
+  knockback: 7
+  onHitStatus: {fileID: 0}
+  onHitStatusPower: 0.1
+  onHitStacks: 1
+  cooldown: 1.6
+  swingDuration: 0.28
+  windup: 0.12
+  range: 9
+  arcDegrees: 150
+  width: 2.2
+  acquireRange: 9
+  amount: 1
+  speed: 16
+  pierce: 0
+  mesh: {fileID: 2060036785046268964, guid: 16c4c349e171e9b59a367611677e6590, type: 3}
+  meshScale: 1.1
+  flightTime: 0.6
+  fuse: 0.4
+  arcHeight: 2.2
+  echoDelay: 0
+  echoAngle: 180
+  echoScale: 1
+  hitEffects:
+  - kind: 10
+    status: {fileID: 11400000, guid: b6b06c7d29ea6ab1397bb31eff19805c, type: 2}
+    chance: 0
+    power: 4
+    bonus: 0
+    radius: 2.4
+    duration: 3
+    count: 0
+    stacks: 1
+    everyNth: 0
+  levels: []

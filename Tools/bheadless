@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Run a BlenderSrc script in a headless Blender: no GUI and no MCP add-on needed (use it when Blender isn't open).
+# Same ARGS/REPO as Tools/blender_bridge.py. Usage: Tools/bheadless BlenderSrc/<script>.py [key=value ...]
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+script="$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"; shift
+args="{"; sep=""
+for kv in "$@"; do args+="$sep\"${kv%%=*}\":\"${kv#*=}\""; sep=","; done
+args+="}"
+GL_REPO="$ROOT" GL_SCRIPT="$script" GL_ARGS="$args" timeout 600 blender -b --factory-startup --python "$ROOT/Tools/blender_headless_runner.py" 2>&1 \
+  | grep -E "^RESULT_JSON|Traceback|Error|^  File" | sed 's/^RESULT_JSON //'

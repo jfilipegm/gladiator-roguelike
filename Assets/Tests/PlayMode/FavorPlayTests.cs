@@ -131,7 +131,7 @@ namespace Gladiator.Tests
             var build = Player.Main.GetComponent<PlayerBuild>();
             WeaponDef loan = null;
             foreach (var u in build.catalog.upgrades)
-                if (u != null && u.kind == UpgradeKind.Weapon && u.weapon != null && weapons.Find(u.weapon) == null && !build.State.IsLocked(u)) { loan = u.weapon; break; }
+                if (u != null && u.kind == UpgradeKind.Weapon && u.weapon != null && !u.IsEvolution && weapons.Find(u.weapon) == null && !build.State.IsLocked(u)) { loan = u.weapon; break; }
             Assert.IsNotNull(loan, "a pool weapon the player doesn't hold");
             int slots = weapons.Weapons.Count;
             weapons.GrantTemporary(loan, 4, 1.5f);

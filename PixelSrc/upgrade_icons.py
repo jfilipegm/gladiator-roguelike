@@ -574,6 +574,212 @@ ICONS["thick_skin"] = grid([  # Thick Skin (max HP): a big heart
 ])
 
 
+
+# ---------- Phase 5.5: evolutions (base icon + brighter metal / gold + one added part) and tag synergies ----------
+def swap(g, table):
+    return [[table.get(c, c) for c in row] for row in g]
+
+
+def overlay(base, top):
+    """`top` drawn over `base` wherever `top` isn't empty."""
+    return [[t if t != "." else b for b, t in zip(rb, rt)] for rb, rt in zip(base, top)]
+
+
+def mirrored(g):
+    return [row[::-1] for row in g]
+
+
+def champions_gladius():  # two clean blades crossed (the echo behind you), gold pommels
+    clean = swap(ICONS["weapon_gladius"], {"r": "l", "R": "s", "b": "Y", "B": "Y"})
+    return overlay(mirrored(clean), clean)
+
+
+def impaler():  # the spear, longer tip, barbs and a gold collar
+    g = [row[:] for row in ICONS["weapon_spear"]]
+    put(g, [(15, 0)], "w")
+    put(g, [(10, 3), (13, 5)], "l")
+    put(g, [(9, 4), (14, 6)], "s")
+    put(g, [(10, 5), (11, 5)], "y")
+    return g
+
+
+def thunderbolts():  # the javelins with charged heads and a bolt between them
+    g = swap(ICONS["weapon_javelins"], {"l": "c", "s": "C"})
+    put(g, [(8, 0), (7, 1), (8, 3), (7, 4)], "c")
+    put(g, [(7, 2), (8, 2), (7, 3)], "w")
+    return g
+
+
+def twin_moons():  # two discs, one silver, one gold
+    g = blank()
+    disc(g, 5.0, 5.5, 4.6, "s", lambda x, y: "w" if x + y < 7 else "l" if x + y < 11 else "s")
+    disc(g, 5.0, 5.5, 1.7, ".")
+    disc(g, 10.5, 10.0, 4.6, "Y", lambda x, y: "h" if x + y < 18 else "y" if x + y < 22 else "Y")
+    disc(g, 10.5, 10.0, 1.7, ".")
+    put(g, [(13, 6), (6, 14)], "c")
+    return g
+
+
+ICONS["evo_champions_gladius"] = champions_gladius()
+ICONS["evo_impaler"] = impaler()
+ICONS["evo_thunderbolts"] = thunderbolts()
+ICONS["evo_twin_moons"] = twin_moons()
+
+ICONS["evo_fire_pot_barrage"] = grid([  # a clay fire-pot, flames over the rim
+    "........o.......",
+    ".....o.oyo..o...",
+    ".....oyoyhoyo...",
+    "......ohhhyo....",
+    ".....YyyyyyyY...",
+    "......BbbbbB....",
+    ".....bbbbbbbB...",
+    "....bnbbbbbbbB..",
+    "...bnbbbbbbbbbB.",
+    "...bnbbbbbbbbbB.",
+    "...bbbbbbbbbbbB.",
+    "....bbbbbbbbbB..",
+    ".....bbbbbbbB...",
+    "......BBBBBB....",
+    "................",
+    "................",
+])
+
+ICONS["evo_chain_of_ruin"] = grid([  # two spiked balls on one chain, gold-banded
+    "................",
+    "..........l.....",
+    ".......l.sdd.l..",
+    "........sssdd...",
+    "..l....swyyydd..",
+    ".sdd..lssssdddl.",
+    "lsydl..ssddddd..",
+    ".sdd....sdddd...",
+    "..l..d.l.ddd.l..",
+    ".....d....l.....",
+    "......s.........",
+    ".....d..........",
+    "....Yb..........",
+    "...bB...........",
+    "..bB............",
+    "................",
+])
+
+
+def sanguine_reaver():  # the greatsword with a blood crescent following it
+    g = swap(ICONS["weapon_crimson_greatsword"], {"d": "Y", "s": "y"})
+    put(g, [(12, 6), (14, 7), (15, 9), (15, 10), (14, 12)], "e")
+    put(g, [(13, 6), (14, 8), (14, 9), (14, 10), (13, 12)], "e")
+    put(g, [(13, 7), (13, 8), (13, 9), (13, 10), (13, 11)], "E")
+    return g
+
+
+ICONS["evo_sanguine_reaver"] = sanguine_reaver()
+
+ICONS["synergy_wildfire"] = grid([  # three fires: it spreads
+    "................",
+    "........o.......",
+    ".......oyo......",
+    "..o....oyo...o..",
+    ".oyo..oyhyo.oyo.",
+    ".oyo..oyhyo.oyo.",
+    "oyhyo.ohhho.oyho",
+    "oyhyooyhhhyooyhy",
+    ".ohhoohhwhhoohho",
+    ".bBbbBbbbbbBbbB.",
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+])
+
+ICONS["synergy_bloodbath"] = grid([  # a big drop splashing
+    "................",
+    ".......e........",
+    "......eee.......",
+    "......eee.......",
+    ".....eeeee......",
+    ".....eweeeE.....",
+    "....ewweeeeE....",
+    "....eweeeeeE....",
+    "....eeeeeeeE....",
+    ".....eeeeeE.....",
+    "..e...EEEE...e..",
+    ".eE..........eE.",
+    "....e..ee..e....",
+    "...eE.eEEe.eE...",
+    "................",
+    "................",
+])
+
+ICONS["synergy_storm_front"] = grid([  # a storm cloud, bolts falling
+    "................",
+    ".....llll.......",
+    "...llwwwwll.....",
+    "..lwwwwwwwwll...",
+    ".lwwwwwwwwwwwl..",
+    ".lllllllllllll..",
+    "..ssssssssssss..",
+    "....c.....c.....",
+    "...cw....cw.....",
+    "..cwc...cwc.....",
+    "...cw....cw.....",
+    "...c....c.......",
+    "..c....c........",
+    "................",
+    "................",
+    "................",
+])
+
+ICONS["synergy_executioner"] = grid([  # an executioner's axe
+    "................",
+    "......lll.......",
+    ".....lwwll......",
+    "....lwwwlls.....",
+    "....lwwllssd....",
+    "....lwllsssdb...",
+    ".....lssssdbB...",
+    "......sssdbB....",
+    "..........bB....",
+    ".........bB.....",
+    "........bB......",
+    ".......bB.......",
+    "......bB........",
+    ".....bB.........",
+    "....YY..........",
+    "................",
+])
+
+ICONS["synergy_juggernaut"] = grid([  # a war hammer
+    "................",
+    "...ssssss.......",
+    "..swwllssd......",
+    "..sllssssd......",
+    "..sssssddd.y....",
+    "...ddddddyYb....",
+    "..........bB....",
+    ".........bB.....",
+    "........bB......",
+    ".......bB.......",
+    "......bB........",
+    ".....bB.........",
+    "....bB..........",
+    "...YY...........",
+    "................",
+    "................",
+])
+
+
+def bulwark():  # a round shield: wood, iron rim, gold boss
+    g = blank()
+    disc(g, 7.5, 7.5, 7.2, "s", lambda x, y: "l" if x + y < 9 else "s" if x + y < 21 else "d")
+    disc(g, 7.5, 7.5, 5.8, "b", lambda x, y: "n" if x + y < 11 else "b" if x + y < 19 else "B")
+    disc(g, 7.5, 7.5, 2.1, "y", lambda x, y: "h" if x + y < 15 else "Y")
+    return g
+
+
+ICONS["synergy_bulwark"] = bulwark()
+
 # ---------- frames ----------
 def to_rgba(g):
     """Fill + 4-neighbour outline, as an RGBA pixel grid (None = transparent)."""

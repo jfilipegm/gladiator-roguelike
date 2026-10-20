@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 40ebe3582a67739c6bdb000081f621a7, type: 3}
+  m_Name: UP_E_Javelins
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.UpgradeDef
+  id: evo_thunderbolts
+  displayName: Thunderbolts
+  glyph: JV
+  icon: {fileID: 2800000, guid: 13ceaa4af4e914da3ab8c2724bbfa51d, type: 3}
+  iconRow: 29
+  kind: 1
+  tags: 2
+  weight: 0
+  maxLevel: 1
+  minRarity: 3
+  maxRarity: 3
+  requiresAny: []
+  weapon: {fileID: 11400000, guid: 93580f9bc4c5cb3fb99a6c6819c37e9f, type: 2}
+  evolvesFrom: {fileID: 11400000, guid: 0749e9799870c7ccc9edaf93ac95ae34, type: 2}
+  catalyst: {fileID: 11400000, guid: 1006031ddab8028e8ad4097064b09e4f, type: 2}
+  perLevel: []
+  effects: []
+  healFraction: 0
+  gold: 0

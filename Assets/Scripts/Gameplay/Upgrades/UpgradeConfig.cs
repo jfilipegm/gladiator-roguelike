@@ -38,6 +38,12 @@ namespace Gladiator.Gameplay
         [Tooltip("Ignore card input for this long after the cards appear (s), so a held jump/click doesn't pick blind.")]
         public float inputGrace = 0.3f;
 
+        [Header("Evolutions (Phase 5.5)")]
+        [Tooltip("Chest, altar and boss rewards put a ready evolution in their first slot.")]
+        public bool evolutionInRewards = true;
+        [Tooltip("Level-ups may offer a ready evolution too (off: evolving is a chest moment).")]
+        public bool evolutionInLevelUps = false;
+
         public float RarityWeight(Rarity r, float luck) =>
             rarityWeights[(int)r] * Mathf.Exp(Mathf.Max(0f, luck) * luckStrength * (int)r);
 

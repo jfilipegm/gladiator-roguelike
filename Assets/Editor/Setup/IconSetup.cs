@@ -47,8 +47,16 @@ namespace Gladiator.EditorTools
                 else { def.icon = null; def.iconRow = -1; Debug.LogWarning("[IconSetup] no icon for " + def.id); }
                 EditorUtility.SetDirty(def);
             }
+            foreach (var guid in AssetDatabase.FindAssets("t:TagSynergyDef")) // Phase 5.5: rows "synergy_<id>"
+            {
+                var syn = AssetDatabase.LoadAssetAtPath<TagSynergyDef>(AssetDatabase.GUIDToAssetPath(guid));
+                if (syn == null) continue;
+                if (rows.TryGetValue("synergy_" + syn.id, out int row)) { syn.icon = atlas; syn.iconRow = row; set++; }
+                else { syn.icon = null; syn.iconRow = -1; Debug.LogWarning("[IconSetup] no icon for synergy " + syn.id); }
+                EditorUtility.SetDirty(syn);
+            }
             AssetDatabase.SaveAssets();
-            Debug.Log($"[IconSetup] {set} upgrades have icons");
+            Debug.Log($"[IconSetup] {set} upgrades and synergies have icons");
             return set;
         }
     }

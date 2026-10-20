@@ -25,3 +25,16 @@ second_wind 23
 serrated_edge 24
 static_charge 25
 thick_skin 26
+evo_champions_gladius 27
+evo_impaler 28
+evo_thunderbolts 29
+evo_twin_moons 30
+evo_fire_pot_barrage 31
+evo_chain_of_ruin 32
+evo_sanguine_reaver 33
+synergy_wildfire 34
+synergy_bloodbath 35
+synergy_storm_front 36
+synergy_executioner 37
+synergy_juggernaut 38
+synergy_bulwark 39

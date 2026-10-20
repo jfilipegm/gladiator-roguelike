@@ -365,6 +365,8 @@ namespace Gladiator.Gameplay
         public float GetHp(int i) => _hp[i];
         public float GetMaxHp(int i) => _maxHp[i];
         public float GetYaw(int i) => _yaw[i];
+        /// <summary>The steering velocity (without knockback), m/s (tests / debug).</summary>
+        public Vector3 GetVelocity(int i) => _vel[i];
         public EnemyDef GetDef(int i) => _view[i] != null ? _view[i].Def : null;
         public AffixDef GetAffix(int i) => _affix[i];
         public bool IsElite(int i) => _affix[i] != null;
@@ -482,6 +484,24 @@ namespace Gladiator.Gameplay
                 TimeController.HitStop(feedback.hitStopOnElite);
             }
             if (_hp[i] <= 0f) Kill(i, info, allowBlast: true);
+        }
+
+        /// <summary>
+        /// Kills enemy `i` outright, credited to `sourceId` (Executioner, Phase 5.5). Its damage number shows the HP it had
+        /// left; bosses and invulnerable enemies are the caller's (and this check's) business.
+        /// </summary>
+        public bool Execute(int i, int sourceId)
+        {
+            if (!IsAlive(i) || _invuln[i]) return false;
+            var info = new DamageInfo { Amount = _hp[i], Flags = DamageFlags.Proc | DamageFlags.Crit, Point = _pos[i], SourceId = sourceId };
+            GameEvents.OnHit.Raise(new HitEvent
+            {
+                TargetId = _uid[i], Index = i, Position = _pos[i] + Vector3.up * (1.2f * _scale[i]), Damage = _hp[i], Crit = true,
+                SourceId = sourceId, Elite = _affix[i] != null, Flags = info.Flags,
+            });
+            _hp[i] = 0f;
+            Kill(i, info, allowBlast: true);
+            return true;
         }
 
         void Kill(int i, in DamageInfo info, bool allowBlast)

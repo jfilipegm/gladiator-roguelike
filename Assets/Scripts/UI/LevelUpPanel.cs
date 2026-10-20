@@ -33,7 +33,7 @@ namespace Gladiator.UI
             public TextMeshProUGUI Rarity, Kind, Title, Desc, Key;
             public Image[] Pips;
             public UpgradeIconView Icon;
-            public readonly CharBuffer Text = new CharBuffer(160);
+            public readonly CharBuffer Text = new CharBuffer(384); // description + Phase 5.5 hints with colour tags
         }
 
         static readonly Color Dim = new Color(0.02f, 0.03f, 0.06f, 0.62f);
@@ -118,8 +118,11 @@ namespace Gladiator.UI
             v.Pips = new Image[MaxPips];
             for (int p = 0; p < MaxPips; p++)
                 v.Pips[p] = UiFactory.Image("Pip" + p, v.Root, PipEmpty, mid, mid, new Vector2(0, PipY), new Vector2(18, 18), PixelIcons.White);
-            v.Desc = UiFactory.Text("Desc", v.Root, "Desc", 30, new Color(0.85f, 0.95f, 1f), TextAlignmentOptions.Top, mid, mid, new Vector2(0, -114), new Vector2(CardW - 36, 150), font, fontMaterial);
+            v.Desc = UiFactory.Text("Desc", v.Root, "Desc", 30, new Color(0.85f, 0.95f, 1f), TextAlignmentOptions.Top, mid, mid, new Vector2(0, -122), new Vector2(CardW - 36, 166), font, fontMaterial);
             v.Desc.textWrappingMode = TextWrappingModes.Normal;
+            v.Desc.enableAutoSizing = true; // evolutions and tag hints run longer: shrink to fit, never below 21
+            v.Desc.fontSizeMin = 21f;
+            v.Desc.fontSizeMax = 30f;
             v.Desc.fontStyle = FontStyles.Normal;
             v.Key = UiFactory.Text("Key", v.Root, "[" + (index + 1) + "]", 28, new Color(1f, 1f, 1f, 0.55f), TextAlignmentOptions.Center, mid, mid, new Vector2(0, -CardH * 0.5f + 32), new Vector2(CardW - 20, 44), font, fontMaterial);
             return v;
@@ -289,9 +292,11 @@ namespace Gladiator.UI
                 v.Title.text = o.Def.displayName;
                 v.Icon.Set(o.Def, col, i * 0.31f);
                 if (o.Def.kind == UpgradeKind.Consumable) { v.Kind.color = PipOwned; v.Kind.text = "SUPPLIES"; }
+                else if (o.Def.evolvesFrom != null) { v.Kind.color = NewGold; v.Kind.text = "EVOLUTION!"; }
                 else if (o.IsNew) { v.Kind.color = NewGold; v.Kind.text = o.Def.kind == UpgradeKind.Weapon ? "NEW WEAPON!" : "NEW!"; }
                 else { v.Kind.color = PipOwned; v.Kind.SetText("LV {0}", o.Level); }
                 CardText.Describe(o, cfg, v.Text);
+                if (c.build != null) CardText.Hints(o, c.build.State, c.build.catalog, v.Text);
                 v.Desc.SetCharArray(v.Text.Chars, 0, v.Text.Length);
                 int pips = o.Def.kind == UpgradeKind.Consumable ? 0 : Mathf.Min(MaxPips, o.Def.maxLevel);
                 float px0 = -(pips - 1) * 13f;

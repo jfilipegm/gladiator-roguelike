@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 39f0cecc993934a19800cd9b6e8df985, type: 3}
+  m_Name: WP_Evo_Chakram
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.WeaponDef
+  id: twin_moons
+  displayName: Twin Moons
+  description: A second disc follows the first, on the other side.
+  pattern: 5
+  damage: 9.6
+  critChance: 0.08
+  critMultiplier: 2
+  knockback: 3
+  onHitStatus: {fileID: 0}
+  onHitStatusPower: 0.1
+  onHitStacks: 1
+  cooldown: 1.7
+  swingDuration: 0.25
+  windup: 0.1
+  range: 7
+  arcDegrees: 150
+  width: 0.55
+  acquireRange: 9
+  amount: 1
+  speed: 14
+  pierce: -1
+  mesh: {fileID: 6040911186442954549, guid: de238d7ecd4cb41988c85d6ec9f4552b, type: 3}
+  meshScale: 1.3
+  flightTime: 0.6
+  fuse: 0.4
+  arcHeight: 2.2
+  echoDelay: 0.25
+  echoAngle: 180
+  echoScale: 1
+  hitEffects: []
+  levels: []

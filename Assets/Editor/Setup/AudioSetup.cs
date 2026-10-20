@@ -127,6 +127,8 @@ namespace Gladiator.EditorTools
                 case SfxId.BloodRite: return E(id, 0.85f, 0f, 1f, 1, false, 9);
                 case SfxId.Splinter: return E(id, 0.7f, 0.08f, 0.08f, 3, true, 6);
                 case SfxId.Spikes: return E(id, 0.5f, 0.08f, 0.05f, 4, true, 4);
+                case SfxId.Squeak: return E(id, 0.55f, 0.12f, 0.3f, 2, true, 6);
+                case SfxId.Quill: return E(id, 0.6f, 0.08f, 0.2f, 1, true, 6);
                 default: return E(id, 0.5f, 0f, 0.1f, 2, true, 1);
             }
         }

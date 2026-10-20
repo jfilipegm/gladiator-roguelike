@@ -355,6 +355,24 @@ MonoBehaviour:
     positional: 1
     priority: 4
     crowdBus: 0
+  - id: 38
+    clip: {fileID: 8300000, guid: a5d041057bf745a9080faf4b73914e56, type: 3}
+    volume: 0.55
+    pitchJitter: 0.12
+    minInterval: 0.3
+    maxVoices: 2
+    positional: 1
+    priority: 6
+    crowdBus: 0
+  - id: 39
+    clip: {fileID: 8300000, guid: 6cd7b45ad1a1a5a11a413263810ff4ea, type: 3}
+    volume: 0.6
+    pitchJitter: 0.08
+    minInterval: 0.2
+    maxVoices: 1
+    positional: 1
+    priority: 6
+    crowdBus: 0
   crowdLoop: {fileID: 8300000, guid: 969b18638588b710c80f8caa8ca24694, type: 3}
   crowdRoar: {fileID: 8300000, guid: 9d00fb7deb7d5d846bc2ce7b730946c9, type: 3}
   mixer: {fileID: 24100000, guid: 339af0a7a793a8dcf8f612d6f2e728e3, type: 2}

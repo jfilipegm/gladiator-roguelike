@@ -271,6 +271,7 @@ namespace Gladiator.EditorTools
             l.altarAnchors = new[] { new Vector3(-22f, 1.3f, 16f), new Vector3(20f, 1.3f, -18f) }; // up on a terrace
             // the rattling crate (Phase 5.2): beside the crates, the cages and the sacks, where one more box blends in
             l.secretSpots = new[] { Inside(14f, 2.8f), Inside(186f, 3.2f), new Vector3(29f, 0f, 10f) };
+            l.secrets = ArenaSecrets.RattlingCrate | ArenaSecrets.GoldenRat; // the rat's holes are the same nooks
             l.barricades = System.Array.Empty<Vector4>();
             l.braziers = System.Array.Empty<Vector3>();
             l.spikeTraps = System.Array.Empty<Vector3>();

@@ -119,12 +119,33 @@ namespace Gladiator.EditorTools
                 new[] { C(UnlockConditionKind.WinWithGladiator, "nobody", 1f), C(UnlockConditionKind.WinWithGladiator, "pit_goblin", 1f),
                         C(UnlockConditionKind.WinWithGladiator, "blood_knight", 1f) });
 
+            Secrets();
+
             var goblin = AssetDatabase.LoadAssetAtPath<UnlockDef>(Ul + "UL_PitGoblin.asset");
             if (goblin != null && goblin.category != UnlockCategory.Secret) { goblin.category = UnlockCategory.Secret; EditorUtility.SetDirty(goblin); }
 
             AssetDatabase.SaveAssets();
             UpgradeSetup.Refresh();
             MetaSetup.CreateOrUpdate(); // lists every UnlockDef
+        }
+
+        /// <summary>The arenas' new secrets (the layouts' regenerators set the same): the golden rat in the Slave Pit's nooks,
+        /// the bookmaker's booths in the Provincial Pit. Rebuild the arena scenes afterwards.</summary>
+        static void Secrets()
+        {
+            var slave = AssetDatabase.LoadAssetAtPath<ArenaLayoutDef>(SlavePitLayout.Path);
+            if (slave != null && (slave.secrets & ArenaSecrets.GoldenRat) == 0)
+            {
+                slave.secrets |= ArenaSecrets.GoldenRat;
+                EditorUtility.SetDirty(slave);
+            }
+            var prov = AssetDatabase.LoadAssetAtPath<ArenaLayoutDef>(ProvincialPitLayout.Path);
+            if (prov != null && (prov.secrets & ArenaSecrets.Bookmaker) == 0)
+            {
+                if (prov.secretSpots == null || prov.secretSpots.Length == 0) prov.secretSpots = ProvincialPitLayout.BookmakerSpots;
+                prov.secrets = ArenaSecrets.Bookmaker; // no rattling crate here
+                EditorUtility.SetDirty(prov);
+            }
         }
 
         static StatusDef Status(string file) => AssetDatabase.LoadAssetAtPath<StatusDef>(St + file + ".asset");

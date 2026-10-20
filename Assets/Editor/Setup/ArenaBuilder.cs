@@ -21,6 +21,8 @@ namespace Gladiator.EditorTools
         const string BarricadeModel = "Environment/PR_Barricade";
         const string SpikeGrateModel = "Environment/PR_SpikeGrate";
         const string SpikesModel = "Environment/PR_Spikes";
+        public const string GoldenRatModel = "Assets/Art/Models/Props/PR_GoldenRat.fbx";
+        public const string BookmakerModel = "Assets/Art/Models/Characters/CH_Bookmaker.fbx";
 
         [MenuItem("Gladiator/Arenas/Build Slave Pit")]
         public static string BuildSlavePit()
@@ -174,7 +176,8 @@ namespace Gladiator.EditorTools
             enemies.hpMul = layout.enemyHpMul > 0f ? layout.enemyHpMul : 1f;
             var props = Object.FindAnyObjectByType<Interactables>();
             if (props != null) { props.chestAnchors = layout.chestAnchors; props.altarAnchors = layout.altarAnchors; }
-            if (layout.secretSpots != null && layout.secretSpots.Length > 0)
+            bool spots = layout.secretSpots != null && layout.secretSpots.Length > 0;
+            if (spots && (layout.secrets & ArenaSecrets.RattlingCrate) != 0)
             {
                 var crate = new GameObject("RattlingCrate").AddComponent<RattlingCrate>(); // the Pit Goblin's discovery
                 crate.transform.SetParent(arena, false);
@@ -185,6 +188,23 @@ namespace Gladiator.EditorTools
                 crate.goblinModel = AssetDatabase.LoadAssetAtPath<GameObject>(GladiatorSetup.GoblinModel);
                 crate.envMaterial = AssetDatabase.LoadAssetAtPath<Material>(LookSetup.EnvMat);
                 crate.charMaterial = AssetDatabase.LoadAssetAtPath<Material>(LookSetup.CharMat);
+            }
+            if (spots && (layout.secrets & ArenaSecrets.GoldenRat) != 0) // Phase 5.6: the Sling's secret
+            {
+                var rat = new GameObject("GoldenRat").AddComponent<GoldenRat>();
+                rat.transform.SetParent(arena, false);
+                rat.holes = layout.secretSpots;
+                rat.model = AssetDatabase.LoadAssetAtPath<GameObject>(GoldenRatModel);
+                rat.material = AssetDatabase.LoadAssetAtPath<Material>(LookSetup.CharMat);
+            }
+            if (spots && (layout.secrets & ArenaSecrets.Bookmaker) != 0) // Phase 5.6: Loaded Dice's secret
+            {
+                var bookie = new GameObject("Bookmaker").AddComponent<Bookmaker>();
+                bookie.transform.SetParent(arena, false);
+                bookie.spots = layout.secretSpots;
+                bookie.arenaCenter = layout.center;
+                bookie.model = AssetDatabase.LoadAssetAtPath<GameObject>(BookmakerModel);
+                bookie.material = AssetDatabase.LoadAssetAtPath<Material>(LookSetup.CharMat);
             }
 
             var bot = new GameObject("[PlaytestBot]").AddComponent<PlaytestBot>();

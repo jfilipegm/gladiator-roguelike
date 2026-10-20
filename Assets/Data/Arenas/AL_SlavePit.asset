@@ -1570,6 +1570,7 @@ MonoBehaviour:
   - {x: 9.59112, y: 0, z: 31.218899}
   - {x: -4.1109853, y: 0, z: -31.62047}
   - {x: 29, y: 0, z: 10}
+  secrets: 3
   barricades: []
   braziers: []
   spikeTraps: []

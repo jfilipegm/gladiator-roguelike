@@ -1,7 +1,7 @@
 # Progress
 
 **Current phase:** Phase 5 — expansion
-**Current milestone:** Phase 5.5 — weapon evolutions + tag synergies (branch `phase5-evolutions`, built and tested, PR waiting for the producer). v0.5.0 (the Provincial Pit + the playtest fixes) released 2026-10-20.
+**Current milestone:** none in progress. Phase 5.5 (weapon evolutions + tag synergies) merged and released as v0.6.0 on 2026-10-20. Next "Should" in CLAUDE.md §9: unlock variety (secret encounters, challenges) + Codex.
 **Last updated:** 2026-10-20
 
 **Repository:** https://github.com/jfilipegm/gladiator-roguelike (public, branch `main`, remote `origin`, `.blend` files via Git LFS). Work on a branch per milestone, push as you go, merge through a PR; release every playable build (`Tools/release`).
@@ -112,7 +112,7 @@
 - **PR #6** (https://github.com/jfilipegm/gladiator-roguelike/pull/6) merged (92b8774). Follow-ups left open: a second gladius (BACKLOG), C13, C14.
 - **v0.5.0 released 2026-10-20** (PRs #6 + #7): https://github.com/jfilipegm/gladiator-roguelike/releases/tag/v0.5.0. Linux 40 MB, Linux dev 71 MB, Windows 42 MB, macOS 50 MB (the build log's `errors=1` on the first build is the bridge timeout, as before). Smoke runs of the downloaded archives (`-bot -timed -botSeconds 40`): Linux as the Nobody (64 kills), as the knight (`-gladiator blood_knight`: 57 kills, 47 HP kill-healed), in the Provincial Pit (`-arena provincial_pit`: 74 kills, 5 bombs), and Windows under Wine as the Nobody (55 kills); all v0.5.0, clock ran to 36–37 s, 0 exceptions; their Profiling files deleted. macOS not run.
 
-## In progress — Phase 5.5 weapon evolutions + tag synergies (branch `phase5-evolutions`, target v0.6.0)
+## Done — Phase 5.5 weapon evolutions + tag synergies (branch `phase5-evolutions`, PR #8 merged 2026-10-20 with the producer's OK, release v0.6.0)
 - **Spec:** `docs/EVOLUTIONS.md` (7 evolutions, 6 tag synergies, 4 generic weapon twists + 2 new effect kinds), DECISIONS "Phase 5.5", CONCERNS C16.
 - **Steps:**
   1. Data and plumbing: `UpgradeDef` evolution fields, weapon tags, `TagSynergyDef` + `TagSynergies`, roller/rewards.
@@ -159,8 +159,11 @@
     - level 27, 8,441 kills, 7 chests, gifts 4/4; no weapon above level 5, so **0 evolutions**, Juggernaut on; Gorm at 68 % in phase 1 after ~57 s; hit-stops 1,210 = 51 s (C14).
   - **Stress `300 60 -evolved -mix`:** 228 fps avg; at 300 enemies 227 fps (4.40 ms, p95 7.21), gameplay 1.54 / 2.07 ms (budget 4); GC 278 B/s, a 9.5 KB first-panel one-off.
   - **`bot 600 -timed -evolved`** (CSV `Profiling/20261020_113502_bot_SlavePit.csv`): 364 fps avg; ≥ 250 enemies 220 fps (4.55 ms, p95 6.35), gameplay 1.79 / 2.21 ms; 4 evolutions, Wildfire + Bloodbath + Executioner; 886 spreads, 2,033 executions; **Gorm defeated ~20 s after his entrance**, run ended Survived at 8:20 (level 26, 9,673 kills). GC: the 215 KB victory screen + save (game over) and a 9.9 KB first-panel one-off. C16 updated with both boss numbers.
-- **PR #8** (https://github.com/jfilipegm/gladiator-roguelike/pull/8) open, waiting for the producer's OK.
-- **Left:** merge #8 only after the producer says so; then `Tools/release 0.6.0` (move the untracked `Assets/_Recovery/` out of Assets first, since the release script refuses untracked files under Assets/, and ask before deleting it) and smoke-run the archives. Untracked `Assets/_Recovery/` (Unity's scene backup from the 01:07 crash) and `mono_crash.*.blob`: never commit them.
+- **PR #8** (https://github.com/jfilipegm/gladiator-roguelike/pull/8) merged (341b5b3).
+- **v0.6.0 released 2026-10-20:** https://github.com/jfilipegm/gladiator-roguelike/releases/tag/v0.6.0.
+  - Archives: Linux 41 MB, Linux dev 72 MB, Windows 43 MB, macOS 51 MB. The build log's `errors=1` on the first build is the bridge timeout, as before.
+  - Smoke runs of the downloaded archives (`-bot -timed -botSeconds 40`), all v0.6.0, clock to 37–38 s, 0 exceptions: Linux as the Nobody (55 kills), as the knight in the Provincial Pit (89 kills, 94 HP kill-healed), with `-evolved` (71 kills, 4 evolutions, 5 Wildfire spreads, 15 executions), and Windows under Wine as the Nobody (54 kills). Their Profiling files were deleted. macOS not run.
+- **Unity's recovery scene** (`Assets/_Recovery/0.unity` + metas, written after the 01:07 crash) was moved out of Assets to `_Recovery_2026-10-20/` at the repo root, untracked, so the release could build. It's the producer's call whether to delete it. `mono_crash.mem.369056.1.blob` is untracked too: never commit either.
 - The Editor crashed while it was being closed (2026-10-20 01:07, GTK cleanup) and was relaunched at about 10:05. It came up ready with no backup-scene dialog.
 
 ## Known issues

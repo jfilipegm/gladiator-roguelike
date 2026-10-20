@@ -28,6 +28,7 @@ namespace Gladiator.Gameplay
             float scale = config.Magnitude(o.Rarity);
             if (d.kind == UpgradeKind.Weapon && d.weapon != null)
             {
+                if (d.evolvesFrom != null) { t.Append("Evolves ").Append(d.evolvesFrom.displayName).Append('\n').Append(d.weapon.description); return; }
                 if (o.Level <= 1) { t.Append(d.weapon.description); return; }
                 int step = o.Level - 2;
                 if (d.weapon.levels == null || step >= d.weapon.levels.Length) return;
@@ -48,6 +49,56 @@ namespace Gladiator.Gameplay
             {
                 if (t.Length > 0) t.Append('\n');
                 Effect(d.effects[i], scale, t);
+            }
+        }
+
+        const string EvoColor = "#FFC94A", TagColor = "#8CEBFF";
+
+        static CharBuffer Line(CharBuffer t, string color)
+        {
+            if (t.Length > 0) t.Append('\n');
+            return t.Append("<color=").Append(color).Append('>');
+        }
+
+        public static string TagName(UpgradeTag tag) => tag switch
+        {
+            UpgradeTag.Fire => "FIRE", UpgradeTag.Lightning => "LIGHTNING", UpgradeTag.Blood => "BLOOD", UpgradeTag.Curse => "CURSE",
+            UpgradeTag.Summon => "SUMMON", UpgradeTag.Heavy => "HEAVY", UpgradeTag.Crit => "CRIT", UpgradeTag.Gold => "GOLD",
+            UpgradeTag.Movement => "MOVEMENT", UpgradeTag.Defense => "DEFENSE", UpgradeTag.Xp => "XP", _ => "TAG",
+        };
+
+        /// <summary>
+        /// Phase 5.5 hints under a card's description (rich text, allocation-free): a weapon's evolution pairing, what a
+        /// catalyst Boon evolves, and how far a new upgrade takes each tag toward its synergy ("FIRE 2/3: Wildfire").
+        /// </summary>
+        public static void Hints(in CardOffer o, BuildState build, UpgradeCatalog catalog, CharBuffer t)
+        {
+            var d = o.Def;
+            if (d == null || build == null || catalog == null || d.kind == UpgradeKind.Consumable) return;
+            var ups = catalog.upgrades;
+            for (int i = 0; ups != null && i < ups.Length; i++)
+            {
+                var e = ups[i];
+                if (e == null || e.evolvesFrom == null || e.catalyst == null || build.LevelOf(e) > 0) continue;
+                if (d.kind == UpgradeKind.Weapon && e.evolvesFrom == d)
+                    Line(t, EvoColor).Append("Lv ").Append(d.maxLevel, 0).Append(" + ").Append(e.catalyst.displayName).Append(" = evolution</color>");
+                else if (d == e.catalyst && o.IsNew && build.LevelOf(e.evolvesFrom) > 0)
+                {
+                    Line(t, EvoColor).Append("Evolves your ").Append(e.evolvesFrom.displayName);
+                    if (build.LevelOf(e.evolvesFrom) >= e.evolvesFrom.maxLevel) t.Append(": open a chest!</color>");
+                    else t.Append(" at Lv ").Append(e.evolvesFrom.maxLevel, 0).Append("</color>");
+                }
+            }
+            // a new upgrade (or an evolution's new tags) moves its tags toward their synergies
+            UpgradeTag gain = d.evolvesFrom != null ? d.tags & ~d.evolvesFrom.tags : o.IsNew ? d.tags : UpgradeTag.None;
+            var syns = catalog.synergies;
+            for (int i = 0; gain != UpgradeTag.None && syns != null && i < syns.Length; i++)
+            {
+                var s = syns[i];
+                if (s == null || (gain & s.tag) == 0 || build.HasSynergy(s)) continue;
+                int after = build.TagCount(s.tag) + 1;
+                if (after >= s.count) Line(t, TagColor).Append(TagName(s.tag)).Append(' ').Append(s.count, 0).Append('/').Append(s.count, 0).Append(": ").Append(s.displayName).Append("!</color>");
+                else Line(t, TagColor).Append(TagName(s.tag)).Append(' ').Append(after, 0).Append('/').Append(s.count, 0).Append(": ").Append(s.displayName).Append("</color>");
             }
         }
 
@@ -88,6 +139,15 @@ namespace Gladiator.Gameplay
                     break;
                 case EffectKind.SlideTrail:
                     t.Append("Slides leave a trail that applies ").Append(Name(e.status)).Append(" (").Append(e.power * scale, 1).Append("/s)");
+                    break;
+                case EffectKind.StatusSpread:
+                    t.Append("Every ").Append(e.duration, 1).Append(" s ").Append(Adj(e.status)).Append(" enemies spread it to a neighbour");
+                    break;
+                case EffectKind.ExecuteOnCrit:
+                    t.Append("Crits kill enemies below ").Append(e.bonus * 100f, 0).Append("% HP (not bosses)");
+                    break;
+                case EffectKind.GroundOnHit:
+                    t.Append("Hits leave ground that applies ").Append(Name(e.status)).Append(" (").Append(e.power * scale, 1).Append("/s)");
                     break;
             }
         }

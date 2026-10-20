@@ -53,6 +53,13 @@ namespace Gladiator.UI
         readonly UpgradeIconView[] _tileIcon = new UpgradeIconView[StripTiles]; // playtest: icons, not letters
         UpgradeIconView _loanIcon;
         int _lastBuildVersion = -1;
+        // Phase 5.5: a weapon tile whose evolution is ready pulses gold ("EVO!"); evolved ones read "EVO"; active synergies sit in a row of chips below
+        readonly bool[] _tileReady = new bool[WeaponTiles];
+        readonly Color[] _tileColor = new Color[WeaponTiles];
+        const int SynergyChips = 6;
+        readonly Image[] _chip = new Image[SynergyChips];
+        readonly TextMeshProUGUI[] _chipText = new TextMeshProUGUI[SynergyChips];
+        static readonly Color ChipColor = new Color(0.06f, 0.16f, 0.2f, 0.85f), ChipText = new Color(0.55f, 0.95f, 1f);
         PlayerBuild _build;
         static readonly Color TileInner = new Color(0.1f, 0.12f, 0.15f, 0.92f);
         // interactables (M2.7): prompt at the bottom + floating price tags over ready chests / the altar
@@ -152,9 +159,15 @@ namespace Gladiator.UI
                 var inner = _tileInner[i] = UiFactory.Image("Inner", _tileBorder[i].transform, Color.clear, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(44, 44), PixelIcons.White);
                 _tileIcon[i] = new UpgradeIconView(inner.transform, "Icon", new Vector2(0.5f, 0.5f), Vector2.zero, 40f, lively: false);
                 _tileGlyph[i] = UiFactory.Text("Glyph", inner.transform, "", 22, Color.white, TextAlignmentOptions.Center, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 4), new Vector2(44, 30), font, fontMaterial);
-                _tileLevel[i] = UiFactory.Text("Level", inner.transform, "", 16, Gold, TextAlignmentOptions.BottomRight, new Vector2(1, 0), new Vector2(1, 0), new Vector2(-2, 0), new Vector2(30, 20), font, fontMaterial);
+                _tileLevel[i] = UiFactory.Text("Level", inner.transform, "", 16, Gold, TextAlignmentOptions.BottomRight, new Vector2(1, 0), new Vector2(1, 0), new Vector2(-2, 0), new Vector2(44, 20), font, fontMaterial);
                 PreSize(_tileGlyph[i], "WWWW");
-                PreSize(_tileLevel[i], "88");
+                PreSize(_tileLevel[i], "EVO!");
+            }
+            for (int j = 0; j < SynergyChips; j++)
+            {
+                _chip[j] = UiFactory.Image("Synergy" + j, canvas, Color.clear, tl, tl, new Vector2(24 + j * 132, -228), new Vector2(126, 28), PixelIcons.White);
+                _chipText[j] = UiFactory.Text("Name", _chip[j].transform, "", 17, ChipText, TextAlignmentOptions.Center, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 1), new Vector2(122, 26), font, fontMaterial);
+                PreSize(_chipText[j], "EXECUTIONER!");
             }
 
             var mid = new Vector2(0.5f, 0.5f);
@@ -338,6 +351,8 @@ namespace Gladiator.UI
             var player = Player.Main;
             float now = Time.unscaledTime;
             for (int i = 0; i < StripTiles; i++) _tileIcon[i].Tick(now); // a rare shine; frames change a few times a minute
+            for (int i = 0; i < WeaponTiles; i++)
+                if (_tileReady[i]) _tileBorder[i].color = Color.Lerp(_tileColor[i], Color.white, 0.5f + 0.5f * Mathf.Sin(now * 6f));
             _loanIcon.Tick(now);
             if (run != null)
             {
@@ -541,7 +556,27 @@ namespace Gladiator.UI
             _lastBuildVersion = state.Version;
             FillRow(state, UpgradeKind.Weapon, 0, WeaponTiles, WeaponTileInner);
             FillRow(state, UpgradeKind.Boon, WeaponTiles, StripTiles, TileInner);
+            for (int j = 0; j < SynergyChips; j++)
+            {
+                bool on = j < state.SynergyCount;
+                _chip[j].color = on ? ChipColor : Color.clear;
+                _chipText[j].text = on ? state.GetSynergy(j).displayName : "";
+            }
         }
+
+        /// <summary>Phase 5.5: the evolution card of owned weapon card `d` that is ready to be offered (null if none).</summary>
+        UpgradeDef ReadyEvolution(BuildState state, UpgradeDef d)
+        {
+            var ups = _build.catalog != null ? _build.catalog.upgrades : null;
+            for (int i = 0; ups != null && i < ups.Length; i++)
+                if (ups[i] != null && ups[i].evolvesFrom == d && UpgradeRoller.IsEvolutionReady(ups[i], state)) return ups[i];
+            return null;
+        }
+
+        /// <summary>Tests: what weapon tile `i`'s level label reads ("EVO!" when its evolution is ready).</summary>
+        public string TileLevel(int i) => _tileLevel[i].text;
+        /// <summary>Tests: the name on synergy chip `j` ("" when empty).</summary>
+        public string SynergyChip(int j) => _chipText[j].text;
 
         void FillRow(BuildState state, UpgradeKind kind, int first, int end, Color inner)
         {
@@ -554,11 +589,16 @@ namespace Gladiator.UI
                 _tileBorder[k].color = rarity;
                 _tileInner[k].color = inner;
                 _tileGlyph[k].text = _tileIcon[k].Set(o.Def, rarity, k * 0.137f) ? "" : o.Def.glyph;
-                _tileLevel[k].SetText("{0}", o.Level);
+                bool ready = kind == UpgradeKind.Weapon && ReadyEvolution(state, o.Def) != null;
+                if (o.Def.evolvesFrom != null) _tileLevel[k].text = "EVO";
+                else if (ready) _tileLevel[k].text = "EVO!";
+                else _tileLevel[k].SetText("{0}", o.Level);
+                if (kind == UpgradeKind.Weapon) { _tileReady[k] = ready; _tileColor[k] = rarity; }
                 k++;
             }
             for (; k < end; k++)
             {
+                if (kind == UpgradeKind.Weapon) _tileReady[k] = false;
                 _tileBorder[k].color = Color.clear;
                 _tileInner[k].color = Color.clear;
                 _tileGlyph[k].text = "";

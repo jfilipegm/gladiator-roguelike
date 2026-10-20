@@ -1,7 +1,7 @@
 # Progress
 
 **Current phase:** Phase 5 — expansion
-**Current milestone:** arena ladder fixes (branch `phase5-arena-ladder`, target v0.8.0): the producer's rule that every arena is bigger than the last and not only round (`docs/GDD.md`), the Provincial Pit rebuilt as a 100 × 70 m octagon, and the spike-trap fix. Then Arena 3. v0.7.0 (unlock variety + Codex) released 2026-10-20.
+**Current milestone:** none in progress. The arena ladder fixes (the Provincial Pit rebuilt as a 100 × 70 m octagon, the spike-trap fix) merged and released as v0.8.0 on 2026-10-20. Next: Arena 3, the Stone Amphitheater + the Beast Lord (bigger again: ≥ 8,000 m², a D-shape per `docs/GDD.md`).
 **Last updated:** 2026-10-20
 
 **Repository:** https://github.com/jfilipegm/gladiator-roguelike (public, branch `main`, remote `origin`, `.blend` files via Git LFS). Work on a branch per milestone, push as you go, merge through a PR; release every playable build (`Tools/release`).
@@ -222,7 +222,7 @@
   - The first smoke attempt idled at the menu: the shell (zsh) passed an unquoted `$ARGS` as one argument, so the game never saw `-bot`. Not a game bug; TOOLING's recipe now says to spell the arguments out.
 - Untracked `_Recovery_2026-10-20/` (repo root) and `mono_crash.*.blob`: never commit them; deleting them is the producer's call.
 
-## In progress — arena ladder fixes (branch `phase5-arena-ladder`, target v0.8.0)
+## Done — arena ladder fixes (branch `phase5-arena-ladder`, PR #10 merged 2026-10-20 with the producer's OK, release v0.8.0)
 - **Producer feedback (2026-10-20, from screenshots):**
   1. The Provincial Pit (~49 m circle, ≈ 1,900 m²) was smaller than the Slave Pit (84 × 70 m oval, ≈ 4,400 m²). Every arena must be bigger than the previous one, and arenas aren't limited to circles/ovals. Rule and size targets: `docs/GDD.md`, DECISIONS "Arena ladder". The producer said "Rebuild the Provincial pit first please".
   2. The spike traps' spikes came up off their grate.
@@ -239,7 +239,11 @@
     - screenshots `p57_top`, `p57_persp`, `p57_persp2`, `p57_play`.
   - `GameInfo.Version` 0.8.0; release notes `docs/releases/v0.8.0.md`.
 - **Verification:** EditMode 77/77, PlayMode 128/128 (2026-10-20).
-- **PR #10** (https://github.com/jfilipegm/gladiator-roguelike/pull/10) open, waiting for the producer's OK. After it: merge, `Tools/release 0.8.0`, smoke-run the archives (spell the arguments out), record here; then Arena 3.
+- **PR #10** (https://github.com/jfilipegm/gladiator-roguelike/pull/10) merged (a27afc0).
+- **v0.8.0 released 2026-10-20:** https://github.com/jfilipegm/gladiator-roguelike/releases/tag/v0.8.0.
+  - Archives: Linux 42 MB, Linux dev 72 MB, Windows 44 MB, macOS 51 MB. The build log's `errors=1` on the first build is the bridge timeout, as before.
+  - Smoke runs of the downloaded archives (`-bot -timed -botSeconds 40`), all v0.8.0, clock to 37 s, 0 exceptions: Linux as the Nobody in the Slave Pit (56 kills), as the knight in the new Provincial Pit (69 kills, 69 HP kill-healed), as the Nobody in the new Provincial Pit (38 kills), and Windows under Wine as the Nobody in the new Provincial Pit (31 kills). Their Profiling files were deleted. macOS not run.
+  - **C18 data point:** in 40 s the Nobody killed 56 in the Slave Pit but 31–38 in the new Provincial Pit (the old one gave the knight 97): the opening fills up more slowly on the big floor. Levers: `AL_ProvincialPit.spawnMaxDistance` 55 → 40, `maxAlive`.
 - **Bot runs (dev build, `bot 600 -timed -arena provincial_pit`), 0 exceptions in both:**
   - before the spawn limit: 421 fps avg; ≥ 250 enemies 228 fps (4.38 ms, p95 6.05), gameplay 1.77 / 2.18 ms; max 300; GC 401 B/s (the victory screen; 59 B/s-class otherwise); **Champion defeated**, Survived at 541 s, level 26, 7,217 kills.
   - with `spawnMaxDistance` 55: 373 fps avg; ≥ 250 enemies 197 fps (5.07 ms, p95 6.59), gameplay 1.91 / 2.41 ms; max 301; GC 59 B/s; Champion at 64 %, level 26, 7,245 kills (a weaker build: 281 bombs, 56 s of hit-stop).

@@ -1,7 +1,7 @@
 # Progress
 
 **Current phase:** Phase 5 — expansion
-**Current milestone:** none in progress. The arena ladder fixes (the Provincial Pit rebuilt as a 100 × 70 m octagon, the spike-trap fix) merged and released as v0.8.0 on 2026-10-20. Next: Arena 3, the Stone Amphitheater + the Beast Lord (bigger again: ≥ 8,000 m², a D-shape per `docs/GDD.md`).
+**Current milestone:** Phase 5.8 — Arena 3, the Stone Amphitheater + the Beast Lord (branch `phase5-arena3`, spec `docs/ARENAS.md` §3 + `docs/BOSSES.md`, target v0.9.0). v0.8.0 (the Provincial Pit rebuilt as a 100 × 70 m octagon + the spike-trap fix) released 2026-10-20.
 **Last updated:** 2026-10-20
 
 **Repository:** https://github.com/jfilipegm/gladiator-roguelike (public, branch `main`, remote `origin`, `.blend` files via Git LFS). Work on a branch per milestone, push as you go, merge through a PR; release every playable build (`Tools/release`).
@@ -248,6 +248,46 @@
   - before the spawn limit: 421 fps avg; ≥ 250 enemies 228 fps (4.38 ms, p95 6.05), gameplay 1.77 / 2.18 ms; max 300; GC 401 B/s (the victory screen; 59 B/s-class otherwise); **Champion defeated**, Survived at 541 s, level 26, 7,217 kills.
   - with `spawnMaxDistance` 55: 373 fps avg; ≥ 250 enemies 197 fps (5.07 ms, p95 6.59), gameplay 1.91 / 2.41 ms; max 301; GC 59 B/s; Champion at 64 %, level 26, 7,245 kills (a weaker build: 281 bombs, 56 s of hit-stop).
   - Kills match the old arena's runs within build-to-build noise, so they can't show horde pressure (the bot's DPS caps them). C18 tracks density for the producer's playtest.
+
+## In progress — Phase 5.8 Arena 3, the Stone Amphitheater (branch `phase5-arena3`, target v0.9.0)
+- **Spec:** `docs/ARENAS.md` §3, `docs/BOSSES.md` "The Beast Lord", DECISIONS "Phase 5.8". The producer said "You can proceed" after v0.8.0 (they had asked for the Provincial Pit rebuild first, then Arena 3).
+- **Done (committed on the branch):**
+  - **Spec** (a16bc1b).
+  - **Kit + runtime plumbing** (ab49548), compiles, **untested**:
+    - `BlenderSrc/environment/amphitheater.py` (`part=terrain|structures|props`), exported and reviewed (bowl, tunnel, statue): `SM_AmphiFloor` (4,903 tris), `SM_AmphiCavea` (the seating bowl, one mesh along the D with three tunnel gaps, 4,860), `SM_AmphiRim` (ground disc at y −0.15), `SM_Pulpitum` (40 × 5.5 × 1.2), `SM_AmphiStage_4m` (4.6 wide, 7.5 tall, front face at local z 0), `SM_CageGate` (opening 3.2 × 3.0, `Bars` child), `SM_GreatGate` (opening 3.4 × 5.0, `DoorL/DoorR`), `SM_AmphiTunnel` (5 m chunk of the bowl with a 3.2 × 2.6 passage, `DoorL/DoorR`), `SM_AmphiColumn` (6.6 m, 1.7 m footprint), `PR_Statue`.
+    - The D is built in Unity XZ and mapped through `B(x, z) = (−x, −z)` because it isn't point-symmetric.
+    - `BeastCages` (`Assets/Scripts/Gameplay/Arena/BeastCages.cs`): `Open(i, count)`, `OpenAll`, `NearestIdle`, automatic releases every `every` s from `first` (stops when `RunState.TimerDone`), pack size `pack.x → pack.y` over the timer.
+    - `ArenaLayoutDef`: `cages` (x, y, z, yaw), `cageBeast`, `cageFirst`, `cageEvery`, `cagePack`, `solidWalls` (x, z, yaw, width; Environment-layer invisible stone), `solidWallHeight`, `eliteEvery`. `ArenaBuilder` places cages (Bars un-static) and the stone, and passes `eliteEvery` → `Director.eliteEveryOverride`.
+- **Why the bowl is decor + invisible stone:** the nav bake turns a solid MeshCollider's bounds into one box obstacle, so a one-piece bowl would block the whole floor.
+- **Resume here (2026-10-20, context compacted) — the plan with its numbers (Unity XZ, metres):**
+  1. **`Assets/Editor/Setup/AmphitheaterLayout.cs`** (like `ProvincialPitLayout`), sharing `amphitheater.py`'s constants: `AX 60` (half width), `ZN 44` (stage wall line), `ZC 20` (curve starts), `BZ 64` (curve depth; apex z −44); curve point `(AX cos t, ZC − BZ sin t)`, t ∈ [0, π]; outward normal ∝ `(cos t / AX, −sin t / BZ)`.
+     - `outline` = the D inset 1.1 (north z 42.9, sides ±58.9, curve semi-axes 58.9 / 62.9, ~48 curve points); play area ≈ 8,500 m² (Provincial 6,274). `tier 2`, `enemyHpMul 1.5`, `playerDamageTakenMul 1.25`, `fog (60, 280)`, `maxAlive 320`, `spawnMaxDistance 55`, `eliteEvery 60`, `playerSpawn (0, 0.1, −12)` yaw 0, sun e.g. (40, −20, 0).
+     - Pieces: floor (Walkable), cavea + rim (Decor), pulpitum (Walkable) at (0, 0, 41.25) yaw 180 spanning x −20..20, z 38.5..44; `SM_Stairs` front centre at (0, 0, 36.5) yaw 180 and the ends at (±22, 0, 41.25) yaw 90 / 270 (origin = low edge, rises toward local −Z).
+     - **Stage wall:** 27 slots across x −60..60 (w 4.444, scale 0.966): slot k centre x = −60 + 4.444 (k + 0.5) at z 44, yaw 180 (model +Z → south). Slot 13 = `SM_GreatGate` (gate 0, the boss's); slots 3, 7, 19, 23 (x ≈ ∓44.4, ∓26.7) = cages (`layout.cages`, y 0); the rest `SM_AmphiStage_4m` (Solid).
+     - **Tunnels** (gates 1–3): curve params t = π/2 − 0.75, π/2, π/2 + 0.75 (points ≈ (40.9, −26.8), (0, −44), (−40.9, −26.8)), at the wall-line point with yaw = YawOf(−outward normal).
+     - **`solidWalls`:** one per bowl path segment (east side z 44→20, the curve, west side), yaw facing inward, height 8.4; the stage pieces are already solid.
+     - **Columns:** 12 `SM_AmphiColumn` on an ellipse a 30, b 22 round (0, 0), every 30° from 15°.
+     - **Statues:** `PR_Statue` (Solid) at (±14, 32) and (±46, −16).
+     - **Platforms** (`SM_ProvPlatform` + climbs, as in the Provincial layout's `Platform()`): (−42, 4) yaw 90 stairs; (42, 4) yaw 270 stairs; (±24, −30) facing the centre (yaw ±38.7) with `SM_Ramp`.
+     - **Braziers** on the pulpitum: (±6, 1.2, 42.5), (±17, 1.2, 42.5).
+     - **Chests:** (0, −18), (0, 12), (±14, 0), (±36, −20), (±50, 12), (±30, 30), (±10, −36), (±52, 32).
+     - **Altars:** (±10, 1.2, 41), plus one on a platform. No spike traps, no barricades, no secrets yet.
+     - **Crowd:** a zone per bowl path segment per tier k = 0..7 at outward offset 1.0 + 0.8k, height 3.0 + 0.45 (k + 1), size (segment length × 0.9, 0.4), ≈ 0.85 per metre (~1,700 in all). Check `CrowdRenderer` draws more than 1,023 (one `RenderMeshInstanced` call).
+  2. **`AmphitheaterSetup.cs`** (like `ProvincialPitSetup`): scene `Assets/Scenes/Arenas/StoneAmphitheater.unity`, run `RD_StoneAmphitheater` (tier 2), unlock `UL_StoneAmphitheater` (`DefeatBoss champion`), spawn table `ST_StoneAmphitheater` (the Provincial's eight + Murmillo + Net-Thrower), add the run to `ProvincialPitSetup.AllRuns` (the menu) and the scene to `BuildScripts` (release + dev scene lists).
+  3. **Enemies:**
+     - **Murmillo:** `ShieldBearer`, data only; HP ~3× the Thug, block 90 %.
+     - **Net-Thrower:** `Lobber` + new `EnemyDef.lobNet`. `EnemyProjectiles.Lob` lands a net: `PlayerMotor.Slow(0.1, 1.2)` if the player is inside and on the ground (Slow clamps at 0.1, so "caught", not a hard root; update the spec wording). Draw the net (reuse the `WP_Net` mesh) in flight and on the ground for 1.2 s.
+     - **War Boar** (`layout.cageBeast`): `Dasher` + new `EnemyDef.flank` (false: line up and dash from range, dash ~14 m, windup 0.7) + `trampleMul` (damage to enemies in the dash lane, once per dash). Quadruped model like the Pit Cur.
+     - Models in `BlenderSrc/enemies/` (≤ 300 tris; review + 64 px silhouette).
+  4. **The Beast Lord:** `BD_BeastLord`, model `EN_BeastLord` (~3.3 m, lion-pelt hood, long goad-spear, ≤ 2,500 tris).
+     - Attacks: the existing cone (Bash) and lane (Whip, with Slow); a new `BossAttack.Pounce` (circle on the player, he leaps there, 0.8 s recovery).
+     - The beast call uses `BeastCages.NearestIdle` / `Open`; phase 2 `OpenAll`. Add the needed `BossDef` flags. Boars despawn on his defeat.
+  5. **Codex:** append the new bestiary entries in `CodexSetup` (the bestiary is created once: append the missing ones), re-bake the portraits, rebuild the menu.
+  6. **Tests:**
+     - `AmphitheaterTests`: locked → unlocked by the Champion; tier 2; the D bigger than Arena 2; cages release boars; a boar tramples.
+     - Enemy tests: the Murmillo blocks; a net catches a standing player, not a jumping one.
+     - `BeastLordTests`.
+     - Full suites, two 10-minute bot runs, release notes `v0.9.0`, `GameInfo.Version` 0.9.0, PR → ask the producer.
 
 ## Known issues
 - **Residual GC (target 0 B/frame, met in steady state):** the 70–85 KB one-offs in paused card panels (v0.6.0/0.7.0) are fixed in Phase 5.6: the description buffers are pre-sized to 400 chars. A 200 s check run had none; the first level-up allocates ~7.5–9.9 KB once (paused; a hidden pre-draw of the cards didn't remove it; BACKLOG), the boss entrance 1.8 KB, the victory screen + save write ~238 KB (game over). Small first-occurrence allocations (≤ 1.2 KB) in the first minutes.

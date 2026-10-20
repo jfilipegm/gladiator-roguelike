@@ -4,7 +4,7 @@ namespace Gladiator.Core
     public static class GameInfo
     {
         /// <summary>Bumped in the PR that cuts a GitHub release; <c>Tools/release</c> refuses a tag that doesn't match.</summary>
-        public const string Version = "0.8.0";
+        public const string Version = "0.9.0";
         public const int SaveVersion = 1;
 
         /// <summary>"v0.1.0", or "v0.1.0 dev" in development builds and the Editor.</summary>

@@ -46,6 +46,6 @@ interaction, ≥ 2 phases, a memorable entrance, personality.
 7. **Call the Beasts (every ~20 s):** blows the horn, "THE PENS OPEN!": the nearest cage opens and 3–5 war boars charge out (plus two Pit Curs). The boars trample his own horde too.
 8. **Phase 2 — "Feed them!" (at 50 % HP):** roars (invulnerable 1.5 s), **every cage opens at once** (a stampede from all four), he moves and attacks 25 % faster, and the Pounce comes twice in a row (re-aiming between).
 9. **Arena interaction:** the cages (his beasts), the stage platform (he pounces onto it after you), the columns and statues (cover from a stampede: a boar stops dead on stone). Spike traps and barricades don't exist here.
-10. **Defeat:** slow-mo, "THE BEAST LORD FALLS!", the beasts scatter (every boar despawns), the crowd goes wild, a pick of 3 Rare-or-better upgrades, victory screen.
+10. **Defeat:** slow-mo, "THE BEAST LORD FALLS!", the beasts scatter (every enemy left is dragged off), the crowd goes wild, a pick of 3 Rare-or-better upgrades, victory screen.
 
 **Tunables (`BossDef BD_BeastLord`):** HP, speeds, every attack's wind-up / damage / size / weight, pounce radius / flight time / recovery, beast-call interval and pack size, phase threshold, phase-2 speed-up and pounce count.

@@ -319,3 +319,16 @@ One line each: what, and why. Newest at the bottom of each section.
 - **New rule: beast cages that trample everyone.** Arena 1 had mud and fire, Arena 2 spike traps that hurt everyone; Arena 3's hazard is alive and moves in lanes, and like the traps it's a tool against the horde as much as a threat.
 - **New enemies are mostly data on existing behaviours** (Murmillo = ShieldBearer, Net-Thrower = Lobber + net, War Boar = Dasher without flanking + trample); new code only for the net landing, the trample and the cages.
 - **The Beast Lord reuses the boss controller's cone, lane and circle telegraphs; the one new attack is the Pounce** (he moves to the circle). The beasts come through the cages, not the gates.
+- **The numbers (all in data, tunable):**
+  - **Arena:** 320 alive at most (300 elsewhere), ring spawns within 55 m of the player, an elite every 60 s, enemy HP ×1.5, damage taken ×1.25, Renown ×2 (tier 2). Cages: the first at 1:15, then every 40 s, packs of 3 growing to 6 over the timer.
+  - **Murmillo:** 135 HP, 2.6 m/s, blocks 90 % over a 130° front, takes 15 % knockback, 7 XP; from 1:10, at most 18.
+  - **Net-Thrower:** 26 HP, keeps 7–11 m away, a 1.7 m net every 4.5 s for 6 damage; from 1:40, at most 8.
+  - **War Boar:** 60 HP, 4.2 m/s, a 0.7 s lane, then 17 m/s over 14 m: 16 to the player, ×3 to every enemy in the lane.
+  - **The Beast Lord:** 15,000 HP (the Champion 13,000). Sweep 5 m / 150° / 0.8 s / 24; Hook Thrust 11 m / 0.6 s / 20 + Slow ×0.5 for 2 s; Pounce 3.5 m, 1 s wind-up (the circle follows for the first 70 %), a 0.55 s flight scaled by distance, 28 + knockback, 0.8 s to get up. Horn every 20 s: the nearest cage (3–5 boars) + two curs. Phase 2 at 50 %: ×1.25 speed, every cage opens (3 boars each), two pounces in a row.
+- **The net is a Slow ×0.1, not a full Root.** The player keeps a crawl and can still jump, so a net in a crowd is a punishment, not a guaranteed death; it reuses `PlayerMotor`'s Slow instead of a new status. A player in the air can't be caught.
+- **The boar's charge hurts the horde (×3) and skips other boars and scripted enemies (the boss).** That makes the cages a tool as much as a hazard, like Arena 2's spike traps; a boar that hit the Beast Lord would be a free win.
+- **The landing is the pounce's one hit.** His body contact is off while he's in the air (it was hitting a second time as he came down onto you).
+- **At the Beast Lord's fall every enemy left is dragged off** (`BossDef.scatterOnDefeat`), not only the boars: a stampede still running through the reward screen would be noise.
+- **The run summary names the arena's boss from its `BossDef`** (`shortName`, `deathLine`, `victoryLine`); it said Gorm in every arena.
+- **The seating bowl is decor; invisible stone along the podium is what blocks.** Each solid collider becomes a nav obstacle box, and a curved mesh collider would bake as one huge box over the floor.
+- **The crowd renderer draws in batches of 1,023** (the `RenderMeshInstanced` limit per call), so the bowl's 1,711 spectators are two draws.

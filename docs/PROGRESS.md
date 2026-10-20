@@ -1,7 +1,7 @@
 # Progress
 
 **Current phase:** Phase 5 — expansion
-**Current milestone:** none in progress. Phase 5.5 (weapon evolutions + tag synergies) merged and released as v0.6.0 on 2026-10-20. Next "Should" in CLAUDE.md §9: unlock variety (secret encounters, challenges) + Codex.
+**Current milestone:** Phase 5.6 — unlock variety (challenges, secrets, a Renown market) + Codex (branch `phase5-unlocks`, spec `docs/UNLOCKS.md`, target v0.7.0). v0.6.0 (evolutions + synergies) released 2026-10-20.
 **Last updated:** 2026-10-20
 
 **Repository:** https://github.com/jfilipegm/gladiator-roguelike (public, branch `main`, remote `origin`, `.blend` files via Git LFS). Work on a branch per milestone, push as you go, merge through a PR; release every playable build (`Tools/release`).
@@ -165,6 +165,16 @@
   - Smoke runs of the downloaded archives (`-bot -timed -botSeconds 40`), all v0.6.0, clock to 37–38 s, 0 exceptions: Linux as the Nobody (55 kills), as the knight in the Provincial Pit (89 kills, 94 HP kill-healed), with `-evolved` (71 kills, 4 evolutions, 5 Wildfire spreads, 15 executions), and Windows under Wine as the Nobody (54 kills). Their Profiling files were deleted. macOS not run.
 - **Unity's recovery scene** (`Assets/_Recovery/0.unity` + metas, written after the 01:07 crash) was moved out of Assets to `_Recovery_2026-10-20/` at the repo root, untracked, so the release could build. It's the producer's call whether to delete it. `mono_crash.mem.369056.1.blob` is untracked too: never commit either.
 - The Editor crashed while it was being closed (2026-10-20 01:07, GTK cleanup) and was relaunched at about 10:05. It came up ready with no backup-scene dialog.
+
+## In progress — Phase 5.6 unlock variety + Codex (branch `phase5-unlocks`, target v0.7.0)
+- **Spec:** `docs/UNLOCKS.md`; DECISIONS "Phase 5.6". The producer said "start the next milestone" on 2026-10-20.
+- **Steps:**
+  1. Meta plumbing: `UnlockDef.category/renownCost/renownBounty`, conditions `RunKills/Evolve/SynergiesFound`, `MetaProgress.Progress/Buy`, save fields, `RunSummary` extras, EditMode tests.
+  2. Content: Sling, Net, Gorm's Whip (patterns: farthest target, tip sweet spot); Boons Loaded Dice, Gilded Palm, Winged Sandals, Wax Tablet; synergies Whirlwind, Midas, Prodigy; unlock assets (setup script); models + icons.
+  3. Secrets: the Golden Rat (Slave Pit), the Bookmaker (Provincial Pit), models, SFX.
+  4. Codex 2.0 (7 tabs, NEW markers, Market, baked portraits); end-screen unlock lines.
+  5. Tests, bot run, release notes v0.7.0, PR → ask the producer.
+- **Done:** spec.
 
 ## Known issues
 - **Residual GC (target 0 B/frame, met in steady state):** one 85 KB allocation once in a paused card panel (v0.6.0 Slave Pit bot run, 77 s; likely the card text's buffers growing for the longer hint lines, unconfirmed); the first level-up allocates ~7.5–9.9 KB once (paused; a hidden pre-draw of the cards didn't remove it; BACKLOG), the boss entrance 1.8 KB, the victory screen + save write ~238 KB (game over). Small first-occurrence allocations (≤ 1.2 KB) in the first minutes.

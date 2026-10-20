@@ -174,9 +174,53 @@
   3. Secrets: the Golden Rat (Slave Pit), the Bookmaker (Provincial Pit), models, SFX.
   4. Codex 2.0 (7 tabs, NEW markers, Market, baked portraits); end-screen unlock lines.
   5. Tests, bot run, release notes v0.7.0, PR → ask the producer.
-- **Done:** spec.
+- **Resume here (2026-10-20, context compacted):** everything is committed and pushed on `phase5-unlocks`, and the release notes are final (`docs/releases/v0.7.0.md`). Next:
+  1. Open the PR `phase5-unlocks` → main ("Phase 5.6: unlock variety + Codex (v0.7.0)"), bind it with ccd_pr, and **ask the producer before merging**.
+  2. After their OK: merge, `Tools/release 0.7.0`, smoke-run the archives (Linux Nobody / knight in the Provincial Pit, Wine), record in PROGRESS.
+  - Untracked `_Recovery_2026-10-20/` (repo root, moved out of Assets) and `mono_crash.*.blob`: never commit them, and ask before deleting.
+- **Done (committed on the branch):**
+  - **Spec** (317f253).
+  - **Meta plumbing** (07c7b86):
+    - categories, Market purchases, bounties;
+    - conditions `RunKills/Evolve/SynergiesFound`;
+    - progress bars, Codex-seen;
+    - save records (`bestRunKills`, `evolutions`, `synergies`, `enemyKills`, `upgradesTaken`, `codexSeen`);
+    - per-enemy-type run kills;
+    - EditMode `UnlockVarietyTests` 5/5.
+  - **Content** (9b68ed6):
+    - Sling (`targetFarthest`), Net (Root via `hitEffects`), Gorm's Whip (`tipLength` always crits, `spreadStrikes`);
+    - 4 Boons and 3 synergies;
+    - `UnlockSetup` (11 unlocks); every slide trail lays its own mark (fix: Whirlwind's Slow was dropped beside Blood Slide);
+    - models WP_SlingStone / WP_Net (iteration 2) / WP_Whip; 10 icons (4 redrawn);
+    - PlayMode `UnlockContentPlayTests` 5/5.
+  - **Secrets** (35f8829):
+    - `GoldenRat` (Slave Pit) and `Bookmaker` (Provincial Pit) placed by `ArenaLayoutDef.secrets`;
+    - `RunObjective` + HUD "WAGER n / N s";
+    - PR_GoldenRat (tail redone, shown ×1.6 after the in-game review), CH_Bookmaker (ring made deeper/thicker after review);
+    - SFX squeak/quill;
+    - PlayMode `SecretPlayTests` 4/4.
+  - **Codex** (d7c8c38):
+    - 7 tabs from data, baked portraits (`CodexSetup`), NEW markers + menu count, Market, end-screen unlock lines;
+    - "…" hints replaced (the font lacks U+2026);
+    - PlayMode `CodexPlayTests` 4/4.
+  - **Screenshots:** `p56_golden_rat`, `p56_bookmaker`, `p56_wager`, `p56_menu`, `p56_codex_*`, `p56_end_secret`.
+- **Verification:** EditMode 76/76, PlayMode 127/127 (2026-10-20). `GameInfo.Version` 0.7.0; dev build.
+- **Bot runs (v0.7.0 dev build), 0 exceptions in both:**
+  - **Slave Pit, `bot 600 -timed`:**
+    - 397 fps avg; ≥ 250 enemies 199 fps (5.02 ms, p95 6.53), gameplay 1.89 / 2.38 ms; max 300;
+    - GC 170 B/s;
+    - level 30, 8,927 kills, 7 chests; Gorm at 27 % in phase 2 (29 attacks, 3 guard waves); Gorm's Whip L5 in the build; Bloodbath on.
+  - **Provincial Pit, `bot 600 -timed -arena provincial_pit`:**
+    - 479 fps avg; ≥ 250 enemies 188 fps (638 frames), gameplay 1.63 / 2.17 ms; max 275;
+    - **Champion defeated**, Survived at 543 s, level 28, 9,881 kills;
+    - the run committed +441 Renown and 3 unlocks (the Net, Butcher, and one more), and the bot save has Executioner, Bloodbath and Juggernaut.
+    - **GC 922 B/s:** three single 70–78 KB allocations in paused card frames (42, 76, 125 s), plus the known game-over ones.
+- **GC fix:**
+  - **Cause:** the Phase 5.5 hint lines make card text longer than `LevelUpPanel.Presize`'s 170-char warm-up string, so TMP grows each card's character arrays mid-run. The same cause explains v0.6.0's 85 KB one-off.
+  - **Fix:** the descriptions are pre-drawn with 400 chars.
+  - **Check:** a 200 s Provincial run had no allocation above 10 KB (176 B/s). It's a different random run, so this is likely but not proven.
 
 ## Known issues
-- **Residual GC (target 0 B/frame, met in steady state):** one 85 KB allocation once in a paused card panel (v0.6.0 Slave Pit bot run, 77 s; likely the card text's buffers growing for the longer hint lines, unconfirmed); the first level-up allocates ~7.5–9.9 KB once (paused; a hidden pre-draw of the cards didn't remove it; BACKLOG), the boss entrance 1.8 KB, the victory screen + save write ~238 KB (game over). Small first-occurrence allocations (≤ 1.2 KB) in the first minutes.
+- **Residual GC (target 0 B/frame, met in steady state):** the 70–85 KB one-offs in paused card panels (v0.6.0/0.7.0) are fixed in Phase 5.6: the description buffers are pre-sized to 400 chars. A 200 s check run had none; the first level-up allocates ~7.5–9.9 KB once (paused; a hidden pre-draw of the cards didn't remove it; BACKLOG), the boss entrance 1.8 KB, the victory screen + save write ~238 KB (game over). Small first-occurrence allocations (≤ 1.2 KB) in the first minutes.
 - **Standalone perf runs need an unlocked desktop** (a locked KDE session hangs the windowed player; headless `-batchmode` runs are valid for GC only).
 - Editor-only: ~368 B/frame IMGUI `GUI.Repaint` allocation (not ours; absent in players).

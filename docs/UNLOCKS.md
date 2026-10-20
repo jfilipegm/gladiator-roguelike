@@ -38,7 +38,7 @@ Every reward is **content** (a weapon or Boon entering the pool) or **Renown** (
 |---|---|---|---|
 | **Sling** (CRIT) | weapon: one fast stone at the farthest target in range, long reach, big crits | Secret: **the Golden Rat** | catch it in the Slave Pit |
 | **Loaded Dice** (GOLD) | Boon: +Luck, +gold | Secret: **the Bookmaker** | win his wager in the Provincial Pit |
-| **Gorm's Whip** (BLOOD) | weapon: a 6 m thin crack through everything in a line, at the two nearest enemies in turn; Bleeds; **the tip** (last 1.5 m) crits double, so you fight at whip's length | Challenge **Pit Master's Bane** | defeat Gorm 3 times |
+| **Gorm's Whip** (BLOOD) | weapon: a 6 m thin crack through everything in a line, at the two nearest enemies in turn; Bleeds; **the tip** (last 1.5 m) always crits, so you fight at whip's length | Challenge **Pit Master's Bane** | defeat Gorm 3 times |
 | **Net** | weapon: a slow thrown net, wide, pierces, Roots for 1.5 s | Challenge **Champion of the Provinces** | defeat the Provincial Champion |
 | **Winged Sandals** (MOVEMENT) | Boon: +1 jump in mid-air per level (max 2) | Market | 300 Renown |
 | **Wax Tablet** (XP) | Boon: +XP, +1 reroll per level | Market | 300 Renown |
@@ -63,7 +63,7 @@ Every reward is **content** (a weapon or Boon entering the pool) or **Renown** (
 **The Golden Rat (Slave Pit).**
 - **When:** with a 50 % chance per run, at a random moment between 1:30 and 6:00, a golden rat scurries out of a hole at one of the layout's secret spots.
 - **How it behaves:** it flees the player at 8.5 m/s, faster than a run (7.5) but slower than a slide, so you catch it with movement. Every 4 s it stops for 0.6 s to sniff. It slides along the arena's edge and the obstacles.
-- **Readability:** it's gold (treasure in the colour language), sparkles every 0.5 s and squeaks. Weapons and enemies ignore it.
+- **Readability:** it's gold (treasure in the colour language), shown 1.6× life size (a real rat's size was lost on screen), sparkles every 0.5 s and squeaks. Weapons and enemies ignore it.
 - **The catch:** touch it within 18 s and it bursts into coins (+30 gold), with "THE GOLDEN RAT!", a crowd cheer and Favor. The first catch also says "WHAT WAS THAT?!" and sets the flag `golden_rat` (unlocks the Sling).
 - **The escape:** after 18 s it dives back into a hole ("IT GOT AWAY!").
 - It keeps appearing after you've caught it (for the gold).
@@ -90,7 +90,7 @@ Both are new components in the RattlingCrate mould: spots from `ArenaLayoutDef.s
 - **Challenges:** name, goal, progress bar, reward.
 - **Secrets:** found = what it was; unfound = "???" plus the hint.
 - **Market:** price, BUY (only when affordable), then OWNED.
-- **Controls:** pages, not scrolling (◀ ▶), for the gamepad. All of it is built from data (MetaConfig, UpgradeCatalog, enemy/boss lists), so a new unlock or enemy appears by itself.
+- **Controls:** pages, not scrolling (◀ ▶; 9 cards a page, 6 on the list tabs), for the gamepad. Left/Right (or the shoulder buttons) change tab, Up/Down change page (in the Market: the item), Enter buys. All of it is built from data (MetaConfig, UpgradeCatalog, enemy/boss lists), so a new unlock or enemy appears by itself.
 - **The end screen:** names each new unlock with its category and any bounty ("CHALLENGE COMPLETE: First Evolution +100 Renown").
 
 ## Tests
@@ -101,7 +101,7 @@ Both are new components in the RattlingCrate mould: spots from `ArenaLayoutDef.s
   - the RunSummary records feed the save;
   - Migrate fills the new lists.
 - **PlayMode:**
-  - **the Golden Rat:** appears, flees faster than a run, a slide catches it, the flag is set, and the Sling unlocks at the run's end;
+  - **the Golden Rat:** appears, flees faster than a run, a touch catches it (the test teleports; in play a slide closes the gap), the flag is set, and the Sling unlocks at the run's end; it dives away when its time is up;
   - **the Bookmaker:** stake, win and lose;
   - **each new weapon fires** (Net roots, Whip pierces a line and Bleeds, Sling hits the farthest target);
   - **the new synergies switch on;**

@@ -25,6 +25,7 @@ namespace Gladiator.EditorTools
         public static string Build()
         {
             var layout = AmphitheaterLayout.Ensure();
+            EnsureEnemies();
             var table = EnsureTable();
             if (layout.spawnTable == null) { layout.spawnTable = table; EditorUtility.SetDirty(layout); }
             var boar = AssetDatabase.LoadAssetAtPath<EnemyDef>(BoarPath);
@@ -60,6 +61,38 @@ namespace Gladiator.EditorTools
             }
             AssetDatabase.SaveAssets();
             return run;
+        }
+
+        /// <summary>The Murmillo, the Net-Thrower and the War Boar (docs/ARENAS.md §3 "New enemies"); numbers in
+        /// DECISIONS "Phase 5.8".</summary>
+        public static void EnsureEnemies()
+        {
+            var humanoid = AssetDatabase.LoadAssetAtPath<PartAnimProfile>(CombatSetup.ConvictAnimPath);
+            var heavy = CombatSetup.Profile("PartAnim_Murmillo", a => { a.strideLength = 1.15f; a.legSwing = 30f; a.armSwing = 14f; a.bobHeight = 0.06f; a.fullRunSpeed = 2.6f; });
+            var boar = CombatSetup.Profile("PartAnim_Boar", a => { a.strideLength = 1.0f; a.legSwing = 38f; a.armSwing = 52f; a.bobHeight = 0.06f; a.fullRunSpeed = 4.2f; });
+            CombatSetup.Enemy("EN_Murmillo", "Murmillo", "murmillo", heavy, d =>
+            {
+                d.behaviour = EnemyBehaviour.ShieldBearer;
+                d.maxHp = 135f; d.moveSpeed = 2.6f; d.radius = 0.5f; d.contactDamage = 13f; d.xp = 7f;
+                d.blockArc = 130f; d.blockReduction = 0.9f; d.knockbackTaken = 0.15f; d.turnRate = 150f; d.goldChance = 0.12f; d.prewarm = 24;
+            });
+            CombatSetup.Enemy("EN_NetThrower", "Net-Thrower", "netthrower", humanoid, d =>
+            {
+                d.behaviour = EnemyBehaviour.Lobber;
+                d.lobNet = true; d.netSlow = 0.1f; d.netTime = 1.2f;
+                d.maxHp = 26f; d.moveSpeed = 3.2f; d.radius = 0.38f; d.contactDamage = 5f; d.xp = 4f;
+                d.keepDistance = new Vector2(7f, 11f); d.windup = 0.9f; d.lobTime = 0.85f; d.attackRange = 13f; d.recover = 0.5f;
+                d.attackRadius = 1.7f; d.attackDamage = 6f; d.attackCooldown = 4.5f; d.goldChance = 0.08f; d.prewarm = 12;
+            });
+            CombatSetup.Enemy("EN_WarBoar", "War Boar", "warboar", boar, d =>
+            {
+                d.behaviour = EnemyBehaviour.Dasher;
+                d.flank = false; d.trampleMul = 3f;
+                d.maxHp = 60f; d.moveSpeed = 4.2f; d.radius = 0.6f; d.acceleration = 16f; d.contactDamage = 10f; d.xp = 3f;
+                d.windup = 0.7f; d.dashSpeed = 17f; d.dashLength = 14f; d.attackDamage = 16f; d.attackCooldown = 3f; d.recover = 1.0f;
+                d.turnRate = 300f; d.speedJitter = 0.12f; d.knockbackTaken = 0.3f; d.goldChance = 0.05f; d.prewarm = 24;
+            });
+            AssetDatabase.SaveAssets();
         }
 
         static SpawnTableDef.Entry E(string asset, float from, float w0, float w1, int cap, bool swarm, bool elite) => new SpawnTableDef.Entry

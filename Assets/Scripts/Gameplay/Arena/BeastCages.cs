@@ -68,6 +68,13 @@ namespace Gladiator.Gameplay
             _nextAuto = first;
         }
 
+        void Start()
+        {
+            // the beasts aren't in the Director's table: their pool fills here, before the fight (no allocation at a release)
+            var em = EnemyManager.Instance;
+            if (em != null && beast != null) em.Prewarm(beast, Mathf.Max(beast.prewarm, pack.y * 2));
+        }
+
         void OnEnable() => GameLoop.Register(this, TickGroup.Enemies, 35);
         void OnDisable() => GameLoop.Unregister(this);
         void OnDestroy() { if (Instance == this) Instance = null; }

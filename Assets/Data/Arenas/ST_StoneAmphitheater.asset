@@ -77,6 +77,22 @@ MonoBehaviour:
     maxAlive: 8
     swarm: 0
     elite: 1
+  - enemy: {fileID: 11400000, guid: f75b026767da750658e1af940ba3a900, type: 2}
+    from: 70
+    to: 0
+    weightStart: 0.9
+    weightEnd: 1.8
+    maxAlive: 18
+    swarm: 0
+    elite: 1
+  - enemy: {fileID: 11400000, guid: 9ba865ce856e5061ca3c512ad66f5591, type: 2}
+    from: 100
+    to: 0
+    weightStart: 0.7
+    weightEnd: 1.2
+    maxAlive: 8
+    swarm: 0
+    elite: 1
   affixes:
   - {fileID: 11400000, guid: 9930d7c59d05924b99927b4eea4b3f13, type: 2}
   - {fileID: 11400000, guid: 9f4e391d9abdd6ffd9af9add181c8de7, type: 2}

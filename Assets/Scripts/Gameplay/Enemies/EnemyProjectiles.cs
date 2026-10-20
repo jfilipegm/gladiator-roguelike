@@ -4,14 +4,15 @@ using UnityEngine;
 namespace Gladiator.Gameplay
 {
     /// <summary>
-    /// Every enemy projectile, one central tick (CLAUDE.md §4: pooled, stepped centrally, no physics). Two kinds:
-    /// straight shots (Slinger stone, Shield Archer arrow: hits the player's capsule, stopped by walls and the ground) and lobs (Fire-Pot:
-    /// ballistic arc onto a marked spot whose telegraph fills during the flight, then a fire patch). Struct-of-arrays,
+    /// Every enemy projectile, one central tick (CLAUDE.md §4: pooled, stepped centrally, no physics). Three kinds:
+    /// straight shots (Slinger stone, Shield Archer arrow: hits the player's capsule, stopped by walls and the ground), lobs (Fire-Pot:
+    /// ballistic arc onto a marked spot whose telegraph fills during the flight, then a fire patch) and nets (Net-Thrower: the
+    /// same arc, then whoever stands inside on the ground is caught and the net lies there a moment). Struct-of-arrays,
     /// fixed capacity, instanced draw with the shared palette material. Zero allocation in steady state.
     /// </summary>
     public sealed class EnemyProjectiles : MonoBehaviour, ITickable
     {
-        public enum Kind : byte { Straight = 0, Lob = 1 }
+        public enum Kind : byte { Straight = 0, Lob = 1, Net = 2, NetDown = 3 }
 
         public static EnemyProjectiles Instance { get; private set; }
 
@@ -21,6 +22,8 @@ namespace Gladiator.Gameplay
         public Mesh potMesh;
         [Tooltip("Shield Archer arrow (points along +Z, drawn along its velocity).")]
         public Mesh arrowMesh;
+        [Tooltip("Net-Thrower's net (WP_Net: flat, ~1.35 m across): balled up in flight, spread over the ring where it lands.")]
+        public Mesh netMesh;
         public float stoneScale = 1f;
         public float potScale = 1f;
         [Tooltip("Player capsule used for hits: radius, and the segment from feet+bottom to feet+top.")]
@@ -40,10 +43,13 @@ namespace Gladiator.Gameplay
 
         Transform _player;
         PlayerHealth _health;
-        Matrix4x4[] _stoneM, _potM, _arrowM;
+        PlayerMotor _motor;
+        Matrix4x4[] _stoneM, _potM, _arrowM, _netM;
         RenderParams _rp;
 
         public int Count => _count;
+        /// <summary>Nets that caught the player this run (tests, bot log).</summary>
+        public int NetsCaught { get; private set; }
 
         void Awake()
         {
@@ -58,6 +64,7 @@ namespace Gladiator.Gameplay
             _stoneM = new Matrix4x4[capacity];
             _arrowM = new Matrix4x4[capacity];
             _potM = new Matrix4x4[capacity];
+            _netM = new Matrix4x4[capacity];
             _rp = new RenderParams(material)
             {
                 shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off,
@@ -143,16 +150,28 @@ namespace Gladiator.Gameplay
             return i;
         }
 
-        int _lastStones, _lastPots, _lastArrows;
+        /// <summary>A net lobbed onto the ground at `target` (ringed in orange-red during the flight): a player standing inside
+        /// when it lands takes `damage` and moves at `slow` × speed for `holdTime` s. A jumping player is never caught.</summary>
+        public int LobNet(Vector3 from, Vector3 target, float flightTime, float radius, float damage, float slow, float holdTime)
+        {
+            int i = Lob(from, target, flightTime, radius, holdTime, slow); // a net's zone time = its hold, its dps slot = the slow
+            if (i < 0) return -1;
+            _kind[i] = Kind.Net;
+            _damage[i] = damage;
+            return i;
+        }
+
+        int _lastStones, _lastPots, _lastArrows, _lastNets;
 
         public void Tick(float dt, float unscaledDt)
         {
             if (_high == 0) return;
-            if (dt <= 0f) { Draw(_lastStones, _lastPots, _lastArrows); return; } // paused: keep them on screen
+            if (dt <= 0f) { Draw(_lastStones, _lastPots, _lastArrows, _lastNets); return; } // paused: keep them on screen
             if (_player == null && Player.Main != null)
             {
                 _player = Player.Main.transform;
                 _health = Player.Main.GetComponent<PlayerHealth>();
+                _motor = Player.Main.GetComponent<PlayerMotor>();
             }
             var em = EnemyManager.Instance;
             var height = em != null ? em.Height : null;
@@ -161,7 +180,7 @@ namespace Gladiator.Gameplay
             var shadows = BlobShadowRenderer.Instance;
             Vector3 pp = _player != null ? _player.position : new Vector3(0f, -1000f, 0f);
             Vector3 segA = pp + Vector3.up * playerBottom, segB = pp + Vector3.up * playerTop;
-            int stones = 0, pots = 0, arrows = 0;
+            int stones = 0, pots = 0, arrows = 0, nets = 0;
 
             for (int i = 0; i < _high; i++)
             {
@@ -192,6 +211,12 @@ namespace Gladiator.Gameplay
                     if (_arrow[i]) _arrowM[arrows++] = Matrix4x4.TRS(p, Quaternion.LookRotation(_vel[i]), Vector3.one);
                     else _stoneM[stones++] = Matrix4x4.TRS(p, Quaternion.Euler(_spin[i], _spin[i] * 0.7f, 0f), Vector3.one * stoneScale);
                 }
+                else if (_kind[i] == Kind.NetDown)
+                {
+                    if (_t[i] >= _dur[i]) { Free(i); continue; }
+                    float k = _zoneRadius[i] * 2f / 1.35f; // WP_Net is ~1.35 m across
+                    _netM[nets++] = Matrix4x4.TRS(_to[i] + Vector3.up * 0.07f, Quaternion.Euler(0f, _spin[i] * 0.05f, 0f), new Vector3(k, 1f, k));
+                }
                 else
                 {
                     float u = Mathf.Clamp01(_t[i] / _dur[i]);
@@ -199,6 +224,11 @@ namespace Gladiator.Gameplay
                     p.y += 4f * _apex[i] * u * (1f - u);
                     _pos[i] = p;
                     if (tele != null) tele.Circle(_to[i], _zoneRadius[i], u, telegraphColor, TelegraphRenderer.Style.Telegraph);
+                    if (u >= 1f && _kind[i] == Kind.Net)
+                    {
+                        NetLands(i, pp);
+                        continue;
+                    }
                     if (u >= 1f)
                     {
                         if (HazardZones.Instance != null)
@@ -210,19 +240,43 @@ namespace Gladiator.Gameplay
                     }
                     float ground = height != null ? height.Sample(p.x, p.z) : 0f;
                     if (shadows != null) shadows.Add(p, ground, 0.6f);
-                    _potM[pots++] = Matrix4x4.TRS(p, Quaternion.Euler(_spin[i] * 0.5f, _spin[i], 0f), Vector3.one * potScale);
+                    if (_kind[i] == Kind.Net) _netM[nets++] = Matrix4x4.TRS(p, Quaternion.Euler(_spin[i] * 0.5f, _spin[i], 0f), new Vector3(0.45f, 0.9f, 0.45f));
+                    else _potM[pots++] = Matrix4x4.TRS(p, Quaternion.Euler(_spin[i] * 0.5f, _spin[i], 0f), Vector3.one * potScale);
                 }
             }
 
             _lastStones = stones;
             _lastPots = pots;
             _lastArrows = arrows;
-            Draw(stones, pots, arrows);
+            _lastNets = nets;
+            Draw(stones, pots, arrows, nets);
         }
 
-        void Draw(int stones, int pots, int arrows)
+        /// <summary>A net lands: a grounded player inside the ring is caught (hurt, slowed to a crawl); the net then lies
+        /// spread on the ground for its hold time either way.</summary>
+        void NetLands(int i, Vector3 pp)
+        {
+            float dx = pp.x - _to[i].x, dz = pp.z - _to[i].z, dy = pp.y - _to[i].y;
+            bool grounded = _motor == null || _motor.IsGrounded;
+            if (_health != null && grounded && dy < 1.2f && dy > -1.2f && dx * dx + dz * dz < Sq(_zoneRadius[i] + playerRadius))
+            {
+                NetsCaught++;
+                float m = Mathf.Sqrt(dx * dx + dz * dz);
+                _health.TakeDamage(new DamageInfo { Amount = _damage[i], Flags = DamageFlags.Projectile | DamageFlags.Area, Point = pp, Direction = m > 1e-3f ? new Vector3(dx / m, 0f, dz / m) : Vector3.forward });
+                if (_motor != null) _motor.Slow(_zoneDps[i], _zoneTime[i]);
+                SfxPlayer.Play(SfxId.Snare, pp);
+            }
+            else SfxPlayer.Play(SfxId.Throw, _to[i], 0.6f);
+            if (burst != null) burst.Burst(_to[i] + Vector3.up * 0.1f, 6, 2.5f, 0.1f, new Color(0.62f, 0.5f, 0.32f), new Color(0.85f, 0.75f, 0.55f));
+            _kind[i] = Kind.NetDown;
+            _t[i] = 0f;
+            _dur[i] = Mathf.Max(0.3f, _zoneTime[i]);
+        }
+
+        void Draw(int stones, int pots, int arrows, int nets)
         {
             if (material == null) return;
+            if (nets > 0 && netMesh != null) Graphics.RenderMeshInstanced(_rp, netMesh, 0, _netM, nets);
             if (arrows > 0 && arrowMesh != null) Graphics.RenderMeshInstanced(_rp, arrowMesh, 0, _arrowM, arrows);
             if (stones > 0 && stoneMesh != null) Graphics.RenderMeshInstanced(_rp, stoneMesh, 0, _stoneM, stones);
             if (pots > 0 && potMesh != null) Graphics.RenderMeshInstanced(_rp, potMesh, 0, _potM, pots);
@@ -241,5 +295,6 @@ namespace Gladiator.Gameplay
         public bool IsActive(int i) => i >= 0 && i < _high && _used[i];
         public Vector3 GetPosition(int i) => _pos[i];
         public bool IsArrow(int i) => _arrow[i];
+        public Kind KindOf(int i) => _kind[i];
     }
 }

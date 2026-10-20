@@ -104,6 +104,17 @@ namespace Gladiator.Gameplay
         public float flankRadius = 5.5f;
         [Tooltip("Gives up flanking and dashes from wherever it is after this long (s).")]
         public float flankTimeout = 4f;
+        [Tooltip("Circles to your side before it dashes (Assassin). Off: makes straight for you and charges once in range (War Boar).")]
+        public bool flank = true;
+        [Tooltip("War Boar: enemies in its charge take this × its hit, once per charge (0 = it passes through them).")]
+        public float trampleMul;
+
+        [Header("Net-Thrower")]
+        [Tooltip("Lobber: a weighted net instead of a fire pot. Whoever stands inside on the ground when it lands is caught (no fire patch).")]
+        public bool lobNet;
+        [Tooltip("Caught: move speed × this (the player's slows bottom out at 0.1) for netTime seconds; attackDamage on landing.")]
+        [Range(0.1f, 1f)] public float netSlow = 0.1f;
+        public float netTime = 1.2f;
 
         [Header("Rewards")]
         public float xp = 1f;

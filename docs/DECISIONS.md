@@ -303,3 +303,7 @@ One line each: what, and why. Newest at the bottom of each section.
 - **Three new weapons, three distinct patterns** (CLAUDE.md §6.8, not reskins). Sling: one long-range shot at the *farthest* target. Net: a slow wide throw that Roots. Gorm's Whip: a thin line with a sweet spot at the tip, so you fight at its length.
 - **Secrets reward movement and nerve:** the Golden Rat is caught by sliding (it's faster than a run), and the Bookmaker bets against your own kill pace. Both repeat after the first time, for gold, so they stay worth doing.
 - **The Codex pages instead of scrolling** (gamepad), and is built from data, so new content shows up without UI work.
+
+## Arena ladder: size and shape (producer, 2026-10-20)
+- **Every arena is bigger than the previous one, compared by playable floor area.** The producer saw from screenshots that the Provincial Pit (~49 m circle, ≈ 1,900 m²) is smaller than the Slave Pit (84 × 70 m oval, ≈ 4,400 m²). The Slave Pit was doubled at the Gate 2 playtest and Arena 2 was built to CLAUDE.md's original ~50 m, so the ladder broke. Targets (about ×1.35 per step) are in `docs/GDD.md`.
+- **Arenas are not limited to circles and ovals.** Each picks the outline that fits its identity (rectangle, D-shape, octagon, hippodrome...). The runtime play area must support any outline: as of v0.7.0 `EnemyManager` contains enemies in an ellipse (`arenaRadius`/`arenaAspect`), Gorm's fire ring and the bot assume it too.

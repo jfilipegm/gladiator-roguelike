@@ -23,12 +23,23 @@ Chunky low-poly, flat-shaded, saturated; tiny point-filtered palette texture (on
 
 ## Arenas (each changes rules, not just paint)
 1. **Slave Pit** — an 84 × 70 m oval stockade where slaves are worked and drilled (palisade, patched fences, dirt embankments, onlooker platforms), mud (slow), mounds, terraces, small fires, ~110 locals. Boss **Gorm, the Pit Master** (chain flail + whip, summons guards, burns the fence in phase 2). *← slice*
-2. Provincial Pit — barricades, braziers, spike traps, 3 gates. Boss: Provincial Champion.
+2. Provincial Pit — barricades, braziers, spike traps, 3 gates. Boss: Provincial Champion. **v0.7.0 is a ~49 m circle (≈ 1,900 m²), smaller than the Slave Pit: to be rebuilt bigger and not round.**
 3. Stone Amphitheater — pillars block line of sight, elites, assassins. Boss: Beast Lord.
 4. Grand Arena — timed gates, fire jets, blades. Boss: Gilded Patron.
 5. Imperial Arena — formations, imperial events. Boss: Emperor's Champion.
 6. Colosseum — hypogeum trapdoors, factions, myth beasts. Boss: Eternal Victor.
 Every arena needs **vertical variety** (mounds, ramps, stairs, platforms, pit edges) so jump/slide matter in a bounded space.
+
+**Size and shape (producer, 2026-10-20):** every arena is **bigger than the one before it**, and arenas are **not limited to circles and ovals**. Size is compared by playable floor area; CLAUDE.md §6.2's ~35/50/75/90/110/140 m went stale when the Slave Pit was doubled at Gate 2. Targets, about ×1.35 per step:
+
+| # | Arena | Floor area target | Shape (proposal) |
+|---|---|---|---|
+| 1 | Slave Pit | ≈ 4,400 m² (built: 84 × 70 m oval) | rough oval stockade |
+| 2 | Provincial Pit | ≥ 6,000 m² | rectangular town arena, corners cut |
+| 3 | Stone Amphitheater | ≥ 8,000 m² | D-shape: half-oval of seating against a straight stage wall |
+| 4 | Grand Arena | ≥ 10,500 m² | octagon or cross-shaped plaza with patron boxes |
+| 5 | Imperial Arena | ≥ 13,500 m² | long hippodrome with a central spina |
+| 6 | Colosseum | ≥ 17,500 m² | the great oval, earned last, with a hypogeum |
 
 ## Enemies
 Tier 1 (slice): Starving Convict (swarmer), Pit Cur (fast), Shield Thug (frontal block), Slinger (ranged), Brute (big, slow), + one assassin/area-denial type. Elite = any enemy + one affix (slice: 3 of Armored, Fast, Explosive, Cursed, Gilded, Berserk).

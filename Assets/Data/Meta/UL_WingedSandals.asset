@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0ea0c2151f44fc41b534863b8707d7a, type: 3}
+  m_Name: UL_WingedSandals
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.UnlockDef
+  id: winged_sandals
+  displayName: Winged Sandals
+  description: 'Winged Sandals (MOVEMENT): jump again in mid-air, twice at level 2. Joins the level-up pool.'
+  hint: For sale in the Market.
+  conditions: []
+  category: 2
+  renownCost: 300
+  renownBounty: 0
+  addsToPool:
+  - {fileID: 11400000, guid: 0a4f18574d08d6583b764816a0c2bfe5, type: 2}

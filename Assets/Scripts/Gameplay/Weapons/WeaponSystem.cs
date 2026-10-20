@@ -97,6 +97,8 @@ namespace Gladiator.Gameplay
         public int Hits { get; private set; }
         /// <summary>Echo strikes fired (evolutions, tests).</summary>
         public int Echoes { get; private set; }
+        /// <summary>Thrust hits that landed on a weapon's tip (the Whip's crack, always crits; tests).</summary>
+        public int TipHits { get; private set; }
         /// <summary>The crowd's weapon in the sand (Phase 5.1): fights beside the slots for a while (null = none).</summary>
         public WeaponInstance Temporary => TemporaryLeft > 0f ? _loan : null;
         public float TemporaryLeft { get; private set; }
@@ -232,8 +234,8 @@ namespace Gladiator.Gameplay
                 if (w.SwingT >= 1f)
                 {
                     w.SwingT = -1f;
-                    // Arc/Thrust Amount: the extra attacks follow right away at whoever is nearest now
-                    if (w.BurstLeft > 0 && em != null) { w.BurstLeft--; StartSwing(w, em); }
+                    // Arc/Thrust Amount: the extra attacks follow right away at whoever is nearest now (or the next-nearest: spreadStrikes)
+                    if (w.BurstLeft > 0 && em != null) { w.BurstLeft--; StartSwing(w, em, AmountOf(w) - 1 - w.BurstLeft); }
                 }
                 return;
             }
@@ -244,11 +246,16 @@ namespace Gladiator.Gameplay
             w.BurstLeft = melee ? AmountOf(w) - 1 : 0;
         }
 
-        bool StartSwing(WeaponInstance w, EnemyManager em)
+        bool StartSwing(WeaponInstance w, EnemyManager em, int strike = 0)
         {
             var d = w.Def;
             Vector3 origin = transform.position;
             if (!em.TryGetNearest(origin, Acquire(w), out int target)) return false;
+            if (d.spreadStrikes && strike > 0)
+            {
+                int found = PickTargets(em, origin, Acquire(w), strike + 1, farthest: false);
+                if (found > 0) target = _targets[Mathf.Min(strike, found - 1)];
+            }
             Vector3 aim = em.GetPosition(target) - origin;
             aim.y = 0f;
             w.AimDir = aim.sqrMagnitude > 1e-4f ? aim.normalized : transform.forward;
@@ -328,9 +335,9 @@ namespace Gladiator.Gameplay
             w.AimDir = aim;
         }
 
-        DamageInfo Hit(WeaponInstance w, EnemyManager em, int i, Vector3 dir, DamageFlags kind)
+        DamageInfo Hit(WeaponInstance w, EnemyManager em, int i, Vector3 dir, DamageFlags kind, bool forceCrit = false)
         {
-            bool crit = GameRandom.Chance(Crit(w));
+            bool crit = forceCrit || GameRandom.Chance(Crit(w));
             return new DamageInfo
             {
                 Amount = Damage(w) * (crit ? CritMul(w) : 1f),
@@ -390,7 +397,9 @@ namespace Gladiator.Gameplay
                 if (along < -0.4f || along > length + r) continue;
                 float side = (to - aim * along).magnitude;
                 if (side > half + r) continue;
-                Strike(w, em, i, Hit(w, em, i, aim, DamageFlags.Melee));
+                bool tip = d.tipLength > 0f && along >= length - d.tipLength * Mathf.Sqrt(area); // the whip's crack
+                if (tip) TipHits++;
+                Strike(w, em, i, Hit(w, em, i, aim, DamageFlags.Melee, tip));
             }
         }
 
@@ -402,7 +411,7 @@ namespace Gladiator.Gameplay
             var d = w.Def;
             Vector3 origin = transform.position;
             int amount = Mathf.Min(AmountOf(w), _targets.Length);
-            int found = NearestTargets(em, origin, Acquire(w), amount);
+            int found = PickTargets(em, origin, Acquire(w), amount, d.targetFarthest);
             float area = AreaOf(w);
             var shot = new ShotParams
             {
@@ -454,7 +463,7 @@ namespace Gladiator.Gameplay
             Vector3 origin = transform.position;
             float blast = d.width * AreaOf(w);
             int amount = Mathf.Min(AmountOf(w), _lobPick.Length);
-            int found = NearestTargets(em, origin, Acquire(w), Mathf.Clamp(lobCandidates, 1, _targets.Length));
+            int found = PickTargets(em, origin, Acquire(w), Mathf.Clamp(lobCandidates, 1, _targets.Length), farthest: false);
             if (found == 0) return;
             int picked = 0;
             for (int b = 0; b < amount && picked < found; b++)
@@ -550,20 +559,22 @@ namespace Gladiator.Gameplay
             }
         }
 
-        /// <summary>Fills _targets with up to `max` nearest alive enemies within `range` (partial selection, no allocation).</summary>
-        int NearestTargets(EnemyManager em, Vector3 origin, float range, int max)
+        /// <summary>Fills _targets with up to `max` alive enemies within `range`, nearest first (or farthest first), by
+        /// partial selection, no allocation.</summary>
+        int PickTargets(EnemyManager em, Vector3 origin, float range, int max, bool farthest)
         {
             int n = em.QueryAlive(origin, range, _hits);
             int found = 0;
+            float r2 = range * range;
             for (int pick = 0; pick < max && pick < n; pick++)
             {
                 int best = -1;
-                float bestD = float.MaxValue;
+                float bestD = farthest ? -1f : float.MaxValue;
                 for (int k = pick; k < n; k++)
                 {
                     Vector3 to = em.GetPosition(_hits[k]) - origin;
                     float dd = to.x * to.x + to.z * to.z;
-                    if (dd < bestD) { bestD = dd; best = k; }
+                    if (farthest ? (dd > bestD && dd <= r2) : dd < bestD) { bestD = dd; best = k; }
                 }
                 if (best < 0) break;
                 (_hits[pick], _hits[best]) = (_hits[best], _hits[pick]);

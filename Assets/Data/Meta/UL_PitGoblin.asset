@@ -20,5 +20,8 @@ MonoBehaviour:
   - kind: 8
     id: rattling_crate
     amount: 1
+  category: 1
+  renownCost: 0
+  renownBounty: 0
   addsToPool:
   - {fileID: 11400000, guid: 5dfe23ca5341be3a987d126ca0ebe74f, type: 2}

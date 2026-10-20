@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0ea0c2151f44fc41b534863b8707d7a, type: 3}
+  m_Name: UL_Sling
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.UnlockDef
+  id: sling
+  displayName: The Sling
+  description: 'The rat-catcher''s sling is yours: a stone at the farthest enemy in reach, and big crits. Now in the level-up pool.'
+  hint: "Something small and shiny runs the Slave Pit's walls. Faster than you can run\u2026"
+  conditions:
+  - kind: 8
+    id: golden_rat
+    amount: 1
+  category: 1
+  renownCost: 0
+  renownBounty: 0
+  addsToPool:
+  - {fileID: 11400000, guid: af717448c2a9650ebbe90b458996a98a, type: 2}

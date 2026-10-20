@@ -1,0 +1,86 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 39f0cecc993934a19800cd9b6e8df985, type: 3}
+  m_Name: WP_Net
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.WeaponDef
+  id: net
+  displayName: Net
+  description: A weighted net, thrown slow and wide. Everything it lands on is pinned for a moment.
+  pattern: 4
+  damage: 5
+  critChance: 0.05
+  critMultiplier: 2
+  knockback: 0
+  onHitStatus: {fileID: 0}
+  onHitStatusPower: 0.1
+  onHitStacks: 1
+  cooldown: 2.4
+  swingDuration: 0.3
+  windup: 0.12
+  range: 9
+  arcDegrees: 150
+  width: 1.2
+  acquireRange: 9
+  amount: 1
+  speed: 9
+  pierce: -1
+  mesh: {fileID: 7706228179771015850, guid: 2acaf20a744c6351b88add728e2cb9ce, type: 3}
+  meshScale: 1
+  flightTime: 0.6
+  fuse: 0.4
+  arcHeight: 2.2
+  echoDelay: 0
+  echoAngle: 180
+  echoScale: 1
+  targetFarthest: 0
+  tipLength: 0
+  spreadStrikes: 0
+  hitEffects:
+  - kind: 0
+    status: {fileID: 11400000, guid: 84f718aecfc90da8888b3b6634460765, type: 2}
+    chance: 1
+    power: 0
+    bonus: 0
+    radius: 0
+    duration: 0
+    count: 0
+    stacks: 1
+    everyNth: 0
+  levels:
+  - mods:
+    - stat: 8
+      op: 1
+      value: 0.2
+  - mods:
+    - stat: 9
+      op: 0
+      value: 1
+  - mods:
+    - stat: 5
+      op: 1
+      value: 0.15
+  - mods:
+    - stat: 4
+      op: 1
+      value: 0.3
+  - mods:
+    - stat: 8
+      op: 1
+      value: 0.2
+  - mods:
+    - stat: 9
+      op: 0
+      value: 1
+  - mods:
+    - stat: 5
+      op: 1
+      value: 0.2

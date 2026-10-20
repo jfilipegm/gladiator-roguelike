@@ -68,4 +68,8 @@ The Slave Pit is now 84 × 70 m (was a 42 m circle) with the same spawn curve an
 
 ## C16 — Evolutions may make the boss easy (NEW, Phase 5.5)
 Evolutions arrive after 8 weapon levels plus a catalyst plus a chest, so late in the run, right before the boss. A Thunderbolts + Storm Front build could melt Gorm. **Proposal:** measure the boss fight's length in bot runs with and without evolutions. If it halves, give bosses an evolution-aware HP scale (`BossDef.hpPerEvolution`) rather than nerfing the evolutions.
+- **Measured (v0.6.0 dev build, Slave Pit, `Tools/perfrun bot 600 -timed`, 2026-10-20):**
+  - **With `-evolved`** (4 evolutions from the first frame: Champion's Gladius, Fire-Pot Barrage, Twin Moons, Sanguine Reaver; Wildfire, Bloodbath and Executioner on): Gorm died about 20 s after his entrance, in phase 2 after 5 attacks. Over the run: 2,033 executions, 886 Wildfire spreads.
+  - **Without** (the bot's random build, no weapon above level 5, 0 evolutions, Juggernaut only): Gorm was at 68 % in phase 1 after about 57 s. In v0.5.0's run 3 a similar build beat him in the last second of the recording.
+- **Reading:** the "halves" line is crossed, but the `-evolved` build is far beyond a real run (4 evolutions at minute 0, against 0 in the natural run). **Recommendation:** no `hpPerEvolution` yet. Let the producer's playtest decide with real runs (0–2 evolutions), and revisit if a real run with 1–2 evolutions kills Gorm in under 30 s. Executioner may be the strongest piece (2,033 kills in one run); it's the first number to turn down.
 

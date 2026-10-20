@@ -1,7 +1,7 @@
 # Progress
 
 **Current phase:** Phase 5 — expansion
-**Current milestone:** Phase 5.6 — unlock variety (challenges, secrets, a Renown market) + Codex (branch `phase5-unlocks`, spec `docs/UNLOCKS.md`, target v0.7.0). v0.6.0 (evolutions + synergies) released 2026-10-20.
+**Current milestone:** none in progress. Phase 5.6 (unlock variety + Codex) merged and released as v0.7.0 on 2026-10-20. Next "Should" in CLAUDE.md §9: Arenas 3–6, one at a time, each with its boss (Arena 3: the Stone Amphitheater + the Beast Lord).
 **Last updated:** 2026-10-20
 
 **Repository:** https://github.com/jfilipegm/gladiator-roguelike (public, branch `main`, remote `origin`, `.blend` files via Git LFS). Work on a branch per milestone, push as you go, merge through a PR; release every playable build (`Tools/release`).
@@ -166,7 +166,7 @@
 - **Unity's recovery scene** (`Assets/_Recovery/0.unity` + metas, written after the 01:07 crash) was moved out of Assets to `_Recovery_2026-10-20/` at the repo root, untracked, so the release could build. It's the producer's call whether to delete it. `mono_crash.mem.369056.1.blob` is untracked too: never commit either.
 - The Editor crashed while it was being closed (2026-10-20 01:07, GTK cleanup) and was relaunched at about 10:05. It came up ready with no backup-scene dialog.
 
-## In progress — Phase 5.6 unlock variety + Codex (branch `phase5-unlocks`, target v0.7.0)
+## Done — Phase 5.6 unlock variety + Codex (branch `phase5-unlocks`, PR #9 merged 2026-10-20 with the producer's OK, release v0.7.0)
 - **Spec:** `docs/UNLOCKS.md`; DECISIONS "Phase 5.6". The producer said "start the next milestone" on 2026-10-20.
 - **Steps:**
   1. Meta plumbing: `UnlockDef.category/renownCost/renownBounty`, conditions `RunKills/Evolve/SynergiesFound`, `MetaProgress.Progress/Buy`, save fields, `RunSummary` extras, EditMode tests.
@@ -174,10 +174,6 @@
   3. Secrets: the Golden Rat (Slave Pit), the Bookmaker (Provincial Pit), models, SFX.
   4. Codex 2.0 (7 tabs, NEW markers, Market, baked portraits); end-screen unlock lines.
   5. Tests, bot run, release notes v0.7.0, PR → ask the producer.
-- **Resume here (2026-10-20, context compacted):** everything is committed and pushed on `phase5-unlocks`, and the release notes are final (`docs/releases/v0.7.0.md`). Next:
-  1. Open the PR `phase5-unlocks` → main ("Phase 5.6: unlock variety + Codex (v0.7.0)"), bind it with ccd_pr, and **ask the producer before merging**.
-  2. After their OK: merge, `Tools/release 0.7.0`, smoke-run the archives (Linux Nobody / knight in the Provincial Pit, Wine), record in PROGRESS.
-  - Untracked `_Recovery_2026-10-20/` (repo root, moved out of Assets) and `mono_crash.*.blob`: never commit them, and ask before deleting.
 - **Done (committed on the branch):**
   - **Spec** (317f253).
   - **Meta plumbing** (07c7b86):
@@ -219,6 +215,12 @@
   - **Cause:** the Phase 5.5 hint lines make card text longer than `LevelUpPanel.Presize`'s 170-char warm-up string, so TMP grows each card's character arrays mid-run. The same cause explains v0.6.0's 85 KB one-off.
   - **Fix:** the descriptions are pre-drawn with 400 chars.
   - **Check:** a 200 s Provincial run had no allocation above 10 KB (176 B/s). It's a different random run, so this is likely but not proven.
+- **PR #9** (https://github.com/jfilipegm/gladiator-roguelike/pull/9) merged (d844b24).
+- **v0.7.0 released 2026-10-20:** https://github.com/jfilipegm/gladiator-roguelike/releases/tag/v0.7.0.
+  - Archives: Linux 42 MB, Linux dev 72 MB, Windows 44 MB, macOS 51 MB. The build log's `errors=1` on the first build is the bridge timeout, as before.
+  - Smoke runs of the downloaded archives (`-bot -timed -botSeconds 40`), all v0.7.0, clock to 36–37 s, 0 exceptions: Linux as the Nobody (52 kills), as the knight in the Provincial Pit (97 kills, 97 HP kill-healed; it took the newly unlocked Net), and Windows under Wine as the Nobody (49 kills). Their Profiling files were deleted. macOS not run.
+  - The first smoke attempt idled at the menu: the shell (zsh) passed an unquoted `$ARGS` as one argument, so the game never saw `-bot`. Not a game bug; TOOLING's recipe now says to spell the arguments out.
+- Untracked `_Recovery_2026-10-20/` (repo root) and `mono_crash.*.blob`: never commit them; deleting them is the producer's call.
 
 ## Known issues
 - **Residual GC (target 0 B/frame, met in steady state):** the 70–85 KB one-offs in paused card panels (v0.6.0/0.7.0) are fixed in Phase 5.6: the description buffers are pre-sized to 400 chars. A 200 s check run had none; the first level-up allocates ~7.5–9.9 KB once (paused; a hidden pre-draw of the cards didn't remove it; BACKLOG), the boss entrance 1.8 KB, the victory screen + save write ~238 KB (game over). Small first-occurrence allocations (≤ 1.2 KB) in the first minutes.

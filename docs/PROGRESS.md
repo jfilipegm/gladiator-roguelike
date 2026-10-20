@@ -239,6 +239,7 @@
     - screenshots `p57_top`, `p57_persp`, `p57_persp2`, `p57_play`.
   - `GameInfo.Version` 0.8.0; release notes `docs/releases/v0.8.0.md`.
 - **Verification:** EditMode 77/77, PlayMode 128/128 (2026-10-20).
+- **PR #10** (https://github.com/jfilipegm/gladiator-roguelike/pull/10) open, waiting for the producer's OK. After it: merge, `Tools/release 0.8.0`, smoke-run the archives (spell the arguments out), record here; then Arena 3.
 - **Bot runs (dev build, `bot 600 -timed -arena provincial_pit`), 0 exceptions in both:**
   - before the spawn limit: 421 fps avg; ≥ 250 enemies 228 fps (4.38 ms, p95 6.05), gameplay 1.77 / 2.18 ms; max 300; GC 401 B/s (the victory screen; 59 B/s-class otherwise); **Champion defeated**, Survived at 541 s, level 26, 7,217 kills.
   - with `spawnMaxDistance` 55: 373 fps avg; ≥ 250 enemies 197 fps (5.07 ms, p95 6.59), gameplay 1.91 / 2.41 ms; max 301; GC 59 B/s; Champion at 64 %, level 26, 7,245 kills (a weaker build: 281 bombs, 56 s of hit-stop).

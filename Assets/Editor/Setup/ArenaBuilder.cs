@@ -170,6 +170,7 @@ namespace Gladiator.EditorTools
             if (director != null)
             {
                 director.maxAliveOverride = layout.maxAlive;
+                director.maxSpawnDistance = layout.spawnMaxDistance;
                 if (layout.spawnTable != null) director.table = layout.spawnTable;
             }
             // the arena's tier and difficulty (Phase 5.4)

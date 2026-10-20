@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: RD_ProvincialPit
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.RunDef
   id: provincial_pit
-  description: "A real arena: sand, stone and stands full of townsfolk. Three gates, barricades, spike traps that hurt everyone. Tougher enemies, more Renown (\xD71.5)."
+  description: "A real arena, and a big one: sand, stone and stands full of townsfolk. Four gates, barricades, spike traps that hurt everyone. Tougher enemies, more Renown (\xD71.5)."
   unlock: {fileID: 11400000, guid: dea2cf75470bda931a339283f13062da, type: 2}
   arenas:
   - displayName: THE PROVINCIAL PIT

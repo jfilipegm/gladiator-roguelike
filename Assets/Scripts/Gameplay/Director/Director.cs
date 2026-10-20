@@ -34,6 +34,8 @@ namespace Gladiator.Gameplay
         public float Clock => RunState.Current != null ? RunState.Current.Elapsed : Time.timeSinceLevelLoad;
         [Tooltip("This arena's cap on enemies alive (0 = DirectorConfig.hardCap). Set from the arena layout.")]
         public int maxAliveOverride;
+        [Tooltip("The arena's ArenaLayoutDef.spawnMaxDistance: ring spawns within this distance of the player when the edge allows it (0 = anywhere).")]
+        public float maxSpawnDistance;
         int HardCap => maxAliveOverride > 0 ? Mathf.Min(config.hardCap, maxAliveOverride) : config.hardCap;
 
         public int TargetAlive => config == null ? 0 : Mathf.Min(HardCap, Mathf.RoundToInt(config.targetAlive.Evaluate(Clock) * densityMultiplier));
@@ -312,15 +314,16 @@ namespace Gladiator.Gameplay
         {
             Vector3 player = Player.Main != null ? Player.Main.transform.position : em.arenaCenter;
             float min2 = config.minPlayerDistance * config.minPlayerDistance;
+            float max2 = maxSpawnDistance > 0f ? maxSpawnDistance * maxSpawnDistance : float.MaxValue;
             Vector3 best = RingPoint(em, angle);
-            for (int attempt = 0; attempt < 6; attempt++)
+            for (int attempt = 0; attempt < 8; attempt++)
             {
                 float a = attempt == 0 ? angle : (skipOffscreenTest ? angle + GameRandom.Range(-0.4f, 0.4f) : RandomAngle());
                 Vector3 p = RingPoint(em, a);
                 // a little depth so a ring of spawns doesn't look like a fence of enemies
                 p += (em.arenaCenter - p).normalized * GameRandom.Range(0f, 2.5f);
-                float dx = p.x - player.x, dz = p.z - player.z;
-                if (dx * dx + dz * dz < min2) continue;
+                float dx = p.x - player.x, dz = p.z - player.z, d2 = dx * dx + dz * dz;
+                if (d2 < min2 || (d2 > max2 && !skipOffscreenTest)) continue; // a swarm keeps its side, however far
                 best = p;
                 if (skipOffscreenTest || !config.preferOffscreen || _cam == null || !InView(p)) break;
             }

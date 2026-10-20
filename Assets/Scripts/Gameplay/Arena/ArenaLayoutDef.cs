@@ -97,6 +97,8 @@ namespace Gladiator.Gameplay
         public float playerYaw;
         [Tooltip("Director cap on enemies alive in this arena (0 = DirectorConfig.hardCap).")]
         public int maxAlive;
+        [Tooltip("Ring spawns come from the part of the edge within this distance of the player (m; 0 = anywhere). On a big floor the horde walks in from the near side, not from 100 m away.")]
+        public float spawnMaxDistance;
         public Vector3 sunEuler = new Vector3(38f, -32f, 0f);
         [Tooltip("Who comes through the gate when the timer runs out (none = the run just ends).")]
         public BossDef boss;

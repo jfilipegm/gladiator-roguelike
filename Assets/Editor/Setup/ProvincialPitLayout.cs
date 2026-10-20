@@ -80,6 +80,7 @@ namespace Gladiator.EditorTools
             l.playerSpawn = new Vector3(0f, 0.1f, -7f);
             l.playerYaw = 0f;
             l.maxAlive = 300;
+            l.spawnMaxDistance = 55f;          // the far end is up to 110 m off: the horde comes from the near side
             l.sunEuler = new Vector3(42f, 28f, 0f);
             l.enemyHpMul = 1.25f;
             l.playerDamageTakenMul = 1.15f;

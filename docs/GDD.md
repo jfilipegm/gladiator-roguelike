@@ -23,7 +23,7 @@ Chunky low-poly, flat-shaded, saturated; tiny point-filtered palette texture (on
 
 ## Arenas (each changes rules, not just paint)
 1. **Slave Pit** — an 84 × 70 m oval stockade where slaves are worked and drilled (palisade, patched fences, dirt embankments, onlooker platforms), mud (slow), mounds, terraces, small fires, ~110 locals. Boss **Gorm, the Pit Master** (chain flail + whip, summons guards, burns the fence in phase 2). *← slice*
-2. Provincial Pit — barricades, braziers, spike traps, 3 gates. Boss: Provincial Champion. **v0.7.0 is a ~49 m circle (≈ 1,900 m²), smaller than the Slave Pit: to be rebuilt bigger and not round.**
+2. **Provincial Pit** — a provincial town's walled square: an elongated octagon, 100 × 70 m with cut corners (play area ≈ 6,300 m²; v0.7.0's ~49 m circle was smaller than the Slave Pit). Four gates, six platforms, a colonnade, barricades, braziers, spike traps that hurt everyone, ~400 townsfolk. Boss: Provincial Champion.
 3. Stone Amphitheater — pillars block line of sight, elites, assassins. Boss: Beast Lord.
 4. Grand Arena — timed gates, fire jets, blades. Boss: Gilded Patron.
 5. Imperial Arena — formations, imperial events. Boss: Emperor's Champion.
@@ -35,7 +35,7 @@ Every arena needs **vertical variety** (mounds, ramps, stairs, platforms, pit ed
 | # | Arena | Floor area target | Shape (proposal) |
 |---|---|---|---|
 | 1 | Slave Pit | ≈ 4,400 m² (built: 84 × 70 m oval) | rough oval stockade |
-| 2 | Provincial Pit | ≥ 6,000 m² | rectangular town arena, corners cut |
+| 2 | Provincial Pit | ≈ 6,300 m² (built v0.8.0: 100 × 70 m octagon) | rectangular town arena, corners cut |
 | 3 | Stone Amphitheater | ≥ 8,000 m² | D-shape: half-oval of seating against a straight stage wall |
 | 4 | Grand Arena | ≥ 10,500 m² | octagon or cross-shaped plaza with patron boxes |
 | 5 | Imperial Arena | ≥ 13,500 m² | long hippodrome with a central spina |

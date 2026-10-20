@@ -1,8 +1,8 @@
 # Progress
 
 **Current phase:** Phase 5 — expansion
-**Current milestone:** Phase 5.4 Arena 2, the Provincial Pit (branch `phase5-arena2`, v0.5.0). v0.4.0 (the Blood Knight) released. Gate 2 report delivered, producer: "push and continue".
-**Last updated:** 2026-10-19
+**Current milestone:** Phase 5.5 — weapon evolutions + tag-threshold synergies (next; not started). v0.5.0 (the Provincial Pit + the playtest fixes) released 2026-10-20.
+**Last updated:** 2026-10-20
 
 **Repository:** https://github.com/jfilipegm/gladiator-roguelike (public, branch `main`, remote `origin`, `.blend` files via Git LFS). Work on a branch per milestone, push as you go, merge through a PR; release every playable build (`Tools/release`).
 
@@ -76,8 +76,7 @@
 
 - **v0.4.0 released 2026-10-19** (PR #5): https://github.com/jfilipegm/gladiator-roguelike/releases/tag/v0.4.0. Linux 39 MB, Linux dev 69 MB, Windows 41 MB, macOS 48 MB. Smoke runs of the downloaded archives (`-bot -timed -botSeconds 40`): Linux as the Nobody and as the knight (65 kills, 46 HP kill-healed), Windows under Wine; all v0.4.0, clock ran, 0 exceptions. macOS not run.
 
-## In progress — Playtest fixes (branch `phase5-playtest-fixes`, from `phase5-arena2`)
-- **Waiting on the producer:** PR #6 (https://github.com/jfilipegm/gladiator-roguelike/pull/6, `phase5-arena2` → `main`, v0.5.0) is open and bound. Do NOT merge without the producer's OK. After the OK: step 2 of "Next (in order)" in the Phase 5.4 section below (merge, `Tools/release 0.5.0`, smoke runs).
+## Done — Playtest fixes (branch `phase5-playtest-fixes`, PR #7 merged 2026-10-20 with the producer's OK, in v0.5.0)
 - **Producer's playtest list (2026-10-19), to fix first:**
   1. The main sound sounds like a choo-choo train.
   2. The Pit Goblin shows as unlocked without the rattling crate being found, and can't be picked anyway.
@@ -96,9 +95,9 @@
 - **Bot runs in the new Slave Pit (dev build, `Tools/perfrun bot 600 -timed`):**
   - Runs 1–2 exposed two **bot** bugs, not game bugs: 0 chests, 0/3 gifts, level 19–23, Gorm untouched. (1) The bootstrap's bot kept the default 15 m round leash (the scene's 31 m one only in the Editor), so it parked beside chests near the wall → it now stays inside the arena's oval (`EdgePoint`/`ClampInside`, `edgeMargin` 4 m) and gives up on a chest after 15 s. (2) In the open pit its uncapped flee push (10 enemies outweighed any goal) made it kite the horde around forever → `threatMax` 1.5, commits within 4 m of a chest/gift/gem, heads for the nearest enemies when idle (`engageRange` 18 m). Checked with the new opt-in `-botTrace 5` and an Editor probe: enemies all move and follow the player (not stuck at the walls). DECISIONS "Playtest fixes".
   - **Run 3** (CSV `Profiling/20261020_000939_bot_SlavePit.csv`): 0 exceptions; 401 fps avg (2.50 ms, p95 5.57, worst 18.6); ≥ 250 enemies 196 fps (5.10 ms, p95 6.52, p99 7.24), gameplay 1.89 / 2.41 ms; GC after warm-up 19.8 KB / 597 s (33 B/s, one-offs ≤ 1.9 KB); max 300 alive (250 at 4:42, 300 at 5:24; per minute 53/78/145/220/254/264/283/299). Bot level 28, 8,780 kills, 7 chests, gifts 4/4, **Gorm defeated** (phase 2, 31 attacks, 3 guard waves) in the last second of the recording (so outcome not yet set). Hit-stops 873 = 36.5 s (C14). Same range as the old pit's runs (level 28–47, 7.4–9.7 k kills, 6–7 chests).
-- **PR #7** (https://github.com/jfilipegm/gladiator-roguelike/pull/7, `phase5-playtest-fixes` → `phase5-arena2`) is open and bound. **Waiting on the producer:** merge #6 first, then #7 (GitHub retargets #7 to `main` when `phase5-arena2` merges; if not, change its base). Do NOT merge without the OK. After it: release v0.5.0 with both (Phase 5.4 "Next" step 2: `Tools/release 0.5.0`, smoke runs, Profiling cleanup).
+- **PR #7** (https://github.com/jfilipegm/gladiator-roguelike/pull/7): retargeted to `main` after #6 merged, then merged (19642a5).
 
-## In progress — Phase 5.4 Arena 2, the Provincial Pit (branch `phase5-arena2`, version 0.5.0 not bumped yet)
+## Done — Phase 5.4 Arena 2, the Provincial Pit (branch `phase5-arena2`, PR #6 merged 2026-10-20 with the producer's OK, release v0.5.0)
 - **Spec:** `docs/ARENAS.md` (layout, rules, Shield Archer + Assassin), `docs/BOSSES.md` (the Provincial Champion, 10 points), DECISIONS "Phase 5.4".
 - **Built and tested (PlayMode `ProvincialPitTests` 3/3, `EnemyRosterTests` archer + assassin 2/2):**
   - Plumbing: `RunDef.description/unlock/DisplayName`; `ArenaLayoutDef.tier/spawnTable/enemyHpMul/playerDamageTakenMul/gateModel/barricades/braziers/spikeTraps`; `RunState.arenaTier` + `RunState.playerDamageTakenMul` (set by ArenaBuilder, read by `PlayerHealth.TakeDamage`; `RunSummary.ArenaIndex` = tier); `EnemyManager.hpMul` (non-Scripted).
@@ -110,10 +109,12 @@
 - **Release prep (done):** `GameInfo.Version` = 0.5.0. EditMode 66/66. Full PlayMode 98/99 → the one failure (`RunFlowTests.BeatingGorm_UnlocksTheFlail`: Gorm now unlocks the flail AND the Provincial Pit) fixed; PlayMode now 100/100 incl. the new `ChampionTests.CallsHisGuards_OnTheClock_EvenWhileAttackingNonStop`. Release notes: `docs/releases/v0.5.0.md` (final).
 - **Bot run 1** (`Tools/perfrun bot 600 -timed -arena provincial_pit`, CSV `Profiling/20261019_205954_bot_ProvincialPit.csv`): 0 exceptions, 306 fps avg, 198 fps at ≥ 250 enemies (5.04 ms), gameplay avg 0.82 / p95 1.70 ms, GC 49 B/s (one-offs: 13.6 KB at the boss entrance, ~8 KB at t=36 s), max 300 enemies; level 31, 9,179 kills; Champion alive at 24 % in phase 2 after ~1 min of fight, 19 attacks, **0 guard waves** → bug: the guard clock only ran in Chase/Recover. Fixed (`BossController`: clock runs all fight except Entering/Roaring/Enraging; DECISIONS), PlaytestBot logs `stuns`. C13 data point, new C14 (hit-stop: 1,113 stops = 45.9 s of 600 s).
 - **Bot run 2** with the fix (rebuilt dev build, CSV `Profiling/20261019_211304_bot_ProvincialPit.csv`): 0 exceptions, 289 fps avg, 178 fps at ≥ 250 enemies (5.63 ms, p99 8.73), gameplay avg 0.86 / p95 1.94 ms, GC 43 B/s (same one-off 13.6 KB at the boss entrance), max 300; level 29, 8,666 kills; Champion alive at 50 % (phase 1), 19 attacks, **2 guard waves, 2 stuns**: the fix works. Release notes' Tested line filled in.
-- **Next (in order):**
-  1. Open the PR `phase5-arena2` → `main` (title "Phase 5.4: Arena 2, the Provincial Pit (v0.5.0)"; body: what's in it — arena, rules, Shield Archer, Assassin, the Champion + generalized BossController, Lane/Sector telegraphs, models — verification numbers, follow-ups: second gladius (BACKLOG), C13, C14; end with the Claude Code line). Bind it with the ccd_pr tools. **Ask the producer before merging** (self-merge is blocked).
-  2. After the OK: merge, update local main, `Tools/release 0.5.0`, smoke-run the downloaded Linux archive (as the Nobody and `-gladiator blood_knight`, also `-arena provincial_pit`) and Windows under Wine, delete the new Profiling files by literal path, record it here.
-  3. Then pick the next Phase 5 item (Favor system gifts/whims is the remaining "Must"; see CLAUDE.md §9 and BACKLOG).
+- **PR #6** (https://github.com/jfilipegm/gladiator-roguelike/pull/6) merged (92b8774). Follow-ups left open: a second gladius (BACKLOG), C13, C14.
+- **v0.5.0 released 2026-10-20** (PRs #6 + #7): https://github.com/jfilipegm/gladiator-roguelike/releases/tag/v0.5.0. Linux 40 MB, Linux dev 71 MB, Windows 42 MB, macOS 50 MB (the build log's `errors=1` on the first build is the bridge timeout, as before). Smoke runs of the downloaded archives (`-bot -timed -botSeconds 40`): Linux as the Nobody (64 kills), as the knight (`-gladiator blood_knight`: 57 kills, 47 HP kill-healed), in the Provincial Pit (`-arena provincial_pit`: 74 kills, 5 bombs), and Windows under Wine as the Nobody (55 kills); all v0.5.0, clock ran to 36–37 s, 0 exceptions; their Profiling files deleted. macOS not run.
+
+## Next — Phase 5.5 weapon evolutions + tag-threshold synergies
+- First "Should" item of CLAUDE.md §9 (every "Must" is done: Goblin, Knight, Arena 2, Favor). Start a branch `phase5-evolutions` from `main`, write the spec (which weapons evolve, with which Boon, at which level; which tag thresholds give which bonus) in `docs/GDD.md`/DECISIONS first, then data + code + tests, bump `GameInfo.Version` to 0.6.0, release notes `docs/releases/v0.6.0.md`.
+- The Editor crashed while it was being closed on 2026-10-20 01:07 (GTK window cleanup; left `mono_crash.mem.369056.1.blob` in the repo root, untracked, and `Temp/__Backupscenes/0.backup`). Relaunching may stop on the "Scene Backup Detected" dialog (TOOLING).
 
 ## Known issues
 - **Residual GC (target 0 B/frame, met in steady state):** the first level-up allocates ~7.5 KB once (paused; a hidden pre-draw of the cards didn't remove it; BACKLOG), the boss entrance 1.8 KB, the victory screen + save write ~238 KB (game over). Small first-occurrence allocations (≤ 1.2 KB) in the first minutes.

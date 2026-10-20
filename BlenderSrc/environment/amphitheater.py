@@ -51,14 +51,16 @@ def arc_speed(t):
 
 def profile():
     """The cavea's closed cross-section: (outward offset, height, swatch of the face from this point to the next)."""
-    p = [(0.0, -0.3, "sandstone_d"), (0.0, PODIUM - 0.4, "red_banner"), (0.0, PODIUM, "marble")]
+    # light travertine faces: from the floor you see the podium and the seat fronts, which face away from the sun on
+    # most of the curve (dark sandstone there read as a brown wall, v0.9.0 review)
+    p = [(0.0, -0.3, "travertine"), (0.0, PODIUM - 0.4, "red_banner"), (0.0, PODIUM, "marble")]
     o, h = PODIUM_CAP, PODIUM
-    p.append((o, h, "sandstone_d"))
+    p.append((o, h, "travertine_d"))
     for k in range(TIERS):
         h += TIER_RISE
         p.append((o, h, "sandstone"))
         o += TIER_RUN
-        p.append((o, h, "sandstone_d" if k < TIERS - 1 else "sandstone"))
+        p.append((o, h, "travertine_d" if k < TIERS - 1 else "sandstone"))
     p.append((o, BACK_TOP, "marble"))
     p.append((o + BACK_DEPTH, BACK_TOP, "sandstone_d"))
     p.append((o + BACK_DEPTH, -0.3, None))  # the bottom: never seen
@@ -128,6 +130,9 @@ def amphi_floor(name, seed=31):
         plane_no = Vector((-out_u.x, -out_u.y, 0.0))
         geom = bm.verts[:] + bm.edges[:] + bm.faces[:]
         bmesh.ops.bisect_plane(bm, geom=geom, plane_co=mid, plane_no=plane_no, clear_outer=True)
+    # the clipped cells: slivers and bow-tie quads (Unity discards self-intersecting polygons)
+    bmesh.ops.dissolve_degenerate(bm, dist=1e-3, edges=bm.edges[:])
+    bmesh.ops.triangulate(bm, faces=[f for f in bm.faces if len(f.verts) > 3 and abs(d_distance(-f.calc_center_median().x, -f.calc_center_median().y)) < 3.0])
     for v in bm.verts:
         d = d_distance(-v.co.x, -v.co.y)
         v.co.z = rng.uniform(-0.03, 0.03) + 0.1 * max(0.0, min(1.3, (3.0 - d) / 4.0))
@@ -201,9 +206,10 @@ def amphi_rim(name, seed=37):
     return obj
 
 
-def pulpitum(name, length=40.0, depth=5.5, height=1.2, seed=41):
-    """The stage platform along the stage wall: an ashlar front with pilasters, a marble top. Origin at the base
-    centre; its front (the long side the stairs come up) faces -Y."""
+def pulpitum(name, length=17.0, depth=5.5, height=1.2, seed=41):
+    """Half of the stage platform along the stage wall (two of them leave the boss's gate a 6 m processional way):
+    an ashlar front with pilasters, a marble top. Origin at the base centre; its front (the long side the stairs come
+    up) faces -Y."""
     rng = random.Random(seed)
     parts = [K.box(name, size=(length, depth, height), pivot=(0, 0, -1), bevel=0.03, swatch="sandstone")]
     parts.append(K.box("Top", size=(length + 0.2, depth + 0.2, 0.12), location=(0, 0, height - 0.12), pivot=(0, 0, -1),
@@ -352,7 +358,11 @@ def tunnel(name, width=5.0, opening=3.2, open_h=2.6):
                                         (-opening / 2, opening / 2, open_h))):
         o = K.object_from_bmesh(name + "_Seats" if i == 0 else "Seats%d" % i, slab(x0, x1, clip),
                                 parent=root if i == 0 else None, swatch="sandstone")
-        K.set_swatch_where(o, "sandstone_d", lambda c, n: abs(n.z) < 0.5)
+        K.set_swatch_where(o, "travertine_d", lambda c, n: abs(n.z) < 0.5)
+        K.set_swatch_where(o, "travertine", lambda c, n: abs(n.z) < 0.5 and abs(n.y) > 0.5 and c.y < 0.05 and c.z < PODIUM)
+        K.set_swatch_where(o, "red_banner", lambda c, n: abs(n.y) > 0.5 and c.y < 0.05 and PODIUM - 0.4 < c.z < PODIUM)
+        top = PODIUM + TIERS * TIER_RISE  # the back wall's inner face, like the bowl's
+        K.set_swatch_where(o, "sandstone", lambda c, n: n.y < -0.5 and c.z > top + 0.05)
         K.set_swatch_where(o, "marble", lambda c, n: n.z > 0.5 and abs(c.z - PODIUM) < 0.05)
         parts.append(o)
     parts.append(K.box("Lintel", size=(opening + 0.8, 0.25, 0.4), location=(0, -0.1, open_h - 0.05), pivot=(0, 0, -1),

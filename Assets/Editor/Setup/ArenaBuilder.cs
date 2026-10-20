@@ -52,7 +52,7 @@ namespace Gladiator.EditorTools
             var gatesRoot = new GameObject("Gates").transform;
             gatesRoot.SetParent(env, false);
             string gateModel = string.IsNullOrEmpty(layout.gateModel) ? "Environment/SM_PitGate" : layout.gateModel;
-            foreach (var g in layout.gates) gateRoots.Add(PlaceGate(g, gatesRoot, gateModel));
+            foreach (var g in layout.gates) gateRoots.Add(PlaceGate(g, gatesRoot, string.IsNullOrEmpty(g.model) ? gateModel : g.model));
 
             // breakables (Phase 5.4): placed before the bake so their obstacles are baked too (switched off when broken)
             var barricades = new List<Transform>();

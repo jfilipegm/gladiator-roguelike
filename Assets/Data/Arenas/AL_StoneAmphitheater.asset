@@ -1,0 +1,2437 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fda5633a9dd401b4e940b484397de0bc, type: 3}
+  m_Name: AL_StoneAmphitheater
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.ArenaLayoutDef
+  id: stone_amphitheater
+  displayName: The Stone Amphitheater
+  tier: 2
+  spawnTable: {fileID: 11400000, guid: 96859dc17f9cf95bd87a4709abd55b47, type: 2}
+  enemyHpMul: 1.5
+  playerDamageTakenMul: 1.25
+  center: {x: 0, y: 0, z: 0}
+  radius: 42.9
+  aspect: 1
+  outline:
+  - {x: -58.9, y: 42.9}
+  - {x: 58.9, y: 42.9}
+  - {x: 58.9, y: 20}
+  - {x: 58.77389, y: 15.886143}
+  - {x: 58.396103, y: 11.789902}
+  - {x: 57.76825, y: 7.7288184}
+  - {x: 56.893032, y: 3.720282}
+  - {x: 55.774185, y: -0.21854109}
+  - {x: 54.416504, y: -4.0707893}
+  - {x: 52.825806, y: -7.819961}
+  - {x: 51.008896, y: -11.45}
+  - {x: 48.97356, y: -14.945369}
+  - {x: 46.72851, y: -18.291094}
+  - {x: 44.283363, y: -21.472855}
+  - {x: 41.64859, y: -24.477016}
+  - {x: 38.83547, y: -27.290724}
+  - {x: 35.856045, y: -29.901928}
+  - {x: 32.723083, y: -32.299442}
+  - {x: 29.449999, y: -34.473}
+  - {x: 26.050802, y: -36.413296}
+  - {x: 22.540054, y: -38.112022}
+  - {x: 18.932785, y: -39.561905}
+  - {x: 15.244444, y: -40.756733}
+  - {x: 11.490815, y: -41.691395}
+  - {x: 7.6879888, y: -42.361885}
+  - {x: 3.852241, y: -42.765327}
+  - {x: -0.0000025746008, y: -42.9}
+  - {x: -3.8522463, y: -42.765327}
+  - {x: -7.687994, y: -42.361885}
+  - {x: -11.49082, y: -41.69139}
+  - {x: -15.244449, y: -40.756733}
+  - {x: -18.93279, y: -39.561905}
+  - {x: -22.540058, y: -38.112022}
+  - {x: -26.0508, y: -36.413296}
+  - {x: -29.450003, y: -34.472996}
+  - {x: -32.723095, y: -32.299435}
+  - {x: -35.85605, y: -29.901924}
+  - {x: -38.835476, y: -27.290716}
+  - {x: -41.64859, y: -24.477016}
+  - {x: -44.283367, y: -21.472847}
+  - {x: -46.72851, y: -18.291094}
+  - {x: -48.973564, y: -14.945365}
+  - {x: -51.008896, y: -11.450004}
+  - {x: -52.825806, y: -7.8199553}
+  - {x: -54.41651, y: -4.070778}
+  - {x: -55.774185, y: -0.21854109}
+  - {x: -56.893032, y: 3.7202897}
+  - {x: -57.768253, y: 7.7288194}
+  - {x: -58.396103, y: 11.789909}
+  - {x: -58.77389, y: 15.886142}
+  - {x: -58.9, y: 20.000006}
+  boundary:
+  - {x: 0, y: 45.7, z: 180, w: 124}
+  fog: {x: 60, y: 280}
+  playerSpawn: {x: 0, y: 0.1, z: -12}
+  playerYaw: 0
+  maxAlive: 320
+  spawnMaxDistance: 55
+  sunEuler: {x: 54, y: -25, z: 0}
+  boss: {fileID: 0}
+  bossGate: 0
+  pieces:
+  - model: Environment/SM_AmphiFloor
+    role: 0
+    position: {x: 0, y: 0, z: 0}
+    yaw: 0
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_AmphiCavea
+    role: 3
+    position: {x: 0, y: 0, z: 0}
+    yaw: 0
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_AmphiRim
+    role: 3
+    position: {x: 0, y: 0, z: 0}
+    yaw: 0
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_AmphiStage_4m
+    role: 1
+    position: {x: -57.79, y: 0, z: 44}
+    yaw: 180
+    scale: {x: 0.9608697, y: 1, z: 1}
+  - model: Environment/SM_AmphiStage_4m
+    role: 1
+    position: {x: -53.37, y: 0, z: 44}
+    yaw: 180
+    scale: {x: 0.9608697, y: 1, z: 1}
+  - model: Environment/SM_AmphiStage_4m
+    role: 1
+    position: {x: -48.949997, y: 0, z: 44}
+    yaw: 180
+    scale: {x: 0.9608697, y: 1, z: 1}
+  - model: Environment/SM_AmphiStage_4m
+    role: 1
+    position: {x: -39.945, y: 0, z: 44}
+    yaw: 180
+    scale: {x: 0.9543478, y: 1, z: 1}
+  - model: Environment/SM_AmphiStage_4m
+    role: 1
+    position: {x: -35.555, y: 0, z: 44}
+    yaw: 180
+    scale: {x: 0.9543478, y: 1, z: 1}
+  - model: Environment/SM_AmphiStage_4m
+    role: 1
+    position: {x: -31.164999, y: 0, z: 44}
+    yaw: 180
+    scale: {x: 0.9543478, y: 1, z: 1}
+  - model: Environment/SM_AmphiStage_4m
+    role: 1
+    position: {x: -22.163, y: 0, z: 44}
+    yaw: 180
+    scale: {x: 0.95956534, y: 1, z: 1}
+  - model: Environment/SM_AmphiStage_4m
+    role: 1
+    position: {x: -17.749, y: 0, z: 44}
+    yaw: 180
+    scale: {x: 0.95956534, y: 1, z: 1}
+  - model: Environment/SM_AmphiStage_4m
+    role: 1
+    position: {x: -13.334999, y: 0, z: 44}
+    yaw: 180
+    scale: {x: 0.95956534, y: 1, z: 1}
+  - model: Environment/SM_AmphiStage_4m
+    role: 1
+    position: {x: -8.921, y: 0, z: 44}
+    yaw: 180
+    scale: {x: 0.95956534, y: 1, z: 1}
+  - model: Environment/SM_AmphiStage_4m
+    role: 1
+    position: {x: -4.5069985, y: 0, z: 44}
+    yaw: 180
+    scale: {x: 0.95956534, y: 1, z: 1}
+  - model: Environment/SM_AmphiStage_4m
+    role: 1
+    position: {x: 4.507, y: 0, z: 44}
+    yaw: 180
+    scale: {x: 0.9595652, y: 1, z: 1}
+  - model: Environment/SM_AmphiStage_4m
+    role: 1
+    position: {x: 8.921, y: 0, z: 44}
+    yaw: 180
+    scale: {x: 0.9595652, y: 1, z: 1}
+  - model: Environment/SM_AmphiStage_4m
+    role: 1
+    position: {x: 13.335, y: 0, z: 44}
+    yaw: 180
+    scale: {x: 0.9595652, y: 1, z: 1}
+  - model: Environment/SM_AmphiStage_4m
+    role: 1
+    position: {x: 17.749, y: 0, z: 44}
+    yaw: 180
+    scale: {x: 0.9595652, y: 1, z: 1}
+  - model: Environment/SM_AmphiStage_4m
+    role: 1
+    position: {x: 22.163, y: 0, z: 44}
+    yaw: 180
+    scale: {x: 0.9595652, y: 1, z: 1}
+  - model: Environment/SM_AmphiStage_4m
+    role: 1
+    position: {x: 31.164999, y: 0, z: 44}
+    yaw: 180
+    scale: {x: 0.9543478, y: 1, z: 1}
+  - model: Environment/SM_AmphiStage_4m
+    role: 1
+    position: {x: 35.555, y: 0, z: 44}
+    yaw: 180
+    scale: {x: 0.9543478, y: 1, z: 1}
+  - model: Environment/SM_AmphiStage_4m
+    role: 1
+    position: {x: 39.945, y: 0, z: 44}
+    yaw: 180
+    scale: {x: 0.9543478, y: 1, z: 1}
+  - model: Environment/SM_AmphiStage_4m
+    role: 1
+    position: {x: 48.949997, y: 0, z: 44}
+    yaw: 180
+    scale: {x: 0.9608697, y: 1, z: 1}
+  - model: Environment/SM_AmphiStage_4m
+    role: 1
+    position: {x: 53.37, y: 0, z: 44}
+    yaw: 180
+    scale: {x: 0.9608697, y: 1, z: 1}
+  - model: Environment/SM_AmphiStage_4m
+    role: 1
+    position: {x: 57.79, y: 0, z: 44}
+    yaw: 180
+    scale: {x: 0.9608697, y: 1, z: 1}
+  - model: Environment/SM_Pulpitum
+    role: 0
+    position: {x: -11.5, y: 0, z: 41.25}
+    yaw: 180
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_Stairs
+    role: 0
+    position: {x: -11.5, y: 0, z: 36.5}
+    yaw: 180
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_Stairs
+    role: 0
+    position: {x: -22, y: 0, z: 41.25}
+    yaw: 270
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_Pulpitum
+    role: 0
+    position: {x: 11.5, y: 0, z: 41.25}
+    yaw: 180
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_Stairs
+    role: 0
+    position: {x: 11.5, y: 0, z: 36.5}
+    yaw: 180
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_Stairs
+    role: 0
+    position: {x: 22, y: 0, z: 41.25}
+    yaw: 90
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_AmphiColumn
+    role: 1
+    position: {x: 28.977774, y: 0, z: 5.694019}
+    yaw: 0
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_AmphiColumn
+    role: 1
+    position: {x: 21.213203, y: 0, z: 15.556349}
+    yaw: 0
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_AmphiColumn
+    role: 1
+    position: {x: 7.764572, y: 0, z: 21.250368}
+    yaw: 0
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_AmphiColumn
+    role: 1
+    position: {x: -7.764571, y: 0, z: 21.250368}
+    yaw: 0
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_AmphiColumn
+    role: 1
+    position: {x: -21.213203, y: 0, z: 15.556349}
+    yaw: 0
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_AmphiColumn
+    role: 1
+    position: {x: -28.977774, y: 0, z: 5.6940207}
+    yaw: 0
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_AmphiColumn
+    role: 1
+    position: {x: -28.977774, y: 0, z: -5.69402}
+    yaw: 0
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_AmphiColumn
+    role: 1
+    position: {x: -21.213205, y: 0, z: -15.556348}
+    yaw: 0
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_AmphiColumn
+    role: 1
+    position: {x: -7.7645693, y: 0, z: -21.25037}
+    yaw: 0
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_AmphiColumn
+    role: 1
+    position: {x: 7.76457, y: 0, z: -21.250368}
+    yaw: 0
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_AmphiColumn
+    role: 1
+    position: {x: 21.2132, y: 0, z: -15.556352}
+    yaw: 0
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_AmphiColumn
+    role: 1
+    position: {x: 28.977772, y: 0, z: -5.694024}
+    yaw: 0
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/PR_Statue
+    role: 1
+    position: {x: -35.5, y: 0, z: 33}
+    yaw: 180
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/PR_Statue
+    role: 1
+    position: {x: -42, y: 0, z: -16}
+    yaw: 69.145546
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/PR_Statue
+    role: 1
+    position: {x: 35.5, y: 0, z: 33}
+    yaw: 180
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/PR_Statue
+    role: 1
+    position: {x: 42, y: 0, z: -16}
+    yaw: -69.145546
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_ProvPlatform
+    role: 0
+    position: {x: -42, y: 0, z: 4}
+    yaw: 90
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_Stairs
+    role: 0
+    position: {x: -38, y: 0, z: 3.9999998}
+    yaw: 90
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_ProvPlatform
+    role: 0
+    position: {x: 42, y: 0, z: 4}
+    yaw: 270
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_Stairs
+    role: 0
+    position: {x: 38, y: 0, z: 4}
+    yaw: 270
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_ProvPlatform
+    role: 0
+    position: {x: -24, y: 0, z: -30}
+    yaw: 38.65981
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_Ramp
+    role: 0
+    position: {x: -20.25183, y: 0, z: -25.314787}
+    yaw: 38.65981
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_ProvPlatform
+    role: 0
+    position: {x: 24, y: 0, z: -30}
+    yaw: -38.65981
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_Ramp
+    role: 0
+    position: {x: 20.25183, y: 0, z: -25.314787}
+    yaw: -38.65981
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/PR_WeaponRack
+    role: 2
+    position: {x: -5.5, y: 0, z: -40.4}
+    yaw: 0
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/PR_WeaponRack
+    role: 2
+    position: {x: 5.5, y: 0, z: -40.4}
+    yaw: 0
+    scale: {x: 1, y: 1, z: 1}
+  gateModel: Environment/SM_AmphiTunnel
+  gates:
+  - position: {x: 0, y: 0, z: 44}
+    yaw: 180
+    model: Environment/SM_GreatGate
+  - position: {x: 40.898323, y: 0, z: -26.82809}
+    yaw: -44.81903
+    model: 
+  - position: {x: -0.0000026226833, y: 0, z: -44}
+    yaw: 0.0000026714433
+    model: 
+  - position: {x: -40.898335, y: 0, z: -26.82808}
+    yaw: 44.819046
+    model: 
+  zones: []
+  crowd:
+  - center: {x: 61, y: 3.45, z: 42}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 3
+  - center: {x: 61.8, y: 3.9, z: 42}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 3
+  - center: {x: 62.6, y: 4.35, z: 42}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 4
+  - center: {x: 63.4, y: 4.8, z: 42}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 3
+  - center: {x: 64.2, y: 5.25, z: 42}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 3
+  - center: {x: 65, y: 5.7, z: 42}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 4
+  - center: {x: 65.8, y: 6.15, z: 42}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 3
+  - center: {x: 66.6, y: 6.6, z: 42}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 3
+  - center: {x: 61, y: 3.45, z: 38}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 4
+  - center: {x: 61.8, y: 3.9, z: 38}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 3
+  - center: {x: 62.6, y: 4.35, z: 38}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 3
+  - center: {x: 63.4, y: 4.8, z: 38}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 4
+  - center: {x: 64.2, y: 5.25, z: 38}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 3
+  - center: {x: 65, y: 5.7, z: 38}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 3
+  - center: {x: 65.8, y: 6.15, z: 38}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 4
+  - center: {x: 66.6, y: 6.6, z: 38}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 3
+  - center: {x: 61, y: 3.45, z: 34}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 3
+  - center: {x: 61.8, y: 3.9, z: 34}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 4
+  - center: {x: 62.6, y: 4.35, z: 34}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 3
+  - center: {x: 63.4, y: 4.8, z: 34}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 3
+  - center: {x: 64.2, y: 5.25, z: 34}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 4
+  - center: {x: 65, y: 5.7, z: 34}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 3
+  - center: {x: 65.8, y: 6.15, z: 34}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 3
+  - center: {x: 66.6, y: 6.6, z: 34}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 4
+  - center: {x: 61, y: 3.45, z: 30}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 3
+  - center: {x: 61.8, y: 3.9, z: 30}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 3
+  - center: {x: 62.6, y: 4.35, z: 30}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 4
+  - center: {x: 63.4, y: 4.8, z: 30}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 3
+  - center: {x: 64.2, y: 5.25, z: 30}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 3
+  - center: {x: 65, y: 5.7, z: 30}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 4
+  - center: {x: 65.8, y: 6.15, z: 30}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 3
+  - center: {x: 66.6, y: 6.6, z: 30}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 3
+  - center: {x: 61, y: 3.45, z: 26}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 4
+  - center: {x: 61.8, y: 3.9, z: 26}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 3
+  - center: {x: 62.6, y: 4.35, z: 26}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 3
+  - center: {x: 63.4, y: 4.8, z: 26}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 4
+  - center: {x: 64.2, y: 5.25, z: 26}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 3
+  - center: {x: 65, y: 5.7, z: 26}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 3
+  - center: {x: 65.8, y: 6.15, z: 26}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 4
+  - center: {x: 66.6, y: 6.6, z: 26}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 3
+  - center: {x: 61, y: 3.45, z: 22}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 3
+  - center: {x: 61.8, y: 3.9, z: 22}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 4
+  - center: {x: 62.6, y: 4.35, z: 22}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 3
+  - center: {x: 63.4, y: 4.8, z: 22}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 3
+  - center: {x: 64.2, y: 5.25, z: 22}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 4
+  - center: {x: 65, y: 5.7, z: 22}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 3
+  - center: {x: 65.8, y: 6.15, z: 22}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 3
+  - center: {x: 66.6, y: 6.6, z: 22}
+    size: {x: 3.6, y: 0.4}
+    yaw: -90
+    count: 4
+  - center: {x: 60.93483, y: 3.45, z: 17.876434}
+    size: {x: 3.8242188, y: 0.4}
+    yaw: -88.24188
+    count: 3
+  - center: {x: 61.734074, y: 3.9, z: 17.851902}
+    size: {x: 3.8683977, y: 0.4}
+    yaw: -88.24188
+    count: 4
+  - center: {x: 62.533318, y: 4.35, z: 17.82737}
+    size: {x: 3.912577, y: 0.4}
+    yaw: -88.24188
+    count: 4
+  - center: {x: 63.33257, y: 4.8, z: 17.802837}
+    size: {x: 3.9567564, y: 0.4}
+    yaw: -88.24188
+    count: 3
+  - center: {x: 64.13181, y: 5.25, z: 17.778305}
+    size: {x: 4.000935, y: 0.4}
+    yaw: -88.24188
+    count: 4
+  - center: {x: 64.93106, y: 5.7, z: 17.75377}
+    size: {x: 4.0451155, y: 0.4}
+    yaw: -88.24188
+    count: 4
+  - center: {x: 65.73031, y: 6.15, z: 17.729239}
+    size: {x: 4.0892944, y: 0.4}
+    yaw: -88.24188
+    count: 3
+  - center: {x: 66.52956, y: 6.6, z: 17.704706}
+    size: {x: 4.133474, y: 0.4}
+    yaw: -88.24188
+    count: 4
+  - center: {x: 60.674408, y: 3.45, z: 13.638348}
+    size: {x: 3.8223262, y: 0.4}
+    yaw: -84.72383
+    count: 4
+  - center: {x: 61.470642, y: 3.9, z: 13.564817}
+    size: {x: 3.8665514, y: 0.4}
+    yaw: -84.72383
+    count: 3
+  - center: {x: 62.266876, y: 4.35, z: 13.491287}
+    size: {x: 3.9107766, y: 0.4}
+    yaw: -84.72383
+    count: 4
+  - center: {x: 63.063114, y: 4.8, z: 13.417757}
+    size: {x: 3.955001, y: 0.4}
+    yaw: -84.72383
+    count: 4
+  - center: {x: 63.859344, y: 5.25, z: 13.344227}
+    size: {x: 3.9992268, y: 0.4}
+    yaw: -84.72383
+    count: 3
+  - center: {x: 64.65558, y: 5.7, z: 13.270697}
+    size: {x: 4.0434504, y: 0.4}
+    yaw: -84.72383
+    count: 4
+  - center: {x: 65.45181, y: 6.15, z: 13.197166}
+    size: {x: 4.087676, y: 0.4}
+    yaw: -84.72383
+    count: 4
+  - center: {x: 66.24805, y: 6.6, z: 13.123635}
+    size: {x: 4.1319017, y: 0.4}
+    yaw: -84.72383
+    count: 4
+  - center: {x: 60.154667, y: 3.45, z: 9.427364}
+    size: {x: 3.818573, y: 0.4}
+    yaw: -81.20034
+    count: 4
+  - center: {x: 60.944878, y: 3.9, z: 9.305038}
+    size: {x: 3.8628886, y: 0.4}
+    yaw: -81.20034
+    count: 4
+  - center: {x: 61.735085, y: 4.35, z: 9.182713}
+    size: {x: 3.9072046, y: 0.4}
+    yaw: -81.20034
+    count: 3
+  - center: {x: 62.52529, y: 4.8, z: 9.060386}
+    size: {x: 3.9515212, y: 0.4}
+    yaw: -81.20034
+    count: 4
+  - center: {x: 63.3155, y: 5.25, z: 8.93806}
+    size: {x: 3.995837, y: 0.4}
+    yaw: -81.20034
+    count: 4
+  - center: {x: 64.10571, y: 5.7, z: 8.815734}
+    size: {x: 4.040153, y: 0.4}
+    yaw: -81.20034
+    count: 3
+  - center: {x: 64.89592, y: 6.15, z: 8.693408}
+    size: {x: 4.0844693, y: 0.4}
+    yaw: -81.20034
+    count: 4
+  - center: {x: 65.68613, y: 6.6, z: 8.571082}
+    size: {x: 4.1287837, y: 0.4}
+    yaw: -81.20034
+    count: 4
+  - center: {x: 59.377792, y: 3.45, z: 5.2614236}
+    size: {x: 3.8130162, y: 0.4}
+    yaw: -77.66786
+    count: 3
+  - center: {x: 60.15896, y: 3.9, z: 5.0906425}
+    size: {x: 3.8574672, y: 0.4}
+    yaw: -77.66786
+    count: 4
+  - center: {x: 60.94013, y: 4.35, z: 4.9198613}
+    size: {x: 3.9019175, y: 0.4}
+    yaw: -77.66786
+    count: 4
+  - center: {x: 61.7213, y: 4.8, z: 4.7490797}
+    size: {x: 3.9463685, y: 0.4}
+    yaw: -77.66786
+    count: 3
+  - center: {x: 62.502464, y: 5.25, z: 4.5782986}
+    size: {x: 3.9908187, y: 0.4}
+    yaw: -77.66786
+    count: 4
+  - center: {x: 63.283634, y: 5.7, z: 4.4075174}
+    size: {x: 4.0352707, y: 0.4}
+    yaw: -77.66786
+    count: 4
+  - center: {x: 64.064804, y: 6.15, z: 4.2367363}
+    size: {x: 4.0797205, y: 0.4}
+    yaw: -77.66786
+    count: 3
+  - center: {x: 64.84597, y: 6.6, z: 4.065955}
+    size: {x: 4.124172, y: 0.4}
+    yaw: -77.66786
+    count: 4
+  - center: {x: 58.34707, y: 3.45, z: 1.1582856}
+    size: {x: 3.805742, y: 0.4}
+    yaw: -74.12293
+    count: 4
+  - center: {x: 59.116177, y: 3.9, z: 0.93953127}
+    size: {x: 3.8503714, y: 0.4}
+    yaw: -74.12293
+    count: 3
+  - center: {x: 59.88529, y: 4.35, z: 0.72077715}
+    size: {x: 3.8950005, y: 0.4}
+    yaw: -74.12293
+    count: 4
+  - center: {x: 60.6544, y: 4.8, z: 0.50202286}
+    size: {x: 3.9396286, y: 0.4}
+    yaw: -74.12293
+    count: 4
+  - center: {x: 61.42351, y: 5.25, z: 0.28326857}
+    size: {x: 3.9842575, y: 0.4}
+    yaw: -74.12293
+    count: 3
+  - center: {x: 62.192623, y: 5.7, z: 0.0645144}
+    size: {x: 4.0288854, y: 0.4}
+    yaw: -74.12293
+    count: 4
+  - center: {x: 62.96173, y: 6.15, z: -0.1542399}
+    size: {x: 4.0735145, y: 0.4}
+    yaw: -74.12293
+    count: 4
+  - center: {x: 63.730843, y: 6.6, z: -0.37299407}
+    size: {x: 4.118143, y: 0.4}
+    yaw: -74.12293
+    count: 3
+  - center: {x: 57.066833, y: 3.45, z: -2.8645542}
+    size: {x: 3.7968757, y: 0.4}
+    yaw: -70.56224
+    count: 4
+  - center: {x: 57.82087, y: 3.9, z: -3.130651}
+    size: {x: 3.8417218, y: 0.4}
+    yaw: -70.56224
+    count: 4
+  - center: {x: 58.57491, y: 4.35, z: -3.396748}
+    size: {x: 3.8865683, y: 0.4}
+    yaw: -70.56224
+    count: 3
+  - center: {x: 59.328945, y: 4.8, z: -3.662845}
+    size: {x: 3.9314167, y: 0.4}
+    yaw: -70.56224
+    count: 4
+  - center: {x: 60.082985, y: 5.25, z: -3.9289417}
+    size: {x: 3.9762635, y: 0.4}
+    yaw: -70.56224
+    count: 4
+  - center: {x: 60.83702, y: 5.7, z: -4.195039}
+    size: {x: 4.02111, y: 0.4}
+    yaw: -70.56224
+    count: 3
+  - center: {x: 61.591057, y: 6.15, z: -4.461136}
+    size: {x: 4.065957, y: 0.4}
+    yaw: -70.56224
+    count: 4
+  - center: {x: 62.345093, y: 6.6, z: -4.7272325}
+    size: {x: 4.110804, y: 0.4}
+    yaw: -70.56224
+    count: 4
+  - center: {x: 55.542503, y: 3.45, z: -6.789928}
+    size: {x: 3.7865427, y: 0.4}
+    yaw: -66.98266
+    count: 3
+  - center: {x: 56.27845, y: 3.9, z: -7.102582}
+    size: {x: 3.8316457, y: 0.4}
+    yaw: -66.98266
+    count: 4
+  - center: {x: 57.0144, y: 4.35, z: -7.4152365}
+    size: {x: 3.8767498, y: 0.4}
+    yaw: -66.98266
+    count: 4
+  - center: {x: 57.750347, y: 4.8, z: -7.7278905}
+    size: {x: 3.9218516, y: 0.4}
+    yaw: -66.98266
+    count: 3
+  - center: {x: 58.486298, y: 5.25, z: -8.0405445}
+    size: {x: 3.966955, y: 0.4}
+    yaw: -66.98266
+    count: 4
+  - center: {x: 59.222244, y: 5.7, z: -8.353199}
+    size: {x: 4.0120587, y: 0.4}
+    yaw: -66.98266
+    count: 4
+  - center: {x: 59.95819, y: 6.15, z: -8.6658535}
+    size: {x: 4.0571604, y: 0.4}
+    yaw: -66.98266
+    count: 3
+  - center: {x: 60.694138, y: 6.6, z: -8.978508}
+    size: {x: 4.1022644, y: 0.4}
+    yaw: -66.98266
+    count: 4
+  - center: {x: 53.78051, y: 3.45, z: -10.601068}
+    size: {x: 3.7749197, y: 0.4}
+    yaw: -63.3813
+    count: 4
+  - center: {x: 54.49536, y: 3.9, z: -10.95933}
+    size: {x: 3.8203144, y: 0.4}
+    yaw: -63.3813
+    count: 3
+  - center: {x: 55.210213, y: 4.35, z: -11.317593}
+    size: {x: 3.865708, y: 0.4}
+    yaw: -63.3813
+    count: 4
+  - center: {x: 55.925064, y: 4.8, z: -11.675856}
+    size: {x: 3.9111035, y: 0.4}
+    yaw: -63.3813
+    count: 4
+  - center: {x: 56.639915, y: 5.25, z: -12.034118}
+    size: {x: 3.9564977, y: 0.4}
+    yaw: -63.3813
+    count: 3
+  - center: {x: 57.354767, y: 5.7, z: -12.392381}
+    size: {x: 4.001891, y: 0.4}
+    yaw: -63.3813
+    count: 4
+  - center: {x: 58.06962, y: 6.15, z: -12.750643}
+    size: {x: 4.047286, y: 0.4}
+    yaw: -63.3813
+    count: 4
+  - center: {x: 58.78447, y: 6.6, z: -13.108906}
+    size: {x: 4.0926785, y: 0.4}
+    yaw: -63.3813
+    count: 3
+  - center: {x: 51.7883, y: 3.45, z: -14.281685}
+    size: {x: 3.7621996, y: 0.4}
+    yaw: -59.755535
+    count: 4
+  - center: {x: 52.479057, y: 3.9, z: -14.684434}
+    size: {x: 3.8079157, y: 0.4}
+    yaw: -59.755535
+    count: 4
+  - center: {x: 53.16982, y: 4.35, z: -15.087183}
+    size: {x: 3.8536317, y: 0.4}
+    yaw: -59.755535
+    count: 3
+  - center: {x: 53.860573, y: 4.8, z: -15.489931}
+    size: {x: 3.8993468, y: 0.4}
+    yaw: -59.755535
+    count: 4
+  - center: {x: 54.551334, y: 5.25, z: -15.892681}
+    size: {x: 3.9450624, y: 0.4}
+    yaw: -59.755535
+    count: 4
+  - center: {x: 55.242096, y: 5.7, z: -16.295431}
+    size: {x: 3.9907784, y: 0.4}
+    yaw: -59.755535
+    count: 3
+  - center: {x: 55.932854, y: 6.15, z: -16.698181}
+    size: {x: 4.0364943, y: 0.4}
+    yaw: -59.755535
+    count: 4
+  - center: {x: 56.62361, y: 6.6, z: -17.10093}
+    size: {x: 4.0822115, y: 0.4}
+    yaw: -59.755535
+    count: 4
+  - center: {x: 49.574306, y: 3.45, z: -17.816029}
+    size: {x: 3.748576, y: 0.4}
+    yaw: -56.103092
+    count: 3
+  - center: {x: 50.238, y: 3.9, z: -18.261961}
+    size: {x: 3.7946408, y: 0.4}
+    yaw: -56.103092
+    count: 4
+  - center: {x: 50.901695, y: 4.35, z: -18.707893}
+    size: {x: 3.8407047, y: 0.4}
+    yaw: -56.103092
+    count: 4
+  - center: {x: 51.565388, y: 4.8, z: -19.153824}
+    size: {x: 3.8867693, y: 0.4}
+    yaw: -56.103092
+    count: 3
+  - center: {x: 52.22908, y: 5.25, z: -19.599756}
+    size: {x: 3.9328346, y: 0.4}
+    yaw: -56.103092
+    count: 4
+  - center: {x: 52.892776, y: 5.7, z: -20.045689}
+    size: {x: 3.9788995, y: 0.4}
+    yaw: -56.103092
+    count: 4
+  - center: {x: 53.556473, y: 6.15, z: -20.49162}
+    size: {x: 4.0249634, y: 0.4}
+    yaw: -56.103092
+    count: 3
+  - center: {x: 54.220165, y: 6.6, z: -20.937553}
+    size: {x: 4.071028, y: 0.4}
+    yaw: -56.103092
+    count: 4
+  - center: {x: 47.147903, y: 3.45, z: -21.188957}
+    size: {x: 3.7342927, y: 0.4}
+    yaw: -52.422035
+    count: 4
+  - center: {x: 47.781593, y: 3.9, z: -21.676575}
+    size: {x: 3.7807271, y: 0.4}
+    yaw: -52.422035
+    count: 3
+  - center: {x: 48.415283, y: 4.35, z: -22.164194}
+    size: {x: 3.8271627, y: 0.4}
+    yaw: -52.422035
+    count: 4
+  - center: {x: 49.048973, y: 4.8, z: -22.651814}
+    size: {x: 3.8735964, y: 0.4}
+    yaw: -52.422035
+    count: 4
+  - center: {x: 49.682663, y: 5.25, z: -23.139431}
+    size: {x: 3.9200308, y: 0.4}
+    yaw: -52.422035
+    count: 3
+  - center: {x: 50.316353, y: 5.7, z: -23.62705}
+    size: {x: 3.9664638, y: 0.4}
+    yaw: -52.422035
+    count: 4
+  - center: {x: 50.950043, y: 6.15, z: -24.11467}
+    size: {x: 4.012902, y: 0.4}
+    yaw: -52.422035
+    count: 4
+  - center: {x: 51.583733, y: 6.6, z: -24.602287}
+    size: {x: 4.0593348, y: 0.4}
+    yaw: -52.422035
+    count: 3
+  - center: {x: 44.626793, y: 3.45, z: -24.270855}
+    size: {x: 3.436275, y: 0.4}
+    yaw: -48.853638
+    count: 3
+  - center: {x: 45.22895, y: 3.9, z: -24.797005}
+    size: {x: 3.4795086, y: 0.4}
+    yaw: -48.853638
+    count: 4
+  - center: {x: 45.8311, y: 4.35, z: -25.323156}
+    size: {x: 3.5227423, y: 0.4}
+    yaw: -48.853638
+    count: 3
+  - center: {x: 46.433258, y: 4.8, z: -25.849306}
+    size: {x: 3.565977, y: 0.4}
+    yaw: -48.853638
+    count: 3
+  - center: {x: 47.035408, y: 5.25, z: -26.375458}
+    size: {x: 3.6092105, y: 0.4}
+    yaw: -48.853638
+    count: 4
+  - center: {x: 47.637566, y: 5.7, z: -26.901608}
+    size: {x: 3.6524467, y: 0.4}
+    yaw: -48.853638
+    count: 3
+  - center: {x: 48.239716, y: 6.15, z: -27.427757}
+    size: {x: 3.695678, y: 0.4}
+    yaw: -48.853638
+    count: 3
+  - center: {x: 48.84187, y: 6.6, z: -27.953907}
+    size: {x: 3.7389126, y: 0.4}
+    yaw: -48.853638
+    count: 4
+  - center: {x: 38.463333, y: 3.45, z: -30.418705}
+    size: {x: 3.1059666, y: 0.4}
+    yaw: -40.89626
+    count: 3
+  - center: {x: 38.98688, y: 3.9, z: -31.023186}
+    size: {x: 3.1460857, y: 0.4}
+    yaw: -40.89626
+    count: 3
+  - center: {x: 39.51043, y: 4.35, z: -31.627668}
+    size: {x: 3.186206, y: 0.4}
+    yaw: -40.89626
+    count: 3
+  - center: {x: 40.03398, y: 4.8, z: -32.23215}
+    size: {x: 3.2263288, y: 0.4}
+    yaw: -40.89626
+    count: 3
+  - center: {x: 40.55753, y: 5.25, z: -32.83663}
+    size: {x: 3.266447, y: 0.4}
+    yaw: -40.89626
+    count: 3
+  - center: {x: 41.081078, y: 5.7, z: -33.441116}
+    size: {x: 3.3065674, y: 0.4}
+    yaw: -40.89626
+    count: 4
+  - center: {x: 41.60463, y: 6.15, z: -34.045597}
+    size: {x: 3.3466902, y: 0.4}
+    yaw: -40.89626
+    count: 3
+  - center: {x: 42.12818, y: 6.6, z: -34.650078}
+    size: {x: 3.386813, y: 0.4}
+    yaw: -40.89626
+    count: 3
+  - center: {x: 35.53683, y: 3.45, z: -32.788425}
+    size: {x: 3.6753232, y: 0.4}
+    yaw: -37.38904
+    count: 4
+  - center: {x: 36.02234, y: 3.9, z: -33.4237}
+    size: {x: 3.7233343, y: 0.4}
+    yaw: -37.38904
+    count: 3
+  - center: {x: 36.50785, y: 4.35, z: -34.058968}
+    size: {x: 3.7713468, y: 0.4}
+    yaw: -37.38904
+    count: 4
+  - center: {x: 36.99336, y: 4.8, z: -34.69424}
+    size: {x: 3.819354, y: 0.4}
+    yaw: -37.38904
+    count: 4
+  - center: {x: 37.478867, y: 5.25, z: -35.32951}
+    size: {x: 3.8673663, y: 0.4}
+    yaw: -37.38904
+    count: 3
+  - center: {x: 37.96438, y: 5.7, z: -35.964783}
+    size: {x: 3.9153814, y: 0.4}
+    yaw: -37.38904
+    count: 4
+  - center: {x: 38.449886, y: 6.15, z: -36.60005}
+    size: {x: 3.963391, y: 0.4}
+    yaw: -37.38904
+    count: 4
+  - center: {x: 38.935394, y: 6.6, z: -37.235325}
+    size: {x: 4.011399, y: 0.4}
+    yaw: -37.38904
+    count: 3
+  - center: {x: 32.21949, y: 3.45, z: -35.152756}
+    size: {x: 3.6613963, y: 0.4}
+    yaw: -33.552406
+    count: 3
+  - center: {x: 32.6614, y: 3.9, z: -35.81908}
+    size: {x: 3.709792, y: 0.4}
+    yaw: -33.552406
+    count: 4
+  - center: {x: 33.10331, y: 4.35, z: -36.48541}
+    size: {x: 3.7581868, y: 0.4}
+    yaw: -33.552406
+    count: 3
+  - center: {x: 33.54522, y: 4.8, z: -37.151737}
+    size: {x: 3.8065841, y: 0.4}
+    yaw: -33.552406
+    count: 4
+  - center: {x: 33.98713, y: 5.25, z: -37.81806}
+    size: {x: 3.8549814, y: 0.4}
+    yaw: -33.552406
+    count: 4
+  - center: {x: 34.42904, y: 5.7, z: -38.48439}
+    size: {x: 3.9033737, y: 0.4}
+    yaw: -33.552406
+    count: 3
+  - center: {x: 34.87095, y: 6.15, z: -39.15072}
+    size: {x: 3.9517694, y: 0.4}
+    yaw: -33.552406
+    count: 4
+  - center: {x: 35.31286, y: 6.6, z: -39.817047}
+    size: {x: 4.000166, y: 0.4}
+    yaw: -33.552406
+    count: 4
+  - center: {x: 28.763618, y: 3.45, z: -37.281}
+    size: {x: 3.6482978, y: 0.4}
+    yaw: -29.68589
+    count: 3
+  - center: {x: 29.159588, y: 3.9, z: -37.9756}
+    size: {x: 3.6970603, y: 0.4}
+    yaw: -29.68589
+    count: 3
+  - center: {x: 29.555557, y: 4.35, z: -38.670204}
+    size: {x: 3.745823, y: 0.4}
+    yaw: -29.68589
+    count: 4
+  - center: {x: 29.951527, y: 4.8, z: -39.36481}
+    size: {x: 3.7945836, y: 0.4}
+    yaw: -29.68589
+    count: 3
+  - center: {x: 30.347492, y: 5.25, z: -40.059414}
+    size: {x: 3.843346, y: 0.4}
+    yaw: -29.68589
+    count: 4
+  - center: {x: 30.743462, y: 5.7, z: -40.75402}
+    size: {x: 3.8921087, y: 0.4}
+    yaw: -29.68589
+    count: 4
+  - center: {x: 31.139431, y: 6.15, z: -41.448624}
+    size: {x: 3.9408712, y: 0.4}
+    yaw: -29.68589
+    count: 3
+  - center: {x: 31.5354, y: 6.6, z: -42.143227}
+    size: {x: 3.9896321, y: 0.4}
+    yaw: -29.68589
+    count: 4
+  - center: {x: 25.184002, y: 3.45, z: -39.163933}
+    size: {x: 3.6362565, y: 0.4}
+    yaw: -25.791262
+    count: 4
+  - center: {x: 25.531876, y: 3.9, z: -39.883823}
+    size: {x: 3.6853611, y: 0.4}
+    yaw: -25.791262
+    count: 3
+  - center: {x: 25.87975, y: 4.35, z: -40.603714}
+    size: {x: 3.7344627, y: 0.4}
+    yaw: -25.791262
+    count: 4
+  - center: {x: 26.227623, y: 4.8, z: -41.3236}
+    size: {x: 3.7835627, y: 0.4}
+    yaw: -25.791262
+    count: 4
+  - center: {x: 26.575493, y: 5.25, z: -42.04349}
+    size: {x: 3.8326654, y: 0.4}
+    yaw: -25.791262
+    count: 3
+  - center: {x: 26.923367, y: 5.7, z: -42.763382}
+    size: {x: 3.8817658, y: 0.4}
+    yaw: -25.791262
+    count: 4
+  - center: {x: 27.27124, y: 6.15, z: -43.48327}
+    size: {x: 3.9308686, y: 0.4}
+    yaw: -25.791262
+    count: 4
+  - center: {x: 27.619112, y: 6.6, z: -44.203156}
+    size: {x: 3.979972, y: 0.4}
+    yaw: -25.791262
+    count: 3
+  - center: {x: 21.495983, y: 3.45, z: -40.79339}
+    size: {x: 3.625499, y: 0.4}
+    yaw: -21.870857
+    count: 3
+  - center: {x: 21.793821, y: 3.9, z: -41.53537}
+    size: {x: 3.6749065, y: 0.4}
+    yaw: -21.870857
+    count: 4
+  - center: {x: 22.09166, y: 4.35, z: -42.277355}
+    size: {x: 3.724315, y: 0.4}
+    yaw: -21.870857
+    count: 3
+  - center: {x: 22.389496, y: 4.8, z: -43.019337}
+    size: {x: 3.7737281, y: 0.4}
+    yaw: -21.870857
+    count: 4
+  - center: {x: 22.687332, y: 5.25, z: -43.761322}
+    size: {x: 3.8231351, y: 0.4}
+    yaw: -21.870857
+    count: 4
+  - center: {x: 22.98517, y: 5.7, z: -44.503304}
+    size: {x: 3.8725455, y: 0.4}
+    yaw: -21.870857
+    count: 3
+  - center: {x: 23.283009, y: 6.15, z: -45.245285}
+    size: {x: 3.921954, y: 0.4}
+    yaw: -21.870857
+    count: 4
+  - center: {x: 23.580845, y: 6.6, z: -45.98727}
+    size: {x: 3.9713645, y: 0.4}
+    yaw: -21.870857
+    count: 4
+  - center: {x: 17.71539, y: 3.45, z: -42.16227}
+    size: {x: 3.6162095, y: 0.4}
+    yaw: -17.927568
+    count: 3
+  - center: {x: 17.961494, y: 3.9, z: -42.922974}
+    size: {x: 3.6658869, y: 0.4}
+    yaw: -17.927568
+    count: 3
+  - center: {x: 18.2076, y: 4.35, z: -43.683678}
+    size: {x: 3.715564, y: 0.4}
+    yaw: -17.927568
+    count: 4
+  - center: {x: 18.453703, y: 4.8, z: -44.44438}
+    size: {x: 3.76524, y: 0.4}
+    yaw: -17.927568
+    count: 3
+  - center: {x: 18.699808, y: 5.25, z: -45.205086}
+    size: {x: 3.8149173, y: 0.4}
+    yaw: -17.927568
+    count: 4
+  - center: {x: 18.945913, y: 5.7, z: -45.96579}
+    size: {x: 3.8645945, y: 0.4}
+    yaw: -17.927568
+    count: 4
+  - center: {x: 19.192019, y: 6.15, z: -46.726494}
+    size: {x: 3.914272, y: 0.4}
+    yaw: -17.927568
+    count: 3
+  - center: {x: 19.438122, y: 6.6, z: -47.487198}
+    size: {x: 3.9639473, y: 0.4}
+    yaw: -17.927568
+    count: 4
+  - center: {x: 13.858459, y: 3.45, z: -43.264618}
+    size: {x: 3.608571, y: 0.4}
+    yaw: -13.9647875
+    count: 4
+  - center: {x: 14.051405, y: 3.9, z: -44.040504}
+    size: {x: 3.6584704, y: 0.4}
+    yaw: -13.9647875
+    count: 3
+  - center: {x: 14.244349, y: 4.35, z: -44.816395}
+    size: {x: 3.7083688, y: 0.4}
+    yaw: -13.9647875
+    count: 4
+  - center: {x: 14.437293, y: 4.8, z: -45.592285}
+    size: {x: 3.7582686, y: 0.4}
+    yaw: -13.9647875
+    count: 4
+  - center: {x: 14.630238, y: 5.25, z: -46.36817}
+    size: {x: 3.8081672, y: 0.4}
+    yaw: -13.9647875
+    count: 3
+  - center: {x: 14.823182, y: 5.7, z: -47.144062}
+    size: {x: 3.8580658, y: 0.4}
+    yaw: -13.9647875
+    count: 4
+  - center: {x: 15.016127, y: 6.15, z: -47.919952}
+    size: {x: 3.9079647, y: 0.4}
+    yaw: -13.9647875
+    count: 4
+  - center: {x: 15.209071, y: 6.6, z: -48.69584}
+    size: {x: 3.9578633, y: 0.4}
+    yaw: -13.9647875
+    count: 3
+  - center: {x: 9.941799, y: 3.45, z: -44.09562}
+    size: {x: 3.6027005, y: 0.4}
+    yaw: -9.986354
+    count: 3
+  - center: {x: 10.080446, y: 3.9, z: -44.883022}
+    size: {x: 3.6527703, y: 0.4}
+    yaw: -9.986354
+    count: 4
+  - center: {x: 10.219093, y: 4.35, z: -45.670425}
+    size: {x: 3.702841, y: 0.4}
+    yaw: -9.986354
+    count: 3
+  - center: {x: 10.35774, y: 4.8, z: -46.45783}
+    size: {x: 3.7529094, y: 0.4}
+    yaw: -9.986354
+    count: 4
+  - center: {x: 10.4963875, y: 5.25, z: -47.24523}
+    size: {x: 3.80298, y: 0.4}
+    yaw: -9.986354
+    count: 4
+  - center: {x: 10.635035, y: 5.7, z: -48.03263}
+    size: {x: 3.8530498, y: 0.4}
+    yaw: -9.986354
+    count: 3
+  - center: {x: 10.773682, y: 6.15, z: -48.820038}
+    size: {x: 3.9031196, y: 0.4}
+    yaw: -9.986354
+    count: 4
+  - center: {x: 10.912329, y: 6.6, z: -49.607437}
+    size: {x: 3.95319, y: 0.4}
+    yaw: -9.986354
+    count: 4
+  - center: {x: 5.98228, y: 3.45, z: -44.65165}
+    size: {x: 3.5987318, y: 0.4}
+    yaw: -5.996471
+    count: 3
+  - center: {x: 6.0658026, y: 3.9, z: -45.446785}
+    size: {x: 3.6489182, y: 0.4}
+    yaw: -5.996471
+    count: 3
+  - center: {x: 6.149326, y: 4.35, z: -46.24193}
+    size: {x: 3.6991043, y: 0.4}
+    yaw: -5.996471
+    count: 4
+  - center: {x: 6.232849, y: 4.8, z: -47.037064}
+    size: {x: 3.7492907, y: 0.4}
+    yaw: -5.996471
+    count: 3
+  - center: {x: 6.316372, y: 5.25, z: -47.832207}
+    size: {x: 3.7994773, y: 0.4}
+    yaw: -5.996471
+    count: 4
+  - center: {x: 6.3998947, y: 5.7, z: -48.627342}
+    size: {x: 3.8496637, y: 0.4}
+    yaw: -5.996471
+    count: 4
+  - center: {x: 6.4834175, y: 6.15, z: -49.42248}
+    size: {x: 3.8998506, y: 0.4}
+    yaw: -5.996471
+    count: 3
+  - center: {x: 6.566941, y: 6.6, z: -50.21762}
+    size: {x: 3.9500368, y: 0.4}
+    yaw: -5.996471
+    count: 4
+  - center: {x: 3.2688124, y: 3.45, z: -44.902}
+    size: {x: 1.3073384, y: 0.4}
+    yaw: -3.2727406
+    count: 2
+  - center: {x: 3.3144798, y: 3.9, z: -45.70063}
+    size: {x: 1.3255962, y: 0.4}
+    yaw: -3.2727406
+    count: 1
+  - center: {x: 3.3601475, y: 4.35, z: -46.499264}
+    size: {x: 1.3438538, y: 0.4}
+    yaw: -3.2727406
+    count: 1
+  - center: {x: 3.4058151, y: 4.8, z: -47.297897}
+    size: {x: 1.3621117, y: 0.4}
+    yaw: -3.2727406
+    count: 2
+  - center: {x: 3.4514828, y: 5.25, z: -48.096527}
+    size: {x: 1.3803694, y: 0.4}
+    yaw: -3.2727406
+    count: 1
+  - center: {x: 3.4971504, y: 5.7, z: -48.895157}
+    size: {x: 1.3986273, y: 0.4}
+    yaw: -3.2727406
+    count: 1
+  - center: {x: 3.5428176, y: 6.15, z: -49.693787}
+    size: {x: 1.4168845, y: 0.4}
+    yaw: -3.2727406
+    count: 2
+  - center: {x: 3.5884852, y: 6.6, z: -50.492416}
+    size: {x: 1.4351422, y: 0.4}
+    yaw: -3.2727406
+    count: 1
+  - center: {x: -3.268818, y: 3.45, z: -44.902}
+    size: {x: 1.3073386, y: 0.4}
+    yaw: 3.2727463
+    count: 1
+  - center: {x: -3.3144855, y: 3.9, z: -45.70063}
+    size: {x: 1.3255962, y: 0.4}
+    yaw: 3.2727463
+    count: 2
+  - center: {x: -3.3601532, y: 4.35, z: -46.499264}
+    size: {x: 1.3438538, y: 0.4}
+    yaw: 3.2727463
+    count: 1
+  - center: {x: -3.4058208, y: 4.8, z: -47.297897}
+    size: {x: 1.3621117, y: 0.4}
+    yaw: 3.2727463
+    count: 1
+  - center: {x: -3.4514885, y: 5.25, z: -48.096527}
+    size: {x: 1.3803692, y: 0.4}
+    yaw: 3.2727463
+    count: 2
+  - center: {x: -3.4971561, y: 5.7, z: -48.895157}
+    size: {x: 1.398627, y: 0.4}
+    yaw: 3.2727463
+    count: 1
+  - center: {x: -3.5428238, y: 6.15, z: -49.693787}
+    size: {x: 1.4168847, y: 0.4}
+    yaw: 3.2727463
+    count: 1
+  - center: {x: -3.5884914, y: 6.6, z: -50.492416}
+    size: {x: 1.4351424, y: 0.4}
+    yaw: 3.2727463
+    count: 2
+  - center: {x: -5.9822855, y: 3.45, z: -44.65165}
+    size: {x: 3.5987313, y: 0.4}
+    yaw: 5.996476
+    count: 3
+  - center: {x: -6.0658083, y: 3.9, z: -45.446785}
+    size: {x: 3.6489182, y: 0.4}
+    yaw: 5.996476
+    count: 3
+  - center: {x: -6.1493316, y: 4.35, z: -46.24193}
+    size: {x: 3.6991043, y: 0.4}
+    yaw: 5.996476
+    count: 4
+  - center: {x: -6.232855, y: 4.8, z: -47.037064}
+    size: {x: 3.7492907, y: 0.4}
+    yaw: 5.996476
+    count: 3
+  - center: {x: -6.3163776, y: 5.25, z: -47.832207}
+    size: {x: 3.7994773, y: 0.4}
+    yaw: 5.996476
+    count: 4
+  - center: {x: -6.3999004, y: 5.7, z: -48.627342}
+    size: {x: 3.8496637, y: 0.4}
+    yaw: 5.996476
+    count: 4
+  - center: {x: -6.4834237, y: 6.15, z: -49.42248}
+    size: {x: 3.8998504, y: 0.4}
+    yaw: 5.996476
+    count: 3
+  - center: {x: -6.566947, y: 6.6, z: -50.21762}
+    size: {x: 3.9500363, y: 0.4}
+    yaw: 5.996476
+    count: 4
+  - center: {x: -9.941805, y: 3.45, z: -44.09562}
+    size: {x: 3.602701, y: 0.4}
+    yaw: 9.986359
+    count: 4
+  - center: {x: -10.080452, y: 3.9, z: -44.88302}
+    size: {x: 3.6527708, y: 0.4}
+    yaw: 9.986359
+    count: 3
+  - center: {x: -10.219099, y: 4.35, z: -45.670425}
+    size: {x: 3.7028413, y: 0.4}
+    yaw: 9.986359
+    count: 3
+  - center: {x: -10.357746, y: 4.8, z: -46.457825}
+    size: {x: 3.7529106, y: 0.4}
+    yaw: 9.986359
+    count: 4
+  - center: {x: -10.496393, y: 5.25, z: -47.24523}
+    size: {x: 3.8029814, y: 0.4}
+    yaw: 9.986359
+    count: 3
+  - center: {x: -10.63504, y: 5.7, z: -48.03263}
+    size: {x: 3.8530507, y: 0.4}
+    yaw: 9.986359
+    count: 4
+  - center: {x: -10.773687, y: 6.15, z: -48.820034}
+    size: {x: 3.9031208, y: 0.4}
+    yaw: 9.986359
+    count: 4
+  - center: {x: -10.912334, y: 6.6, z: -49.607437}
+    size: {x: 3.9531915, y: 0.4}
+    yaw: 9.986359
+    count: 3
+  - center: {x: -13.858465, y: 3.45, z: -43.264618}
+    size: {x: 3.608571, y: 0.4}
+    yaw: 13.964793
+    count: 3
+  - center: {x: -14.051411, y: 3.9, z: -44.040504}
+    size: {x: 3.6584694, y: 0.4}
+    yaw: 13.964793
+    count: 4
+  - center: {x: -14.244354, y: 4.35, z: -44.81639}
+    size: {x: 3.708368, y: 0.4}
+    yaw: 13.964793
+    count: 3
+  - center: {x: -14.4373, y: 4.8, z: -45.592285}
+    size: {x: 3.758267, y: 0.4}
+    yaw: 13.964793
+    count: 4
+  - center: {x: -14.630243, y: 5.25, z: -46.36817}
+    size: {x: 3.8081656, y: 0.4}
+    yaw: 13.964793
+    count: 4
+  - center: {x: -14.823189, y: 5.7, z: -47.144062}
+    size: {x: 3.858065, y: 0.4}
+    yaw: 13.964793
+    count: 3
+  - center: {x: -15.016132, y: 6.15, z: -47.919952}
+    size: {x: 3.907963, y: 0.4}
+    yaw: 13.964793
+    count: 4
+  - center: {x: -15.209078, y: 6.6, z: -48.69584}
+    size: {x: 3.9578614, y: 0.4}
+    yaw: 13.964793
+    count: 4
+  - center: {x: -17.715393, y: 3.45, z: -42.16227}
+    size: {x: 3.6162078, y: 0.4}
+    yaw: 17.927574
+    count: 3
+  - center: {x: -17.961498, y: 3.9, z: -42.922974}
+    size: {x: 3.6658852, y: 0.4}
+    yaw: 17.927574
+    count: 3
+  - center: {x: -18.207603, y: 4.35, z: -43.683678}
+    size: {x: 3.7155628, y: 0.4}
+    yaw: 17.927574
+    count: 4
+  - center: {x: -18.453709, y: 4.8, z: -44.44438}
+    size: {x: 3.765238, y: 0.4}
+    yaw: 17.927574
+    count: 3
+  - center: {x: -18.699814, y: 5.25, z: -45.205086}
+    size: {x: 3.8149157, y: 0.4}
+    yaw: 17.927574
+    count: 4
+  - center: {x: -18.945919, y: 5.7, z: -45.96579}
+    size: {x: 3.8645928, y: 0.4}
+    yaw: 17.927574
+    count: 4
+  - center: {x: -19.192024, y: 6.15, z: -46.726494}
+    size: {x: 3.9142702, y: 0.4}
+    yaw: 17.927574
+    count: 3
+  - center: {x: -19.43813, y: 6.6, z: -47.487198}
+    size: {x: 3.9639473, y: 0.4}
+    yaw: 17.927574
+    count: 4
+  - center: {x: -21.495987, y: 3.45, z: -40.79339}
+    size: {x: 3.625499, y: 0.4}
+    yaw: 21.870861
+    count: 4
+  - center: {x: -21.793825, y: 3.9, z: -41.53537}
+    size: {x: 3.6749065, y: 0.4}
+    yaw: 21.870861
+    count: 3
+  - center: {x: -22.091663, y: 4.35, z: -42.277355}
+    size: {x: 3.7243166, y: 0.4}
+    yaw: 21.870861
+    count: 4
+  - center: {x: -22.3895, y: 4.8, z: -43.019337}
+    size: {x: 3.7737281, y: 0.4}
+    yaw: 21.870861
+    count: 4
+  - center: {x: -22.687336, y: 5.25, z: -43.761322}
+    size: {x: 3.8231351, y: 0.4}
+    yaw: 21.870861
+    count: 3
+  - center: {x: -22.985174, y: 5.7, z: -44.503304}
+    size: {x: 3.8725455, y: 0.4}
+    yaw: 21.870861
+    count: 4
+  - center: {x: -23.283012, y: 6.15, z: -45.245285}
+    size: {x: 3.921954, y: 0.4}
+    yaw: 21.870861
+    count: 4
+  - center: {x: -23.580849, y: 6.6, z: -45.98727}
+    size: {x: 3.9713626, y: 0.4}
+    yaw: 21.870861
+    count: 3
+  - center: {x: -25.184006, y: 3.45, z: -39.163933}
+    size: {x: 3.6362536, y: 0.4}
+    yaw: 25.791264
+    count: 3
+  - center: {x: -25.531878, y: 3.9, z: -39.883823}
+    size: {x: 3.685358, y: 0.4}
+    yaw: 25.791264
+    count: 4
+  - center: {x: -25.879751, y: 4.35, z: -40.603714}
+    size: {x: 3.734458, y: 0.4}
+    yaw: 25.791264
+    count: 3
+  - center: {x: -26.227623, y: 4.8, z: -41.3236}
+    size: {x: 3.7835596, y: 0.4}
+    yaw: 25.791264
+    count: 4
+  - center: {x: -26.575497, y: 5.25, z: -42.04349}
+    size: {x: 3.8326623, y: 0.4}
+    yaw: 25.791264
+    count: 4
+  - center: {x: -26.923368, y: 5.7, z: -42.763382}
+    size: {x: 3.8817627, y: 0.4}
+    yaw: 25.791264
+    count: 3
+  - center: {x: -27.27124, y: 6.15, z: -43.48327}
+    size: {x: 3.9308655, y: 0.4}
+    yaw: 25.791264
+    count: 4
+  - center: {x: -27.619114, y: 6.6, z: -44.203156}
+    size: {x: 3.9799685, y: 0.4}
+    yaw: 25.791264
+    count: 4
+  - center: {x: -28.763622, y: 3.45, z: -37.281}
+    size: {x: 3.6483054, y: 0.4}
+    yaw: 29.68589
+    count: 3
+  - center: {x: -29.159592, y: 3.9, z: -37.9756}
+    size: {x: 3.6970663, y: 0.4}
+    yaw: 29.68589
+    count: 3
+  - center: {x: -29.55556, y: 4.35, z: -38.670204}
+    size: {x: 3.7458293, y: 0.4}
+    yaw: 29.68589
+    count: 4
+  - center: {x: -29.951529, y: 4.8, z: -39.364807}
+    size: {x: 3.79459, y: 0.4}
+    yaw: 29.68589
+    count: 3
+  - center: {x: -30.347496, y: 5.25, z: -40.05941}
+    size: {x: 3.843354, y: 0.4}
+    yaw: 29.68589
+    count: 4
+  - center: {x: -30.743465, y: 5.7, z: -40.75402}
+    size: {x: 3.8921149, y: 0.4}
+    yaw: 29.68589
+    count: 4
+  - center: {x: -31.139435, y: 6.15, z: -41.448624}
+    size: {x: 3.940876, y: 0.4}
+    yaw: 29.68589
+    count: 3
+  - center: {x: -31.535402, y: 6.6, z: -42.143227}
+    size: {x: 3.989637, y: 0.4}
+    yaw: 29.68589
+    count: 4
+  - center: {x: -32.219498, y: 3.45, z: -35.15275}
+    size: {x: 3.661401, y: 0.4}
+    yaw: 33.552414
+    count: 4
+  - center: {x: -32.661407, y: 3.9, z: -35.819077}
+    size: {x: 3.7097979, y: 0.4}
+    yaw: 33.552414
+    count: 3
+  - center: {x: -33.103317, y: 4.35, z: -36.485405}
+    size: {x: 3.7581933, y: 0.4}
+    yaw: 33.552414
+    count: 4
+  - center: {x: -33.54523, y: 4.8, z: -37.151733}
+    size: {x: 3.8065906, y: 0.4}
+    yaw: 33.552414
+    count: 4
+  - center: {x: -33.98714, y: 5.25, z: -37.818058}
+    size: {x: 3.8549862, y: 0.4}
+    yaw: 33.552414
+    count: 3
+  - center: {x: -34.429047, y: 5.7, z: -38.484386}
+    size: {x: 3.9033818, y: 0.4}
+    yaw: 33.552414
+    count: 4
+  - center: {x: -34.870956, y: 6.15, z: -39.150715}
+    size: {x: 3.951777, y: 0.4}
+    yaw: 33.552414
+    count: 4
+  - center: {x: -35.312866, y: 6.6, z: -39.81704}
+    size: {x: 4.000174, y: 0.4}
+    yaw: 33.552414
+    count: 3
+  - center: {x: -35.53684, y: 3.45, z: -32.78842}
+    size: {x: 3.6753154, y: 0.4}
+    yaw: 37.38905
+    count: 3
+  - center: {x: -36.022346, y: 3.9, z: -33.42369}
+    size: {x: 3.723327, y: 0.4}
+    yaw: 37.38905
+    count: 4
+  - center: {x: -36.50786, y: 4.35, z: -34.058964}
+    size: {x: 3.771339, y: 0.4}
+    yaw: 37.38905
+    count: 3
+  - center: {x: -36.993366, y: 4.8, z: -34.694237}
+    size: {x: 3.8193467, y: 0.4}
+    yaw: 37.38905
+    count: 4
+  - center: {x: -37.478874, y: 5.25, z: -35.329506}
+    size: {x: 3.8673587, y: 0.4}
+    yaw: 37.38905
+    count: 4
+  - center: {x: -37.964386, y: 5.7, z: -35.964775}
+    size: {x: 3.9153714, y: 0.4}
+    yaw: 37.38905
+    count: 3
+  - center: {x: -38.449894, y: 6.15, z: -36.600048}
+    size: {x: 3.963384, y: 0.4}
+    yaw: 37.38905
+    count: 4
+  - center: {x: -38.935402, y: 6.6, z: -37.23532}
+    size: {x: 4.011391, y: 0.4}
+    yaw: 37.38905
+    count: 4
+  - center: {x: -38.463333, y: 3.45, z: -30.418697}
+    size: {x: 3.105969, y: 0.4}
+    yaw: 40.896267
+    count: 3
+  - center: {x: -38.986885, y: 3.9, z: -31.02318}
+    size: {x: 3.146088, y: 0.4}
+    yaw: 40.896267
+    count: 3
+  - center: {x: -39.510437, y: 4.35, z: -31.627663}
+    size: {x: 3.1862082, y: 0.4}
+    yaw: 40.896267
+    count: 3
+  - center: {x: -40.03398, y: 4.8, z: -32.232147}
+    size: {x: 3.226331, y: 0.4}
+    yaw: 40.896267
+    count: 3
+  - center: {x: -40.557533, y: 5.25, z: -32.836624}
+    size: {x: 3.2664492, y: 0.4}
+    yaw: 40.896267
+    count: 3
+  - center: {x: -41.081085, y: 5.7, z: -33.44111}
+    size: {x: 3.3065696, y: 0.4}
+    yaw: 40.896267
+    count: 4
+  - center: {x: -41.604637, y: 6.15, z: -34.045593}
+    size: {x: 3.3466923, y: 0.4}
+    yaw: 40.896267
+    count: 3
+  - center: {x: -42.12818, y: 6.6, z: -34.650074}
+    size: {x: 3.386815, y: 0.4}
+    yaw: 40.896267
+    count: 3
+  - center: {x: -44.626804, y: 3.45, z: -24.270844}
+    size: {x: 3.4362662, y: 0.4}
+    yaw: 48.853657
+    count: 4
+  - center: {x: -45.22896, y: 3.9, z: -24.796993}
+    size: {x: 3.4795012, y: 0.4}
+    yaw: 48.853657
+    count: 3
+  - center: {x: -45.831112, y: 4.35, z: -25.323143}
+    size: {x: 3.522736, y: 0.4}
+    yaw: 48.853657
+    count: 3
+  - center: {x: -46.433266, y: 4.8, z: -25.849295}
+    size: {x: 3.5659695, y: 0.4}
+    yaw: 48.853657
+    count: 4
+  - center: {x: -47.03542, y: 5.25, z: -26.375444}
+    size: {x: 3.6092043, y: 0.4}
+    yaw: 48.853657
+    count: 3
+  - center: {x: -47.637573, y: 5.7, z: -26.901596}
+    size: {x: 3.6524377, y: 0.4}
+    yaw: 48.853657
+    count: 3
+  - center: {x: -48.239727, y: 6.15, z: -27.427746}
+    size: {x: 3.6956716, y: 0.4}
+    yaw: 48.853657
+    count: 4
+  - center: {x: -48.84188, y: 6.6, z: -27.953896}
+    size: {x: 3.738904, y: 0.4}
+    yaw: 48.853657
+    count: 3
+  - center: {x: -47.14791, y: 3.45, z: -21.188953}
+    size: {x: 3.734283, y: 0.4}
+    yaw: 52.42204
+    count: 4
+  - center: {x: -47.7816, y: 3.9, z: -21.67657}
+    size: {x: 3.7807176, y: 0.4}
+    yaw: 52.42204
+    count: 4
+  - center: {x: -48.41529, y: 4.35, z: -22.164188}
+    size: {x: 3.827152, y: 0.4}
+    yaw: 52.42204
+    count: 3
+  - center: {x: -49.04898, y: 4.8, z: -22.65181}
+    size: {x: 3.8735864, y: 0.4}
+    yaw: 52.42204
+    count: 4
+  - center: {x: -49.68267, y: 5.25, z: -23.139427}
+    size: {x: 3.9200196, y: 0.4}
+    yaw: 52.42204
+    count: 4
+  - center: {x: -50.31636, y: 5.7, z: -23.627047}
+    size: {x: 3.966454, y: 0.4}
+    yaw: 52.42204
+    count: 3
+  - center: {x: -50.95005, y: 6.15, z: -24.114666}
+    size: {x: 4.0128903, y: 0.4}
+    yaw: 52.42204
+    count: 4
+  - center: {x: -51.583736, y: 6.6, z: -24.602283}
+    size: {x: 4.059325, y: 0.4}
+    yaw: 52.42204
+    count: 4
+  - center: {x: -49.57431, y: 3.45, z: -17.816027}
+    size: {x: 3.7485805, y: 0.4}
+    yaw: 56.103096
+    count: 3
+  - center: {x: -50.238003, y: 3.9, z: -18.26196}
+    size: {x: 3.7946455, y: 0.4}
+    yaw: 56.103096
+    count: 4
+  - center: {x: -50.901695, y: 4.35, z: -18.70789}
+    size: {x: 3.8407094, y: 0.4}
+    yaw: 56.103096
+    count: 4
+  - center: {x: -51.56539, y: 4.8, z: -19.153822}
+    size: {x: 3.8867762, y: 0.4}
+    yaw: 56.103096
+    count: 3
+  - center: {x: -52.229084, y: 5.25, z: -19.599754}
+    size: {x: 3.9328394, y: 0.4}
+    yaw: 56.103096
+    count: 4
+  - center: {x: -52.892776, y: 5.7, z: -20.045687}
+    size: {x: 3.9789042, y: 0.4}
+    yaw: 56.103096
+    count: 4
+  - center: {x: -53.556473, y: 6.15, z: -20.49162}
+    size: {x: 4.024968, y: 0.4}
+    yaw: 56.103096
+    count: 3
+  - center: {x: -54.22017, y: 6.6, z: -20.93755}
+    size: {x: 4.071033, y: 0.4}
+    yaw: 56.103096
+    count: 4
+  - center: {x: -51.7883, y: 3.45, z: -14.281685}
+    size: {x: 3.762192, y: 0.4}
+    yaw: 59.755535
+    count: 4
+  - center: {x: -52.47906, y: 3.9, z: -14.684434}
+    size: {x: 3.807908, y: 0.4}
+    yaw: 59.755535
+    count: 3
+  - center: {x: -53.16982, y: 4.35, z: -15.087183}
+    size: {x: 3.8536222, y: 0.4}
+    yaw: 59.755535
+    count: 4
+  - center: {x: -53.86058, y: 4.8, z: -15.489931}
+    size: {x: 3.8993375, y: 0.4}
+    yaw: 59.755535
+    count: 4
+  - center: {x: -54.55134, y: 5.25, z: -15.892681}
+    size: {x: 3.9450552, y: 0.4}
+    yaw: 59.755535
+    count: 3
+  - center: {x: -55.242096, y: 5.7, z: -16.295431}
+    size: {x: 3.9907708, y: 0.4}
+    yaw: 59.755535
+    count: 4
+  - center: {x: -55.932854, y: 6.15, z: -16.698181}
+    size: {x: 4.0364866, y: 0.4}
+    yaw: 59.755535
+    count: 4
+  - center: {x: -56.62361, y: 6.6, z: -17.10093}
+    size: {x: 4.082202, y: 0.4}
+    yaw: 59.755535
+    count: 3
+  - center: {x: -53.78051, y: 3.45, z: -10.601067}
+    size: {x: 3.7749283, y: 0.4}
+    yaw: 63.3813
+    count: 4
+  - center: {x: -54.49536, y: 3.9, z: -10.95933}
+    size: {x: 3.820322, y: 0.4}
+    yaw: 63.3813
+    count: 4
+  - center: {x: -55.210213, y: 4.35, z: -11.317592}
+    size: {x: 3.865718, y: 0.4}
+    yaw: 63.3813
+    count: 3
+  - center: {x: -55.925064, y: 4.8, z: -11.675854}
+    size: {x: 3.9111109, y: 0.4}
+    yaw: 63.3813
+    count: 4
+  - center: {x: -56.639915, y: 5.25, z: -12.034117}
+    size: {x: 3.9565053, y: 0.4}
+    yaw: 63.3813
+    count: 4
+  - center: {x: -57.354767, y: 5.7, z: -12.39238}
+    size: {x: 4.0018997, y: 0.4}
+    yaw: 63.3813
+    count: 3
+  - center: {x: -58.06962, y: 6.15, z: -12.750642}
+    size: {x: 4.0472946, y: 0.4}
+    yaw: 63.3813
+    count: 4
+  - center: {x: -58.784466, y: 6.6, z: -13.108904}
+    size: {x: 4.092689, y: 0.4}
+    yaw: 63.3813
+    count: 4
+  - center: {x: -55.542507, y: 3.45, z: -6.789919}
+    size: {x: 3.7865498, y: 0.4}
+    yaw: 66.982666
+    count: 3
+  - center: {x: -56.278458, y: 3.9, z: -7.1025734}
+    size: {x: 3.8316538, y: 0.4}
+    yaw: 66.982666
+    count: 4
+  - center: {x: -57.014404, y: 4.35, z: -7.415227}
+    size: {x: 3.8767571, y: 0.4}
+    yaw: 66.982666
+    count: 4
+  - center: {x: -57.75035, y: 4.8, z: -7.7278814}
+    size: {x: 3.9218595, y: 0.4}
+    yaw: 66.982666
+    count: 3
+  - center: {x: -58.486298, y: 5.25, z: -8.040536}
+    size: {x: 3.9669626, y: 0.4}
+    yaw: 66.982666
+    count: 4
+  - center: {x: -59.222248, y: 5.7, z: -8.353189}
+    size: {x: 4.0120664, y: 0.4}
+    yaw: 66.982666
+    count: 4
+  - center: {x: -59.9582, y: 6.15, z: -8.665844}
+    size: {x: 4.0571694, y: 0.4}
+    yaw: 66.982666
+    count: 3
+  - center: {x: -60.694145, y: 6.6, z: -8.978498}
+    size: {x: 4.102272, y: 0.4}
+    yaw: 66.982666
+    count: 4
+  - center: {x: -57.06684, y: 3.45, z: -2.8645482}
+    size: {x: 3.7968645, y: 0.4}
+    yaw: 70.56225
+    count: 4
+  - center: {x: -57.820877, y: 3.9, z: -3.130645}
+    size: {x: 3.8417108, y: 0.4}
+    yaw: 70.56225
+    count: 3
+  - center: {x: -58.574913, y: 4.35, z: -3.3967419}
+    size: {x: 3.8865576, y: 0.4}
+    yaw: 70.56225
+    count: 4
+  - center: {x: -59.32895, y: 4.8, z: -3.662839}
+    size: {x: 3.9314055, y: 0.4}
+    yaw: 70.56225
+    count: 4
+  - center: {x: -60.08299, y: 5.25, z: -3.9289358}
+    size: {x: 3.9762526, y: 0.4}
+    yaw: 70.56225
+    count: 3
+  - center: {x: -60.837025, y: 5.7, z: -4.1950326}
+    size: {x: 4.021097, y: 0.4}
+    yaw: 70.56225
+    count: 4
+  - center: {x: -61.591064, y: 6.15, z: -4.461129}
+    size: {x: 4.065944, y: 0.4}
+    yaw: 70.56225
+    count: 4
+  - center: {x: -62.3451, y: 6.6, z: -4.7272263}
+    size: {x: 4.1107926, y: 0.4}
+    yaw: 70.56225
+    count: 3
+  - center: {x: -58.34707, y: 3.45, z: 1.1582894}
+    size: {x: 3.8057494, y: 0.4}
+    yaw: 74.12294
+    count: 4
+  - center: {x: -59.11618, y: 3.9, z: 0.93953526}
+    size: {x: 3.8503783, y: 0.4}
+    yaw: 74.12294
+    count: 4
+  - center: {x: -59.885292, y: 4.35, z: 0.72078097}
+    size: {x: 3.895007, y: 0.4}
+    yaw: 74.12294
+    count: 3
+  - center: {x: -60.654404, y: 4.8, z: 0.50202686}
+    size: {x: 3.9396353, y: 0.4}
+    yaw: 74.12294
+    count: 4
+  - center: {x: -61.423515, y: 5.25, z: 0.28327268}
+    size: {x: 3.984264, y: 0.4}
+    yaw: 74.12294
+    count: 4
+  - center: {x: -62.192627, y: 5.7, z: 0.06451857}
+    size: {x: 4.0288935, y: 0.4}
+    yaw: 74.12294
+    count: 3
+  - center: {x: -62.96174, y: 6.15, z: -0.15423572}
+    size: {x: 4.0735216, y: 0.4}
+    yaw: 74.12294
+    count: 4
+  - center: {x: -63.730846, y: 6.6, z: -0.37298977}
+    size: {x: 4.1181493, y: 0.4}
+    yaw: 74.12294
+    count: 4
+  - center: {x: -59.377796, y: 3.45, z: 5.261428}
+    size: {x: 3.8130102, y: 0.4}
+    yaw: 77.66787
+    count: 3
+  - center: {x: -60.158966, y: 3.9, z: 5.0906467}
+    size: {x: 3.857461, y: 0.4}
+    yaw: 77.66787
+    count: 4
+  - center: {x: -60.940132, y: 4.35, z: 4.9198656}
+    size: {x: 3.901912, y: 0.4}
+    yaw: 77.66787
+    count: 4
+  - center: {x: -61.7213, y: 4.8, z: 4.7490845}
+    size: {x: 3.9463623, y: 0.4}
+    yaw: 77.66787
+    count: 3
+  - center: {x: -62.502472, y: 5.25, z: 4.5783033}
+    size: {x: 3.9908133, y: 0.4}
+    yaw: 77.66787
+    count: 4
+  - center: {x: -63.283638, y: 5.7, z: 4.407522}
+    size: {x: 4.035264, y: 0.4}
+    yaw: 77.66787
+    count: 4
+  - center: {x: -64.064804, y: 6.15, z: 4.2367406}
+    size: {x: 4.079715, y: 0.4}
+    yaw: 77.66787
+    count: 3
+  - center: {x: -64.84597, y: 6.6, z: 4.0659595}
+    size: {x: 4.1241655, y: 0.4}
+    yaw: 77.66787
+    count: 4
+  - center: {x: -60.15467, y: 3.45, z: 9.427368}
+    size: {x: 3.818578, y: 0.4}
+    yaw: 81.20035
+    count: 4
+  - center: {x: -60.944878, y: 3.9, z: 9.305042}
+    size: {x: 3.862894, y: 0.4}
+    yaw: 81.20035
+    count: 3
+  - center: {x: -61.735085, y: 4.35, z: 9.182716}
+    size: {x: 3.9072104, y: 0.4}
+    yaw: 81.20035
+    count: 4
+  - center: {x: -62.525295, y: 4.8, z: 9.06039}
+    size: {x: 3.9515264, y: 0.4}
+    yaw: 81.20035
+    count: 4
+  - center: {x: -63.315506, y: 5.25, z: 8.938065}
+    size: {x: 3.9958415, y: 0.4}
+    yaw: 81.20035
+    count: 3
+  - center: {x: -64.10571, y: 5.7, z: 8.815739}
+    size: {x: 4.0401583, y: 0.4}
+    yaw: 81.20035
+    count: 4
+  - center: {x: -64.89592, y: 6.15, z: 8.693413}
+    size: {x: 4.084474, y: 0.4}
+    yaw: 81.20035
+    count: 4
+  - center: {x: -65.68613, y: 6.6, z: 8.571087}
+    size: {x: 4.12879, y: 0.4}
+    yaw: 81.20035
+    count: 3
+  - center: {x: -60.674408, y: 3.45, z: 13.638351}
+    size: {x: 3.8223186, y: 0.4}
+    yaw: 84.72384
+    count: 4
+  - center: {x: -61.470642, y: 3.9, z: 13.564821}
+    size: {x: 3.8665438, y: 0.4}
+    yaw: 84.72384
+    count: 4
+  - center: {x: -62.266876, y: 4.35, z: 13.491291}
+    size: {x: 3.9107687, y: 0.4}
+    yaw: 84.72384
+    count: 3
+  - center: {x: -63.063114, y: 4.8, z: 13.417761}
+    size: {x: 3.9549935, y: 0.4}
+    yaw: 84.72384
+    count: 4
+  - center: {x: -63.859344, y: 5.25, z: 13.344231}
+    size: {x: 3.999219, y: 0.4}
+    yaw: 84.72384
+    count: 4
+  - center: {x: -64.65558, y: 5.7, z: 13.2706995}
+    size: {x: 4.043443, y: 0.4}
+    yaw: 84.72384
+    count: 3
+  - center: {x: -65.45181, y: 6.15, z: 13.197169}
+    size: {x: 4.0876684, y: 0.4}
+    yaw: 84.72384
+    count: 4
+  - center: {x: -66.24805, y: 6.6, z: 13.123638}
+    size: {x: 4.131894, y: 0.4}
+    yaw: 84.72384
+    count: 4
+  - center: {x: -60.93483, y: 3.45, z: 17.876434}
+    size: {x: 3.8242197, y: 0.4}
+    yaw: 88.24188
+    count: 3
+  - center: {x: -61.734074, y: 3.9, z: 17.851902}
+    size: {x: 3.8683984, y: 0.4}
+    yaw: 88.24188
+    count: 4
+  - center: {x: -62.533318, y: 4.35, z: 17.82737}
+    size: {x: 3.9125776, y: 0.4}
+    yaw: 88.24188
+    count: 4
+  - center: {x: -63.33257, y: 4.8, z: 17.802835}
+    size: {x: 3.9567573, y: 0.4}
+    yaw: 88.24188
+    count: 3
+  - center: {x: -64.13181, y: 5.25, z: 17.778303}
+    size: {x: 4.000936, y: 0.4}
+    yaw: 88.24188
+    count: 4
+  - center: {x: -64.93106, y: 5.7, z: 17.75377}
+    size: {x: 4.045116, y: 0.4}
+    yaw: 88.24188
+    count: 4
+  - center: {x: -65.73031, y: 6.15, z: 17.729239}
+    size: {x: 4.0892954, y: 0.4}
+    yaw: 88.24188
+    count: 3
+  - center: {x: -66.52956, y: 6.6, z: 17.704706}
+    size: {x: 4.133475, y: 0.4}
+    yaw: 88.24188
+    count: 4
+  - center: {x: -61, y: 3.45, z: 22}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 4
+  - center: {x: -61.8, y: 3.9, z: 22}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 3
+  - center: {x: -62.6, y: 4.35, z: 22}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 3
+  - center: {x: -63.4, y: 4.8, z: 22}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 4
+  - center: {x: -64.2, y: 5.25, z: 22}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 3
+  - center: {x: -65, y: 5.7, z: 22}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 3
+  - center: {x: -65.8, y: 6.15, z: 22}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 4
+  - center: {x: -66.6, y: 6.6, z: 22}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 3
+  - center: {x: -61, y: 3.45, z: 26}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 3
+  - center: {x: -61.8, y: 3.9, z: 26}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 4
+  - center: {x: -62.6, y: 4.35, z: 26}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 3
+  - center: {x: -63.4, y: 4.8, z: 26}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 3
+  - center: {x: -64.2, y: 5.25, z: 26}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 4
+  - center: {x: -65, y: 5.7, z: 26}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 3
+  - center: {x: -65.8, y: 6.15, z: 26}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 3
+  - center: {x: -66.6, y: 6.6, z: 26}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 4
+  - center: {x: -61, y: 3.45, z: 30}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 3
+  - center: {x: -61.8, y: 3.9, z: 30}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 3
+  - center: {x: -62.6, y: 4.35, z: 30}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 4
+  - center: {x: -63.4, y: 4.8, z: 30}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 3
+  - center: {x: -64.2, y: 5.25, z: 30}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 3
+  - center: {x: -65, y: 5.7, z: 30}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 4
+  - center: {x: -65.8, y: 6.15, z: 30}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 3
+  - center: {x: -66.6, y: 6.6, z: 30}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 3
+  - center: {x: -61, y: 3.45, z: 34}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 4
+  - center: {x: -61.8, y: 3.9, z: 34}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 3
+  - center: {x: -62.6, y: 4.35, z: 34}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 3
+  - center: {x: -63.4, y: 4.8, z: 34}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 4
+  - center: {x: -64.2, y: 5.25, z: 34}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 3
+  - center: {x: -65, y: 5.7, z: 34}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 3
+  - center: {x: -65.8, y: 6.15, z: 34}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 4
+  - center: {x: -66.6, y: 6.6, z: 34}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 3
+  - center: {x: -61, y: 3.45, z: 38}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 3
+  - center: {x: -61.8, y: 3.9, z: 38}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 4
+  - center: {x: -62.6, y: 4.35, z: 38}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 3
+  - center: {x: -63.4, y: 4.8, z: 38}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 3
+  - center: {x: -64.2, y: 5.25, z: 38}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 4
+  - center: {x: -65, y: 5.7, z: 38}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 3
+  - center: {x: -65.8, y: 6.15, z: 38}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 3
+  - center: {x: -66.6, y: 6.6, z: 38}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 4
+  - center: {x: -61, y: 3.45, z: 42}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 3
+  - center: {x: -61.8, y: 3.9, z: 42}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 3
+  - center: {x: -62.6, y: 4.35, z: 42}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 4
+  - center: {x: -63.4, y: 4.8, z: 42}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 3
+  - center: {x: -64.2, y: 5.25, z: 42}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 3
+  - center: {x: -65, y: 5.7, z: 42}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 4
+  - center: {x: -65.8, y: 6.15, z: 42}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 3
+  - center: {x: -66.6, y: 6.6, z: 42}
+    size: {x: 3.6, y: 0.4}
+    yaw: 90
+    count: 3
+  - center: {x: 41.60319, y: 3.45, z: -27.537428}
+    size: {x: 4.5000005, y: 0.4}
+    yaw: -44.81903
+    count: 5
+  - center: {x: 42.167088, y: 3.9, z: -28.104897}
+    size: {x: 4.5000005, y: 0.4}
+    yaw: -44.81903
+    count: 4
+  - center: {x: 42.730984, y: 4.35, z: -28.672365}
+    size: {x: 4.5000005, y: 0.4}
+    yaw: -44.81903
+    count: 4
+  - center: {x: 43.29488, y: 4.8, z: -29.239836}
+    size: {x: 4.5000005, y: 0.4}
+    yaw: -44.81903
+    count: 5
+  - center: {x: 43.858776, y: 5.25, z: -29.807304}
+    size: {x: 4.5000005, y: 0.4}
+    yaw: -44.81903
+    count: 4
+  - center: {x: 44.422672, y: 5.7, z: -30.374775}
+    size: {x: 4.4999995, y: 0.4}
+    yaw: -44.81903
+    count: 4
+  - center: {x: 44.98657, y: 6.15, z: -30.942244}
+    size: {x: 4.5000005, y: 0.4}
+    yaw: -44.81903
+    count: 5
+  - center: {x: 45.550465, y: 6.6, z: -31.509712}
+    size: {x: 4.5000014, y: 0.4}
+    yaw: -44.81903
+    count: 4
+  - center: {x: -0.0000026226044, y: 3.45, z: -45}
+    size: {x: 4.5, y: 0.4}
+    yaw: 0.0000026714433
+    count: 4
+  - center: {x: -0.0000026226044, y: 3.9, z: -45.8}
+    size: {x: 4.5, y: 0.4}
+    yaw: 0.0000026714433
+    count: 5
+  - center: {x: -0.000002861023, y: 4.35, z: -46.6}
+    size: {x: 4.5, y: 0.4}
+    yaw: 0.0000026714433
+    count: 4
+  - center: {x: -0.000002861023, y: 4.8, z: -47.4}
+    size: {x: 4.5, y: 0.4}
+    yaw: 0.0000026714433
+    count: 4
+  - center: {x: -0.000002861023, y: 5.25, z: -48.2}
+    size: {x: 4.5, y: 0.4}
+    yaw: 0.0000026714433
+    count: 5
+  - center: {x: -0.000002861023, y: 5.7, z: -49}
+    size: {x: 4.5, y: 0.4}
+    yaw: 0.0000026714433
+    count: 4
+  - center: {x: -0.000002861023, y: 6.15, z: -49.8}
+    size: {x: 4.5, y: 0.4}
+    yaw: 0.0000026714433
+    count: 4
+  - center: {x: -0.000002861023, y: 6.6, z: -50.6}
+    size: {x: 4.5, y: 0.4}
+    yaw: 0.0000026714433
+    count: 5
+  - center: {x: -41.603203, y: 3.45, z: -27.537416}
+    size: {x: 4.5000005, y: 0.4}
+    yaw: 44.819046
+    count: 4
+  - center: {x: -42.1671, y: 3.9, z: -28.104885}
+    size: {x: 4.5000005, y: 0.4}
+    yaw: 44.819046
+    count: 4
+  - center: {x: -42.730995, y: 4.35, z: -28.672354}
+    size: {x: 4.5000005, y: 0.4}
+    yaw: 44.819046
+    count: 5
+  - center: {x: -43.29489, y: 4.8, z: -29.239824}
+    size: {x: 4.5000005, y: 0.4}
+    yaw: 44.819046
+    count: 4
+  - center: {x: -43.858788, y: 5.25, z: -29.807293}
+    size: {x: 4.5000005, y: 0.4}
+    yaw: 44.819046
+    count: 4
+  - center: {x: -44.422684, y: 5.7, z: -30.374762}
+    size: {x: 4.5000005, y: 0.4}
+    yaw: 44.819046
+    count: 5
+  - center: {x: -44.98658, y: 6.15, z: -30.942232}
+    size: {x: 4.5000005, y: 0.4}
+    yaw: 44.819046
+    count: 4
+  - center: {x: -45.550476, y: 6.6, z: -31.5097}
+    size: {x: 4.4999995, y: 0.4}
+    yaw: 44.819046
+    count: 4
+  chestAnchors:
+  - {x: 0, y: 0, z: -18}
+  - {x: 0, y: 0, z: 12}
+  - {x: -14, y: 0, z: 0}
+  - {x: 14, y: 0, z: 0}
+  - {x: -36, y: 0, z: -20}
+  - {x: 36, y: 0, z: -20}
+  - {x: -50, y: 0, z: 12}
+  - {x: 50, y: 0, z: 12}
+  - {x: -30, y: 0, z: 30}
+  - {x: 30, y: 0, z: 30}
+  - {x: -10, y: 0, z: -36}
+  - {x: 10, y: 0, z: -36}
+  - {x: -52, y: 0, z: 32}
+  - {x: 52, y: 0, z: 32}
+  altarAnchors:
+  - {x: -10, y: 1.2, z: 41}
+  - {x: 10, y: 1.2, z: 41}
+  - {x: 41.3, y: 1.2, z: 4}
+  secretSpots: []
+  secrets: 0
+  barricades: []
+  braziers:
+  - {x: -17, y: 1.2, z: 42.5}
+  - {x: -6, y: 1.2, z: 42.5}
+  - {x: 6, y: 1.2, z: 42.5}
+  - {x: 17, y: 1.2, z: 42.5}
+  spikeTraps: []
+  cages:
+  - {x: -44.44, y: 0, z: 44, w: 180}
+  - {x: -26.67, y: 0, z: 44, w: 180}
+  - {x: 26.67, y: 0, z: 44, w: 180}
+  - {x: 44.44, y: 0, z: 44, w: 180}
+  cageBeast: {fileID: 0}
+  cageFirst: 75
+  cageEvery: 40
+  cagePack: {x: 3, y: 6}
+  solidWalls:
+  - {x: 60, y: 42, z: -90, w: 4.3}
+  - {x: 60, y: 38, z: -90, w: 4.3}
+  - {x: 60, y: 34, z: -90, w: 4.3}
+  - {x: 60, y: 30, z: -90, w: 4.3}
+  - {x: 60, y: 26, z: -90, w: 4.3}
+  - {x: 60, y: 22, z: -90, w: 4.3}
+  - {x: 59.93577, y: 17.9071, z: -88.24188, w: 4.4877715}
+  - {x: 59.679115, y: 13.730261, z: -84.72383, w: 4.485606}
+  - {x: 59.166904, y: 9.580271, z: -81.20034, w: 4.4813094}
+  - {x: 58.40133, y: 5.4749002, z: -77.66786, w: 4.474947}
+  - {x: 57.385677, y: 1.4317284, z: -74.12293, w: 4.466619}
+  - {x: 56.12429, y: -2.5319328, z: -70.56224, w: 4.456464}
+  - {x: 54.622566, y: -6.39911, z: -66.98266, w: 4.4446263}
+  - {x: 52.886948, y: -10.153239, z: -63.3813, w: 4.431309}
+  - {x: 50.92485, y: -13.778248, z: -59.755535, w: 4.4167266}
+  - {x: 48.74469, y: -17.258614, z: -56.103092, w: 4.4011073}
+  - {x: 46.355793, y: -20.579433, z: -52.422035, w: 4.3847203}
+  - {x: 43.874104, y: -23.613167, z: -48.853638, w: 4.058036}
+  - {x: 37.80889, y: -29.663101, z: -40.89626, w: 3.69535}
+  - {x: 34.929947, y: -31.994337, z: -37.38904, w: 4.3170094}
+  - {x: 31.667103, y: -34.319843, z: -33.552406, w: 4.3010015}
+  - {x: 28.268658, y: -36.412743, z: -29.68589, w: 4.2859406}
+  - {x: 24.749163, y: -38.264072, z: -25.791262, w: 4.272089}
+  - {x: 21.123688, y: -39.865906, z: -21.870857, w: 4.259708}
+  - {x: 17.407757, y: -41.211388, z: -17.927568, w: 4.249016}
+  - {x: 13.617279, y: -42.294754, z: -13.9647875, w: 4.2402196}
+  - {x: 9.768491, y: -43.111366, z: -9.986354, w: 4.233459}
+  - {x: 5.8778763, y: -43.657722, z: -5.996471, w: 4.2288876}
+  - {x: 3.211728, y: -43.903713, z: -3.2727406, w: 1.7272406}
+  - {x: -3.2117333, y: -43.903713, z: 3.2727463, w: 1.7272406}
+  - {x: -5.8778815, y: -43.657722, z: 5.996476, w: 4.228887}
+  - {x: -9.7684965, y: -43.111366, z: 9.986359, w: 4.23346}
+  - {x: -13.617285, y: -42.294754, z: 13.964793, w: 4.2402186}
+  - {x: -17.40776, y: -41.211388, z: 17.927574, w: 4.2490144}
+  - {x: -21.123692, y: -39.865906, z: 21.870861, w: 4.259708}
+  - {x: -24.749165, y: -38.264072, z: 25.791264, w: 4.2720857}
+  - {x: -28.268661, y: -36.412743, z: 29.68589, w: 4.2859473}
+  - {x: -31.667112, y: -34.31984, z: 33.552414, w: 4.301008}
+  - {x: -34.929955, y: -31.994331, z: 37.38905, w: 4.317001}
+  - {x: -37.8089, y: -29.663095, z: 40.896267, w: 3.6953526}
+  - {x: -43.874115, y: -23.613155, z: 48.853657, w: 4.0580273}
+  - {x: -46.355797, y: -20.57943, z: 52.42204, w: 4.38471}
+  - {x: -48.74469, y: -17.258612, z: 56.103096, w: 4.4011126}
+  - {x: -50.92485, y: -13.778248, z: 59.755535, w: 4.416718}
+  - {x: -52.886948, y: -10.153238, z: 63.3813, w: 4.431318}
+  - {x: -54.622574, y: -6.3991013, z: 66.982666, w: 4.444635}
+  - {x: -56.124294, y: -2.531927, z: 70.56225, w: 4.4564514}
+  - {x: -57.38568, y: 1.4317322, z: 74.12294, w: 4.466626}
+  - {x: -58.401337, y: 5.4749045, z: 77.66787, w: 4.4749403}
+  - {x: -59.16691, y: 9.580276, z: 81.20035, w: 4.481315}
+  - {x: -59.679115, y: 13.730265, z: 84.72384, w: 4.4855976}
+  - {x: -59.93577, y: 17.907099, z: 88.24188, w: 4.4877725}
+  - {x: -60, y: 22, z: 90, w: 4.3}
+  - {x: -60, y: 26, z: 90, w: 4.3}
+  - {x: -60, y: 30, z: 90, w: 4.3}
+  - {x: -60, y: 34, z: 90, w: 4.3}
+  - {x: -60, y: 38, z: 90, w: 4.3}
+  - {x: -60, y: 42, z: 90, w: 4.3}
+  solidWallHeight: 8.4
+  eliteEvery: 60

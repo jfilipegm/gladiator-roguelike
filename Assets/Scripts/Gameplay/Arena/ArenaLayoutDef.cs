@@ -45,6 +45,8 @@ namespace Gladiator.Gameplay
             [Tooltip("Where the gate model stands (its front faces into the arena).")]
             public Vector3 position;
             public float yaw;
+            [Tooltip("This gate's model under Assets/Art/Models/ (empty = the layout's gateModel).")]
+            public string model;
         }
 
         public enum ZoneKind { Mud, Fire }

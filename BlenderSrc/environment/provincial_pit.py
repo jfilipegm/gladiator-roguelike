@@ -12,7 +12,7 @@ import random
 import bmesh
 import bpy
 import gladiator_kit as K
-from mathutils import Vector
+from mathutils import Matrix, Vector
 
 importlib.reload(K)
 PART = ARGS.get("part", "structures")  # noqa: F821  (ARGS injected by Tools/blender_bridge.py)
@@ -258,7 +258,12 @@ def spikes(name, size=1.8, height=0.8):
             parts.append(K.cone(name if not parts else "Spike%d%d" % (i, j), radius=0.08, depth=h, verts=4,
                                 location=(x, y, 0), pivot=(0, 0, -1), swatch="steel_l"))
     finish(parts)
-    return K.join(parts, name)
+    o = K.join(parts, name)
+    # the join keeps the first spike's origin (a corner); SpikeTraps draws the mesh at the grate's centre, so the
+    # origin must be the grid's centre or the spikes come up off the grate
+    o.data.transform(Matrix.Translation(o.location))
+    o.location = (0, 0, 0)
+    return o
 
 
 def banner(name, height=3.2):

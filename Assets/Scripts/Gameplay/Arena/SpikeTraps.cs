@@ -17,6 +17,8 @@ namespace Gladiator.Gameplay
         public Vector3[] traps = System.Array.Empty<Vector3>();
         [Tooltip("Half the grate's side (m): who stands on it is hit.")]
         public float halfSize = 0.9f;
+        [Tooltip("Half the side of the grate's painted border (m, PR_SpikeGrate): the telegraph covers exactly this square.")]
+        public float borderHalf = 0.98f;
 
         [Header("Cycle (s)")]
         public float period = 7f;
@@ -108,7 +110,8 @@ namespace Gladiator.Gameplay
                 Vector3 c = traps[i];
                 if (t >= 0f && t < telegraph)
                 {
-                    if (tele != null) tele.Circle(c, halfSize * 1.45f, t / telegraph, telegraphColor, TelegraphRenderer.Style.Telegraph);
+                    // the grate's own square, filling across it: the spikes come up exactly where it's lit
+                    if (tele != null) tele.Lane(c - Vector3.forward * borderHalf, Vector3.forward, borderHalf * 2f, borderHalf * 2f, t / telegraph, telegraphColor);
                 }
                 else if (t >= telegraph && t < telegraph + upTime)
                 {

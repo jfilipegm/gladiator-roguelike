@@ -79,5 +79,26 @@ namespace Gladiator.Tests
             }
             finally { Object.DestroyImmediate(go); }
         }
+
+        /// <summary>
+        /// Meshes drawn raw with RenderMeshInstanced (no prefab transform) must have their origin where the system draws
+        /// them. SpikeTraps draws PR_Spikes at the grate's centre: its origin used to be a corner spike, so the spikes
+        /// came up 0.68 m off the grate (v0.7.0).
+        /// </summary>
+        [Test]
+        public void Spikes_ComeUpInsideTheirGrate()
+        {
+            var spikes = AssetDatabase.LoadAssetAtPath<Mesh>("Assets/Art/Models/Environment/PR_Spikes.fbx");
+            var grate = AssetDatabase.LoadAssetAtPath<Mesh>("Assets/Art/Models/Environment/PR_SpikeGrate.fbx");
+            Assert.IsNotNull(spikes);
+            Assert.IsNotNull(grate);
+            Bounds s = spikes.bounds, g = grate.bounds;
+            Assert.Less(Mathf.Abs(s.center.x), 0.01f, "centred on X");
+            Assert.Less(Mathf.Abs(s.center.z), 0.01f, "centred on Z");
+            Assert.LessOrEqual(s.max.x, g.max.x);
+            Assert.GreaterOrEqual(s.min.x, g.min.x);
+            Assert.LessOrEqual(s.max.z, g.max.z);
+            Assert.GreaterOrEqual(s.min.z, g.min.z);
+        }
     }
 }

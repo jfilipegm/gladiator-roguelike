@@ -20,6 +20,9 @@ MonoBehaviour:
   playerDamageTakenMul: 1.15
   center: {x: 0, y: 0, z: 0}
   radius: 24.4
+  aspect: 1
+  boundary: []
+  fog: {x: 0, y: 0}
   playerSpawn: {x: 0, y: 0.1, z: -6.5}
   playerYaw: 0
   maxAlive: 300
@@ -780,7 +783,11 @@ MonoBehaviour:
   altarAnchors:
   - {x: 15.22597, y: 1.2, z: 7.099986}
   - {x: -13.761755, y: 1.2, z: 9.636082}
-  secretSpots: []
+  secretSpots:
+  - {x: 22.650578, y: 0, z: 3.9939091}
+  - {x: 4.0286407, y: 0, z: -22.84754}
+  - {x: -21.61293, y: 0, z: 7.866462}
+  secrets: 4
   barricades:
   - {x: -2.8940377, y: 0, z: 18.272234, w: -9}
   - {x: 5.046306, y: 0, z: 14.655538, w: 19}

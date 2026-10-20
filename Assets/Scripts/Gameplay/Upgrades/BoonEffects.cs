@@ -327,16 +327,16 @@ namespace Gladiator.Gameplay
         void TickMarks(EnemyManager em, float dt)
         {
             var tele = TelegraphRenderer.Instance;
-            int trail = -1;
-            for (int k = 0; k < _fxCount && trail < 0; k++) if (_fx[k].E.kind == EffectKind.SlideTrail) trail = k;
-            if (trail >= 0 && _motor != null && _motor.IsSliding)
+            if (_anyTrail && _motor != null && _motor.IsSliding)
             {
                 Vector3 p = transform.position;
                 _slidDist += (p - _lastSlidePos).magnitude;
                 if (_slidDist >= trailSpacing || _markCount == 0)
                 {
                     _slidDist = 0f;
-                    AddMark(MarkFor(_fx[trail], p, ground: false));
+                    // every trail lays its own mark (Blood Slide's Bleed and Whirlwind's Slow side by side, Phase 5.6)
+                    for (int k = 0; k < _fxCount; k++)
+                        if (_fx[k].E.kind == EffectKind.SlideTrail) AddMark(MarkFor(_fx[k], p, ground: false));
                 }
             }
             _lastSlidePos = transform.position;
@@ -405,15 +405,11 @@ namespace Gladiator.Gameplay
             _spreadClock = interval;
         }
 
-        /// <summary>Drops a trail mark at `pos` as if the player slid there (tests).</summary>
+        /// <summary>Drops the trail marks at `pos` as if the player slid there (tests).</summary>
         public void DebugMark(Vector3 pos)
         {
             for (int k = 0; k < _fxCount; k++)
-            {
-                if (_fx[k].E.kind != EffectKind.SlideTrail) continue;
-                AddMark(MarkFor(_fx[k], pos, ground: false));
-                return;
-            }
+                if (_fx[k].E.kind == EffectKind.SlideTrail) AddMark(MarkFor(_fx[k], pos, ground: false));
         }
 
         public void Tick(float dt, float unscaledDt)

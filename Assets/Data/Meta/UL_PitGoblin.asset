@@ -15,10 +15,13 @@ MonoBehaviour:
   id: pit_goblin
   displayName: The Pit Goblin
   description: The thing in the crate wants a turn. The Pit Goblin can be chosen, and its Bomb Satchel joins the level-up pool.
-  hint: "Something rattles in the Slave Pit\u2026"
+  hint: Something rattles in the Slave Pit...
   conditions:
   - kind: 8
     id: rattling_crate
     amount: 1
+  category: 1
+  renownCost: 0
+  renownBounty: 0
   addsToPool:
   - {fileID: 11400000, guid: 5dfe23ca5341be3a987d126ca0ebe74f, type: 2}

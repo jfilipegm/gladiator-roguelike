@@ -3,6 +3,10 @@ using UnityEngine;
 
 namespace Gladiator.Gameplay
 {
+    /// <summary>The secrets an arena hides (Phase 5.6, docs/UNLOCKS.md).</summary>
+    [Flags]
+    public enum ArenaSecrets { None = 0, RattlingCrate = 1, GoldenRat = 2, Bookmaker = 4 }
+
     /// <summary>How a placed piece takes part in the arena (CLAUDE.md §7.3).</summary>
     public enum PieceRole
     {
@@ -106,8 +110,10 @@ namespace Gladiator.Gameplay
         public CrowdZone[] crowd = Array.Empty<CrowdZone>();
         public Vector3[] chestAnchors = Array.Empty<Vector3>();
         public Vector3[] altarAnchors = Array.Empty<Vector3>();
-        [Tooltip("Where a secret can hide: the rattling crate picks one per run (empty = no secret here).")]
+        [Tooltip("Where a secret can hide: the rattling crate picks one per run, the golden rat's holes, the bookmaker's booth (empty = no secret here).")]
         public Vector3[] secretSpots = Array.Empty<Vector3>();
+        [Tooltip("Which secrets hide in this arena (Phase 5.6); each uses secretSpots.")]
+        public ArenaSecrets secrets = ArenaSecrets.RattlingCrate;
 
         [Header("Breakables and traps (Phase 5.4)")]
         [Tooltip("Barricades (x, y, z, yaw): obstacles a boss charge wrecks for the rest of the run.")]

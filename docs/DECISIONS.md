@@ -293,3 +293,13 @@ One line each: what, and why. Newest at the bottom of each section.
 - **Twists are four generic `WeaponDef` features (Echo, status on hit for every pattern, Chain on hit, Ground on hit) plus two new effect kinds (`StatusSpread`, `ExecuteOnCrit`).** The 7 evolutions and 6 synergies are data on top of them.
 - **Loans never hand out an evolution, nor the base of one you've evolved.** The crowd's Weapon in the Sand and the Pit Goblin's Scavenger lend pool weapons. An evolved weapon has no level table, so a loan would arrive weaker than intended and spoil the reward; a second copy of your evolved weapon's base would just be noise.
 
+
+## Phase 5.6 — unlock variety + Codex (branch `phase5-unlocks`, spec `docs/UNLOCKS.md`)
+- **Next item = unlock variety + Codex**, the next "Should" in CLAUDE.md §9 after evolutions. Renown had no use, beating the Provincial Champion unlocked nothing, and the Codex was a stub.
+- **Three kinds of goal: Challenges (visible, with progress), Secrets (discoveries), the Market (Renown).** Each serves a different player: the skilled, the curious, and anyone who keeps playing. Only Boons are for sale (CLAUDE.md §6.6, "only some"); weapons come from challenges and secrets.
+- **Rewards are content or Renown, never flat stats.** Challenges without a content reward pay a Renown bounty, which the Market turns into content, so the systems feed each other.
+- **New Boons give MOVEMENT, GOLD and XP their third carrier, so the Phase 5.5 synergies those tags were waiting for (Whirlwind, Midas, Prodigy) come in now.** Their synergies are data: stat mods, plus an existing `SlideTrail`.
+- **Winged Sandals is the "double jump as an upgrade" from CLAUDE.md §4** (ExtraJumps +1 per level, max 2).
+- **Three new weapons, three distinct patterns** (CLAUDE.md §6.8, not reskins). Sling: one long-range shot at the *farthest* target. Net: a slow wide throw that Roots. Gorm's Whip: a thin line with a sweet spot at the tip, so you fight at its length.
+- **Secrets reward movement and nerve:** the Golden Rat is caught by sliding (it's faster than a run), and the Bookmaker bets against your own kill pace. Both repeat after the first time, for gold, so they stay worth doing.
+- **The Codex pages instead of scrolling** (gamepad), and is built from data, so new content shows up without UI work.

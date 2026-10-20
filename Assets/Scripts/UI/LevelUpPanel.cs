@@ -148,11 +148,17 @@ namespace Gladiator.UI
         {
             const string Long = "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 0123456789 " +
                                 "+-%×°·—–…!?.,:;'()[]/&#\"<>=_ ’ WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW";
+            // descriptions take up to their 384-char buffer (Phase 5.5 hints + colour tags): grow theirs past that, or the
+            // first long card grows TMP's character arrays mid-run (one ~77 KB allocation per card, v0.6.0/0.7.0 bot runs)
+            var longDesc = new System.Text.StringBuilder(400);
+            while (longDesc.Length < 400) longDesc.Append(Long).Append(' ');
+            longDesc.Length = 400;
+            string descText = longDesc.ToString();
             foreach (var c in _cards)
             {
                 foreach (var t in new[] { c.Rarity, c.Kind, c.Title, c.Desc })
                 {
-                    t.SetText(Long);
+                    t.SetText(t == c.Desc ? descText : Long);
                     t.ForceMeshUpdate(true, true);
                 }
             }

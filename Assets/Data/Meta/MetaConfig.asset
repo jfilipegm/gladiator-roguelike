@@ -19,6 +19,17 @@ MonoBehaviour:
   deeperArenaBonus: 0.5
   unlocks:
   - {fileID: 11400000, guid: 1f6d57591f7d8a68394d42c6320a38bf, type: 2}
+  - {fileID: 11400000, guid: b3f649f9605c9653c930cf71a84ecbba, type: 2}
+  - {fileID: 11400000, guid: 1eae844bfff5dcc14ba3874bc66a6c77, type: 2}
+  - {fileID: 11400000, guid: a3f6187c831960ec485f448897ec337e, type: 2}
+  - {fileID: 11400000, guid: 90ab7f14349edf25c81dea1a213fafc8, type: 2}
+  - {fileID: 11400000, guid: 0f3402ef1c51cce07903cae05866af18, type: 2}
   - {fileID: 11400000, guid: 9e5f9aa05ad8cf94eb4fe91cde0346e7, type: 2}
+  - {fileID: 11400000, guid: da80c265761b24452b4ef04eaca42dec, type: 2}
+  - {fileID: 11400000, guid: a3ea7608a5d081a40a3e6149f5cd7e4c, type: 2}
+  - {fileID: 11400000, guid: d4935b26ab498e0349a445dda044c6a7, type: 2}
   - {fileID: 11400000, guid: 062cde42a02861921afcb4e11cd6dbb6, type: 2}
   - {fileID: 11400000, guid: dea2cf75470bda931a339283f13062da, type: 2}
+  - {fileID: 11400000, guid: 3b3e5368434b56ce795446708df5f1a9, type: 2}
+  - {fileID: 11400000, guid: f40e8d5246075e65cb645101575bca8a, type: 2}
+  - {fileID: 11400000, guid: 1541e2c9608b665bdad5450a28178ecb, type: 2}

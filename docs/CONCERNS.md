@@ -66,6 +66,11 @@ The Slave Pit is now 84 × 70 m (was a 42 m circle) with the same spawn curve an
 **Data (bot run 3, 2026-10-20):** alive enemies per minute 53 / 78 / 145 / 220 / 254 / 264 / 283 / 299, 300 reached at 5:24 (the §8 target is 300 by minute 5); the bot's kills and level match the old pit's runs once it fights instead of kiting. So the totals hold; what the bot can't tell is whether the first two minutes (under 80 enemies on 3.5× the floor) feel empty.
 **Proposal:** judge in the playtest. If the first minutes feel empty, raise the early budget in `DirectorConfig` (or the Slave Pit's `maxAlive`) or lower `DirectorConfig.ringInset`'s distance from the player (`minPlayerDistance`) so spawns land closer, before shrinking the arena again.
 
+## C17 — The Renown economy is a guess (NEW, Phase 5.6)
+- **What's guessed:** Market Boons cost 300 Renown, and challenge bounties pay 100–200. A winning Slave Pit run earns about 150–290 Renown, kills dominate it (2 per 100 kills), and the Provincial Pit pays ×1.5.
+- **The risk:** if kill counts grow (evolved builds kill 9–10 k a run), the Market empties in two or three runs and Renown loses its use again.
+- **Proposal:** after the producer's playtest, either cap the kill share of Renown or add Renown sinks that scale: run modifiers and cosmetics (BACKLOG). Tunables: `MetaConfig.renown*`, `UnlockDef.renownCost` / `renownBounty`.
+
 ## C16 — Evolutions may make the boss easy (NEW, Phase 5.5)
 Evolutions arrive after 8 weapon levels plus a catalyst plus a chest, so late in the run, right before the boss. A Thunderbolts + Storm Front build could melt Gorm. **Proposal:** measure the boss fight's length in bot runs with and without evolutions. If it halves, give bosses an evolution-aware HP scale (`BossDef.hpPerEvolution`) rather than nerfing the evolutions.
 - **Measured (v0.6.0 dev build, Slave Pit, `Tools/perfrun bot 600 -timed`, 2026-10-20):**

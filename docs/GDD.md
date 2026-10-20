@@ -44,6 +44,10 @@ Tier 1 (slice): Starving Convict (swarmer), Pit Cur (fast), Shield Thug (frontal
 ## Meta
 Renown per run gates arena tiers and cosmetics. Unlocks are **content, never flat stats**: gladiators, weapons entering the pool, arenas, modifiers, cosmetics. Conditions are pluggable (defeat boss, reach arena, survive T, kills with weapon, win with gladiator, lifetime gold, secret discovery, Renown purchase). A Codex shows locked gladiators as silhouettes with cryptic hints.
 **Slice (built):** versioned save, Renown per run (time, kills, boss, victory, arena depth), Codex screen (records, unlocks, gladiator silhouettes), and one unlock: beating Gorm adds **Gorm's Flail** (orbiting spiked balls) to the level-up pool.
+**Phase 5.6 (built, docs/UNLOCKS.md):**
+- **Three kinds of goal:** Challenges (visible, with progress; some pay a Renown bounty), Secrets (the rattling crate, the Golden Rat, the Bookmaker's wager) and the Market (Boons bought with Renown, the first use of Renown).
+- **New rewards:** the Sling, the Net and Gorm's Whip, plus four Boons that give MOVEMENT, GOLD and XP their synergies (Whirlwind, Midas, Prodigy).
+- **The Codex:** seven tabs (Records, Gladiators, Arsenal, Bestiary, Challenges, Secrets, Market) with baked portraits, black silhouettes for what you haven't found, and NEW markers.
 
 ## Gladiators
 Starter **The Nobody** (rusty gladius + scrap shield; *Underdog*: bonus damage/XP when outnumbered). After the slice, in order: Pit Goblin, Blood Knight, then the rest (Murder Machine, Beastmaster, Thunder Champion, Ashen Oracle, Golden Idol, Net-Weaver, Asterion).

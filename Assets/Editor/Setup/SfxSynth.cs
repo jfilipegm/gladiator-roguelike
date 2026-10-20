@@ -144,6 +144,22 @@ namespace Gladiator.EditorTools
                     Tone(b, 0.01f, 0.3f, 1870, 1800, 0.15f, 0.002f, 0.15f);
                     return Finish(b, 0.65f);
                 }
+                case "sfx_squeak":
+                {
+                    // the golden rat: two quick rising chirps
+                    var b = new Buf(0.22f);
+                    Tone(b, 0f, 0.06f, 2300, 3300, 0.45f, 0.003f, 0.03f);
+                    Tone(b, 0.09f, 0.07f, 2500, 3600, 0.4f, 0.003f, 0.035f);
+                    return Finish(b, 0.55f);
+                }
+                case "sfx_quill":
+                {
+                    // the bookmaker scratching a bet into his ledger: three dry strokes
+                    var b = new Buf(0.4f);
+                    for (int k = 0; k < 3; k++) Noise(b, k * 0.12f, 0.08f, 0.6f, 0.004f, 0.05f, 0.9f, 0.7f, 120 + k, true);
+                    Tone(b, 0.0f, 0.05f, 900, 700, 0.12f, 0.002f, 0.03f);
+                    return Finish(b, 0.5f);
+                }
                 case "sfx_bomb": { var b = new Buf(0.45f); Noise(b, 0, 0.45f, 0.9f, 0.002f, 0.14f, 0.35f, 0.03f, 66); Tone(b, 0, 0.35f, 150, 50, 0.9f, 0.002f, 0.1f); return Finish(b, 0.75f); }
                 case "sfx_boo": return CrowdSynth.Shot(CrowdSynth.Mood.Boo, 1.9f, 404);
                 // the crowd (playtest fix: the old pulsed-noise loop sounded like a steam train): a talking murmur and an
@@ -160,6 +176,7 @@ namespace Gladiator.EditorTools
             "sfx_player_hurt", "sfx_gem", "sfx_coin", "sfx_levelup", "sfx_card", "sfx_pick", "sfx_chest", "sfx_altar",
             "sfx_explosion", "sfx_slam", "sfx_spark", "sfx_fire_pot", "sfx_boss_roar", "sfx_horn", "sfx_gate",
             "sfx_announce", "sfx_fight", "sfx_victory", "sfx_death", "sfx_cheer", "sfx_giftthrow", "sfx_giftland", "sfx_boo", "sfx_cackle", "sfx_snare", "sfx_rattle", "sfx_bomb", "sfx_bloodrite", "sfx_splinter", "sfx_spikes",
+            "sfx_squeak", "sfx_quill",
             "amb_crowd", "amb_crowd_roar",
         };
 

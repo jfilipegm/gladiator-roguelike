@@ -13,6 +13,7 @@ namespace Gladiator.Gameplay
         Cackle, Snare, Rattle, Bomb,
         BloodRite,
         Splinter, Spikes,
+        Squeak, Quill,
     }
 
     [Serializable]

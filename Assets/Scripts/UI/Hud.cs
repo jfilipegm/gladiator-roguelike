@@ -19,6 +19,8 @@ namespace Gladiator.UI
         public bool showDebug = true;
 
         Image _xpFill, _hpFill;
+        TextMeshProUGUI _objective; // a timed goal under the timer (Phase 5.6: the Bookmaker's wager)
+        string _objectiveLabel, _objectiveFormat;
         TextMeshProUGUI _timer, _level, _hpText, _gold, _kills, _toast, _announce, _pause, _debug, _tags;
         readonly char[] _timeBuf = new char[8];
         int _lastSecond = -1, _lastLevel = -1, _lastGold = -1, _lastKills = -1, _lastHp = -1, _lastMaxHp = -1;
@@ -116,6 +118,7 @@ namespace Gladiator.UI
 
             _timer = UiFactory.Text("Timer", canvas, "8:00", 58, Color.white, TextAlignmentOptions.Center, top, top, new Vector2(0, -26), new Vector2(300, 70), font, fontMaterial);
             _tags = UiFactory.Text("DevTags", canvas, "", 22, new Color(1f, 0.84f, 0.3f), TextAlignmentOptions.Center, top, top, new Vector2(0, -88), new Vector2(700, 30), font, fontMaterial);
+            _objective = UiFactory.Text("Objective", canvas, "", 30, new Color(1f, 0.84f, 0.3f), TextAlignmentOptions.Center, top, top, new Vector2(0, -122), new Vector2(700, 40), font, fontMaterial);
             _level = UiFactory.Text("Level", canvas, "LV 1", 46, Color.white, TextAlignmentOptions.Right, new Vector2(1, 1), new Vector2(1, 1), new Vector2(-28, -26), new Vector2(300, 60), font, fontMaterial);
 
             // HP bar + icon
@@ -313,6 +316,25 @@ namespace Gladiator.UI
             }
         }
 
+        /// <summary>"WAGER  42 / 120   18s" while a RunObjective is on (the format string is built once per label).</summary>
+        void DrawObjective()
+        {
+            if (!RunObjective.Active)
+            {
+                if (_objectiveLabel != null) { _objectiveLabel = null; _objective.SetText(""); }
+                return;
+            }
+            if (!ReferenceEquals(_objectiveLabel, RunObjective.Label))
+            {
+                _objectiveLabel = RunObjective.Label;
+                _objectiveFormat = _objectiveLabel + "  {0} / {1}   {2}s";
+            }
+            _objective.SetText(_objectiveFormat, RunObjective.Current, RunObjective.Target, Mathf.CeilToInt(RunObjective.SecondsLeft));
+        }
+
+        /// <summary>The objective line's text (tests).</summary>
+        public string ObjectiveText => _objective != null ? _objective.text : "";
+
         void DrawBoss(RunState run)
         {
             if (run != null && run.TimerDone && !_timerBoss) { _timerBoss = true; _timer.text = "BOSS"; _timer.color = BossRed; }
@@ -384,6 +406,7 @@ namespace Gladiator.UI
             DrawFavor(unscaledDt);
             DrawBlood(unscaledDt);
             DrawBoss(run);
+            DrawObjective();
             DrawIntro(unscaledDt);
             if (player != null && player.IsPaused && !OptionsPanel.IsOpen && Keyboard.current != null)
             {

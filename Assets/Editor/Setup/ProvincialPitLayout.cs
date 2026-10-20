@@ -33,6 +33,9 @@ namespace Gladiator.EditorTools
 
         static float SlotDeg(int i) => (i + 0.5f) / Segments * 360f;
 
+        /// <summary>The Bookmaker's booths (Phase 5.6): at the foot of the wall between gates, clear of chests, spikes and platforms.</summary>
+        public static Vector3[] BookmakerSpots => new[] { Polar(80f, 23f), Polar(170f, 23.2f), Polar(290f, 23f) };
+
         static ArenaLayoutDef Write(bool overwrite)
         {
             var existing = AssetDatabase.LoadAssetAtPath<ArenaLayoutDef>(Path);
@@ -137,7 +140,8 @@ namespace Gladiator.EditorTools
                 Polar(35f, 20f), Polar(155f, 20f), Polar(275f, 20.5f), Polar(110f, 21f),
             };
             l.altarAnchors = new[] { Polar(65f, 16.8f, 1.2f), Polar(305f, 16.8f, 1.2f) }; // up on the platforms
-            l.secretSpots = new Vector3[0];
+            l.secretSpots = BookmakerSpots;
+            l.secrets = ArenaSecrets.Bookmaker;
 
             if (existing == null) AssetDatabase.CreateAsset(l, Path);
             EditorUtility.SetDirty(l);

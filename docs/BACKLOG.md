@@ -21,8 +21,8 @@ Good ideas that are **not** in the current phase. Pull from here only when a pha
 - **Instanced enemy rendering** (C5) only if an arena needs 1,000+ on screen.
 
 ## Meta progression (after the slice)
-- **Renown purchases** — an `UnlockCondition` kind "costs N Renown" bought in the Codex (only some unlocks, CLAUDE.md §6.6); arena tiers and cosmetics gated by Renown.
-- **Codex discovery** — seen-enemy / seen-boss entries, "NEW" markers on fresh unlocks, secrets found in the arenas (the rattling crate → Pit Goblin).
+- **Renown purchases, the rest** — Phase 5.6 sells Boons in the Codex Market; run modifiers and cosmetics bought with Renown are still to come.
+- **More secrets** — Phase 5.6 adds the Golden Rat and the Bookmaker; next: one per new arena, the Ashen Oracle's encounter, a Codex 3D model viewer.
 - **Unlock banner beat** — a dedicated "UNLOCKED!" moment (crowd roar, reveal of the weapon model) instead of one gold line on the end screen.
 - **Per-gladiator records** (best time / wins per gladiator) once there's more than one.
 

@@ -89,6 +89,14 @@ namespace Gladiator.Gameplay
         [Tooltip("The echo's size relative to the first strike.")]
         public float echoScale = 1f;
 
+        [Header("Targeting and sweet spots (Phase 5.6)")]
+        [Tooltip("Projectile: aim at the farthest enemies within acquireRange instead of the nearest (the Sling).")]
+        public bool targetFarthest;
+        [Tooltip("Thrust: hits in the last tipLength m of the line always crit (the Whip's crack); 0 = off.")]
+        public float tipLength;
+        [Tooltip("MeleeArc / Thrust with Amount > 1: each extra strike goes for the next-nearest enemy instead of the nearest again.")]
+        public bool spreadStrikes;
+
         [Header("Hit effects (every pattern, Phase 5.5)")]
         [Tooltip("Run by BoonEffects on this weapon's direct hits only, at potency 1: StatusOnHit (chance 1 = always), ChainSpark, GroundOnHit.")]
         public BoonEffect[] hitEffects = Array.Empty<BoonEffect>();

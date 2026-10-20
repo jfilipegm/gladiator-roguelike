@@ -47,7 +47,8 @@ namespace Gladiator.UI
             _boss = StatRow(card.transform, "Gorm", 5);
             _renown = StatRow(card.transform, "Renown", 6);
             _renown.color = Gold;
-            _unlock = UiFactory.Text("Unlock", canvas, "", 34, Gold, TextAlignmentOptions.Center, mid, mid, new Vector2(0, -290), new Vector2(1400, 50), font, fontMaterial);
+            _unlock = UiFactory.Text("Unlock", canvas, "", 30, Gold, TextAlignmentOptions.Center, mid, mid, new Vector2(0, -296), new Vector2(1500, 84), font, fontMaterial);
+            _unlock.enableAutoSizing = true; _unlock.fontSizeMin = 20; _unlock.fontSizeMax = 30;
 
             UiFactory.Button("Retry", canvas, "Retry  [R]", mid, mid, new Vector2(-140, -365), new Vector2(250, 70), font, fontMaterial, OnRetry, 32f);
             UiFactory.Button("Quit", canvas, "Main Menu  [M]", mid, mid, new Vector2(140, -365), new Vector2(250, 70), font, fontMaterial, OnQuit, 32f);
@@ -113,9 +114,28 @@ namespace Gladiator.UI
             else _boss.SetText("{0}% left", Mathf.Round(boss.Hp01 * 100f));
             var rewards = c.Rewards;
             if (rewards == null) { _renown.text = "not recorded"; _unlock.text = ""; return; }
-            _renown.SetText("+{0}  ({1})", (float)rewards.Renown, (float)rewards.RenownTotal);
-            _unlock.text = rewards.NewUnlocks.Count == 0 ? ""
-                : "UNLOCKED: " + rewards.NewUnlocks[0].displayName.ToUpperInvariant() + "  —  now in the level-up pool";
+            if (rewards.Bounty > 0) _renown.SetText("+{0} +{1}  ({2})", (float)rewards.Renown, (float)rewards.Bounty, (float)rewards.RenownTotal);
+            else _renown.SetText("+{0}  ({1})", (float)rewards.Renown, (float)rewards.RenownTotal);
+            _unlock.text = UnlockLines(rewards);
+        }
+
+        /// <summary>One line per new unlock (two at most, then "+N more in the Codex"), named by how it was earned.</summary>
+        static string UnlockLines(RunRewards rewards)
+        {
+            var list = rewards.NewUnlocks;
+            if (list.Count == 0) return "";
+            var sb = new System.Text.StringBuilder();
+            for (int i = 0; i < list.Count && i < 2; i++)
+            {
+                var u = list[i];
+                if (i > 0) sb.Append('\n');
+                sb.Append(u.category == UnlockCategory.Secret ? "SECRET FOUND: " : u.category == UnlockCategory.Challenge ? "CHALLENGE COMPLETE: " : "UNLOCKED: ");
+                sb.Append(u.displayName.ToUpperInvariant());
+                if (u.addsToPool != null && u.addsToPool.Length > 0) sb.Append("  —  now in the level-up pool");
+                if (u.renownBounty > 0) sb.Append("  +").Append(u.renownBounty).Append(" Renown");
+            }
+            if (list.Count > 2) sb.Append("\n+").Append(list.Count - 2).Append(" more in the Codex");
+            return sb.ToString();
         }
 
         void OnRetry() { if (_shown) RunEndController.Instance?.Retry(); }

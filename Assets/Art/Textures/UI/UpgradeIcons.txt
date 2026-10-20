@@ -38,3 +38,13 @@ synergy_storm_front 36
 synergy_executioner 37
 synergy_juggernaut 38
 synergy_bulwark 39
+weapon_sling 40
+weapon_net 41
+weapon_gorms_whip 42
+loaded_dice 43
+gilded_palm 44
+winged_sandals 45
+wax_tablet 46
+synergy_whirlwind 47
+synergy_midas 48
+synergy_prodigy 49

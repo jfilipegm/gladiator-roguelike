@@ -1,0 +1,77 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 99edb864ddcd630fdad609397a5c5f75, type: 3}
+  m_Name: CodexConfig
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.CodexConfig
+  catalog: {fileID: 11400000, guid: e93cb754957a0d6b3b06acc9f47ac07a, type: 2}
+  upgrades: {fileID: 11400000, guid: a75b64ea525751d30a96d0df7879d523, type: 2}
+  meta: {fileID: 11400000, guid: d3c066395bc477ef18241ea9ca6a686c, type: 2}
+  bestiary:
+  - enemy: {fileID: 11400000, guid: 824754529e64539a08f93ce5ea6b9028, type: 2}
+    boss: {fileID: 0}
+    tier: 0
+    blurb: Starved, chained and thrown in first. Alone they're nothing; they never come alone.
+  - enemy: {fileID: 11400000, guid: 51fd6705a6918542c8a48f6531e10146, type: 2}
+    boss: {fileID: 0}
+    tier: 0
+    blurb: A half-wild dog the pit masters keep hungry. It circles, then leaps for your throat.
+  - enemy: {fileID: 11400000, guid: 729da0abfb08161378f0ed030335efd6, type: 2}
+    boss: {fileID: 0}
+    tier: 0
+    blurb: Hides behind a door torn off its hinges. Hit him from the side or from behind.
+  - enemy: {fileID: 11400000, guid: 677af5aa554d6225685c50de3950805f, type: 2}
+    boss: {fileID: 0}
+    tier: 0
+    blurb: Keeps his distance and pelts you with stones. Close the gap.
+  - enemy: {fileID: 11400000, guid: dadc94099a6e8005494fa3c710e62faf, type: 2}
+    boss: {fileID: 0}
+    tier: 0
+    blurb: Twice your size and slow to fall. When he winds up, get out of the way.
+  - enemy: {fileID: 11400000, guid: 45a98fc17f9762fc4873616e13196ccf, type: 2}
+    boss: {fileID: 0}
+    tier: 0
+    blurb: Lobs burning pots that set the sand alight. Don't stand where they land.
+  - enemy: {fileID: 11400000, guid: 7fa2501fb2c6dc3b3bd5b5513e6d7b2b, type: 2}
+    boss: {fileID: 11400000, guid: a371ea03d5b6dfdc58859b5691e51df4, type: 2}
+    tier: 0
+    blurb: The Pit Master. A flail, a whip, guards on call, and a ring of fire for whoever lasts.
+  - enemy: {fileID: 11400000, guid: 48e7ab87ef6d1dcc493c937e44e6fcd9, type: 2}
+    boss: {fileID: 0}
+    tier: 1
+    blurb: Plants a pavise and looses arrows over it. Strike while he reloads.
+  - enemy: {fileID: 11400000, guid: 977754d8957140798a734032f2047210, type: 2}
+    boss: {fileID: 0}
+    tier: 1
+    blurb: Flanks you where you aren't looking and dashes down a line. Watch the lane.
+  - enemy: {fileID: 11400000, guid: a1fd40a55ef7c1818ae59788a7dab6f8, type: 2}
+    boss: {fileID: 11400000, guid: fd512218ec0bb2f9fb7394d81bf0d1a8, type: 2}
+    tier: 1
+    blurb: 'The Provinces'' pride: a fortress shield that wrecks barricades. Make him charge the stone.'
+  portraits: {fileID: 2800000, guid: be5ef48f9fb608466be6ca91c1a52ff0, type: 3}
+  portraitIds:
+  - en:convict
+  - en:pitcur
+  - en:shieldthug
+  - en:slinger
+  - en:brute
+  - en:firepot
+  - en:gorm
+  - en:shieldarcher
+  - en:assassin
+  - en:champion
+  - gl:pit_goblin
+  - gl:blood_knight
+  - sc:pit_goblin
+  - sc:sling
+  - sc:loaded_dice
+  portraitCell: 128
+  portraitColumns: 8

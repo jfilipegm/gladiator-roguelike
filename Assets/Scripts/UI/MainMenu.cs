@@ -33,6 +33,8 @@ namespace Gladiator.UI
         [Tooltip("Every arena the menu can offer, in ladder order. Locked ones show their unlock's hint.")]
         public RunDef[] runs = Array.Empty<RunDef>();
         public MetaConfig meta;
+        [Tooltip("The Codex's Bestiary, portraits and Arsenal source (Phase 5.6).")]
+        public CodexConfig codex;
         public GladiatorDef[] gladiators = Array.Empty<GladiatorDef>();
         public Locked[] locked = Array.Empty<Locked>();
         public string title = "GLADIATOR";
@@ -74,6 +76,19 @@ namespace Gladiator.UI
         Screen _screen;
         Image[] _menuFrames;
 
+        /// <summary>The Codex screen (tests drive it).</summary>
+        public CodexPanel Codex { get; private set; }
+        public bool CodexOpen => _screen == Screen.Codex;
+        /// <summary>The menu's CODEX button text ("CODEX • 3 NEW").</summary>
+        public string CodexButtonText => UiFactory.Label(_menuButtons[1]).text;
+
+        void RefreshCodexButton()
+        {
+            int n = Codex != null ? Codex.RemainingNew : 0;
+            var label = UiFactory.Label(_menuButtons[1]);
+            label.text = n > 0 ? "CODEX  <color=#FFD84A>• " + n + " NEW</color>" : "CODEX";
+        }
+
         void Awake()
         {
             MetaProgress.CheckUnlocks(meta); // a discovery from a run that was quit, not finished
@@ -85,9 +100,11 @@ namespace Gladiator.UI
             BuildMenu(_menu.transform);
             BuildSelect(_select.transform);
             BuildArena(_arena.transform);
-            var dim = UiFactory.Image("Dim", _codex.transform, new Color(0.02f, 0.02f, 0.04f, 0.8f), Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, PixelIcons.White);
+            var dim = UiFactory.Image("Dim", _codex.transform, new Color(0.02f, 0.02f, 0.04f, 0.88f), Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, PixelIcons.White);
             UiFactory.Stretch(dim.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            new CodexPanel(font, fontMaterial).Build(_codex.transform, MetaProgress.Data, meta, gladiators, locked, CloseCodex);
+            Codex = new CodexPanel(font, fontMaterial);
+            Codex.Build(_codex.transform, MetaProgress.Data, codex, meta, gladiators, locked, CloseCodex);
+            RefreshCodexButton();
             Show(Screen.Menu);
         }
 
@@ -334,9 +351,9 @@ namespace Gladiator.UI
         void OpenSelect() { SfxPlayer.Play2D(SfxId.Card); Show(Screen.Select); }
         void CloseSelect() => Show(Screen.Menu);
         void BackToSelect() => Show(Screen.Select);
-        void OpenCodex() { SfxPlayer.Play2D(SfxId.Card); Show(Screen.Codex); }
+        public void OpenCodex() { SfxPlayer.Play2D(SfxId.Card); Show(Screen.Codex); }
         void OpenOptions() { SfxPlayer.Play2D(SfxId.Card); if (OptionsPanel.Instance != null) OptionsPanel.Instance.Open(); }
-        void CloseCodex() => Show(Screen.Menu);
+        void CloseCodex() { Show(Screen.Menu); RefreshCodexButton(); }
 
         /// <summary>FIGHT! on the gladiator screen: on to the arena screen when there's a choice, else straight in.
         /// Bot and perf runs always go straight in.</summary>
@@ -414,7 +431,9 @@ namespace Gladiator.UI
             }
             if (_screen == Screen.Codex)
             {
-                if (confirm || back) CloseCodex();
+                bool left = (kb != null && (kb.leftArrowKey.wasPressedThisFrame || kb.aKey.wasPressedThisFrame)) || (pad != null && (pad.dpad.left.wasPressedThisFrame || pad.leftShoulder.wasPressedThisFrame));
+                bool right = (kb != null && (kb.rightArrowKey.wasPressedThisFrame || kb.dKey.wasPressedThisFrame)) || (pad != null && (pad.dpad.right.wasPressedThisFrame || pad.rightShoulder.wasPressedThisFrame));
+                Codex.HandleInput(left, right, up, down, confirm, back);
                 return;
             }
             if (up) _focus = (_focus + _menuButtons.Length - 1) % _menuButtons.Length;

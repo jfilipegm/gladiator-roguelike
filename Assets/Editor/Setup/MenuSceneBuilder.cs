@@ -66,6 +66,7 @@ namespace Gladiator.EditorTools
             foreach (var t in hero.GetComponentsInChildren<Transform>(true)) GameObjectUtility.SetStaticEditorFlags(t.gameObject, 0);
             menu.runs = ProvincialPitSetup.AllRuns(); // arena select (Phase 5.4)
             menu.meta = MetaSetup.Load();
+            menu.codex = CodexSetup.Load() != null ? CodexSetup.Load() : CodexSetup.CreateOrUpdate(); // Phase 5.6
             GladiatorSetup.CreateOrUpdate();
             menu.gladiators = GladiatorSetup.All(); // locked ones show their unlock's hint
             menu.locked = new[] // not built as data yet

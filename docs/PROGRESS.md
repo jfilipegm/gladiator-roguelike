@@ -1,7 +1,7 @@
 # Progress
 
 **Current phase:** Phase 5 — expansion
-**Current milestone:** Phase 5.5 — weapon evolutions + tag-threshold synergies (next; not started). v0.5.0 (the Provincial Pit + the playtest fixes) released 2026-10-20.
+**Current milestone:** Phase 5.5 — weapon evolutions + tag synergies (branch `phase5-evolutions`, spec written). v0.5.0 (the Provincial Pit + the playtest fixes) released 2026-10-20.
 **Last updated:** 2026-10-20
 
 **Repository:** https://github.com/jfilipegm/gladiator-roguelike (public, branch `main`, remote `origin`, `.blend` files via Git LFS). Work on a branch per milestone, push as you go, merge through a PR; release every playable build (`Tools/release`).
@@ -112,9 +112,17 @@
 - **PR #6** (https://github.com/jfilipegm/gladiator-roguelike/pull/6) merged (92b8774). Follow-ups left open: a second gladius (BACKLOG), C13, C14.
 - **v0.5.0 released 2026-10-20** (PRs #6 + #7): https://github.com/jfilipegm/gladiator-roguelike/releases/tag/v0.5.0. Linux 40 MB, Linux dev 71 MB, Windows 42 MB, macOS 50 MB (the build log's `errors=1` on the first build is the bridge timeout, as before). Smoke runs of the downloaded archives (`-bot -timed -botSeconds 40`): Linux as the Nobody (64 kills), as the knight (`-gladiator blood_knight`: 57 kills, 47 HP kill-healed), in the Provincial Pit (`-arena provincial_pit`: 74 kills, 5 bombs), and Windows under Wine as the Nobody (55 kills); all v0.5.0, clock ran to 36–37 s, 0 exceptions; their Profiling files deleted. macOS not run.
 
-## Next — Phase 5.5 weapon evolutions + tag-threshold synergies
-- First "Should" item of CLAUDE.md §9 (every "Must" is done: Goblin, Knight, Arena 2, Favor). Start a branch `phase5-evolutions` from `main`, write the spec (which weapons evolve, with which Boon, at which level; which tag thresholds give which bonus) in `docs/GDD.md`/DECISIONS first, then data + code + tests, bump `GameInfo.Version` to 0.6.0, release notes `docs/releases/v0.6.0.md`.
-- The Editor crashed while it was being closed on 2026-10-20 01:07 (GTK window cleanup; left `mono_crash.mem.369056.1.blob` in the repo root, untracked, and `Temp/__Backupscenes/0.backup`). Relaunching may stop on the "Scene Backup Detected" dialog (TOOLING).
+## In progress — Phase 5.5 weapon evolutions + tag synergies (branch `phase5-evolutions`, target v0.6.0)
+- **Spec:** `docs/EVOLUTIONS.md` (7 evolutions, 6 tag synergies, 4 generic weapon twists + 2 new effect kinds), DECISIONS "Phase 5.5", CONCERNS C16.
+- **Steps:**
+  1. Data and plumbing: `UpgradeDef` evolution fields, weapon tags, `TagSynergyDef` + `TagSynergies`, roller/rewards.
+  2. Weapon twists (Echo, status on hit everywhere, Chain, Ground) + effects (`StatusSpread`, `ExecuteOnCrit`).
+  3. The 7 evolved `WeaponDef`s + 6 synergies as assets (Editor setup script).
+  4. UI: card banner + tag chips, HUD hint/pulse, synergy row, announcer.
+  5. Art: `BlenderSrc/weapons/wp_evolved.py`, atlas icons.
+  6. Tests, bot, 10-minute runs, release notes, `GameInfo.Version` 0.6.0.
+- **Done so far:** spec only.
+- The Editor crashed while it was being closed (2026-10-20 01:07, GTK cleanup) and was relaunched at about 10:05. It came up ready with no backup-scene dialog. `mono_crash.mem.369056.1.blob` is in the repo root, untracked: never commit it.
 
 ## Known issues
 - **Residual GC (target 0 B/frame, met in steady state):** the first level-up allocates ~7.5 KB once (paused; a hidden pre-draw of the cards didn't remove it; BACKLOG), the boss entrance 1.8 KB, the victory screen + save write ~238 KB (game over). Small first-occurrence allocations (≤ 1.2 KB) in the first minutes.

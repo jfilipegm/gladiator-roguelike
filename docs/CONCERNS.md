@@ -66,3 +66,6 @@ The Slave Pit is now 84 × 70 m (was a 42 m circle) with the same spawn curve an
 **Data (bot run 3, 2026-10-20):** alive enemies per minute 53 / 78 / 145 / 220 / 254 / 264 / 283 / 299, 300 reached at 5:24 (the §8 target is 300 by minute 5); the bot's kills and level match the old pit's runs once it fights instead of kiting. So the totals hold; what the bot can't tell is whether the first two minutes (under 80 enemies on 3.5× the floor) feel empty.
 **Proposal:** judge in the playtest. If the first minutes feel empty, raise the early budget in `DirectorConfig` (or the Slave Pit's `maxAlive`) or lower `DirectorConfig.ringInset`'s distance from the player (`minPlayerDistance`) so spawns land closer, before shrinking the arena again.
 
+## C16 — Evolutions may make the boss easy (NEW, Phase 5.5)
+Evolutions arrive after 8 weapon levels plus a catalyst plus a chest, so late in the run, right before the boss. A Thunderbolts + Storm Front build could melt Gorm. **Proposal:** measure the boss fight's length in bot runs with and without evolutions. If it halves, give bosses an evolution-aware HP scale (`BossDef.hpPerEvolution`) rather than nerfing the evolutions.
+

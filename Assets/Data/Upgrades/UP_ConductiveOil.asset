@@ -26,6 +26,8 @@ MonoBehaviour:
   requiresAny:
   - {fileID: 11400000, guid: 1006031ddab8028e8ad4097064b09e4f, type: 2}
   weapon: {fileID: 0}
+  evolvesFrom: {fileID: 0}
+  catalyst: {fileID: 0}
   perLevel: []
   effects:
   - kind: 4

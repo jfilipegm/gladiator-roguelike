@@ -59,6 +59,7 @@ namespace Gladiator.UI
         const int SynergyChips = 6;
         readonly Image[] _chip = new Image[SynergyChips];
         readonly TextMeshProUGUI[] _chipText = new TextMeshProUGUI[SynergyChips];
+        readonly UpgradeIconView[] _chipIcon = new UpgradeIconView[SynergyChips];
         static readonly Color ChipColor = new Color(0.06f, 0.16f, 0.2f, 0.85f), ChipText = new Color(0.55f, 0.95f, 1f);
         PlayerBuild _build;
         static readonly Color TileInner = new Color(0.1f, 0.12f, 0.15f, 0.92f);
@@ -165,8 +166,9 @@ namespace Gladiator.UI
             }
             for (int j = 0; j < SynergyChips; j++)
             {
-                _chip[j] = UiFactory.Image("Synergy" + j, canvas, Color.clear, tl, tl, new Vector2(24 + j * 132, -228), new Vector2(126, 28), PixelIcons.White);
-                _chipText[j] = UiFactory.Text("Name", _chip[j].transform, "", 17, ChipText, TextAlignmentOptions.Center, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 1), new Vector2(122, 26), font, fontMaterial);
+                _chip[j] = UiFactory.Image("Synergy" + j, canvas, Color.clear, tl, tl, new Vector2(24 + j * 150, -228), new Vector2(144, 30), PixelIcons.White);
+                _chipIcon[j] = new UpgradeIconView(_chip[j].transform, "Icon", new Vector2(0f, 0.5f), new Vector2(16, 0), 28f, lively: false);
+                _chipText[j] = UiFactory.Text("Name", _chip[j].transform, "", 17, ChipText, TextAlignmentOptions.Left, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(15, 1), new Vector2(110, 26), font, fontMaterial);
                 PreSize(_chipText[j], "EXECUTIONER!");
             }
 
@@ -351,6 +353,7 @@ namespace Gladiator.UI
             var player = Player.Main;
             float now = Time.unscaledTime;
             for (int i = 0; i < StripTiles; i++) _tileIcon[i].Tick(now); // a rare shine; frames change a few times a minute
+            for (int j = 0; j < SynergyChips; j++) _chipIcon[j].Tick(now);
             for (int i = 0; i < WeaponTiles; i++)
                 if (_tileReady[i]) _tileBorder[i].color = Color.Lerp(_tileColor[i], Color.white, 0.5f + 0.5f * Mathf.Sin(now * 6f));
             _loanIcon.Tick(now);
@@ -561,6 +564,8 @@ namespace Gladiator.UI
                 bool on = j < state.SynergyCount;
                 _chip[j].color = on ? ChipColor : Color.clear;
                 _chipText[j].text = on ? state.GetSynergy(j).displayName : "";
+                if (on) _chipIcon[j].Set(state.GetSynergy(j).icon, state.GetSynergy(j).iconRow, ChipText, j * 0.4f);
+                else _chipIcon[j].Clear();
             }
         }
 

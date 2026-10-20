@@ -15,8 +15,8 @@ MonoBehaviour:
   id: evo_thunderbolts
   displayName: Thunderbolts
   glyph: JV
-  icon: {fileID: 0}
-  iconRow: -1
+  icon: {fileID: 2800000, guid: 13ceaa4af4e914da3ab8c2724bbfa51d, type: 3}
+  iconRow: 29
   kind: 1
   tags: 2
   weight: 0

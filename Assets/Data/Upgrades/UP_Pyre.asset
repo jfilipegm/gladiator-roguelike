@@ -27,6 +27,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 88dec8640666390588da59378da65968, type: 2}
   - {fileID: 11400000, guid: e9cecf92373d7033f89c4bbc6859a71d, type: 2}
   weapon: {fileID: 0}
+  evolvesFrom: {fileID: 0}
+  catalyst: {fileID: 0}
   perLevel: []
   effects:
   - kind: 2

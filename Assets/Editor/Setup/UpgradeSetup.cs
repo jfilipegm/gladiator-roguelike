@@ -53,6 +53,7 @@ namespace Gladiator.EditorTools
 
             CreateWeapons();
             CreateStatusBoons();
+            EvolutionSetup.CreateOrUpdate(); // Phase 5.5: evolutions, weapon tags, synergies
             IconSetup.Apply(); // pixel icons (playtest pass)
 
             AssetDatabase.SaveAssets();

@@ -18,8 +18,8 @@ MonoBehaviour:
   description: A crit on an enemy below 20% HP kills it outright (not bosses).
   tag: 64
   count: 3
-  icon: {fileID: 0}
-  iconRow: -1
+  icon: {fileID: 2800000, guid: 13ceaa4af4e914da3ab8c2724bbfa51d, type: 3}
+  iconRow: 37
   mods: []
   effects:
   - kind: 9

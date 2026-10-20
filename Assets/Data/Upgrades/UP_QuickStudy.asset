@@ -25,6 +25,8 @@ MonoBehaviour:
   maxRarity: 3
   requiresAny: []
   weapon: {fileID: 0}
+  evolvesFrom: {fileID: 0}
+  catalyst: {fileID: 0}
   perLevel:
   - stat: 14
     op: 1

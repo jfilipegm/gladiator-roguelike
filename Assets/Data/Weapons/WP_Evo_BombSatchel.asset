@@ -33,7 +33,7 @@ MonoBehaviour:
   amount: 1
   speed: 16
   pierce: 0
-  mesh: {fileID: 7593729641053697157, guid: 31e4c83d4f5bb002097d25b058ba0a7c, type: 3}
+  mesh: {fileID: 2060036785046268964, guid: 16c4c349e171e9b59a367611677e6590, type: 3}
   meshScale: 1.1
   flightTime: 0.6
   fuse: 0.4

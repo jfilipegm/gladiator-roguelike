@@ -33,8 +33,8 @@ MonoBehaviour:
   amount: 3
   speed: 9
   pierce: -1
-  mesh: {fileID: 2018309946361260889, guid: 6dce99e8cbec6a576be735d3357e4765, type: 3}
-  meshScale: 1.6899998
+  mesh: {fileID: 1870090151971410137, guid: 97dff7f7f6332f4d3be74aef64b57704, type: 3}
+  meshScale: 1.3
   flightTime: 0.6
   fuse: 0.4
   arcHeight: 2.2

@@ -64,7 +64,7 @@ namespace Gladiator.EditorTools
             Evolution("GormsFlail", "BruteForce", "chain_of_ruin", "Chain of Ruin", Heavy,
                 "One more ball, bigger, and every hit drags them down.", w =>
                 {
-                    w.damage *= 1.2f; w.amount += 1; w.width *= 1.3f; w.meshScale *= 1.3f;
+                    w.damage *= 1.2f; w.amount += 1; w.width *= 1.3f; // the evolved model is already bigger: same meshScale
                     w.hitEffects = new[] { new BoonEffect { kind = EffectKind.StatusOnHit, status = slow, chance = 1f, power = 0f, stacks = 1 } };
                 });
             Evolution("CrimsonGreatsword", "OpenWounds", "sanguine_reaver", "Sanguine Reaver", Blood | Heavy,
@@ -73,6 +73,13 @@ namespace Gladiator.EditorTools
                     w.damage *= 1.15f; w.onHitStacks = 2;
                     w.echoDelay = 0.25f; w.echoAngle = 0f; w.echoScale = 1.4f;
                 });
+
+            // their own models (BlenderSrc/weapons/wp_evolved.py); the gladius and greatsword show as slashes
+            Model("Spear", "WP_EvoSpear");
+            Model("Javelins", "WP_EvoJavelin");
+            Model("Chakram", "WP_EvoChakram");
+            Model("BombSatchel", "WP_EvoFirePot");
+            Model("GormsFlail", "WP_EvoFlailBall");
 
             Synergy("SY_Wildfire", "wildfire", "Wildfire", "FIRE SYNERGY: WILDFIRE!", Fire,
                 "Every second, each burning enemy sets a neighbour alight.",
@@ -145,6 +152,19 @@ namespace Gladiator.EditorTools
             card.weight = 0f; // never rolled: only offered by the reward path
             card.minRarity = card.maxRarity = Rarity.Legendary;
             AssetDatabase.CreateAsset(card, upPath);
+        }
+
+        /// <summary>Gives WP_Evo_X the evolved model while it still shows its base weapon's (designer-owned otherwise).</summary>
+        static void Model(string weapon, string model)
+        {
+            var evo = AssetDatabase.LoadAssetAtPath<WeaponDef>(Wp + "WP_Evo_" + weapon + ".asset");
+            var card = AssetDatabase.LoadAssetAtPath<UpgradeDef>(Up + "UP_W_" + weapon + ".asset");
+            var mesh = AssetDatabase.LoadAssetAtPath<Mesh>("Assets/Art/Models/Weapons/" + model + ".fbx");
+            if (evo == null || mesh == null) { Debug.LogWarning("[EvolutionSetup] no model " + model + " for " + weapon); return; }
+            var baseMesh = card != null && card.weapon != null ? card.weapon.mesh : null;
+            if (evo.mesh != null && evo.mesh != baseMesh) return;
+            evo.mesh = mesh;
+            EditorUtility.SetDirty(evo);
         }
 
         static void Synergy(string file, string id, string name, string announce, UpgradeTag tag, string description,

@@ -243,7 +243,8 @@ namespace Gladiator.Gameplay
             if (_state != State.Entering && _state != State.Roaring && _state != State.Enraging) GuardsClock(dt);
             ShieldUp = def.enemy.blockArc > 0f && _state != State.Stunned && _state != State.Entering;
             _em.SetScriptedShield(_slot, ShieldUp);
-            Contact(pp, dt);
+            bool leaping = _state == State.Strike && _attack == BossAttack.Pounce; // in the air: the landing is the hit
+            if (!leaping) Contact(pp, dt);
             _em.SetScripted(_slot, _pos, _yaw, _state == State.Windup);
             Animate(dt);
         }

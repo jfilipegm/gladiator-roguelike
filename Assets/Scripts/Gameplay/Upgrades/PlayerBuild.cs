@@ -46,7 +46,7 @@ namespace Gladiator.Gameplay
             foreach (var w in _weapons.Weapons)
             {
                 var card = FindWeaponCard(w.Def);
-                if (card != null && State.LevelOf(card) == 0) State.Take(card, Rarity.Common, null, config);
+                if (card != null && State.LevelOf(card) == 0 && !State.IsEvolved(card)) State.Take(card, Rarity.Common, null, config);
             }
         }
 

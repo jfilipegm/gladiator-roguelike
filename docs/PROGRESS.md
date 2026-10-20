@@ -121,7 +121,34 @@
   4. UI: card banner + tag chips, HUD hint/pulse, synergy row, announcer.
   5. Art: `BlenderSrc/weapons/wp_evolved.py`, atlas icons.
   6. Tests, bot, 10-minute runs, release notes, `GameInfo.Version` 0.6.0.
-- **Done so far:** spec only.
+- **Done (committed on the branch):**
+  - **Plumbing:**
+    - `UpgradeDef.evolvesFrom/catalyst`;
+    - `UpgradeRoller.IsEvolutionReady` + `OfferEvolutions` (first slot, Legendary; chest/altar/boss only, `UpgradeConfig.evolutionInRewards/InLevelUps`), and a base weapon whose evolution is owned is never offered;
+    - `BuildState.Evolve/IsEvolved/TagCount/UpdateSynergies`;
+    - `PlayerBuild` evolves (same slot, `WeaponSystem.Evolve` keeps level 8 and the level mods), announces, and switches synergies on;
+    - `TagSynergyDef` + `UpgradeCatalog.synergies`.
+  - **Twists:**
+    - `WeaponDef.echoDelay/echoAngle/echoScale` (Echo for MeleeArc/Thrust/Returning);
+    - `WeaponDef.hitEffects` (filtered to that weapon's hits);
+    - `BoonEffects`: several spark chains, marks that carry their own status (slide trail + `GroundOnHit`), `StatusSpread`, `ExecuteOnCrit` (`EnemyManager.Execute`), with synergies and weapon effects as extra effect sources.
+  - **Data:** `EvolutionSetup` (also run by Create Upgrade Data) creates:
+    - 7 `WP_Evo_*` + `UP_E_*`;
+    - weapon-card tags;
+    - 6 `SY_*` synergies.
+  - **UI:**
+    - evolution card "EVOLUTION!" + "Evolves X";
+    - card hints: pairing, "Evolves your X / open a chest!", "TAG n/3: Synergy";
+    - HUD tiles "EVO!" pulsing gold / "EVO";
+    - synergy chips with icons.
+    - Screenshots `p55_evo_cards.png`, `p55_tag_hint.png`, `p55_evolved_fight.png`.
+  - **Art:**
+    - 13 icons in `PixelSrc/upgrade_icons.py` (atlas 40 rows);
+    - 5 evolved models from `BlenderSrc/weapons/wp_evolved.py` (108–160 tris; fire-pot needed 2 iterations), built headless (`Tools/bheadless`) because Blender wasn't open.
+  - **Bot:** takes an evolution card whenever offered, logs evolutions / synergies / sparks / spreads / executions, `-evolved` flag.
+  - **Tests:** EditMode `EvolutionTests` 5 (suite 71/71); PlayMode `EvolutionPlayTests` 6/6 (chest evolution in the same slot, Echo with a plain-gladius control, Thunderbolts chain, Fire-Pot ground, Wildfire, Executioner spares bosses).
+- **Resume here (2026-10-20, context compacted):** EditMode 71/71 after the bot changes; a full PlayMode run was in progress at the compact, so **rerun it** (`Tools/utest PlayMode "" 2400`, in the background). If it hangs on "running", a level-up panel may be holding the game paused: `Tools/u editor_stop`, then rerun. Untracked `Assets/_Recovery/` (Unity's scene-backup recovery after the 01:07 crash) and `mono_crash.*.blob`: never commit; move `Assets/_Recovery` out of Assets before `Tools/release` (it refuses untracked files under Assets/), and ask the producer before deleting it.
+- **Left:** full PlayMode suite, `GameInfo.Version` 0.6.0, dev build, bot runs (`bot 600 -timed` in the Slave Pit; `stress 300 60 -evolved -mix`; `bot 600 -timed -evolved`), release notes' Tested line (`docs/releases/v0.6.0.md` written), PR → ask the producer.
 - The Editor crashed while it was being closed (2026-10-20 01:07, GTK cleanup) and was relaunched at about 10:05. It came up ready with no backup-scene dialog. `mono_crash.mem.369056.1.blob` is in the repo root, untracked: never commit it.
 
 ## Known issues

@@ -52,6 +52,9 @@ namespace Gladiator.Gameplay
         public Vector2 slideEvery = new Vector2(2.5f, 6f);
         public Vector2 slideHold = new Vector2(0.4f, 1.1f);
         public float cameraOrbitAmount = 0.35f;
+        [Tooltip("-evolved: start from a late run's build (4 evolutions, 3 synergies), applied on the first frame (after PlayerBuild.Start).")]
+        public bool evolvedBuild;
+        bool _evolvedApplied;
         [Tooltip("Seconds between [BotTrace] lines (where it is, what it goes for, gold); 0 = off. Command line: -botTrace 5.")]
         public float traceEvery = 0f;
 
@@ -99,6 +102,7 @@ namespace Gladiator.Gameplay
         {
             if (_finished) return;
             _elapsed += UnityEngine.Time.unscaledDeltaTime;
+            if (evolvedBuild && !_evolvedApplied && Player.Main != null) { _evolvedApplied = true; PlaytestBotBootstrap.EvolvedBuild(); }
 
             if (mode == Mode.Stress && !_stressRequested && Sensor != null && _elapsed > 1f)
             {
@@ -147,6 +151,15 @@ namespace Gladiator.Gameplay
             if (boss != null)
                 sb.Append(" | boss ").Append(boss.Defeated ? "DEFEATED" : "alive").Append(" hp ").Append((boss.Hp01 * 100f).ToString("0")).Append("% phase ")
                   .Append(boss.Phase).Append(" attacks ").Append(boss.AttacksDone).Append(" guardWaves ").Append(boss.GuardWaves).Append(" stuns ").Append(boss.Stuns);
+            var pb = player.GetComponent<PlayerBuild>();
+            if (pb != null)
+            {
+                sb.Append(" | evolutions ").Append(pb.Evolutions).Append(" synergies");
+                if (pb.State.SynergyCount == 0) sb.Append(" none");
+                for (int i = 0; i < pb.State.SynergyCount; i++) sb.Append(' ').Append(pb.State.GetSynergy(i).id);
+            }
+            var fx = player.GetComponent<BoonEffects>();
+            if (fx != null) sb.Append(" | sparks ").Append(fx.SparksFired).Append(" spreads ").Append(fx.Spreads).Append(" executions ").Append(fx.Executions);
             var loadout = player.GetComponent<GladiatorLoadout>();
             if (loadout != null && loadout.Current != null) sb.Append(" | as ").Append(loadout.Current.id);
             var scav = player.GetComponent<Scavenger>();

@@ -16,6 +16,17 @@ namespace Gladiator.Gameplay
         LifetimeRenown,   // amount
         Flag,             // id = a secret / discovery flag set by the world (the rattling crate…)
         DefeatBossBelowHp, // id = BossDef.id, amount = HP fraction (0.3 = beaten with less than 30 % HP left)
+        RunKills,         // amount = kills in one run (best ever)
+        Evolve,           // id = evolution card id (empty = any), amount = times
+        SynergiesFound,   // amount = different synergies ever switched on
+    }
+
+    /// <summary>Where an unlock lives in the Codex and how it's earned (Phase 5.6, docs/UNLOCKS.md).</summary>
+    public enum UnlockCategory
+    {
+        Challenge, // a visible goal with a progress bar
+        Secret,    // a discovery: a cryptic hint until found
+        Market,    // bought in the Codex with Renown (renownCost); conditions never grant it
     }
 
     [Serializable]
@@ -28,8 +39,8 @@ namespace Gladiator.Gameplay
 
     /// <summary>
     /// Meta content that's earned, not bought with flat stats (CLAUDE.md §6.6). All `conditions` must hold; checked when a
-    /// run ends. Rewards: upgrades that join the level-up pool (they're never offered while locked). The Codex shows the
-    /// `hint` while locked and the `description` once earned.
+    /// run ends (a Market unlock is bought instead). Rewards: upgrades that join the level-up pool (they're never offered
+    /// while locked) and/or a Renown bounty. The Codex shows the `hint` while locked and the `description` once earned.
     /// </summary>
     [CreateAssetMenu(menuName = "Gladiator/Unlock", fileName = "UL_")]
     public sealed class UnlockDef : ScriptableObject
@@ -40,6 +51,11 @@ namespace Gladiator.Gameplay
         [Tooltip("Shown in the Codex while locked: cryptic, never the full answer.")]
         [TextArea] public string hint = "???";
         public UnlockCondition[] conditions = Array.Empty<UnlockCondition>();
+        public UnlockCategory category = UnlockCategory.Challenge;
+        [Tooltip("Market only: the Renown it costs in the Codex.")]
+        public int renownCost;
+        [Tooltip("Renown paid once, when it unlocks (a challenge's bounty).")]
+        public int renownBounty;
 
         [Header("Rewards")]
         [Tooltip("Upgrades kept out of the level-up pool until this unlocks.")]

@@ -368,6 +368,13 @@ namespace Gladiator.Gameplay
         /// <summary>The steering velocity (without knockback), m/s (tests / debug).</summary>
         public Vector3 GetVelocity(int i) => _vel[i];
         public EnemyDef GetDef(int i) => _view[i] != null ? _view[i].Def : null;
+
+        /// <summary>The EnemyDef with this RuntimeId among those spawned since the scene loaded (run end, Codex; not per frame).</summary>
+        public EnemyDef DefByRuntimeId(int runtimeId)
+        {
+            foreach (var def in _pools.Keys) if (def != null && def.RuntimeId == runtimeId) return def;
+            return null;
+        }
         public AffixDef GetAffix(int i) => _affix[i];
         public bool IsElite(int i) => _affix[i] != null;
         /// <summary>0 move, 1 wind-up, 2 attack, 3 recover (tests / debug).</summary>

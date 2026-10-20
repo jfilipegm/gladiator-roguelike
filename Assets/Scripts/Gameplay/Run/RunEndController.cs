@@ -118,7 +118,45 @@ namespace Gladiator.Gameplay
                     s.Weapons[k] = new WeaponKills { Id = def.id, Kills = run.KillsBy(def.RuntimeId) };
                 }
             }
+            s.EnemyKills = EnemyKills();
+            var build = p.GetComponent<PlayerBuild>();
+            if (build != null) Discoveries(build, ref s);
             return s;
+        }
+
+        IdCount[] EnemyKills()
+        {
+            var em = EnemyManager.Instance;
+            var list = new System.Collections.Generic.List<IdCount>(run.KilledTypeCount);
+            for (int k = 0; k < run.KilledTypeCount; k++)
+            {
+                run.GetTypeKills(k, out int typeId, out int kills);
+                var def = em != null ? em.DefByRuntimeId(typeId) : null;
+                if (def != null && kills > 0) list.Add(new IdCount { id = def.id, count = kills });
+            }
+            return list.ToArray();
+        }
+
+        /// <summary>What the build found this run: upgrades (an evolution's base card too), evolutions, synergies.</summary>
+        static void Discoveries(PlayerBuild build, ref RunSummary s)
+        {
+            var st = build.State;
+            var ups = new System.Collections.Generic.List<string>(st.OwnedCount + 4);
+            var evos = new System.Collections.Generic.List<string>(4);
+            for (int k = 0; k < st.OwnedCount; k++)
+            {
+                var d = st.GetOwned(k).Def;
+                if (d == null) continue;
+                ups.Add(d.id);
+                if (!d.IsEvolution) continue;
+                evos.Add(d.id);
+                if (d.evolvesFrom != null && !ups.Contains(d.evolvesFrom.id)) ups.Add(d.evolvesFrom.id);
+            }
+            var syn = new string[st.SynergyCount];
+            for (int k = 0; k < syn.Length; k++) syn[k] = st.GetSynergy(k).id;
+            s.Upgrades = ups.ToArray();
+            s.Evolutions = evos.ToArray();
+            s.Synergies = syn;
         }
 
         void ShowScreen()

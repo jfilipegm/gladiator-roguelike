@@ -59,14 +59,36 @@ namespace Gladiator.Gameplay
         readonly int[] _sourceIds = new int[MaxSources];
         readonly int[] _sourceKills = new int[MaxSources];
         int _sourceCount;
+        // Kills per enemy type (EnemyDef RuntimeId) for the Codex's Bestiary: a fixed table, no allocation.
+        const int MaxTypes = 48;
+        readonly int[] _typeIds = new int[MaxTypes];
+        readonly int[] _typeKills = new int[MaxTypes];
+        int _typeCount;
+
+        /// <summary>Enemy types killed this run (see GetTypeKills).</summary>
+        public int KilledTypeCount => _typeCount;
+
+        public void GetTypeKills(int k, out int enemyTypeId, out int kills)
+        {
+            enemyTypeId = _typeIds[k];
+            kills = _typeKills[k];
+        }
 
         void OnKill(in KillEvent e)
         {
             if (Ended) return;
             Kills++;
+            CountType(e.EnemyTypeId);
             for (int k = 0; k < _sourceCount; k++)
                 if (_sourceIds[k] == e.SourceId) { _sourceKills[k]++; return; }
             if (_sourceCount < MaxSources) { _sourceIds[_sourceCount] = e.SourceId; _sourceKills[_sourceCount++] = 1; }
+        }
+
+        void CountType(int typeId)
+        {
+            for (int k = 0; k < _typeCount; k++)
+                if (_typeIds[k] == typeId) { _typeKills[k]++; return; }
+            if (_typeCount < MaxTypes) { _typeIds[_typeCount] = typeId; _typeKills[_typeCount++] = 1; }
         }
 
         public int KillsBy(int sourceId)

@@ -39,12 +39,31 @@ namespace Gladiator.Gameplay
         public List<IdCount> bossKillLowestHp = new List<IdCount>();
         public List<string> unlocked = new List<string>();
         public List<string> flags = new List<string>();
+        // Phase 5.6 (filled by Migrate in older files): records for challenges and the Codex's discoveries.
+        public long bestRunKills;
+        /// <summary>Evolution card id → times taken.</summary>
+        public List<IdCount> evolutions = new List<IdCount>();
+        /// <summary>TagSynergyDef id → runs it was switched on in.</summary>
+        public List<IdCount> synergies = new List<IdCount>();
+        /// <summary>EnemyDef id → lifetime kills (bosses included).</summary>
+        public List<IdCount> enemyKills = new List<IdCount>();
+        /// <summary>UpgradeDef id → runs it was taken in.</summary>
+        public List<IdCount> upgradesTaken = new List<IdCount>();
+        /// <summary>Codex entries already shown unlocked/discovered (anything else that's open is NEW).</summary>
+        public List<string> codexSeen = new List<string>();
 
         public static long Count(List<IdCount> list, string id)
         {
             if (list == null || string.IsNullOrEmpty(id)) return 0;
             for (int i = 0; i < list.Count; i++) if (list[i].id == id) return list[i].count;
             return 0;
+        }
+
+        public static long Total(List<IdCount> list)
+        {
+            long n = 0;
+            if (list != null) for (int i = 0; i < list.Count; i++) n += list[i].count;
+            return n;
         }
 
         public static void Add(List<IdCount> list, string id, long n)
@@ -91,6 +110,11 @@ namespace Gladiator.Gameplay
             bossKillLowestHp ??= new List<IdCount>();
             unlocked ??= new List<string>();
             flags ??= new List<string>();
+            evolutions ??= new List<IdCount>();
+            synergies ??= new List<IdCount>();
+            enemyKills ??= new List<IdCount>();
+            upgradesTaken ??= new List<IdCount>();
+            codexSeen ??= new List<string>();
             if (renown < 0) renown = 0;
             // v0 (no version field) → v1: nothing to convert yet.
             if (version < CurrentVersion) version = CurrentVersion;

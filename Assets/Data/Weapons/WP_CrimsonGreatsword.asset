@@ -38,6 +38,13 @@ MonoBehaviour:
   flightTime: 0.6
   fuse: 0.4
   arcHeight: 2.2
+  echoDelay: 0
+  echoAngle: 180
+  echoScale: 1
+  targetFarthest: 0
+  tipLength: 0
+  spreadStrikes: 0
+  hitEffects: []
   levels:
   - mods:
     - stat: 4

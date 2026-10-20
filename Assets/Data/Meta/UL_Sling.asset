@@ -15,7 +15,7 @@ MonoBehaviour:
   id: sling
   displayName: The Sling
   description: 'The rat-catcher''s sling is yours: a stone at the farthest enemy in reach, and big crits. Now in the level-up pool.'
-  hint: "Something small and shiny runs the Slave Pit's walls. Faster than you can run\u2026"
+  hint: Something small and shiny runs the Slave Pit's walls. Faster than you can run...
   conditions:
   - kind: 8
     id: golden_rat

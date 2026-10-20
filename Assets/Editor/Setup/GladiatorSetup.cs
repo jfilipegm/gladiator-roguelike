@@ -293,7 +293,7 @@ namespace Gladiator.EditorTools
             u.id = "pit_goblin";
             u.displayName = "The Pit Goblin";
             u.description = "The thing in the crate wants a turn. The Pit Goblin can be chosen, and its Bomb Satchel joins the level-up pool.";
-            u.hint = "Something rattles in the Slave Pit…";
+            u.hint = "Something rattles in the Slave Pit...";
             u.conditions = new[] { new UnlockCondition { kind = UnlockConditionKind.Flag, id = Flag, amount = 1f } };
             u.addsToPool = new[] { satchelCard };
             EditorUtility.SetDirty(u);

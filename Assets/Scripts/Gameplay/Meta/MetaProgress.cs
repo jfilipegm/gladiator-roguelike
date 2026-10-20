@@ -145,12 +145,14 @@ namespace Gladiator.Gameplay
         }
 
         /// <summary>Has the Codex shown `id` (an unlock, enemy, upgrade… id) as open yet? Open and unseen = NEW.</summary>
-        public static bool Seen(string id) => string.IsNullOrEmpty(id) || Data.codexSeen.Contains(id);
+        public static bool Seen(string id) => Seen(id, Data);
+        public static bool Seen(string id, SaveData d) => string.IsNullOrEmpty(id) || d.codexSeen.Contains(id);
 
         /// <summary>Marks Codex entries as seen (no save; call SaveSeen once after a batch).</summary>
-        public static void MarkSeen(string id)
+        public static void MarkSeen(string id) => MarkSeen(id, Data);
+        public static void MarkSeen(string id, SaveData d)
         {
-            if (!string.IsNullOrEmpty(id) && !Data.codexSeen.Contains(id)) Data.codexSeen.Add(id);
+            if (!string.IsNullOrEmpty(id) && !d.codexSeen.Contains(id)) d.codexSeen.Add(id);
         }
 
         public static void SaveSeen() => SaveSystem.Save(Data);

@@ -85,7 +85,7 @@ namespace Gladiator.EditorTools
             // ---------------------------------------------------------------- unlocks
             Unlock("UL_Sling", "sling", "The Sling", UnlockCategory.Secret,
                 "The rat-catcher's sling is yours: a stone at the farthest enemy in reach, and big crits. Now in the level-up pool.",
-                "Something small and shiny runs the Slave Pit's walls. Faster than you can run…",
+                "Something small and shiny runs the Slave Pit's walls. Faster than you can run...",
                 new[] { C(UnlockConditionKind.Flag, "golden_rat") }, slingCard);
             Unlock("UL_LoadedDice", "loaded_dice", "Loaded Dice", UnlockCategory.Secret,
                 "You beat the Bookmaker at his own game, and took his dice. Loaded Dice (GOLD: +Luck, +gold) joins the level-up pool.",

@@ -181,6 +181,25 @@ namespace Gladiator.Tests
         }
 
         [UnityTest, Timeout(60000)]
+        public IEnumerator Scavenger_NeverLendsAnEvolution()
+        {
+            yield return Boot(TestArena, Goblin);
+            var s = Player.Main.GetComponent<Scavenger>();
+            s.enabled = false; // pulled by hand below
+            var ups = Player.Main.GetComponent<PlayerBuild>().catalog.upgrades;
+            int evolutions = 0;
+            foreach (var u in ups) if (u != null && u.IsEvolution) evolutions++;
+            Assert.Greater(evolutions, 0, "the pool has evolution cards");
+            for (int k = 0; k < 40; k++)
+            {
+                Assert.IsTrue(s.Fire(), "something to lend");
+                foreach (var u in ups)
+                    if (u != null && u.IsEvolution) Assert.AreNotSame(u.weapon, s.LastWeapon, "an evolution is earned, never lent (" + u.weapon.id + ")");
+            }
+            yield return null;
+        }
+
+        [UnityTest, Timeout(60000)]
         public IEnumerator RattlingCrate_RattlesOnlyNearby_BreaksAndSavesTheFlag()
         {
             SaveSandbox.Wipe();

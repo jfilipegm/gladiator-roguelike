@@ -365,6 +365,8 @@ namespace Gladiator.Gameplay
         public float GetHp(int i) => _hp[i];
         public float GetMaxHp(int i) => _maxHp[i];
         public float GetYaw(int i) => _yaw[i];
+        /// <summary>The steering velocity (without knockback), m/s (tests / debug).</summary>
+        public Vector3 GetVelocity(int i) => _vel[i];
         public EnemyDef GetDef(int i) => _view[i] != null ? _view[i].Def : null;
         public AffixDef GetAffix(int i) => _affix[i];
         public bool IsElite(int i) => _affix[i] != null;

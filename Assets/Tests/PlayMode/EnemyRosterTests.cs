@@ -258,12 +258,11 @@ namespace Gladiator.Tests
             int i = _em.Spawn(def, P + new Vector3(0f, 0f, 6f));
             yield return Until(() => _em.GetAiState(i) == 2, 6f);
             Assert.AreEqual(2, _em.GetAiState(i), "lunges once in range");
-            Vector3 a = _em.GetPosition(i);
-            float t0 = Time.time;
+            // its velocity, not distance over frames: a slow frame in a long suite let it land before the second sample
             yield return null;
-            yield return null;
-            float speed = Vector3.Distance(a, _em.GetPosition(i)) / Mathf.Max(1e-3f, Time.time - t0);
-            Assert.Greater(speed, def.moveSpeed * 1.5f, "the leap is much faster than its run");
+            Vector3 v = _em.GetVelocity(i);
+            v.y = 0f;
+            Assert.Greater(v.magnitude, def.moveSpeed * 1.5f, "the leap is much faster than its run");
             yield return Until(() => CountDamage(def.attackDamage) > 0, 2f);
             Assert.AreEqual(1, CountDamage(def.attackDamage), "the lunge bites for attackDamage");
         }

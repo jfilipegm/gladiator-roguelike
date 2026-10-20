@@ -134,9 +134,14 @@ namespace Gladiator.Tests
         {
             yield return Boot(weapons: false);
             var brute = En("EN_Brute");
+            // both rooted, the one in front clearly nearer: walking in, the one behind could become the nearest and draw the
+            // auto-aimed swing itself (a flake in the full suite). Within reach behind: 2.8 m < range 2.6 + its radius 0.75.
+            var root = St("SE_Root");
             // control: the rusty gladius in the same spot never touches the one behind
-            int front = SpawnAt(brute, new Vector3(0f, 0f, 1.6f));
-            int back = SpawnAt(brute, new Vector3(0f, 0f, -2.0f));
+            int front = SpawnAt(brute, new Vector3(0f, 0f, 1.2f));
+            int back = SpawnAt(brute, new Vector3(0f, 0f, -2.8f));
+            _em.ApplyStatus(front, root, 0f);
+            _em.ApplyStatus(back, root, 0f);
             Arm(Wp("WP_Gladius"));
             yield return new WaitForSeconds(1.2f);
             Assert.Less(_em.GetHp(front), _em.GetMaxHp(front), "control: the gladius cuts the one in front");
@@ -146,8 +151,10 @@ namespace Gladiator.Tests
             PickupSystem.Instance.ClearAll();
             yield return new WaitForSeconds(0.5f);
 
-            front = SpawnAt(brute, new Vector3(0f, 0f, 1.6f));
-            back = SpawnAt(brute, new Vector3(0f, 0f, -2.0f));
+            front = SpawnAt(brute, new Vector3(0f, 0f, 1.2f));
+            back = SpawnAt(brute, new Vector3(0f, 0f, -2.8f));
+            _em.ApplyStatus(front, root, 0f);
+            _em.ApplyStatus(back, root, 0f);
             Arm(Wp("WP_Evo_Gladius"));
             yield return new WaitForSeconds(1.2f);
             Assert.Greater(_weapons.Echoes, 0, "the echo fired");

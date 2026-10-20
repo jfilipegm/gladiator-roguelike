@@ -291,4 +291,5 @@ One line each: what, and why. Newest at the bottom of each section.
 - **The evolved weapon replaces its base in the same slot; the catalyst stays.** No slot pressure, and nothing you picked is taken away.
 - **Synergies switch on at 3 distinct upgrades of one tag; weapons carry tags.** Counting distinct upgrades (not levels) rewards variety within a theme. Only tags with at least 3 carriers get a synergy now (Fire, Blood, Lightning via the evolved javelins, Crit, Heavy, Defense); Movement, XP and Gold wait for more Boons.
 - **Twists are four generic `WeaponDef` features (Echo, status on hit for every pattern, Chain on hit, Ground on hit) plus two new effect kinds (`StatusSpread`, `ExecuteOnCrit`).** The 7 evolutions and 6 synergies are data on top of them.
+- **Loans never hand out an evolution, nor the base of one you've evolved.** The crowd's Weapon in the Sand and the Pit Goblin's Scavenger lend pool weapons. An evolved weapon has no level table, so a loan would arrive weaker than intended and spoil the reward; a second copy of your evolved weapon's base would just be noise.
 

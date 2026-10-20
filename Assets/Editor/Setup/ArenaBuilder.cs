@@ -101,10 +101,17 @@ namespace Gladiator.EditorTools
             var (enemies, _) = ArenaSceneCommon.AddCombatSystems(player, layout.radius, debugEnemies: 0);
             enemies.arenaCenter = layout.center;
             enemies.arenaAspect = layout.aspect > 0f ? layout.aspect : 1f;
+            enemies.arenaOutline = layout.outline ?? new Vector2[0];
             // the nav bake and the spatial hash cover the whole arena (the old ±26 m box fits only the small ones)
-            var half = new Vector2(Mathf.Max(26f, layout.radius + 7f), Mathf.Max(26f, layout.radius * enemies.arenaAspect + 7f));
-            enemies.boundsMin = new Vector2(layout.center.x, layout.center.z) - half;
-            enemies.boundsMax = new Vector2(layout.center.x, layout.center.z) + half;
+            var c2 = new Vector2(layout.center.x, layout.center.z);
+            Vector2 lo = c2 - new Vector2(layout.radius, layout.radius * enemies.arenaAspect), hi = c2 + new Vector2(layout.radius, layout.radius * enemies.arenaAspect);
+            if (enemies.HasOutline)
+            {
+                lo = hi = layout.outline[0];
+                foreach (var v in layout.outline) { lo = Vector2.Min(lo, v); hi = Vector2.Max(hi, v); }
+            }
+            enemies.boundsMin = Vector2.Min(c2 - new Vector2(26f, 26f), lo - new Vector2(7f, 7f));
+            enemies.boundsMax = Vector2.Max(c2 + new Vector2(26f, 26f), hi + new Vector2(7f, 7f));
             AddBoundary(layout, env);
             ArenaNavBaker.Bake(enemies, System.IO.Path.GetFileNameWithoutExtension(scenePath));
             ArenaSceneCommon.AddRunSystems(player);
@@ -163,6 +170,7 @@ namespace Gladiator.EditorTools
             if (director != null)
             {
                 director.maxAliveOverride = layout.maxAlive;
+                director.maxSpawnDistance = layout.spawnMaxDistance;
                 if (layout.spawnTable != null) director.table = layout.spawnTable;
             }
             // the arena's tier and difficulty (Phase 5.4)
@@ -209,7 +217,7 @@ namespace Gladiator.EditorTools
 
             var bot = new GameObject("[PlaytestBot]").AddComponent<PlaytestBot>();
             bot.arenaCenter = layout.center;
-            bot.arenaRadius = Mathf.Min(layout.radius, layout.radius * (layout.aspect > 0f ? layout.aspect : 1f)) - 3f;
+            bot.arenaRadius = enemies.ArenaMinRadius - 3f; // only without an EnemyManager: it uses the arena's own edge
             bot.gameObject.SetActive(false); // enabled by -bot / smoke test
 
             SceneSetupUtil.SaveScene(scene, scenePath);

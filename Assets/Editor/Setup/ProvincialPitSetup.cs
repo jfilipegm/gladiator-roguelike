@@ -39,7 +39,7 @@ namespace Gladiator.EditorTools
                 unlock = PlayerSetup.EnsureAsset<UnlockDef>(UnlockPath);
                 unlock.id = "provincial_pit";
                 unlock.displayName = "The Provincial Pit";
-                unlock.description = "Word of the Pit Master's fall reached the provinces. A real arena wants you: stone, stands, three gates, and a champion.";
+                unlock.description = "Word of the Pit Master's fall reached the provinces. A real arena wants you: a walled square, packed stands, four gates, and a champion.";
                 unlock.hint = "Beat the Pit Master and the provinces will want you.";
                 unlock.conditions = new[] { new UnlockCondition { kind = UnlockConditionKind.DefeatBoss, id = "gorm", amount = 1f } };
                 EditorUtility.SetDirty(unlock);
@@ -50,7 +50,7 @@ namespace Gladiator.EditorTools
             {
                 run = PlayerSetup.EnsureAsset<RunDef>(RunPath);
                 run.id = "provincial_pit";
-                run.description = "A real arena: sand, stone and stands full of townsfolk. Three gates, barricades, spike traps that hurt everyone. Tougher enemies, more Renown (×1.5).";
+                run.description = "A real arena, and a big one: sand, stone and stands full of townsfolk. Four gates, barricades, spike traps that hurt everyone. Tougher enemies, more Renown (×1.5).";
                 run.unlock = unlock;
                 run.arenas = new[] { new RunDef.Arena { displayName = "THE PROVINCIAL PIT", scenePath = Scene } };
                 EditorUtility.SetDirty(run);

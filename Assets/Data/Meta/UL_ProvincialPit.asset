@@ -14,10 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.UnlockDef
   id: provincial_pit
   displayName: The Provincial Pit
-  description: 'Word of the Pit Master''s fall reached the provinces. A real arena wants you: stone, stands, three gates, and a champion.'
+  description: 'Word of the Pit Master''s fall reached the provinces. A real arena wants you: a walled square, packed stands, four gates, and a champion.'
   hint: Beat the Pit Master and the provinces will want you.
   conditions:
   - kind: 0
     id: gorm
     amount: 1
+  category: 0
+  renownCost: 0
+  renownBounty: 0
   addsToPool: []

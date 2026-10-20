@@ -12,7 +12,8 @@ namespace Gladiator.Tests
     /// Phase 5.4 (docs/ARENAS.md): the Provincial Pit is locked until Gorm falls, then the menu asks which arena and a
     /// run there loads it with its own difficulty and records arena tier 1; spike grates telegraph, then hurt whoever
     /// stands on them (a jump clears them); barricades block the horde until something smashes them; a toppled brazier
-    /// leaves burning ground.
+    /// leaves burning ground. v0.8.0 rebuild: an elongated octagon, bigger than the Slave Pit, that keeps the horde in
+    /// along its straight sides and cut corners.
     /// </summary>
     public class ProvincialPitTests
     {
@@ -74,6 +75,31 @@ namespace Gladiator.Tests
 
         static Vector2 XZ(Vector3 v) => new Vector2(v.x, v.z);
 
+        [UnityTest, Timeout(60000)]
+        public IEnumerator TheArena_IsAnOctagonBiggerThanTheSlavePit_ThatKeepsTheHordeIn()
+        {
+            var pit = Load<ArenaLayoutDef>("Assets/Data/Arenas/AL_ProvincialPit.asset");
+            var slave = Load<ArenaLayoutDef>("Assets/Data/Arenas/AL_SlavePit.asset");
+            Assert.AreEqual(8, pit.outline.Length, "an octagon, not a circle");
+            Assert.Greater(pit.PlayArea(), slave.PlayArea() * 1.3f, "every arena is bigger than the one before it");
+            yield return Boot(true);
+            Assert.IsTrue(_em.HasOutline);
+            Assert.AreEqual(48.9f, _em.EdgePoint(0f, 0f).x, 0.05f, "the east wall: 50 m, less the play inset");
+            Assert.AreEqual(33.9f, _em.ArenaRadiusZ, 0.05f, "the north wall: 35 m, less the inset");
+            // the cut corner: (44, 30) is inside the wall's bounding box but outside the octagon
+            var corner = new Vector3(44f, 0f, 30f);
+            Assert.Greater(_em.EdgeDistance01(corner), 1f, "behind the cut corner");
+            Assert.IsTrue(_em.ClampInside(ref corner, 0.5f));
+            Assert.LessOrEqual(_em.EdgeDistance01(corner, 0.5f), 1.0001f);
+            // enemies put down beyond each wall and corner are walked back inside
+            int[] slots = new int[4];
+            Vector3[] outside = { new Vector3(53f, 0f, 2f), new Vector3(-3f, 0f, 38f), new Vector3(46f, 0f, 31f), new Vector3(-46f, 0f, -31f) };
+            for (int k = 0; k < outside.Length; k++) slots[k] = _em.Spawn(_convict, outside[k]);
+            yield return new WaitForSeconds(0.3f);
+            for (int k = 0; k < slots.Length; k++)
+                Assert.LessOrEqual(_em.EdgeDistance01(_em.GetPosition(slots[k])), 1.001f, "pulled back in from " + outside[k]);
+        }
+
         [UnityTest, Timeout(120000)]
         public IEnumerator LockedUntilGormFalls_ThenTheMenuAsks_AndARunThereIsTier1WithItsOwnDifficulty()
         {
@@ -109,10 +135,11 @@ namespace Gladiator.Tests
             Assert.AreEqual(1.15f, RunState.Current.playerDamageTakenMul, 1e-4f, "+15 % damage taken");
             Assert.AreSame(Load<SpawnTableDef>("Assets/Data/Arenas/ST_ProvincialPit.asset"), Director.Instance.table);
             Assert.IsNotNull(SpikeTraps.Instance);
-            Assert.AreEqual(6, SpikeTraps.Instance.traps.Length);
+            Assert.AreEqual(10, SpikeTraps.Instance.traps.Length);
             Assert.IsNotNull(ArenaBreakables.Instance);
-            Assert.AreEqual(8, ArenaBreakables.Instance.barricades.Length);
-            Assert.AreEqual(4, ArenaBreakables.Instance.braziers.Length);
+            Assert.AreEqual(12, ArenaBreakables.Instance.barricades.Length);
+            Assert.AreEqual(6, ArenaBreakables.Instance.braziers.Length);
+            Assert.AreEqual(4, ArenaGates.Instance.Count, "a gate mid-side");
 
             var convict = Load<EnemyDef>("Assets/Data/Enemies/EN_Convict.asset");
             int i = EnemyManager.Instance.Spawn(convict, Player.Main.transform.position + new Vector3(0f, 0f, 12f));

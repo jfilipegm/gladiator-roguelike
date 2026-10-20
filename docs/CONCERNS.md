@@ -66,6 +66,11 @@ The Slave Pit is now 84 × 70 m (was a 42 m circle) with the same spawn curve an
 **Data (bot run 3, 2026-10-20):** alive enemies per minute 53 / 78 / 145 / 220 / 254 / 264 / 283 / 299, 300 reached at 5:24 (the §8 target is 300 by minute 5); the bot's kills and level match the old pit's runs once it fights instead of kiting. So the totals hold; what the bot can't tell is whether the first two minutes (under 80 enemies on 3.5× the floor) feel empty.
 **Proposal:** judge in the playtest. If the first minutes feel empty, raise the early budget in `DirectorConfig` (or the Slave Pit's `maxAlive`) or lower `DirectorConfig.ringInset`'s distance from the player (`minPlayerDistance`) so spawns land closer, before shrinking the arena again.
 
+## C18 — Big arenas may thin out the horde (NEW, v0.8.0)
+- **What changed:** the Provincial Pit's play area went from 1,870 to 6,274 m² with the same 300-enemy cap. The Director spawns on the arena's edge, so on a big floor more of the 300 are walking in at any moment.
+- **Done:** `ArenaLayoutDef.spawnMaxDistance` (55 m here) keeps ring spawns on the near side; four gates instead of three.
+- **Not measured:** the bot's kill count is capped by its own DPS, so it can't show pressure. **Proposal:** the producer's playtest decides; if it feels empty, raise `maxAlive` here (300 → 380, within the 500 peak budget) or lower `spawnMaxDistance` to 40. Every later arena is bigger again, so this needs an answer before Arena 3.
+
 ## C17 — The Renown economy is a guess (NEW, Phase 5.6)
 - **What's guessed:** Market Boons cost 300 Renown, and challenge bounties pay 100–200. A winning Slave Pit run earns about 150–290 Renown, kills dominate it (2 per 100 kills), and the Provincial Pit pays ×1.5.
 - **The risk:** if kill counts grow (evolved builds kill 9–10 k a run), the Market empties in two or three runs and Renown loses its use again.

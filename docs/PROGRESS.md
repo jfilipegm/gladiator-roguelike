@@ -1,7 +1,7 @@
 # Progress
 
 **Current phase:** Phase 5 — expansion
-**Current milestone:** none in progress. Phase 5.6 (unlock variety + Codex) merged and released as v0.7.0 on 2026-10-20. Next "Should" in CLAUDE.md §9: Arenas 3–6, one at a time, each with its boss (Arena 3: the Stone Amphitheater + the Beast Lord).
+**Current milestone:** arena ladder fixes (branch `phase5-arena-ladder`, target v0.8.0): the producer's rule that every arena is bigger than the last and not only round (`docs/GDD.md`), the Provincial Pit rebuilt as a 100 × 70 m octagon, and the spike-trap fix. Then Arena 3. v0.7.0 (unlock variety + Codex) released 2026-10-20.
 **Last updated:** 2026-10-20
 
 **Repository:** https://github.com/jfilipegm/gladiator-roguelike (public, branch `main`, remote `origin`, `.blend` files via Git LFS). Work on a branch per milestone, push as you go, merge through a PR; release every playable build (`Tools/release`).
@@ -221,6 +221,29 @@
   - Smoke runs of the downloaded archives (`-bot -timed -botSeconds 40`), all v0.7.0, clock to 36–37 s, 0 exceptions: Linux as the Nobody (52 kills), as the knight in the Provincial Pit (97 kills, 97 HP kill-healed; it took the newly unlocked Net), and Windows under Wine as the Nobody (49 kills). Their Profiling files were deleted. macOS not run.
   - The first smoke attempt idled at the menu: the shell (zsh) passed an unquoted `$ARGS` as one argument, so the game never saw `-bot`. Not a game bug; TOOLING's recipe now says to spell the arguments out.
 - Untracked `_Recovery_2026-10-20/` (repo root) and `mono_crash.*.blob`: never commit them; deleting them is the producer's call.
+
+## In progress — arena ladder fixes (branch `phase5-arena-ladder`, target v0.8.0)
+- **Producer feedback (2026-10-20, from screenshots):**
+  1. The Provincial Pit (~49 m circle, ≈ 1,900 m²) was smaller than the Slave Pit (84 × 70 m oval, ≈ 4,400 m²). Every arena must be bigger than the previous one, and arenas aren't limited to circles/ovals. Rule and size targets: `docs/GDD.md`, DECISIONS "Arena ladder". The producer said "Rebuild the Provincial pit first please".
+  2. The spike traps' spikes came up off their grate.
+- **Done (committed on the branch):**
+  - **Rule + docs** (b9eed64): GDD ladder table (floor-area targets ×1.35 per step, a shape per arena), DECISIONS, memory.
+  - **Spike traps** (2638171): `PR_Spikes` kept its first (corner) spike's origin after the join, and `SpikeTraps` draws the raw mesh at the grate's centre, so the spike bed sat 0.68 m toward −X/−Z and stuck ~0.46 m past two edges. `provincial_pit.py` recentres it (re-exported, ±0.755 m inside the ±0.98 m grate); the telegraph is the grate's own square (`SpikeTraps.borderHalf`) instead of a 1.3 m circle; the damage area was already the grate. EditMode `ModelPipelineTests.Spikes_ComeUpInsideTheirGrate`. Screenshots `spike_fix_*`.
+  - **The Provincial Pit rebuilt** (2cb062a + this commit):
+    - an elongated octagon, wall face 100 × 70 m with 14 m cut corners; play area 6,274 m² (Slave Pit 4,379; old Provincial 1,870);
+    - `ArenaLayoutDef.outline` + `PlayArea()`; `EnemyManager.arenaOutline` → radial edge table (720 bins) behind `EdgeDistance01` / `ClampInside` / `EdgePoint` / per-enemy containment, `EdgePerimeter` (Gorm's fire ring); the Slave Pit's ellipse path is unchanged;
+    - `ArenaLayoutDef.spawnMaxDistance` → `Director.maxSpawnDistance` (55 m here, 0 = anywhere): ring spawns come from the near side of a big floor (swarms keep their side);
+    - layout: walls split per edge and scaled to fit (no coplanar overlaps), 4 mid-side gates (north = boss), corner piers + stand fillers, ~400 townsfolk, 6 platforms, 10 pillars, 12 barricades, 6 braziers, 10 spike grates, wall-side props; floor/rim regenerated from the octagon (`provincial_pit.py`); 80,920 static tris, 2 materials;
+    - arena/unlock text says four gates; GDD, ARENAS.md;
+    - tests: PlayMode `ProvincialPitTests` 4/4 (+`TheArena_IsAnOctagonBiggerThanTheSlavePit_ThatKeepsTheHordeIn`), `ChampionTests` 6/6 (charge lane now barricade 8 → the west pillar), `SecretPlayTests` 4/4;
+    - screenshots `p57_top`, `p57_persp`, `p57_persp2`, `p57_play`.
+  - `GameInfo.Version` 0.8.0; release notes `docs/releases/v0.8.0.md`.
+- **Verification:** EditMode 77/77, PlayMode 128/128 (2026-10-20).
+- **PR #10** (https://github.com/jfilipegm/gladiator-roguelike/pull/10) open, waiting for the producer's OK. After it: merge, `Tools/release 0.8.0`, smoke-run the archives (spell the arguments out), record here; then Arena 3.
+- **Bot runs (dev build, `bot 600 -timed -arena provincial_pit`), 0 exceptions in both:**
+  - before the spawn limit: 421 fps avg; ≥ 250 enemies 228 fps (4.38 ms, p95 6.05), gameplay 1.77 / 2.18 ms; max 300; GC 401 B/s (the victory screen; 59 B/s-class otherwise); **Champion defeated**, Survived at 541 s, level 26, 7,217 kills.
+  - with `spawnMaxDistance` 55: 373 fps avg; ≥ 250 enemies 197 fps (5.07 ms, p95 6.59), gameplay 1.91 / 2.41 ms; max 301; GC 59 B/s; Champion at 64 %, level 26, 7,245 kills (a weaker build: 281 bombs, 56 s of hit-stop).
+  - Kills match the old arena's runs within build-to-build noise, so they can't show horde pressure (the bot's DPS caps them). C18 tracks density for the producer's playtest.
 
 ## Known issues
 - **Residual GC (target 0 B/frame, met in steady state):** the 70–85 KB one-offs in paused card panels (v0.6.0/0.7.0) are fixed in Phase 5.6: the description buffers are pre-sized to 400 chars. A 200 s check run had none; the first level-up allocates ~7.5–9.9 KB once (paused; a hidden pre-draw of the cards didn't remove it; BACKLOG), the boss entrance 1.8 KB, the victory screen + save write ~238 KB (game over). Small first-occurrence allocations (≤ 1.2 KB) in the first minutes.

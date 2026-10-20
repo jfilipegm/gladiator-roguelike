@@ -42,25 +42,38 @@ namespace Gladiator.EditorTools
             cfg.catalog = AssetDatabase.LoadAssetAtPath<UpgradeCatalog>(UpgradeSetup.CatalogPath);
             cfg.meta = MetaSetup.Load();
             cfg.upgrades = AssetDatabase.LoadAssetAtPath<UpgradeConfig>(UpgradeSetup.ConfigPath);
-            if (cfg.bestiary == null || cfg.bestiary.Length == 0)
-                cfg.bestiary = new[]
-                {
-                    Beast("EN_Convict", 0, "Starved, chained and thrown in first. Alone they're nothing; they never come alone."),
-                    Beast("EN_PitCur", 0, "A half-wild dog the pit masters keep hungry. It circles, then leaps for your throat."),
-                    Beast("EN_ShieldThug", 0, "Hides behind a door torn off its hinges. Hit him from the side or from behind."),
-                    Beast("EN_Slinger", 0, "Keeps his distance and pelts you with stones. Close the gap."),
-                    Beast("EN_Brute", 0, "Twice your size and slow to fall. When he winds up, get out of the way."),
-                    Beast("EN_FirePot", 0, "Lobs burning pots that set the sand alight. Don't stand where they land."),
-                    Boss("BD_Gorm", 0, "The Pit Master. A flail, a whip, guards on call, and a ring of fire for whoever lasts."),
-                    Beast("EN_ShieldArcher", 1, "Plants a pavise and looses arrows over it. Strike while he reloads."),
-                    Beast("EN_Assassin", 1, "Flanks you where you aren't looking and dashes down a line. Watch the lane."),
-                    Boss("BD_Champion", 1, "The Provinces' pride: a fortress shield that wrecks barricades. Make him charge the stone."),
-                };
+            // created once, designer-owned afterwards: later arenas' entries are appended when missing
+            var list = new System.Collections.Generic.List<CodexConfig.Beast>(cfg.bestiary ?? new CodexConfig.Beast[0]);
+            foreach (var d in Defaults())
+            {
+                bool has = false;
+                foreach (var x in list) has |= (d.boss != null && x.boss == d.boss) || (d.boss == null && x.boss == null && x.enemy == d.enemy);
+                if (!has && (d.enemy != null || d.boss != null)) list.Add(d);
+            }
+            cfg.bestiary = list.ToArray();
             EditorUtility.SetDirty(cfg);
             BakePortraits(cfg);
             AssetDatabase.SaveAssets();
             return cfg;
         }
+
+        static CodexConfig.Beast[] Defaults() => new[]
+        {
+            Beast("EN_Convict", 0, "Starved, chained and thrown in first. Alone they're nothing; they never come alone."),
+            Beast("EN_PitCur", 0, "A half-wild dog the pit masters keep hungry. It circles, then leaps for your throat."),
+            Beast("EN_ShieldThug", 0, "Hides behind a door torn off its hinges. Hit him from the side or from behind."),
+            Beast("EN_Slinger", 0, "Keeps his distance and pelts you with stones. Close the gap."),
+            Beast("EN_Brute", 0, "Twice your size and slow to fall. When he winds up, get out of the way."),
+            Beast("EN_FirePot", 0, "Lobs burning pots that set the sand alight. Don't stand where they land."),
+            Boss("BD_Gorm", 0, "The Pit Master. A flail, a whip, guards on call, and a ring of fire for whoever lasts."),
+            Beast("EN_ShieldArcher", 1, "Plants a pavise and looses arrows over it. Strike while he reloads."),
+            Beast("EN_Assassin", 1, "Flanks you where you aren't looking and dashes down a line. Watch the lane."),
+            Boss("BD_Champion", 1, "The Provinces' pride: a fortress shield that wrecks barricades. Make him charge the stone."),
+            Beast("EN_Murmillo", 2, "A door-sized scutum and a fish-crested helm. Nothing gets through his front: go round him."),
+            Beast("EN_NetThrower", 2, "Whirls a weighted net and throws it where you stand. Keep moving, or jump: it can't catch you in the air."),
+            Beast("EN_WarBoar", 2, "Bred in the pens to charge. It runs over anything in its lane, its own side included: lead it through the horde."),
+            Boss("BD_BeastLord", 2, "Master of the pens, more beast than man. He leaps on you from anywhere and his horn opens the cages."),
+        };
 
         public static CodexConfig Load() => AssetDatabase.LoadAssetAtPath<CodexConfig>(ConfigPath);
 

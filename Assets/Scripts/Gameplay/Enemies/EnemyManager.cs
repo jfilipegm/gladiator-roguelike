@@ -782,6 +782,7 @@ namespace Gladiator.Gameplay
                 if (dasher && def.trampleMul > 0f && _state[i] == AiState.Attack) Trample(i, def, np);
 
                 // keep inside the arena (its outline, or the ellipse)
+                bool clamped = false;
                 float cx = np.x - arenaCenter.x, cz = np.z - arenaCenter.z;
                 if (_edge != null)
                 {
@@ -789,20 +790,21 @@ namespace Gladiator.Gameplay
                     if (d2 > rin * rin) // only near the edge: the table lookup needs an atan2
                     {
                         float d = Mathf.Sqrt(d2), lim = EdgeRadius(cx, cz) - _radius[i];
-                        if (d > lim) { float k2 = lim / d; np.x = arenaCenter.x + cx * k2; np.z = arenaCenter.z + cz * k2; }
+                        if (d > lim) { float k2 = lim / d; np.x = arenaCenter.x + cx * k2; np.z = arenaCenter.z + cz * k2; clamped = true; }
                     }
                 }
                 else
                 {
                     float erx = arenaRadius - _radius[i], erz = arenaRadius * arenaAspect - _radius[i];
                     float ux = cx / erx, uz = cz / erz, e2 = ux * ux + uz * uz;
-                    if (e2 > 1f) { float k2 = 1f / Mathf.Sqrt(e2); np.x = arenaCenter.x + cx * k2; np.z = arenaCenter.z + cz * k2; }
+                    if (e2 > 1f) { float k2 = 1f / Mathf.Sqrt(e2); np.x = arenaCenter.x + cx * k2; np.z = arenaCenter.z + cz * k2; clamped = true; }
                 }
 
-                // terrain: follow walkable height, but never step up a wall
+                // terrain: follow walkable height, but never step up a wall (unless the edge is pulling it back in from
+                // outside: behind the amphitheatre's stage wall the ground is lower than the stage in front of it)
                 float h0 = p.y;
                 float h1 = _height != null ? _height.Sample(np.x, np.z) : 0f;
-                if (h1 - h0 > maxStepUp) { np.x = p.x; np.z = p.z; h1 = _height != null ? _height.Sample(p.x, p.z) : h0; _vel[i] *= 0.5f; }
+                if (!clamped && h1 - h0 > maxStepUp) { np.x = p.x; np.z = p.z; h1 = _height != null ? _height.Sample(p.x, p.z) : h0; _vel[i] *= 0.5f; }
                 np.y = Mathf.MoveTowards(h0, h1, 12f * dt + Mathf.Abs(h1 - h0) * 0.5f);
                 _pos[i] = np;
 

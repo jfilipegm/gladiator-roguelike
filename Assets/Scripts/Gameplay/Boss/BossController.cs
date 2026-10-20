@@ -592,7 +592,10 @@ namespace Gladiator.Gameplay
             float reach = def.pounceRadius + playerRadius;
             float feet = _player != null ? _player.position.y - (_em.Height != null ? _em.Height.Sample(pp.x, pp.z) : 0f) : 0f;
             if (d.sqrMagnitude < reach * reach && feet < 0.6f)
+            {
                 HitPlayer(def.pounceDamage, d.sqrMagnitude > 1e-4f ? d.normalized : _aim, def.pounceKnockback);
+                _contactCd = def.contactInterval; // landing on you is one hit, not two
+            }
             if (_em.deathPop != null) _em.deathPop.Burst(_pos + Vector3.up * 0.2f, 30, 9f, 0.28f, new Color(0.62f, 0.52f, 0.38f), Danger);
             SfxPlayer.Play(SfxId.Slam, _pos);
             ScreenShake.Add(0.4f);

@@ -132,7 +132,8 @@ namespace Gladiator.Gameplay
         {
             if (dt <= 0f || cages.Length == 0) return;
             var run = RunState.Current;
-            if (every > 0f && run != null && !run.TimerDone && run.Elapsed >= _nextAuto)
+            // not once the clock is out (TimerDone lags a frame behind a jump to 0:00: "boss now")
+            if (every > 0f && run != null && !run.TimerDone && run.TimeRemaining > 0f && run.Elapsed >= _nextAuto)
             {
                 _nextAuto = run.Elapsed + every;
                 int start = (int)GameRandom.Range(0f, cages.Length - 0.001f);

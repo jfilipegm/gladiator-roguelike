@@ -236,6 +236,27 @@ namespace Gladiator.Tests
             Assert.IsFalse(sfx.CrowdEnding);
         }
 
+        /// <summary>The arena intro holds the game paused behind its title card; the crowd stays full there (only menus and
+        /// cards duck it). FeedbackTests' crowd swell runs in that window too.</summary>
+        [UnityTest, Timeout(60000)]
+        public IEnumerator Crowd_IsNotDucked_UnderTheArenaIntro()
+        {
+            SaveSandbox.Wipe();
+            DevSettings.ResetAll();
+            DevSettings.GodMode = true;
+            TimeController.GameSpeed = 1f;
+            TimeController.ResetForNewRun();
+            var op = SceneManager.LoadSceneAsync(SlavePit, LoadSceneMode.Single);
+            while (!op.isDone) yield return null;
+            var intro = RunIntro.Instance;
+            Assert.IsNotNull(intro, "the Slave Pit opens on its title card");
+            if (intro.Current != RunIntro.Stage.Holding) Assert.Inconclusive("the intro was already past its hold on the first frame");
+            Assert.IsTrue(TimeController.IsPaused, "the intro holds the game paused");
+            var sfx = SfxPlayer.Instance;
+            for (int k = 0; k < 10; k++) sfx.Tick(0f, 0.1f); // a second of real time, still on the title card
+            Assert.AreEqual(1f, sfx.CrowdDuck, 1e-3f, "the crowd isn't ducked under the title card");
+        }
+
         [UnityTest, Timeout(60000)]
         public IEnumerator AdminTag_IsSpelledOut_InTheBottomRightCorner()
         {

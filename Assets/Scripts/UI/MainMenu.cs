@@ -11,11 +11,16 @@ namespace Gladiator.UI
     /// <summary>
     /// Main menu → gladiator select → arena select (Phase 5.4, only when two or more arenas are earned) → the run
     /// (M3.5), and the Codex (M3.6: records, unlocks, gladiators; CodexPanel).
-    /// Built in code over the menu diorama. Every GladiatorDef gets a card: earned ones can be picked (click, or
-    /// left/right), locked ones show as a dark silhouette with their unlock's hint; `locked` lists gladiators that don't
-    /// exist as data yet. Renown from the save shows in the corner.
-    /// Mouse, keyboard (Enter / Esc / arrows) and gamepad (South / East / d-pad). Under -bot the run starts at once
-    /// (`-gladiator &lt;id&gt;` picks who and `-arena &lt;run id&gt;` where, earned or not).
+    /// R9 (the producer's playtest: the sliding card row stranded the mouse): the gladiator select is a grid of tessera
+    /// tiles on the left (RosterGrid: every gladiator, the earned ones first, locked ones as dark silhouettes), the 3D
+    /// diorama in the middle, and the lanista's wax tablet on the right (GladiatorTablet). The arena select is the climb
+    /// (ArenaLadder: steps from the Slave Pit at the bottom to the newest at the top) beside its tablet page. A locked tile
+    /// or step can be picked to read its hint; FIGHT! waits for an earned one, and the diorama keeps the last earned
+    /// gladiator. Nothing slides: every block is anchored to its edge and scaled to fit (MenuLayout), re-fitted when the
+    /// window changes size. `locked` lists gladiators that don't exist as data yet. Renown from the save shows in the corner.
+    /// Mouse (click picks, a second click fights), keyboard (arrows/WASD move in 2D, Enter / Space fight, Esc back) and
+    /// gamepad (d-pad, South, East). Under -bot the run starts at once (`-gladiator &lt;id&gt;` picks who and
+    /// `-arena &lt;run id&gt;` where, earned or not).
     /// </summary>
     public sealed class MainMenu : MonoBehaviour
     {
@@ -46,25 +51,35 @@ namespace Gladiator.UI
 
         static readonly Color Gold = new Color(1f, 0.84f, 0.3f);
         static readonly Color Soft = new Color(1f, 1f, 1f, 0.75f);
-        static readonly Color CardColor = new Color(0.08f, 0.1f, 0.14f, 0.94f);
+        static readonly Color Dim = new Color(1f, 1f, 1f, 0.5f);
 
         enum Screen { Menu, Select, Arena, Codex }
 
         CanvasGroup _menu, _select, _arena, _codex;
-        RunDef[] _openRuns = Array.Empty<RunDef>();
-        Image[] _runBorders = Array.Empty<Image>();
-        int _runPick;
         Button[] _menuButtons;
         int _focus;
-        GladiatorDef[] _available = Array.Empty<GladiatorDef>();
-        Image[] _cardBorders = Array.Empty<Image>();
-        // Phase 5.14: eight gladiators no longer fit one 1920 px row; the row slides to keep the picked card in view
-        RectTransform _cardRow;
-        float[] _cardX = Array.Empty<float>();
-        float _rowHalf;
-        const float VisibleHalf = 930f;
-        int _pick;
+        Screen _screen;
+        Image[] _menuFrames;
         readonly System.Collections.Generic.Dictionary<GameObject, GameObject> _heroModels = new System.Collections.Generic.Dictionary<GameObject, GameObject>();
+        int _screenW, _screenH;
+
+        // the gladiator select: grid slots are the earned gladiators (in `_available`'s order) then the locked ones, so
+        // slot i < _available.Length is _available[i]
+        GladiatorDef[] _available = Array.Empty<GladiatorDef>();
+        int _pick;    // into _available: who FIGHT! takes and the diorama shows
+        int _slot;    // the grid's cursor (may rest on a locked tile)
+        RosterGrid _roster;
+        GladiatorTablet _tablet;
+        Button _fight;
+
+        // the arena select: ladder steps in ladder order; `_openRuns` are the earned ones in the same order
+        RunDef[] _openRuns = Array.Empty<RunDef>();
+        int[] _stepToOpen = Array.Empty<int>();
+        int _runPick; // into _openRuns
+        int _step;    // the ladder's cursor
+        ArenaLadder _ladder;
+        ArenaTablet _arenaTablet;
+        Button _arenaFight;
 
         /// <summary>Earned: no unlock, or its unlock is in the save.</summary>
         public static bool IsAvailable(GladiatorDef g) => g != null && (g.unlock == null || MetaProgress.IsUnlocked(g.unlock));
@@ -78,8 +93,59 @@ namespace Gladiator.UI
 
         /// <summary>The gladiator FIGHT! starts with.</summary>
         public GladiatorDef Selected => _available.Length > 0 ? _available[Mathf.Clamp(_pick, 0, _available.Length - 1)] : null;
-        Screen _screen;
-        Image[] _menuFrames;
+
+        // ---- tests (RosterTests) ------------------------------------------------------------------------------------
+        public RosterGrid Roster => _roster;
+        public GladiatorTablet Tablet => _tablet;
+        public ArenaLadder Ladder => _ladder;
+        public ArenaTablet ArenaTablet => _arenaTablet;
+        /// <summary>The grid's cursor (a slot index: earned gladiators first, then the locked).</summary>
+        public int Slot => _slot;
+        public int Step => _step;
+        public bool FightEnabled => _fight != null && _fight.interactable;
+        public bool ArenaFightEnabled => _arenaFight != null && _arenaFight.interactable;
+
+        /// <summary>Moves the grid's cursor to `slot`, earned or locked (a keyboard/gamepad move; never fights).</summary>
+        public void PickSlot(int slot)
+        {
+            if (_roster == null || _roster.Count == 0) return;
+            _slot = Mathf.Clamp(slot, 0, _roster.Count - 1);
+            if (_slot < _available.Length) _pick = _slot;
+            RefreshPick();
+        }
+
+        /// <summary>The keyboard/gamepad move on the gladiator grid (dx right, dy down). False when blocked by an edge.</summary>
+        public bool MoveCursor(int dx, int dy)
+        {
+            if (_roster == null) return false;
+            int s = GridMath.Step(_slot, _roster.Count, _roster.Columns, dx, dy);
+            if (s == _slot) return false;
+            SfxPlayer.Play2D(SfxId.Card);
+            PickSlot(s);
+            return true;
+        }
+
+        /// <summary>Moves the ladder's cursor to `step`, earned or locked.</summary>
+        public void PickStep(int step)
+        {
+            if (_ladder == null || _ladder.Count == 0) return;
+            _step = Mathf.Clamp(step, 0, _ladder.Count - 1);
+            if (_stepToOpen[_step] >= 0) _runPick = _stepToOpen[_step];
+            RefreshRunPick();
+        }
+
+        /// <summary>Up (+1) climbs the ladder, down (-1) descends. False at either end.</summary>
+        public bool Climb(int d)
+        {
+            if (_ladder == null) return false;
+            int s = GridMath.Climb(_step, _ladder.Count, d);
+            if (s == _step) return false;
+            SfxPlayer.Play2D(SfxId.Card);
+            PickStep(s);
+            return true;
+        }
+
+        // ---- the Codex --------------------------------------------------------------------------------------------
 
         /// <summary>The Codex screen (tests drive it).</summary>
         public CodexPanel Codex { get; private set; }
@@ -110,6 +176,7 @@ namespace Gladiator.UI
             Codex = new CodexPanel(font, fontMaterial);
             Codex.Build(_codex.transform, MetaProgress.Data, codex, meta, gladiators, locked, CloseCodex);
             RefreshCodexButton();
+            Refit();
             Show(Screen.Menu);
         }
 
@@ -163,158 +230,144 @@ namespace Gladiator.UI
                 UiFactory.Text("Runs", root, save.runs + (save.runs == 1 ? " run  ·  " : " runs  ·  ") + save.victories + (save.victories == 1 ? " victory" : " victories"), 24, Soft, TextAlignmentOptions.Right, corner, corner, new Vector2(-60, -102), new Vector2(600, 36), font, fontMaterial).fontStyle = FontStyles.Normal;
         }
 
+        /// <summary>The header, the key line under it, and BACK / FIGHT! in the bottom corners (both select screens).</summary>
+        Button Chrome(Transform root, string header, string keys, UnityEngine.Events.UnityAction fight, UnityEngine.Events.UnityAction back)
+        {
+            var top = new Vector2(0.5f, 1f);
+            UiFactory.Text("Header", root, header, 56, Gold, TextAlignmentOptions.Center, top, top, new Vector2(0, -54), new Vector2(1400, 76), font, fontMaterial);
+            UiFactory.Text("Keys", root, keys, 22, Dim, TextAlignmentOptions.Center, top, top, new Vector2(0, -106), new Vector2(1400, 30), font, fontMaterial).fontStyle = FontStyles.Normal;
+            UiFactory.Button("Back", root, "BACK", Vector2.zero, Vector2.zero, new Vector2(MenuLayout.Margin, 40), new Vector2(220, 76), font, fontMaterial, back, 34f);
+            var corner = new Vector2(1f, 0f);
+            return UiFactory.Button("Fight", root, "FIGHT!", corner, corner, new Vector2(-MenuLayout.Margin, 40), new Vector2(300, 80), font, fontMaterial, fight, 44f);
+        }
+
         void BuildSelect(Transform root)
         {
-            var mid = new Vector2(0.5f, 0.5f);
-            UiFactory.Text("Header", root, "CHOOSE YOUR GLADIATOR", 64, Gold, TextAlignmentOptions.Center, mid, mid, new Vector2(0, 360), new Vector2(1400, 90), font, fontMaterial);
-            int open = 0, n = locked.Length;
-            foreach (var g in gladiators) if (g != null) { n++; if (IsAvailable(g)) open++; }
+            var slots = RosterGrid.Slots(gladiators, locked);
+            int open = 0;
+            while (open < slots.Length && slots[open].Open) open++;
             _available = new GladiatorDef[open];
-            _cardBorders = new Image[open];
-            _cardX = new float[open];
-            float w = 330f, gap = 30f, x0 = -(n - 1) * (w + gap) * 0.5f;
-            _rowHalf = (n * w + (n - 1) * gap) * 0.5f;
-            _cardRow = new GameObject("Cards", typeof(RectTransform)).GetComponent<RectTransform>();
-            _cardRow.SetParent(root, false);
-            _cardRow.anchorMin = _cardRow.anchorMax = mid;
-            _cardRow.sizeDelta = Vector2.zero;
-            var row = _cardRow.transform;
-            int k = 0, a = 0;
-            foreach (var g in gladiators)
-            {
-                if (g == null) continue;
-                float x = x0 + k++ * (w + gap);
-                if (!IsAvailable(g)) { LockedCard(row, x, w, g.unlock != null ? g.unlock.hint : "???"); continue; }
-                int index = a;
-                var card = Card(row, x, w, true, out var border);
-                var hit = border.gameObject.AddComponent<Button>();
-                hit.transition = Selectable.Transition.None;
-                hit.onClick.AddListener(() => Choose(index));
-                _available[a] = g;
-                _cardX[a] = x;
-                _cardBorders[a++] = border;
-                var title = Line(card, g.displayName.ToUpperInvariant(), 36, Gold, 205);
-                title.textWrappingMode = TextWrappingModes.NoWrap; // long names shrink instead of spilling onto the text
-                title.enableAutoSizing = true;
-                title.fontSizeMin = 20f;
-                title.fontSizeMax = 36f;
-                var desc = Line(card, g.description, 25, Soft, 105, 150f);
-                desc.fontStyle = FontStyles.Normal;
-                desc.enableAutoSizing = true; // long descriptions (the Thunder Champion's) spilled over the title
-                desc.fontSizeMin = 16f;
-                desc.fontSizeMax = 25f;
-                Line(card, StatsLine(g), 24, new Color(0.6f, 0.95f, 1f), -15, 60f);
-                if (!string.IsNullOrEmpty(g.tradeoff)) Line(card, g.tradeoff, 21, Soft, -85, 70f).fontStyle = FontStyles.Italic;
-                Line(card, g.SelectLine, 22, Soft, -170, 60f).fontStyle = FontStyles.Normal;
-            }
-            foreach (var l in locked) LockedCard(row, x0 + k++ * (w + gap), w, l.hint);
+            for (int i = 0; i < open; i++) _available[i] = slots[i].Def;
+
+            _fight = Chrome(root, "CHOOSE YOUR GLADIATOR", "Arrows / d-pad: move     Enter / A: fight     Esc / B: back", StartRun, CloseSelect);
+            _roster = new RosterGrid(font);
+            _roster.Build(root, new Vector2(0f, 1f), new Vector2(MenuLayout.Margin, -MenuLayout.Top), slots, MenuLayout.Columns, codex, Choose);
+            _tablet = new GladiatorTablet(font);
+            var corner = new Vector2(1f, 1f);
+            _tablet.Build(root, corner, corner, new Vector2(-MenuLayout.Margin, -MenuLayout.Top), codex);
+
             // the last gladiator played this session stays picked
             _pick = 0;
             for (int i = 0; i < _available.Length; i++) if (_available[i] == GameSession.Gladiator) _pick = i;
+            _slot = _pick;
             RefreshPick();
-            UiFactory.Button("Fight", root, "FIGHT!", mid, mid, new Vector2(140, -380), new Vector2(300, 80), font, fontMaterial, StartRun, 44f);
-            UiFactory.Button("Back", root, "BACK", mid, mid, new Vector2(-200, -380), new Vector2(220, 80), font, fontMaterial, CloseSelect, 34f);
         }
 
         void BuildArena(Transform root)
         {
-            var mid = new Vector2(0.5f, 0.5f);
-            UiFactory.Text("Header", root, "CHOOSE YOUR ARENA", 64, Gold, TextAlignmentOptions.Center, mid, mid, new Vector2(0, 360), new Vector2(1400, 90), font, fontMaterial);
             var all = AllRuns;
             int open = 0, n = 0;
             foreach (var r in all) if (r != null) { n++; if (IsAvailable(r)) open++; }
             _openRuns = new RunDef[open];
-            _runBorders = new Image[open];
-            float w = 420f, gap = 40f, x0 = -(n - 1) * (w + gap) * 0.5f;
+            _stepToOpen = new int[n];
+            var steps = new ArenaLadder.Step[n];
             int k = 0, a = 0;
             foreach (var r in all)
             {
                 if (r == null) continue;
-                float x = x0 + k++ * (w + gap);
-                if (!IsAvailable(r)) { LockedCard(root, x, w, r.unlock != null ? r.unlock.hint : "???"); continue; }
-                int index = a;
-                var card = Card(root, x, w, true, out var border);
-                var hit = border.gameObject.AddComponent<Button>();
-                hit.transition = Selectable.Transition.None;
-                hit.onClick.AddListener(() => ChooseArena(index));
-                _openRuns[a] = r;
-                _runBorders[a++] = border;
-                var title = Line(card, r.DisplayName.ToUpperInvariant(), 36, Gold, 205);
-                title.textWrappingMode = TextWrappingModes.NoWrap;
-                title.enableAutoSizing = true;
-                title.fontSizeMin = 20f;
-                title.fontSizeMax = 36f;
-                Line(card, r.description, 25, Soft, 20, 300f).fontStyle = FontStyles.Normal;
+                bool earned = IsAvailable(r);
+                _stepToOpen[k] = earned ? a : -1;
+                if (earned) _openRuns[a++] = r;
+                steps[k++] = new ArenaLadder.Step { Run = r, Open = earned };
             }
+
+            _arenaFight = Chrome(root, "CHOOSE YOUR ARENA", "Up / Down: climb     Enter / A: fight     Esc / B: back", Launch, BackToSelect);
+            _ladder = new ArenaLadder(font);
+            _ladder.Build(root, new Vector2(MenuLayout.Margin, MenuLayout.Bottom), steps, MetaProgress.Data, ChooseArena);
+            _arenaTablet = new ArenaTablet(font);
+            var corner = new Vector2(1f, 1f);
+            _arenaTablet.Build(root, corner, corner, new Vector2(-MenuLayout.Margin, -MenuLayout.Top));
+
             // the last arena played this session stays picked
             _runPick = 0;
             for (int i = 0; i < _openRuns.Length; i++) if (_openRuns[i] == GameSession.Run) _runPick = i;
+            _step = StepOf(_runPick);
             RefreshRunPick();
-            UiFactory.Button("Fight", root, "FIGHT!", mid, mid, new Vector2(140, -380), new Vector2(300, 80), font, fontMaterial, Launch, 44f);
-            UiFactory.Button("Back", root, "BACK", mid, mid, new Vector2(-200, -380), new Vector2(220, 80), font, fontMaterial, BackToSelect, 34f);
+        }
+
+        int StepOf(int openIndex)
+        {
+            for (int i = 0; i < _stepToOpen.Length; i++) if (_stepToOpen[i] == openIndex) return i;
+            return 0;
+        }
+
+        /// <summary>Scales the grid, the ladder and the tablets to the canvas (the window may have changed size).</summary>
+        void Refit()
+        {
+            _screenW = UnityEngine.Screen.width;
+            _screenH = UnityEngine.Screen.height;
+            var canvas = GridMath.CanvasSize(_screenW, _screenH, MenuLayout.Reference, MenuLayout.Match);
+            float tablet = MenuLayout.TabletScale(canvas);
+            if (_roster != null) _roster.Fit(MenuLayout.GridScale(canvas, _roster.Count));
+            if (_tablet != null) _tablet.Fit(tablet);
+            if (_ladder != null) _ladder.Fit(MenuLayout.LadderScale(canvas, _ladder.Count));
+            if (_arenaTablet != null) _arenaTablet.Fit(tablet);
         }
 
         /// <summary>Picks arena `r` if it's earned (tests). False if it's locked or unknown.</summary>
         public bool PickArena(RunDef r)
         {
             for (int i = 0; i < _openRuns.Length; i++)
-                if (_openRuns[i] == r) { _runPick = i; RefreshRunPick(); return true; }
+                if (_openRuns[i] == r) { _runPick = i; _step = StepOf(i); RefreshRunPick(); return true; }
             return false;
         }
 
-        void ChooseArena(int index)
+        void ChooseArena(int step)
         {
-            if (index == _runPick) { Launch(); return; }
-            _runPick = index;
+            if (step == _step) // a second click on the picked step fights
+            {
+                if (_stepToOpen[step] >= 0) Launch();
+                else SfxPlayer.Play2D(SfxId.Blocked);
+                return;
+            }
             SfxPlayer.Play2D(SfxId.Card);
-            RefreshRunPick();
+            PickStep(step);
         }
 
         void RefreshRunPick()
         {
-            for (int i = 0; i < _runBorders.Length; i++)
-                _runBorders[i].color = i == _runPick ? Gold : new Color(0.55f, 0.48f, 0.3f, 0.9f);
-        }
-
-        void LockedCard(Transform root, float x, float w, string hint)
-        {
-            var mid = new Vector2(0.5f, 0.5f);
-            var card = Card(root, x, w, false, out _);
-            var sil = UiFactory.Image("Silhouette", card, new Color(0f, 0f, 0f, 0.85f), mid, mid, new Vector2(0, 70), new Vector2(150, 230), PixelIcons.White);
-            sil.raycastTarget = false;
-            Line(card, "???", 44, new Color(1f, 1f, 1f, 0.5f), 70);
-            Line(card, hint, 22, new Color(1f, 0.84f, 0.3f, 0.65f), -150, 90f).fontStyle = FontStyles.Italic;
+            if (_ladder == null || _ladder.Count == 0) return;
+            _ladder.SetPick(_step);
+            bool open = _stepToOpen[_step] >= 0;
+            _arenaTablet.Show(_ladder.Run(_step), open, ArenaLadder.Tier(_ladder.Run(_step), _step), MetaProgress.Data, meta);
+            _arenaFight.interactable = open;
         }
 
         /// <summary>Picks `g` if it's earned (tests, and later a gamepad cursor). False if it's locked or unknown.</summary>
         public bool Pick(GladiatorDef g)
         {
             for (int i = 0; i < _available.Length; i++)
-                if (_available[i] == g) { _pick = i; RefreshPick(); return true; }
+                if (_available[i] == g) { _pick = _slot = i; RefreshPick(); return true; }
             return false;
         }
 
-        void Choose(int index)
+        void Choose(int slot)
         {
-            if (index == _pick) { StartRun(); return; } // a second click on the picked card fights
-            _pick = index;
+            if (slot == _slot) { StartRun(); return; } // a second click on the picked tile fights
             SfxPlayer.Play2D(SfxId.Card);
-            RefreshPick();
+            PickSlot(slot);
         }
 
         void RefreshPick()
         {
-            for (int i = 0; i < _cardBorders.Length; i++)
-                _cardBorders[i].color = i == _pick ? Gold : new Color(0.55f, 0.48f, 0.3f, 0.9f);
-            if (_cardRow != null && _pick >= 0 && _pick < _cardX.Length)
+            if (_roster != null && _roster.Count > 0)
             {
-                // centre the pick, but never slide past either end of the row (no empty space at the screen's edges)
-                float o = _rowHalf > VisibleHalf ? Mathf.Clamp(-_cardX[_pick], VisibleHalf - _rowHalf, _rowHalf - VisibleHalf) : 0f;
-                // the last earned card shows the row's right end, so the locked cards past it can be read too
-                if (_rowHalf > VisibleHalf && _pick > 0 && _pick == _cardX.Length - 1) o = VisibleHalf - _rowHalf;
-                _cardRow.anchoredPosition = new Vector2(o, 0f);
+                _roster.SetPick(_slot);
+                bool open = _slot < _available.Length;
+                _tablet.Show(_roster.Def(_slot), open, MetaProgress.Data, _roster.Hint(_slot));
+                _fight.interactable = open;
             }
-            ShowHero(Selected);
+            ShowHero(Selected); // a locked pick leaves the last earned gladiator standing
         }
 
         /// <summary>The diorama shows whoever is picked (the scene's own hero is the Nobody, hidden once another stands in).</summary>
@@ -332,30 +385,6 @@ namespace Gladiator.UI
             }
             hero.gameObject.SetActive(false);
             foreach (var kv in _heroModels) kv.Value.SetActive(kv.Value == shown);
-        }
-
-        static string StatsLine(GladiatorDef g)
-        {
-            float hp = g.BaseValue(StatId.MaxHp, 100f), move = g.BaseValue(StatId.MoveSpeed, 1f);
-            return Mathf.RoundToInt(hp) + " HP  ·  " + Mathf.RoundToInt(move * 100f) + "% speed";
-        }
-
-        Transform Card(Transform root, float x, float w, bool open, out Image border)
-        {
-            var mid = new Vector2(0.5f, 0.5f);
-            border = UiFactory.Image("Card", root, open ? Gold : new Color(0.3f, 0.3f, 0.34f, 0.9f), mid, mid, new Vector2(x, 20), new Vector2(w, 520), PixelIcons.White);
-            border.raycastTarget = open; // the card's button needs the hit (UiFactory images ignore the pointer)
-            var inner = UiFactory.Image("Inner", border.transform, CardColor, mid, mid, Vector2.zero, new Vector2(w - 10, 510), PixelIcons.White);
-            inner.raycastTarget = false; // clicks reach the border's button
-            return inner.transform;
-        }
-
-        TextMeshProUGUI Line(Transform card, string text, float size, Color color, float y, float height = 50f)
-        {
-            var mid = new Vector2(0.5f, 0.5f);
-            var t = UiFactory.Text("Line", card, text, size, color, TextAlignmentOptions.Center, mid, mid, new Vector2(0, y), new Vector2(300, height), font, fontMaterial);
-            t.textWrappingMode = TextWrappingModes.Normal;
-            return t;
         }
 
         void Show(Screen screen)
@@ -381,10 +410,15 @@ namespace Gladiator.UI
         void CloseCodex() { Show(Screen.Menu); RefreshCodexButton(); }
 
         /// <summary>FIGHT! on the gladiator screen: on to the arena screen when there's a choice, else straight in.
-        /// Bot and perf runs always go straight in.</summary>
+        /// Refused while a locked tile is picked. Bot and perf runs always go straight in.</summary>
         void StartRun()
         {
             bool bot = CommandLine.Has("-bot") || CommandLine.Has("-stress");
+            if (!bot && _slot >= _available.Length)
+            {
+                SfxPlayer.Play2D(SfxId.Blocked);
+                return;
+            }
             if (!bot && AsksForArena && _screen != Screen.Arena)
             {
                 SfxPlayer.Play2D(SfxId.Card);
@@ -419,6 +453,7 @@ namespace Gladiator.UI
 
         void Update()
         {
+            if (UnityEngine.Screen.width != _screenW || UnityEngine.Screen.height != _screenH) Refit();
             if (GameOptions.PanelOwnsInput) return;
             var kb = Keyboard.current;
             var pad = Gamepad.current;
@@ -430,12 +465,9 @@ namespace Gladiator.UI
             {
                 bool left = (kb != null && (kb.leftArrowKey.wasPressedThisFrame || kb.aKey.wasPressedThisFrame)) || (pad != null && pad.dpad.left.wasPressedThisFrame);
                 bool right = (kb != null && (kb.rightArrowKey.wasPressedThisFrame || kb.dKey.wasPressedThisFrame)) || (pad != null && pad.dpad.right.wasPressedThisFrame);
-                if (_available.Length > 1 && (left || right))
-                {
-                    _pick = (_pick + (right ? 1 : _available.Length - 1)) % _available.Length;
-                    SfxPlayer.Play2D(SfxId.Card);
-                    RefreshPick();
-                }
+                int dx = (right ? 1 : 0) - (left ? 1 : 0), dy = (down ? 1 : 0) - (up ? 1 : 0);
+                if (dx != 0) MoveCursor(dx, 0);
+                else if (dy != 0) MoveCursor(0, dy);
                 if (confirm) StartRun();
                 else if (back) CloseSelect();
                 return;
@@ -444,13 +476,14 @@ namespace Gladiator.UI
             {
                 bool left = (kb != null && (kb.leftArrowKey.wasPressedThisFrame || kb.aKey.wasPressedThisFrame)) || (pad != null && pad.dpad.left.wasPressedThisFrame);
                 bool right = (kb != null && (kb.rightArrowKey.wasPressedThisFrame || kb.dKey.wasPressedThisFrame)) || (pad != null && pad.dpad.right.wasPressedThisFrame);
-                if (_openRuns.Length > 1 && (left || right))
+                // the ladder climbs up and to the right
+                if (up || right) Climb(1);
+                else if (down || left) Climb(-1);
+                if (confirm)
                 {
-                    _runPick = (_runPick + (right ? 1 : _openRuns.Length - 1)) % _openRuns.Length;
-                    SfxPlayer.Play2D(SfxId.Card);
-                    RefreshRunPick();
+                    if (ArenaFightEnabled) Launch();
+                    else SfxPlayer.Play2D(SfxId.Blocked);
                 }
-                if (confirm) Launch();
                 else if (back) BackToSelect();
                 return;
             }

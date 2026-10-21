@@ -26,7 +26,21 @@ namespace Gladiator.Gameplay
         public UnlockDef unlock;
         public Arena[] arenas = Array.Empty<Arena>();
 
+        [Header("Arena select (R9: the ladder and the tablet; filled by Gladiator/Setup/UI/Bake Portraits)")]
+        [Tooltip("The first arena from a fixed high three-quarter camera, 192×108, point filtered.")]
+        public Sprite thumbnail;
+        [Tooltip("How the climb feels here (docs/GDD.md's ladder): \"I need to survive.\"")]
+        public string tagline;
+        [Tooltip("The arena's hazards in one line.")]
+        public string hazards;
+        [Tooltip("The first arena's layout: floor size, difficulty, tier (Renown) and its boss's records.")]
+        public ArenaLayoutDef layout;
+        public Sprite bossPortrait;
+        [Tooltip("\"Gorm, the Pit Master\" (empty = the layout's boss).")]
+        public string bossName;
+
         public string DisplayName => arenas.Length > 0 ? arenas[0].displayName : id;
+        public BossDef Boss => layout != null ? layout.boss : null;
     }
 
     /// <summary>

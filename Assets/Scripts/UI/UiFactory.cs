@@ -110,6 +110,7 @@ namespace Gladiator.UI
     public static class PixelIcons
     {
         static Sprite _white, _coin, _skull, _heart, _chevron, _laurel;
+        static Sprite _tessera, _plate, _hole, _crack, _bust, _wreath, _sigil, _lock;
 
         public static Sprite White => _white != null ? _white : _white = Make(new[] { "#" }, Color.white, Color.white);
 
@@ -175,8 +176,131 @@ namespace Gladiator.UI
             "##......##",
         }, Color.white, new Color(0.1f, 0.06f, 0.05f));
 
-        /// <summary>'#' = outline colour, letters = fill (O/R) or highlight (Y), '.' = transparent.</summary>
-        static Sprite Make(string[] rows, Color fill, Color outline, Color? highlight = null)
+        // ---- R9: the select screens' tesserae and the lanista's tablet --------------------------------------------
+
+        /// <summary>A bone tessera: chamfered top corners, a shaded foot, a dark rim. White-based: tint it (bone open,
+        /// charcoal locked, gold for the picked frame). 9-sliced, 5 canvas units per art pixel.</summary>
+        public static Sprite Tessera => _tessera != null ? _tessera : _tessera = Make(new[]
+        {
+            "..######..",
+            ".#OOOOOO#.",
+            "#OOOOOOOO#",
+            "#OOOOOOOO#",
+            "#OOOOOOOO#",
+            "#OOOOOOOO#",
+            "#OOOOOOOO#",
+            "#YYYYYYYY#",
+            "#YYYYYYYY#",
+            "##########",
+        }, Color.white, new Color(0.56f, 0.5f, 0.44f), new Color(0.82f, 0.79f, 0.74f), new Vector4(3, 3, 3, 3), 20f);
+
+        /// <summary>The tessera's shape filled flat (no rim, no shade): the gold or pale frame drawn behind a tile.</summary>
+        public static Sprite Plate => _plate != null ? _plate : _plate = Make(new[]
+        {
+            "..OOOOOO..",
+            ".OOOOOOOO.",
+            "OOOOOOOOOO",
+            "OOOOOOOOOO",
+            "OOOOOOOOOO",
+            "OOOOOOOOOO",
+            "OOOOOOOOOO",
+            "OOOOOOOOOO",
+            "OOOOOOOOOO",
+            "OOOOOOOOOO",
+        }, Color.white, Color.white, null, new Vector4(3, 3, 3, 3), 20f);
+
+        /// <summary>The cord hole in a tessera's head.</summary>
+        public static Sprite Hole => _hole != null ? _hole : _hole = Make(new[]
+        {
+            ".###.",
+            "#OOO#",
+            "#OOO#",
+            "#OOO#",
+            ".###.",
+        }, new Color(0.12f, 0.1f, 0.09f), new Color(0.42f, 0.36f, 0.3f));
+
+        /// <summary>Cracks across a locked tessera (transparent, ink lines).</summary>
+        public static Sprite Crack => _crack != null ? _crack : _crack = Make(new[]
+        {
+            "........#...",
+            ".......#....",
+            ".......#....",
+            "......##....",
+            ".....#..#...",
+            "....#....#..",
+            "....#.....#.",
+            "...##.......",
+            "..#.........",
+            "..#.........",
+            ".#..........",
+            ".##.........",
+            "#..#........",
+            "....#.......",
+            "............",
+            "............",
+        }, Color.white, new Color(0.08f, 0.07f, 0.06f));
+
+        /// <summary>A head-and-shoulders silhouette: the tile's picture when no portrait is baked. White: tint it.</summary>
+        public static Sprite Bust => _bust != null ? _bust : _bust = Make(new[]
+        {
+            "....OOOO....",
+            "...OOOOOO...",
+            "..OOOOOOOO..",
+            "..OOOOOOOO..",
+            "..OOOOOOOO..",
+            "...OOOOOO...",
+            "....OOOO....",
+            "..OOOOOOOO..",
+            ".OOOOOOOOOO.",
+            "OOOOOOOOOOOO",
+            "OOOOOOOOOOOO",
+            "OOOOOOOOOOOO",
+        }, Color.white, Color.white);
+
+        /// <summary>A gold laurel wreath on a crimson ribbon: hung on the picked tessera's cord, and a beaten arena's mark.</summary>
+        public static Sprite Wreath => _wreath != null ? _wreath : _wreath = Make(new[]
+        {
+            "..#O....O#..",
+            ".#O#....#O#.",
+            "#O#......#O#",
+            "#O#......#O#",
+            ".#O#....#O#.",
+            "..#OO..OO#..",
+            "...##YY##...",
+            "....#YY#....",
+            "...#Y##Y#...",
+        }, new Color(0.97f, 0.85f, 0.42f), new Color(0.6f, 0.42f, 0.12f), new Color(0.65f, 0.11f, 0.19f));
+
+        /// <summary>A small bronze shield: a trait's mark on the tablet.</summary>
+        public static Sprite Sigil => _sigil != null ? _sigil : _sigil = Make(new[]
+        {
+            ".######.",
+            "#OOOOOO#",
+            "#OYYYYO#",
+            "#OYOOYO#",
+            "#OYOOYO#",
+            "#OYYYYO#",
+            "#OOOOOO#",
+            ".######.",
+        }, new Color(0.69f, 0.48f, 0.23f), new Color(0.3f, 0.19f, 0.08f), new Color(0.97f, 0.85f, 0.42f));
+
+        /// <summary>An iron padlock: a locked arena.</summary>
+        public static Sprite Lock => _lock != null ? _lock : _lock = Make(new[]
+        {
+            "..###..",
+            ".#...#.",
+            ".#...#.",
+            "#######",
+            "#OOOOO#",
+            "#OO#OO#",
+            "#OO#OO#",
+            "#OOOOO#",
+            "#######",
+        }, new Color(0.55f, 0.58f, 0.62f), new Color(0.15f, 0.16f, 0.18f));
+
+        /// <summary>'#' = outline colour, letters = fill (O/R) or highlight (Y), '.' = transparent. A non-zero `border`
+        /// (left, bottom, right, top, in art pixels) makes a 9-sliceable sprite.</summary>
+        static Sprite Make(string[] rows, Color fill, Color outline, Color? highlight = null, Vector4 border = default, float pixelsPerUnit = 8f)
         {
             int h = rows.Length, w = rows[0].Length;
             var tex = new Texture2D(w, h, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
@@ -189,7 +313,9 @@ namespace Gladiator.UI
                 }
             tex.Apply();
             tex.hideFlags = HideFlags.DontUnloadUnusedAsset;
-            var sprite = Sprite.Create(tex, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), 8f);
+            var sprite = border == default
+                ? Sprite.Create(tex, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), pixelsPerUnit)
+                : Sprite.Create(tex, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), pixelsPerUnit, 0, SpriteMeshType.FullRect, border);
             sprite.hideFlags = HideFlags.DontUnloadUnusedAsset;
             return sprite;
         }

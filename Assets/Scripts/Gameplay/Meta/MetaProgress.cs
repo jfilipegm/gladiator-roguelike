@@ -185,6 +185,7 @@ namespace Gladiator.Gameplay
                 data.RecordBossKillHp(run.BossDefeated, Mathf.RoundToInt(hp01 * 1000f));
             }
             if (won) SaveData.Add(data.gladiatorWins, run.GladiatorId, 1);
+            SaveData.Add(data.gladiatorRuns, run.GladiatorId, 1);
             if (run.Weapons != null)
                 foreach (var w in run.Weapons)
                 {

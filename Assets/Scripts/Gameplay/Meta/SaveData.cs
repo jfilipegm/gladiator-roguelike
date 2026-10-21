@@ -33,6 +33,9 @@ namespace Gladiator.Gameplay
         public int deepestArena;
         public List<IdCount> bossKills = new List<IdCount>();
         public List<IdCount> gladiatorWins = new List<IdCount>();
+        /// <summary>GladiatorDef id → runs finished with them, won or lost (the select screens' tablet). Added in R9;
+        /// Migrate seeds an older file's from its wins (every win was a run).</summary>
+        public List<IdCount> gladiatorRuns = new List<IdCount>();
         public List<IdCount> weaponKills = new List<IdCount>();
         /// <summary>WeaponDef id → won runs that ended with it in hand. Added in 0.15.0 (filled by Migrate).</summary>
         public List<IdCount> weaponWins = new List<IdCount>();
@@ -108,6 +111,8 @@ namespace Gladiator.Gameplay
         {
             bossKills ??= new List<IdCount>();
             gladiatorWins ??= new List<IdCount>();
+            if (gladiatorRuns == null || (gladiatorRuns.Count == 0 && gladiatorWins.Count > 0))
+                gladiatorRuns = new List<IdCount>(gladiatorWins); // a file from before R9: at least its wins were runs
             weaponKills ??= new List<IdCount>();
             weaponWins ??= new List<IdCount>();
             bossKillLowestHp ??= new List<IdCount>();

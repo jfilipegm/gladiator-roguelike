@@ -930,6 +930,26 @@ def trident():
 
 ICONS["weapon_trident"] = trident()
 
+
+ICONS["weapon_wolf_pack"] = grid([  # Wolf Pack (Phase 5.15): a grey wolf's head, ears up, cyan eyes and collar
+    "................",
+    "..s.........s...",
+    "..ss.......ss...",
+    "..lss.....ssl...",
+    "..llsssssssll...",
+    "..lsssssssssl...",
+    "..scsssssscs....",
+    "..sssssssss.....",
+    "...sslllss......",
+    "...sllllls......",
+    "....lldll.......",
+    "....lwwwl.......",
+    "...ccccccc......",
+    "...ccccccc......",
+    "................",
+    "................",
+])
+
 ICONS["loaded_dice"] = grid([  # Loaded Dice (iteration 2: read as toast): a die's top, front and side, five dark pips
     "................",
     "................",

@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e4c5aaae484d6afeca96e9ebb533f9a0, type: 3}
+  m_Name: TR_HuntingHorn
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.HuntingHornTrait
+  id: hunting_horn
+  displayName: Hunting Horn
+  description: 'Start a slide with the horn ready (every 5 s): every wolf pounces on the enemies ahead of you, biting three times and Staggering them.'
+  cooldown: 5
+  ahead: 4
+  range: 8
+  damageMul: 3
+  status: {fileID: 11400000, guid: 53a24c2b311ddf3f7b918de9ef2dff3d, type: 2}

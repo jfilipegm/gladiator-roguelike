@@ -46,6 +46,7 @@ MonoBehaviour:
   spreadStrikes: 0
   prongs: 3
   prongInterval: 0.07
+  summon: {fileID: 0}
   hitEffects:
   - kind: 0
     status: {fileID: 11400000, guid: f293bdbc4917d934f8bb1b6d2292d615, type: 2}

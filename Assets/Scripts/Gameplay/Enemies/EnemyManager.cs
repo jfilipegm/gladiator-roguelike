@@ -156,6 +156,7 @@ namespace Gladiator.Gameplay
             _trampled = new int[capacity];
             AllocStatus();
             AllocGilded();
+            AllocLeash();
             for (int i = capacity - 1; i >= 0; i--) _free[_freeCount++] = i;
             _grid = new SpatialHashGrid(boundsMin, boundsMax, gridCellSize, capacity);
             _poolRoot = new GameObject("[EnemyPool]").transform;
@@ -394,6 +395,7 @@ namespace Gladiator.Gameplay
             _attackHit[i] = false;
             _charge[i] = _trampled[i] = 0;
             ResetGilded(i);
+            ResetLeash(i);
             _aim[i] = Vector3.forward;
             _flash[i] = 0f; _contactCd[i] = 0.5f; _phase[i] = GameRandom.Range(0f, 6.28f); _recoil[i] = 0f; _dying[i] = 0f;
             _uid[i] = _nextUid++;
@@ -407,6 +409,7 @@ namespace Gladiator.Gameplay
             _aliveByDef[def] = AliveOf(def) + 1;
             AliveCount++;
             DevCounters.Enemies = AliveCount;
+            if (def.escort != null && def.escortCount > 0) SpawnEscorts(i, def);
             return i;
         }
 
@@ -620,6 +623,7 @@ namespace Gladiator.Gameplay
                 Xp = def.xp * (elite ? affix.xpMultiplier : 1f), GoldChance = def.goldChance,
             });
             if (_carried[i] > 0) DropCarried(i);
+            if (def.escort != null) FreeEscorts(i);
             if (deathPop != null && feedback != null)
                 deathPop.Emit(_pos[i] + Vector3.up * 0.7f, info.Direction, feedback);
             if (feedback != null && feedback.shakeOnKill > 0f) ScreenShake.Add(feedback.shakeOnKill);
@@ -783,6 +787,7 @@ namespace Gladiator.Gameplay
                 _knock[i] *= knockDecay;
 
                 _obstacles?.PushOut(ref np, _radius[i]);
+                if (_leaderSlot[i] >= 0) LeashClamp(i, ref np);
                 if (dasher && def.trampleMul > 0f && _state[i] == AiState.Attack) Trample(i, def, np);
 
                 // keep inside the arena (its outline, or the ellipse)

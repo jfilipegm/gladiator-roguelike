@@ -132,6 +132,13 @@ namespace Gladiator.Gameplay
         [Tooltip("How far from the player it reappears (m).")]
         public Vector2 blinkDistance = new Vector2(9f, 12f);
 
+        [Header("Escort (the Beast Handler, Phase 5.15)")]
+        [Tooltip("Spawned with this enemy, on its leash (none = alone). Its own escort is ignored.")]
+        public EnemyDef escort;
+        [Min(0)] public int escortCount;
+        [Tooltip("Escorts can't stray further than this from it while it lives (m). When it dies they're freed: they vanish, no kill.")]
+        public float leashLength = 3.5f;
+
         [Header("Rewards")]
         public float xp = 1f;
         [Range(0f, 1f)] public float goldChance = 0.05f;

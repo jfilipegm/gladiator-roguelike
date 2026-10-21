@@ -239,6 +239,7 @@ namespace Gladiator.Gameplay
         {
             var d = w.Def;
             if (d.pattern == WeaponPattern.Orbit) { TickOrbit(w, em, dt); return; }
+            if (d.pattern == WeaponPattern.Summon) { TickSummon(w, em, dt); return; }
             if (w.EchoT >= 0f)
             {
                 w.EchoT -= dt;
@@ -669,6 +670,28 @@ namespace Gladiator.Gameplay
         /// along it. Each ball hits enemies its circle (width × √area) touches; an enemy is hit at most once per
         /// CooldownOf(w) by this weapon, and knocked outward.
         /// </summary>
+        CompanionPack _pack;
+
+        /// <summary>Summon (the Wolf Pack): the companions live in a CompanionPack on the player, driven every frame.</summary>
+        void TickSummon(WeaponInstance w, EnemyManager em, float dt)
+        {
+            if (_pack == null)
+            {
+                _pack = GetComponent<CompanionPack>();
+                if (_pack == null) _pack = gameObject.AddComponent<CompanionPack>();
+            }
+            _pack.Drive(w, this, em, dt);
+        }
+
+        /// <summary>A companion's bite on enemy i: the weapon's damage (× mul), crits, on-hit status, Boon procs and kill
+        /// credit, like any of its hits.</summary>
+        public void CompanionHit(WeaponInstance w, EnemyManager em, int i, Vector3 dir, float mul)
+        {
+            var info = Hit(w, em, i, dir, DamageFlags.Melee);
+            info.Amount *= mul;
+            Strike(w, em, i, info);
+        }
+
         void TickOrbit(WeaponInstance w, EnemyManager em, float dt)
         {
             var d = w.Def;

@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0ea0c2151f44fc41b534863b8707d7a, type: 3}
+  m_Name: UL_Beastmaster
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.UnlockDef
+  id: beastmaster
+  displayName: The Beastmaster
+  description: Twenty-five handlers dead, fifty beasts running free, and a hunter from the forests has heard about you. The Beastmaster can be chosen, and his Wolf Pack joins the level-up pool.
+  hint: Somewhere a man is waiting for someone to free the beasts. Kill their handlers.
+  conditions:
+  - kind: 14
+    id: beasthandler
+    amount: 25
+  category: 0
+  renownCost: 0
+  renownBounty: 0
+  addsToPool:
+  - {fileID: 11400000, guid: abdbe86ea8d6a14e099273a9ed3b375f, type: 2}

@@ -177,6 +177,7 @@ namespace Gladiator.Gameplay
             if (enemies != null && enemies.GoldStolen + enemies.Blinks > 0)
                 sb.Append(" goldStolen ").Append(enemies.GoldStolen).Append(" (back ").Append(enemies.GoldReturned).Append(") blinks ").Append(enemies.Blinks);
             if (ep != null && ep.RunesErupted > 0) sb.Append(" runes ").Append(ep.RunesErupted).Append(" (hit you ").Append(ep.RuneHits).Append(')');
+            if (enemies != null && enemies.EscortsFreed > 0) sb.Append(" cursFreed ").Append(enemies.EscortsFreed);
             var pb = player.GetComponent<PlayerBuild>();
             if (pb != null)
             {
@@ -216,6 +217,9 @@ namespace Gladiator.Gameplay
             var net = player.GetComponent<CastNet>();
             if (net != null) sb.Append(" nets ").Append(net.Casts).Append(" (hauled ").Append(net.Hauled).Append(')');
             if (weapons != null && weapons.Prongs > 0) sb.Append(" prongs ").Append(weapons.Prongs);
+            var pack = CompanionPack.Instance;
+            if (pack != null && pack.Bites > 0)
+                sb.Append(" wolves ").Append(pack.Count).Append(" bites ").Append(pack.Bites).Append(" pounces ").Append(pack.Pounces).Append(" frenzies ").Append(pack.Frenzies);
             var thirst = player.GetComponent<Bloodthirst>();
             if (thirst != null) sb.Append(" kill-healed ").Append(thirst.Healed.ToString("0")).Append(" HP");
             sb.Append(" | hitstops ").Append(TimeController.HitStopCount).Append(" (").Append(TimeController.HitStopSeconds.ToString("0.0")).Append(" s)");

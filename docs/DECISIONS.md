@@ -407,3 +407,4 @@ One line each: what, and why. Newest at the bottom of each section.
 - **The open gates:** a pen or a barred tunnel behind each gate, so an open door shows where enemies come from: "the arenas must remain closed".
 - **Vows:** trade-off Boons with a fixed share of the card odds (15 %), so they appear often enough to give banish a job but never flood a late pool; a Vow takes a Boon slot (part of its price; the producer may prefer a separate row).
 - **The crowd under the arena intro** stays full (the duck is for the pause menu and level-ups), so the title card still has its roar.
+- **The producer's answers (2026-10-22 00:00):** a Vow takes a Boon slot ("it should take space as one boon") and stays random ("they're not supposed to always show up"): as built, 15 % of each card's odds, at most one per pick. The crowd stays full under the arena intro ("yes for now").

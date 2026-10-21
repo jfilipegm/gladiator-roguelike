@@ -92,6 +92,7 @@ namespace Gladiator.Tests
             yield return UntilState(c, Windup, 5f); // its first cooldown is at most 0.7 × 4.5 s
             Assert.AreEqual(Windup, _em.GetAiState(c), "you in front within 7 m: it plants and winds up");
             float t0 = Time.time;
+            yield return null; // the wind-up state posts its threat from its first tick, the frame after the switch
             Assert.IsTrue(WindupThreatAt(_em.GetPosition(c)), "the cone shows (a wind-up threat at the beast)");
             yield return null;
             Assert.IsTrue(WindupThreatAt(_em.GetPosition(c)), "still showing");

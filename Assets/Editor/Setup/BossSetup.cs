@@ -5,8 +5,9 @@ using UnityEngine;
 namespace Gladiator.EditorTools
 {
     /// <summary>
-    /// Gorm, the Pit Master (docs/BOSSES.md): his body (EnemyDef, behaviour Scripted) and his tuning (BossDef), created
-    /// once with the spec's starting numbers; designer-owned after that (only the model link is repaired).
+    /// Every boss's body (EnemyDef, behaviour Scripted) and tuning (BossDef) (docs/BOSSES.md): Gorm, the Provincial
+    /// Champion, the Beast Lord, the Gilded Patron and the Emperor's Champion, each created once with the spec's starting
+    /// numbers; designer-owned after that (only the model and guard links are repaired).
     /// </summary>
     public static class BossSetup
     {
@@ -18,6 +19,10 @@ namespace Gladiator.EditorTools
         public const string BeastLordPath = "Assets/Data/Bosses/BD_BeastLord.asset";
         public const string PatronEnemyPath = "Assets/Data/Enemies/EN_GildedPatron.asset";
         public const string PatronPath = "Assets/Data/Bosses/BD_GildedPatron.asset";
+        public const string EmperorsChampionEnemyPath = "Assets/Data/Enemies/EN_EmperorsChampion.asset";
+        public const string EmperorsChampionPath = "Assets/Data/Bosses/BD_EmperorsChampion.asset";
+        /// <summary>His guard (made by ImperialArenaSetup): loaded by path so this file doesn't depend on it.</summary>
+        const string CenturionPath = "Assets/Data/Enemies/EN_Centurion.asset";
 
         [MenuItem("Gladiator/Setup/Bosses/Create Boss Data")]
         public static BossDef EnsureGorm()
@@ -283,6 +288,97 @@ namespace Gladiator.EditorTools
             }
             if (merc != null && (boss.guards == null || boss.guards.Length == 0)) boss.guards = new[] { merc };
             if (merc != null && boss.guardedBy == null) boss.guardedBy = merc;
+            boss.enemy = body;
+            EditorUtility.SetDirty(boss);
+            AssetDatabase.SaveAssets();
+            return boss;
+        }
+
+        /// <summary>
+        /// The Emperor's Champion (docs/BOSSES.md, Arena 5): spear, scutum at his side (blocks 50 % from a 100° front)
+        /// and javelins. Spear Thrust (the lane), Shield Bash (the cone) and a Javelin Volley thrown at the player's height;
+        /// he strides in when the player is far. Phase 2 (60 %): "PRAETORIANS, TO ME!", two Centurions with their lines
+        /// through the two gates nearest the player, again every 26 s, and the Shield Charge (stunned on stone, takes
+        /// ×1.5). Phase 3 (30 %): "FOR THE EMPEROR!", faster, the charge twice in a row, and the chariot races run back
+        /// to back (ChariotRace reads his phase). At his fall the Guard stands down (every enemy is dragged off).
+        /// </summary>
+        [MenuItem("Gladiator/Setup/Bosses/Create Emperor's Champion Data")]
+        public static BossDef EnsureEmperorsChampion()
+        {
+            var body = AssetDatabase.LoadAssetAtPath<EnemyDef>(EmperorsChampionEnemyPath);
+            if (body == null)
+            {
+                body = PlayerSetup.EnsureAsset<EnemyDef>(EmperorsChampionEnemyPath);
+                body.id = "emperors_champion";
+                body.displayName = "The Emperor's Champion";
+                body.behaviour = EnemyBehaviour.Scripted;
+                body.maxHp = 18000f;
+                body.radius = 1.25f;
+                body.knockbackTaken = 0f;
+                body.blockArc = 100f; // the scutum at his side: half of what hits him from the front
+                body.blockReduction = 0.5f;
+                body.contactDamage = 0f; // BossController handles touching him
+                body.moveSpeed = 0f;
+                body.xp = 0f;
+                body.goldChance = 0f;
+                body.prewarm = 1;
+            }
+            if (body.model == null)
+                body.model = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Art/Models/Enemies/EN_EmperorsChampion.fbx");
+            EditorUtility.SetDirty(body);
+
+            if (!AssetDatabase.IsValidFolder("Assets/Data/Bosses")) AssetDatabase.CreateFolder("Assets/Data", "Bosses");
+            var centurion = AssetDatabase.LoadAssetAtPath<EnemyDef>(CenturionPath);
+            var boss = AssetDatabase.LoadAssetAtPath<BossDef>(EmperorsChampionPath);
+            if (boss == null)
+            {
+                boss = PlayerSetup.EnsureAsset<BossDef>(EmperorsChampionPath);
+                boss.id = "emperors_champion";
+                boss.displayName = "THE EMPEROR'S CHAMPION"; // the boss bar reads "NAME, TITLE"
+                boss.title = "FIRST SPEAR OF THE EMPIRE";
+                boss.enterText = "THE EMPEROR'S CHAMPION!";
+                boss.fallText = "THE EMPEROR'S CHAMPION FALLS!";
+                boss.guardsText = "THE PRAETORIAN GUARD!";
+                boss.phase2Text = "\"PRAETORIANS, TO ME!\"";
+                boss.phase3Text = "\"FOR THE EMPEROR!\"";
+                boss.shortName = "The Emperor's Champion";
+                boss.deathLine = "The Emperor's Champion turns to the imperial box. The thumb goes down.";
+                boss.victoryLine = "The Emperor's own champion lies in the sand, and the Emperor is on his feet.";
+                boss.phase1Attacks = new[] { BossAttack.Whip, BossAttack.Bash, BossAttack.Volley };
+                boss.phase2Attacks = new[] { BossAttack.Whip, BossAttack.Bash, BossAttack.Volley, BossAttack.Charge };
+                boss.phase3Attacks = new[] { BossAttack.Whip, BossAttack.Bash, BossAttack.Volley, BossAttack.Charge };
+                boss.moveSpeed = 3.4f; boss.enragedMoveSpeed = 3.9f; boss.phase3MoveSpeed = 4.6f; boss.turnRate = 160f;
+                boss.closeInRange = 28f; boss.closeInSpeed = 6.5f; // a 190 m floor: he strides in
+                boss.contactDamage = 12f; boss.contactInterval = 0.8f; boss.recover = 0.6f;
+                // Spear Thrust: a lane, a lunge down it, no slow
+                boss.whipLength = 10f; boss.whipWidth = 1.3f; boss.whipWindup = 0.65f; boss.whipDamage = 22f;
+                boss.whipSlow = 1f; boss.whipSlowSeconds = 0f;
+                // Shield Bash: the scutum punched forward
+                boss.bashRange = 4.5f; boss.bashAngle = 110f; boss.bashWindup = 0.65f; boss.bashDamage = 20f; boss.bashKnockback = 12f;
+                // Javelin Volley: thrown at your height (the spina is no shelter); the obelisk and the metae stop them
+                boss.volleyCount = new Vector2Int(5, 7); boss.volleyArc = new Vector2(36f, 50f); boss.volleyWindup = 0.85f;
+                boss.volleySpeed = 22f; boss.volleyDamage = 16f; boss.volleyRange = 30f; boss.volleyJavelins = true;
+                // Shield Charge: stunned on stone with his guard down
+                boss.chargeWindup = 0.9f; boss.chargeSpeed = 17f; boss.chargeLength = 20f; boss.chargeWidth = 2.6f;
+                boss.chargeDamage = 26f; boss.chargeKnockback = 13f; boss.chargeStun = 1.8f; boss.stunDamageTakenMul = 1.5f;
+                boss.chargeRepeats = new Vector2Int(1, 1); boss.phase3ChargeRepeats = 2;
+                // the Praetorian Guard: a Centurion and his line per gate, from phase 2
+                boss.guardCount = new Vector2Int(2, 2);
+                boss.guardsEvery = 26f;
+                boss.guardsFromPhase = 2;
+                boss.guardsNearestGates = true;
+                boss.guardSpotsUsed = 2;
+                boss.phase2At = 0.6f; boss.enrageSpeed = 1.2f; boss.enrageRoar = 1.5f;
+                boss.phase3At = 0.3f; boss.phase3Speed = 1.4f;
+                boss.phase2FireRing = false;
+                boss.phase2SpikeVolley = false;
+                boss.phase2FireJets = false;
+                boss.phase2Blades = false;
+                boss.scatterOnDefeat = true; // the Guard stands down
+                boss.rewardFloor = Rarity.Rare;
+                boss.defeatGold = 0;
+            }
+            if (centurion != null && (boss.guards == null || boss.guards.Length == 0)) boss.guards = new[] { centurion };
             boss.enemy = body;
             EditorUtility.SetDirty(boss);
             AssetDatabase.SaveAssets();

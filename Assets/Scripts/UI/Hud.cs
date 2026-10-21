@@ -359,6 +359,11 @@ namespace Gladiator.UI
                 _bossName.text = b.def.displayName + ", " + b.def.title; // once per boss
                 var notch = UiFactory.Image("Phase2", _bossFill.transform.parent, new Color(1f, 0.85f, 0.4f, 0.9f), new Vector2(0f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(760f * b.def.phase2At, 0f), new Vector2(3f, 30f), PixelIcons.White);
                 notch.raycastTarget = false;
+                if (b.def.phase3At > 0f) // a third phase (the Emperor's Champion)
+                {
+                    var notch3 = UiFactory.Image("Phase3", _bossFill.transform.parent, new Color(1f, 0.85f, 0.4f, 0.9f), new Vector2(0f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(760f * b.def.phase3At, 0f), new Vector2(3f, 30f), PixelIcons.White);
+                    notch3.raycastTarget = false;
+                }
             }
             float a = show ? 1f : 0f;
             if (!Mathf.Approximately(_bossGroup.alpha, a)) _bossGroup.alpha = a;

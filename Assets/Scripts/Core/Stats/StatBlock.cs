@@ -184,16 +184,17 @@ namespace Gladiator.Core
             int s = (int)stat;
             int n = 0;
             into[n++] = new StatShare { Source = new StatSource(StatSourceKind.Base), Amount = _base[s], Count = 1 };
-            float f = _base[s] + _flat[s], p = _pct[s], factor = Mathf.Max(0f, 1f + p), g = f * factor, m = _mul[s];
-            float kPct = Mathf.Abs(p) > 1e-6f ? (factor - 1f) / p : 1f; // percent share_i = f × p_i × kPct
-            float lnM = Mathf.Log(Mathf.Max(1e-8f, m));
-            float kMul = Mathf.Abs(lnM) > 1e-6f ? (m - 1f) / lnM : 1f;  // multiply share_i = g × ln(m_i) × kMul
+            // doubles: several clamped multipliers (1e-4 each) make tiny products whose logs a float can't hold
+            double f = _base[s] + _flat[s], p = _pct[s], factor = System.Math.Max(0.0, 1.0 + p), g = f * factor, m = _mul[s];
+            double kPct = System.Math.Abs(p) > 1e-9 ? (factor - 1.0) / p : 1.0; // percent share_i = f × p_i × kPct
+            double lnM = System.Math.Log(System.Math.Max(double.Epsilon, m));
+            double kMul = System.Math.Abs(lnM) > 1e-9 ? (m - 1.0) / lnM : 1.0;  // multiply share_i = g × ln(m_i) × kMul
             for (int i = 0; i < _entryCount && n < into.Length; i++)
             {
                 ref var e = ref _entries[i];
                 if (e.Stat != stat || e.Count <= 0) continue;
-                float amount = e.Flat + f * e.Pct * kPct + g * Mathf.Log(Mathf.Max(1e-8f, e.Mul)) * kMul;
-                into[n++] = new StatShare { Source = e.Source, Amount = amount, Count = e.Count };
+                double amount = e.Flat + f * e.Pct * kPct + g * System.Math.Log(System.Math.Max(double.Epsilon, (double)e.Mul)) * kMul;
+                into[n++] = new StatShare { Source = e.Source, Amount = (float)amount, Count = e.Count };
             }
             return n;
         }

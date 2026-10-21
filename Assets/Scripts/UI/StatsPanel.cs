@@ -54,6 +54,8 @@ namespace Gladiator.UI
         public string PromptText => _promptText.ToString();
         /// <summary>How many times the page's text has been rewritten (tests: it must not rewrite every frame).</summary>
         public int Rewrites { get; private set; }
+        /// <summary>The page's box (tests: the cards never run under it).</summary>
+        public RectTransform Page => _box;
         /// <summary>The width the Pick face takes from the right of the screen (LevelUpPanel moves its cards left by it).</summary>
         public float PickReserve => PickWidth + Margin;
 

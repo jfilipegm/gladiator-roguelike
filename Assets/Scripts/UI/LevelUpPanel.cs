@@ -73,6 +73,7 @@ namespace Gladiator.UI
         public string CardRarity(int i) => _cards[i].Rarity.text;
         public string CardDescription(int i) => _cards[i].Text.ToString();
         public UpgradeIconView CardIcon(int i) => _cards[i].Icon;
+        public RectTransform CardRect(int i) => _cards[i].Root;
         /// <summary>Tests: card `i` wears the Vow frame.</summary>
         public bool CardIsVowFramed(int i) => _cards[i].VowHalf.color.a > 0f;
         /// <summary>The cards, title and buttons (moved left for the stats column).</summary>

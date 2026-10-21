@@ -43,6 +43,11 @@ namespace Gladiator.Gameplay
         public float eliteEveryOverride;
         float EliteEvery => eliteEveryOverride > 0f ? eliteEveryOverride : config.eliteEvery;
         int HardCap => maxAliveOverride > 0 ? Mathf.Min(config.hardCap, maxAliveOverride) : config.hardCap;
+        [Tooltip("The arena's ArenaLayoutDef.swarmMul: multiplies every swarm's size (R2: the Colosseum's huge waves).")]
+        public float swarmMultiplier = 1f;
+        float SwarmMul => swarmMultiplier > 0f ? swarmMultiplier : 1f;
+        /// <summary>This arena's cap on enemies alive (the Hypogeum's lift packs respect it too); 0 without a config.</summary>
+        public int AliveCap => config != null ? HardCap : 0;
 
         public int TargetAlive => config == null ? 0 : Mathf.Min(HardCap, Mathf.RoundToInt(config.targetAlive.Evaluate(Clock) * Density));
         public float NextSwarmAt => _nextSwarm;
@@ -104,7 +109,7 @@ namespace Gladiator.Gameplay
                 }
                 for (int i = 0; i < n; i++) need[i] = Mathf.Max(need[i], Mathf.CeilToInt(share[i]));
             }
-            int swarm = Mathf.CeilToInt(config.swarmSize.Evaluate(runLength) * densityMultiplier);
+            int swarm = Mathf.CeilToInt(config.swarmSize.Evaluate(runLength) * densityMultiplier * SwarmMul);
             for (int i = 0; i < n; i++)
             {
                 if (entries[i].swarm) need[i] += swarm;
@@ -234,7 +239,7 @@ namespace Gladiator.Gameplay
             _swarmEntry = Pick(em, t, runLength, swarmOnly: true, eliteOnly: false);
             if (_swarmEntry < 0) return false;
             if (_gates == null) _gates = ArenaGates.Instance;
-            _swarmLeft = Mathf.RoundToInt(config.swarmSize.Evaluate(t) * densityMultiplier);
+            _swarmLeft = Mathf.RoundToInt(config.swarmSize.Evaluate(t) * densityMultiplier * SwarmMul);
             _swarmRate = _swarmLeft / Mathf.Max(0.1f, config.swarmDuration);
             _swarmAcc = 1f; // first one right away
             _swarmAngle = RandomAngle();

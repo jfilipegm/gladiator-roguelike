@@ -88,6 +88,7 @@ namespace Gladiator.Gameplay
         Vector3 _viewDir = Vector3.forward;
         bool[] _attackHit, _invuln, _scriptedWindup, _scriptedShield;
         AffixDef[] _affix;
+        float[] _hpFloor;   // a boss's HP can't drop below this (the Eternal Victor's false death, R2); 0 = off
 
         struct Blast { public Vector3 Pos; public float T, Fuse, Radius, ToPlayer, ToEnemies; }
         readonly Blast[] _blasts = new Blast[64];
@@ -135,6 +136,12 @@ namespace Gladiator.Gameplay
         public int Trampled { get; private set; }
         /// <summary>Damage source of a beast's trample (kill stats: not a weapon).</summary>
         public static readonly int TrampleSourceId = Gladiator.Core.GameInfo.StableId("trample");
+        /// <summary>A fall into an open trapdoor (the Colosseum's Hypogeum, R2): the dead don't reassemble.</summary>
+        public static readonly int FallSourceId = Gladiator.Core.GameInfo.StableId("hypogeum");
+        /// <summary>A bone pile stomped by the player (R2): that's the kill.</summary>
+        public static readonly int StompSourceId = Gladiator.Core.GameInfo.StableId("stomp");
+        /// <summary>A Chimera's fire on other enemies (R2; kill stats: not a weapon).</summary>
+        public static readonly int BreathSourceId = Gladiator.Core.GameInfo.StableId("breath");
 
         void Awake()
         {
@@ -155,7 +162,9 @@ namespace Gladiator.Gameplay
             _scriptedShield = new bool[capacity];
             _charge = new int[capacity];
             _trampled = new int[capacity];
+            _hpFloor = new float[capacity];
             AllocStatus();
+            AllocUndead();
             AllocGilded();
             AllocLeash();
             for (int i = capacity - 1; i >= 0; i--) _free[_freeCount++] = i;
@@ -395,6 +404,8 @@ namespace Gladiator.Gameplay
             _strafe[i] = (GameRandom.NextUInt() & 1) == 0 ? 1f : -1f;
             _attackHit[i] = false;
             _charge[i] = _trampled[i] = 0;
+            _hpFloor[i] = 0f;
+            _revived[i] = 0;
             ResetGilded(i);
             ResetLeash(i);
             _aim[i] = Vector3.forward;
@@ -410,7 +421,7 @@ namespace Gladiator.Gameplay
             _aliveByDef[def] = AliveOf(def) + 1;
             AliveCount++;
             DevCounters.Enemies = AliveCount;
-            if (def.escort != null && def.escortCount > 0) SpawnEscorts(i, def);
+            if (def.escort != null && def.escortCount > 0 && !_rising) SpawnEscorts(i, def); // a pile standing up comes alone
             return i;
         }
 
@@ -442,6 +453,7 @@ namespace Gladiator.Gameplay
             }
             DevCounters.Enemies = AliveCount;
             _blastCount = 0;
+            ClearPiles();
         }
 
         public void KillAll()
@@ -451,6 +463,7 @@ namespace Gladiator.Gameplay
                 if (_active[i]) Kill(i, new DamageInfo(), allowBlast: false);
             _killingAll = false;
             _blastCount = 0;
+            ClearPiles();
         }
 
         // ------------------------------------------------------------------ queries (weapons, bot, pickups)
@@ -553,6 +566,7 @@ namespace Gladiator.Gameplay
             if (_stMask[i] != 0) amount *= StatusDamageMul(i, statusTick);
             bool elite = _affix[i] != null;
             _hp[i] -= amount;
+            if (_hpFloor[i] > 0f && _hp[i] < _hpFloor[i]) _hp[i] = _hpFloor[i]; // a boss's floor holds (SetHpFloor)
             if (!statusTick) // ticks don't flash, recoil or push: hundreds of burning enemies must stay readable
             {
                 _knock[i] += info.Direction * (info.Knockback * def.knockbackTaken * _knockMul[i] * (blocked ? 0.4f : 1f));
@@ -597,12 +611,20 @@ namespace Gladiator.Gameplay
         public bool Execute(int i, int sourceId)
         {
             if (!IsAlive(i) || _invuln[i]) return false;
-            var info = new DamageInfo { Amount = _hp[i], Flags = DamageFlags.Proc | DamageFlags.Crit, Point = _pos[i], SourceId = sourceId };
-            GameEvents.OnHit.Raise(new HitEvent
+            float floor = _hpFloor[i];
+            float amount = Mathf.Max(0f, _hp[i] - floor);
+            var info = new DamageInfo { Amount = amount, Flags = DamageFlags.Proc | DamageFlags.Crit, Point = _pos[i], SourceId = sourceId };
+            if (amount > 0f)
+                GameEvents.OnHit.Raise(new HitEvent
+                {
+                    TargetId = _uid[i], Index = i, Position = _pos[i] + Vector3.up * (1.2f * _scale[i]), Damage = amount, Crit = true,
+                    SourceId = sourceId, Elite = _affix[i] != null, Flags = info.Flags,
+                });
+            if (floor > 0f) // a boss's floor holds: down to it, not dead (SetHpFloor)
             {
-                TargetId = _uid[i], Index = i, Position = _pos[i] + Vector3.up * (1.2f * _scale[i]), Damage = _hp[i], Crit = true,
-                SourceId = sourceId, Elite = _affix[i] != null, Flags = info.Flags,
-            });
+                if (IsAlive(i)) _hp[i] = Mathf.Min(_hp[i], floor);
+                return false;
+            }
             _hp[i] = 0f;
             Kill(i, info, allowBlast: true);
             return true;
@@ -612,22 +634,27 @@ namespace Gladiator.Gameplay
         {
             // Once only: OnHit hooks (sparks, bursts) can kill this enemy re-entrantly before ApplyDamage's own check.
             if (!_active[i]) return;
+            var def = _view[i].Def;
+            // the dead (R2): a Skeletal Legionnaire collapses into a bone pile instead, unless it burns, falls or the piles are full
+            bool collapse = def.reviveCount > _revived[i] && !_killingAll && CanCollapse(i, def, info.SourceId);
             _active[i] = false;
             _dying[i] = feedback != null ? feedback.deathPopTime : 0.1f;
             AliveCount--;
             DevCounters.Enemies = AliveCount;
-            var def = _view[i].Def;
             _aliveByDef[def] = AliveOf(def) - 1;
             var affix = _affix[i];
             bool elite = affix != null;
-            GameEvents.OnKill.Raise(new KillEvent
-            {
-                TargetId = _uid[i], Index = i, Position = _pos[i], EnemyTypeId = def.RuntimeId, Elite = elite, SourceId = info.SourceId,
-                Xp = def.xp * (elite ? affix.xpMultiplier : 1f), GoldChance = def.goldChance,
-            });
+            if (collapse) Collapse(i, def, affix); // not a kill yet: no OnKill (no XP, gold, streak), no blast
+            else
+                GameEvents.OnKill.Raise(new KillEvent
+                {
+                    TargetId = _uid[i], Index = i, Position = _pos[i], EnemyTypeId = def.RuntimeId, Elite = elite, SourceId = info.SourceId,
+                    Xp = def.xp * (elite ? affix.xpMultiplier : 1f), GoldChance = def.goldChance,
+                });
             if (_carried[i] > 0) DropCarried(i);
             if (_slotIndex[i] >= 0) LeaveLine(i);
             if (def.escort != null) FreeEscorts(i);
+            if (collapse) return; // its own clatter (Collapse): no kill pop, shake or hit-stop
             if (deathPop != null && feedback != null)
                 deathPop.Emit(_pos[i] + Vector3.up * 0.7f, info.Direction, feedback);
             if (feedback != null && feedback.shakeOnKill > 0f) ScreenShake.Add(feedback.shakeOnKill);
@@ -704,7 +731,8 @@ namespace Gladiator.Gameplay
         {
             _threatCount = 0;
             _puffsThisFrame = 0;
-            if ((_high == 0 && _blastCount == 0) || dt <= 0f) return;
+            if (dt <= 0f) { if (PileCount > 0) DrawPiles(); return; } // paused (a level-up): the piles stay on screen
+            if (_high == 0 && _blastCount == 0 && PileCount == 0) return;
             _grid.Build(_pos, _active, _high);
             if (_player == null && Player.Main != null)
             {
@@ -855,7 +883,8 @@ namespace Gladiator.Gameplay
 
                 // facing: shield bearers / shooters / wind-ups look at the player (turn-rate limited), others look where they go;
                 // a line faces its leader's front, not you (flanking works), and a bracing leader keeps the push's facing
-                Vector3 face = facePlayer ? dirTo : (_state[i] == AiState.Attack || ((dasher || _formedMask[i] != 0) && _state[i] == AiState.Windup) ? _aim[i] : _vel[i]);
+                bool lockedAim = dasher || _formedMask[i] != 0 || def.behaviour == EnemyBehaviour.Breather; // a breather turns into its cone
+                Vector3 face = facePlayer ? dirTo : (_state[i] == AiState.Attack || (lockedAim && _state[i] == AiState.Windup) ? _aim[i] : _vel[i]);
                 if (inLine) _yaw[i] = Mathf.MoveTowardsAngle(_yaw[i], lineYaw, def.turnRate * dt);
                 else if (face.x * face.x + face.z * face.z > (facePlayer ? 1e-4f : 0.04f))
                     _yaw[i] = Mathf.MoveTowardsAngle(_yaw[i], Mathf.Atan2(face.x, face.z) * Mathf.Rad2Deg, def.turnRate * dt);
@@ -880,6 +909,8 @@ namespace Gladiator.Gameplay
                 float ex = np.x - camPos.x, ez = np.z - camPos.z;
                 if (ex * ex + ez * ez < animD2 && v.Rig.IsValid) Animate(i, v, dt, recoilTime, recoilAngle);
             }
+
+            if (PileCount > 0) TickPiles(dt, player, tele); // after the loop: a pile standing up joins next frame
         }
 
         /// <summary>A scripted enemy (boss): only flash, threat and transform here; its controller does the rest.</summary>
@@ -911,6 +942,21 @@ namespace Gladiator.Gameplay
 
         /// <summary>Damage this enemy takes is multiplied by `mul` (a stunned boss's open guard). Spawn resets it.</summary>
         public void SetDamageTakenMul(int i, float mul) { if (i >= 0 && i < capacity) _dmgTakenMul[i] = mul; }
+
+        /// <summary>
+        /// Its HP can't drop below `hp` (0 = off): hits, ticks and blasts stop at the floor, and Execute brings it down to
+        /// the floor and returns false (the Eternal Victor's false death, R2: his controller watches for HP at the floor).
+        /// Spawn resets it.
+        /// </summary>
+        public void SetHpFloor(int i, float hp) { if (i >= 0 && i < capacity) _hpFloor[i] = Mathf.Max(0f, hp); }
+        public float GetHpFloor(int i) => i >= 0 && i < capacity ? _hpFloor[i] : 0f;
+
+        /// <summary>Sets its HP, clamped to (0, max HP]. No hit, kill or number: the caller's beat (a boss's remains, his rise).</summary>
+        public void SetHp(int i, float hp)
+        {
+            if (!IsAlive(i)) return;
+            _hp[i] = Mathf.Min(Mathf.Max(hp, 0.01f), _maxHp[i]);
+        }
 
         public PartRig GetRig(int i) => _view[i] != null ? _view[i].Rig : null;
         public Transform GetViewRoot(int i) => _view[i] != null ? _view[i].Root : null;
@@ -1089,6 +1135,9 @@ namespace Gladiator.Gameplay
                         }
                     }
 
+                case EnemyBehaviour.Breather:
+                    return ThinkBreather(i, def, p, player, dirTo, dist, dt, tele, out facePlayer);
+
                 default: // Chaser
                     return dirTo * speed;
             }
@@ -1250,6 +1299,9 @@ namespace Gladiator.Gameplay
                             pose.ArmL = pose.ArmR = PartPose.Swing(10f * k);
                             pose.RootY = -0.05f * k;
                         }
+                        break;
+                    case EnemyBehaviour.Breather:
+                        BreatherPose(ref pose, st, k, shake);
                         break;
                     case EnemyBehaviour.Ranged:
                     case EnemyBehaviour.Lobber:

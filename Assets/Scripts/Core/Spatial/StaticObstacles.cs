@@ -6,7 +6,9 @@ namespace Gladiator.Core
     /// <summary>
     /// Static obstacles on the XZ plane (circles + oriented boxes) collected once from scene colliders.
     /// Enemies are pushed out of them each tick — no physics, no NavMesh. An obstacle can be switched off at runtime
-    /// (a barricade the Champion smashed, Phase 5.4): it stops pushing and blocking.
+    /// (a barricade the Champion smashed, Phase 5.4): it stops pushing and blocking. A walk-only box (R2: a trapdoor
+    /// left open, added at load with AddBox) blocks walking but not shots: PushOut moves bodies out of it, Overlaps
+    /// (projectiles, gifts, placement) ignores it, and a bake never writes it.
     /// </summary>
     public sealed class StaticObstacles
     {
@@ -16,6 +18,7 @@ namespace Gladiator.Core
         Circle[] _circles = new Circle[0];
         Box[] _boxes = new Box[0];
         bool[] _circleOff, _boxOff; // null until something is switched off
+        bool[] _boxWalkOnly;        // null until a walk-only box is added
 
         /// <summary>The box whose centre is nearest `p` (within `maxDistance`), or -1.</summary>
         public int FindBox(Vector2 p, float maxDistance)
@@ -24,6 +27,7 @@ namespace Gladiator.Core
             float bestD = maxDistance * maxDistance;
             for (int i = 0; i < _boxes.Length; i++)
             {
+                if (WalkOnly(i)) continue; // a trapdoor isn't a barricade
                 float d = (_boxes[i].C - p).sqrMagnitude;
                 if (d <= bestD) { bestD = d; best = i; }
             }
@@ -58,6 +62,29 @@ namespace Gladiator.Core
         }
 
         public bool BoxActive(int i) => i >= 0 && i < _boxes.Length && (_boxOff == null || !_boxOff[i]);
+
+        /// <summary>True for a box that blocks walking but not shots (AddBox with walkOnly).</summary>
+        public bool WalkOnly(int i) => _boxWalkOnly != null && i >= 0 && i < _boxWalkOnly.Length && _boxWalkOnly[i];
+
+        /// <summary>
+        /// Adds an oriented box at runtime (at load: the arrays grow, so not per frame). Axes from the yaw as everywhere:
+        /// local X = (cos, −sin), local Z = (sin, cos); `half` = half its size along them. `walkOnly`: it blocks walking
+        /// (PushOut) but not shots or placement (Overlaps), and ToArrays leaves it out. Returns its index for
+        /// SetBoxActive.
+        /// </summary>
+        public int AddBox(Vector2 centre, float yawDeg, Vector2 half, bool active, bool walkOnly)
+        {
+            int n = _boxes.Length;
+            float yaw = yawDeg * Mathf.Deg2Rad;
+            float c = Mathf.Cos(yaw), s = Mathf.Sin(yaw);
+            System.Array.Resize(ref _boxes, n + 1);
+            _boxes[n] = new Box { C = centre, Ax = new Vector2(c, -s), Az = new Vector2(s, c), Half = new Vector2(Mathf.Abs(half.x), Mathf.Abs(half.y)) };
+            if (_boxOff != null || !active) System.Array.Resize(ref _boxOff, n + 1); // null (all on) until one is off
+            if (_boxOff != null) _boxOff[n] = !active;
+            if (_boxWalkOnly != null || walkOnly) System.Array.Resize(ref _boxWalkOnly, n + 1);
+            if (_boxWalkOnly != null) _boxWalkOnly[n] = walkOnly;
+            return n;
+        }
 
         public int Count => _circles.Length + _boxes.Length;
 
@@ -99,18 +126,23 @@ namespace Gladiator.Core
             return new StaticObstacles { _circles = circles.ToArray(), _boxes = boxes.ToArray() };
         }
 
-        /// <summary>Flat arrays for baking into an asset: circles (x, z, r, 0); boxes A (cx, cz, axX, axZ), B (azX, azZ, halfX, halfZ).</summary>
+        /// <summary>Flat arrays for baking into an asset: circles (x, z, r, 0); boxes A (cx, cz, axX, axZ), B (azX, azZ, halfX, halfZ).
+        /// Walk-only boxes are left out (they're added at runtime, never baked).</summary>
         public void ToArrays(out Vector4[] circles, out Vector4[] boxesA, out Vector4[] boxesB)
         {
             circles = new Vector4[_circles.Length];
             for (int i = 0; i < circles.Length; i++) circles[i] = new Vector4(_circles[i].C.x, _circles[i].C.y, _circles[i].R, 0f);
-            boxesA = new Vector4[_boxes.Length];
-            boxesB = new Vector4[_boxes.Length];
-            for (int i = 0; i < _boxes.Length; i++)
+            int baked = 0;
+            for (int i = 0; i < _boxes.Length; i++) if (!WalkOnly(i)) baked++;
+            boxesA = new Vector4[baked];
+            boxesB = new Vector4[baked];
+            for (int i = 0, k = 0; i < _boxes.Length; i++)
             {
+                if (WalkOnly(i)) continue;
                 var bx = _boxes[i];
-                boxesA[i] = new Vector4(bx.C.x, bx.C.y, bx.Ax.x, bx.Ax.y);
-                boxesB[i] = new Vector4(bx.Az.x, bx.Az.y, bx.Half.x, bx.Half.y);
+                boxesA[k] = new Vector4(bx.C.x, bx.C.y, bx.Ax.x, bx.Ax.y);
+                boxesB[k] = new Vector4(bx.Az.x, bx.Az.y, bx.Half.x, bx.Half.y);
+                k++;
             }
         }
 
@@ -127,7 +159,8 @@ namespace Gladiator.Core
             return o;
         }
 
-        /// <summary>True if a circle of `radius` at p (XZ) overlaps any obstacle (projectiles hitting walls/pillars).</summary>
+        /// <summary>True if a circle of `radius` at p (XZ) overlaps any obstacle (projectiles hitting walls/pillars).
+        /// Walk-only boxes don't count: shots fly over an open trapdoor.</summary>
         public bool Overlaps(Vector2 p, float radius)
         {
             for (int i = 0; i < _circles.Length; i++)
@@ -138,7 +171,7 @@ namespace Gladiator.Core
             }
             for (int i = 0; i < _boxes.Length; i++)
             {
-                if (_boxOff != null && _boxOff[i]) continue;
+                if ((_boxOff != null && _boxOff[i]) || (_boxWalkOnly != null && _boxWalkOnly[i])) continue;
                 var b = _boxes[i];
                 var d = p - b.C;
                 if (Mathf.Abs(Vector2.Dot(d, b.Ax)) < b.Half.x + radius && Mathf.Abs(Vector2.Dot(d, b.Az)) < b.Half.y + radius) return true;

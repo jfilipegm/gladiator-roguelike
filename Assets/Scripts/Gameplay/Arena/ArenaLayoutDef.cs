@@ -59,6 +59,23 @@ namespace Gladiator.Gameplay
             public float radius;
         }
 
+        /// <summary>What a hypogeum lift can bring up (R2, docs/ARENAS.md §6 "Lift packs"): each lift in a wave picks one,
+        /// weighted among those active at the run time and under their caps.</summary>
+        [Serializable]
+        public struct LiftPack
+        {
+            public EnemyDef enemy;
+            [Tooltip("Run seconds this pack is offered from / until (to 0 = the end of the run).")]
+            public float from, to;
+            public float weight;
+            [Tooltip("Enemies per lift (inclusive).")]
+            public Vector2Int count;
+            [Tooltip("Not offered if alive + count.y would pass this (0 = no cap).")]
+            public int maxAlive;
+            [Tooltip("The announcer's call when this pack is the wave's first (a constant string).")]
+            public string call;
+        }
+
         [Serializable]
         public struct CrowdZone
         {
@@ -103,6 +120,8 @@ namespace Gladiator.Gameplay
         public float spawnMaxDistance;
         [Tooltip("Multiplies the Director's target-alive curve and spawn rate here (C18: a bigger floor gets more of the horde). Capped by maxAlive.")]
         public float densityMul = 1f;
+        [Tooltip("Multiplies the Director's swarm sizes here (R2: the Colosseum's huge waves). Capped by maxAlive.")]
+        public float swarmMul = 1f;
         public Vector3 sunEuler = new Vector3(38f, -32f, 0f);
         [Tooltip("Who comes through the gate when the timer runs out (none = the run just ends).")]
         public BossDef boss;
@@ -178,6 +197,37 @@ namespace Gladiator.Gameplay
         public int chariotLaps = 2;
         [Tooltip("The chariot model under Assets/Art/Models/ (needs WheelL/R and Horse0-3 children to animate).")]
         public string chariotModel = "Props/PR_Chariot";
+
+        [Header("Hypogeum (R2)")]
+        [Tooltip("Trapdoors (x, z, yaw, group): door centres at y 0, yaw of the long side (local X), group 0-5. Each group drops together (Hypogeum).")]
+        public Vector4[] trapdoors = Array.Empty<Vector4>();
+        [Tooltip("A trapdoor's size: along its local X, across its local Z (m).")]
+        public Vector2 trapdoorSize = new Vector2(8f, 4f);
+        [Tooltip("The trapdoor model under Assets/Art/Models/ (needs LeafF / LeafB children hinged at local z = ±size.y / 2).")]
+        public string trapdoorModel = "Environment/SM_ColTrapdoor";
+        [Tooltip("Lift centres (y = the floor): their packs rise there; the layout sets guardSpots to the same.")]
+        public Vector3[] lifts = Array.Empty<Vector3>();
+        [Tooltip("A lift's square side (m).")]
+        public float liftSize = 4f;
+        [Tooltip("The lift model under Assets/Art/Models/ (needs a Platform child, pivot at the deck's top centre).")]
+        public string liftModel = "Environment/SM_ColLift";
+        [Tooltip("The boss's lift (the Eternal Victor rises on it): the lift model at centerLift, scaled centerLiftScale.")]
+        public bool hasCenterLift;
+        public Vector3 centerLift = new Vector3(0f, 1.2f, 0f);
+        public float centerLiftScale = 1.25f;
+        [Tooltip("Seconds into the run of the first drop, then from one drop's start to the next.")]
+        public float dropFirst = 40f;
+        public float dropEvery = 14f;
+        [Tooltip("A drop's telegraph (doors shut, orange-red) and how long the doors stay open (s).")]
+        public float dropTelegraph = 2f;
+        public float dropOpen = 4f;
+        [Tooltip("Seconds into the run of the first lift wave, then between waves.")]
+        public float liftFirst = 90f;
+        public float liftEvery = 45f;
+        [Tooltip("Lifts per wave: the idle ones nearest the player but at least liftMinDistance (m) away.")]
+        public int liftsPerWave = 3;
+        public float liftMinDistance = 12f;
+        public LiftPack[] liftPacks = Array.Empty<LiftPack>();
 
         /// <summary>The play area's floor (m²): the outline's, else the ellipse's. Each arena of the ladder must be bigger
         /// than the one before it (docs/GDD.md).</summary>

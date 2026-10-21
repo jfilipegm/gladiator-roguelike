@@ -17,7 +17,7 @@ namespace Gladiator.EditorTools
         public const string MacOutput = "Builds/Mac/Gladiator.app";
 
         /// <summary>What a player gets: the menu and the arenas (no dev test arena).</summary>
-        static string[] ReleaseScenes => new[] { Gladiator.Gameplay.GameSession.MenuScene, ArenaBuilder.SlavePitScene, ProvincialPitSetup.Scene, AmphitheaterSetup.Scene, GrandArenaSetup.Scene, ImperialArenaSetup.Scene };
+        static string[] ReleaseScenes => new[] { Gladiator.Gameplay.GameSession.MenuScene, ArenaBuilder.SlavePitScene, ProvincialPitSetup.Scene, AmphitheaterSetup.Scene, GrandArenaSetup.Scene, ImperialArenaSetup.Scene, ColosseumSetup.Scene };
 
         public static void ConfigurePlayer()
         {
@@ -35,7 +35,7 @@ namespace Gladiator.EditorTools
 
         /// <summary>Main menu first (-bot / -stress jump straight into the run), then the arenas, then the dev test arena.</summary>
         [MenuItem("Gladiator/Build/Linux Development Build")]
-        public static string BuildLinuxDev() => Build(new[] { Gladiator.Gameplay.GameSession.MenuScene, ArenaBuilder.SlavePitScene, ProvincialPitSetup.Scene, AmphitheaterSetup.Scene, GrandArenaSetup.Scene, ImperialArenaSetup.Scene, TestArenaScene.ScenePath }, DevOutput, BuildOptions.Development);
+        public static string BuildLinuxDev() => Build(new[] { Gladiator.Gameplay.GameSession.MenuScene, ArenaBuilder.SlavePitScene, ProvincialPitSetup.Scene, AmphitheaterSetup.Scene, GrandArenaSetup.Scene, ImperialArenaSetup.Scene, ColosseumSetup.Scene, TestArenaScene.ScenePath }, DevOutput, BuildOptions.Development);
 
         /// <summary>The playtest build: what a player gets (menu + the arenas, no admin panel, no dev overlay).</summary>
         [MenuItem("Gladiator/Build/Linux Release Build")]

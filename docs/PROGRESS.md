@@ -306,6 +306,20 @@
   - Archives: Linux 43 MB, Linux dev 73 MB, Windows 45 MB, macOS 52 MB.
   - Smoke runs of the downloaded archives (`-bot -timed -botSeconds 40`), all v0.11.0, 0 exceptions: Linux as the Thunder Champion in the Stone Amphitheater (79 kills, 8 dashes, clock to 37 s), Linux as the Nobody in the Slave Pit (60 kills, 37 s), Windows under Wine as the Thunder Champion (69 kills, 5 dashes, 38 s). Their Profiling files were deleted. macOS not run.
 
+## Phase 5.11 the Golden Idol (branch `phase5-golden-idol`, v0.12.0)
+- **Spec:** `docs/GLADIATORS.md` "The Golden Idol"; DECISIONS "Phase 5.11" (why before the Ashen Oracle, which stays next). Merging inside the producer's window (until 07:05 WEST 2026-10-21).
+- **Done (committed, verified):**
+  - **Model** `CH_GoldenIdol` (`BlenderSrc/characters/ch_goldenidol.py`, 844 tris, iteration 2): gilded body and mask, crimson sash, a spiked sun-crown disc behind his head (its back player cyan), a sceptre with an orb.
+  - **Coin Toss** `WP_CoinToss` (`Projectile` data, `PR_Coin` mesh, 3 coins, pierce 1) + card + icon.
+  - **Traits** (one file per ScriptableObject: Unity serializes an SO only from a file of its name): `TR_MidasBody` (`MidasBody`: Damage ×(1 + gold/10 %), cap +100 %; HUD bar "+N% DMG"), `TR_GoldenStreak` (`GoldenStreak`: GoldGain ×1.5/2/2.5/3 by streak tier for 8 s), `TR_MakeItRain` (`MakeItRain`: on `SlideEvent` with 40+ gold and the 2 s cooldown, `SpendGold(40)` and 16 coin shots in a ring, 20 × Damage).
+  - **Unlock** `UL_GoldenIdol` (`LifetimeGold 10000`; adds the Coin Toss). Codex + menu rebuilt (6 gladiators). Bot log adds `showers N (gold G) goldStreaks S`.
+  - **Tests:** `GoldenIdolTests` 6/6. Full suites EditMode 77/77, PlayMode 158/158 (2026-10-21).
+  - **Play mode (Slave Pit, staged):** from behind the sun-crown's cyan back; the Midas bar "+60% DMG" at 600 gold; Make It Rain's ring of coins. Screenshot `gi_rain`.
+  - **Bot runs (dev build, `-gladiator golden_idol`), 0 exceptions:**
+    - Slave Pit: 372 fps avg, 184 fps at ≥ 250 enemies (one 25.8 ms frame; p99 7.7 ms), 29 B/s GC; level 28, 7,645 kills, Coin Toss level 4, 10 Make It Rains (400 gold), 21 gold streaks, 3 chests (34 gold at the end); Gorm at 34 % in phase 2 when the recording ended.
+    - Stone Amphitheater: 505 fps avg, 214 fps at ≥ 250 enemies (only 1,074 such frames: the build killed faster than the horde arrived, alive per minute 52 / 90 / 119 / 117 / 157 / 125 / 179 / 134, more C18 data); level 31, 9,643 kills, 13 Make It Rains (520 gold), 26 gold streaks; **beat the Beast Lord** in 9 attacks (Survived at 8:29). GC 438 B/s is the end-of-run spike.
+- **Next:** PR → merge (inside the window) → `Tools/release 0.12.0` → smoke runs.
+
 ## Known issues
 - **Residual GC (target 0 B/frame, met in steady state):** the 70–85 KB one-offs in paused card panels (v0.6.0/0.7.0) are fixed in Phase 5.6: the description buffers are pre-sized to 400 chars. A 200 s check run had none; the first level-up allocates ~7.5–9.9 KB once (paused; a hidden pre-draw of the cards didn't remove it; BACKLOG), the boss entrance 1.8 KB, the victory screen + save write ~238 KB (game over). Small first-occurrence allocations (≤ 1.2 KB) in the first minutes.
 - **Standalone perf runs need an unlocked desktop** (a locked KDE session hangs the windowed player; headless `-batchmode` runs are valid for GC only).

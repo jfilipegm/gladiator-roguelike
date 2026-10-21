@@ -114,7 +114,7 @@ Arena 3 exists, so `UL_BloodKnight` switches from the interim "beat Gorm below 3
 
 **Tests:** a bolt strikes the nearest and chains to the next ones but not to one beyond jump range, and Shocks them; Charge raises attack speed and drains after the grace time; a slide with the dash ready blinks forward, hits the enemies on the path and not one beside it, and goes on cooldown; a wall stops the blink; beating the Beast Lord unlocks him.
 
-## The Golden Idol (Phase 5.11, v0.12.0)
+## The Golden Idol (built, Phase 5.11, v0.12.0)
 | | |
 |---|---|
 | **Fantasy** | A champion so rich he had himself gilded. The crowd adores him; the other fighters can't believe he's real. Gold is his armour, his weapon and his religion. |
@@ -125,7 +125,7 @@ Arena 3 exists, so `UL_BloodKnight` switches from the interim "beat Gorm below 3
 | **Ability: Make It Rain** | Starting a slide with at least 40 gold (every 2 s): he pays 40 gold and **16 coins spray out in a ring**, 20 × his Damage each, through 1 enemy. Gold turned straight into damage, at a cost to Midas Body. |
 | **Strength** | Scales without limit in a rich run, and streaks feed it; Make It Rain clears a ring round him on demand. |
 | **Weakness** | Weak early (no gold, no bonus), and every chest is a choice between an upgrade and his damage. 100 HP. |
-| **Personality** | Struts; the crowd cheers louder when he's rich (Favor already loves streaks). |
+| **Personality** | Struts with a bounce; flicks coins with a wave of the wrist. |
 | **Unlock: 10,000 lifetime gold** | §6.7. `UL_GoldenIdol` (`LifetimeGold 10000`). Codex hint: *"Gold, and plenty of it: 10,000 over all your runs."* The unlock also adds the Coin Toss to everyone's level-up pool. |
 
 **Colours:** his coins are the pickup gold (yellow), never orange-red.

@@ -348,3 +348,10 @@ One line each: what, and why. Newest at the bottom of each section.
 - **"Attack-speed scaling" = Stormcaller's Charge:** +1.5 % attack speed per hit, up to +60 %, drained after 2.5 s without a hit. A stat bonus that rewards staying in the crowd rather than a flat number on the select screen, and the HUD can show it.
 - **"Lightning dash" = the slide becomes a blink** (7 m, every 3 s, hits and Shocks the path). Movement-triggered like the knight's Rite (slide) and the Machine's Verdict (jump). It's `CharacterController.Move`, so walls and stone stop it; it can't blink through the arena's edge.
 - **His numbers:** 90 HP, 105 % move speed, capsule 1.75 m. Storm Spear: 11 damage, 0.9 s, knockback 1.5.
+
+## Phase 5.11 — the Golden Idol (branch `phase5-golden-idol`, spec `docs/GLADIATORS.md`)
+- **The Golden Idol before the Ashen Oracle** (the GDD lists the Oracle next). The Oracle needs a new status kind (Curse: one more enemy status slot, its colours and puffs), a player smoke-zone weapon and a secret-encounter unlock, which is more than fits the producer's overnight merge window. The Idol builds on systems that exist: gold, GoldGain, the streak announcer, `PlayerProjectiles`. The Oracle stays next.
+- **§6.7's "convert gold into power" is Midas Body:** +1 % damage per 10 gold carried, up to +100 % at 1,000. Gold already buys chests and Market items, so carrying it is a real choice, not a free stat. Make It Rain (slide with 40+ gold) is the active conversion: 40 gold for 16 coins at 20 × Damage.
+- **"Kill-streak gold multiplier" listens to the announcer's streaks** (×1.5 / ×2 / ×2.5 / ×3 for 8 s, a GoldGain `StatMod`), so the player sees the streak name and the reward together. The announcer is quiet during boss fights, so the streak gold is too.
+- **The Coin Toss is data only** (`Projectile` + the `PR_Coin` mesh): three coins at the three nearest, through one enemy each. A new gladiator doesn't always need a new pattern.
+- **His numbers:** 100 HP, normal speed. Coin Toss: 9 damage, 1.1 s, 3 coins, 12 m.

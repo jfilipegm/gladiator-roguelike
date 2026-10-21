@@ -180,6 +180,10 @@ namespace Gladiator.Gameplay
             if (storm != null) sb.Append(" peakCharge ").Append(storm.PeakCharge);
             var dash = player.GetComponent<LightningDash>();
             if (dash != null) sb.Append(" dashes ").Append(dash.Dashes).Append(" (hit ").Append(dash.DashHits).Append(')');
+            var rain = player.GetComponent<MakeItRain>();
+            if (rain != null) sb.Append(" showers ").Append(rain.Showers).Append(" (gold ").Append(rain.GoldSpent).Append(')');
+            var streak = player.GetComponent<GoldenStreak>();
+            if (streak != null) sb.Append(" goldStreaks ").Append(streak.Streaks);
             var thirst = player.GetComponent<Bloodthirst>();
             if (thirst != null) sb.Append(" kill-healed ").Append(thirst.Healed.ToString("0")).Append(" HP");
             sb.Append(" | hitstops ").Append(TimeController.HitStopCount).Append(" (").Append(TimeController.HitStopSeconds.ToString("0.0")).Append(" s)");

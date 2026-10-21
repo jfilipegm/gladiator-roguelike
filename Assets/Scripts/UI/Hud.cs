@@ -104,6 +104,9 @@ namespace Gladiator.UI
         // Thunder Champion (Phase 5.10): the same bar is his Charge (electric blue; "+N% SPD").
         static readonly Color ChargeColor = new Color(0.35f, 0.62f, 1f);
         static readonly Color ChargeHot = new Color(0.88f, 0.97f, 1f);
+        // Golden Idol (Phase 5.11): the same bar is Midas Body's damage bonus from gold carried ("+N% DMG").
+        static readonly Color MidasColor = new Color(1f, 0.8f, 0.25f);
+        static readonly Color MidasHot = new Color(1f, 0.97f, 0.7f);
 
         static readonly Color XpColor = new Color(0.31f, 0.89f, 0.82f);
         static readonly Color HpColor = new Color(0.88f, 0.2f, 0.17f);
@@ -475,13 +478,16 @@ namespace Gladiator.UI
             var rite = BloodRite.Instance;
             var verdict = Verdict.Instance;
             var storm = Stormcaller.Instance;
+            var midas = MidasBody.Instance;
             bool wrath = rite == null && verdict != null && verdict.trait != null;
             bool charge = rite == null && !wrath && storm != null && storm.trait != null;
-            bool on = (rite != null && rite.trait != null) || wrath || charge;
+            bool gold = rite == null && !wrath && !charge && midas != null && midas.trait != null;
+            bool on = (rite != null && rite.trait != null) || wrath || charge || gold;
             if (_bloodRoot.activeSelf != on) { _bloodRoot.SetActive(on); _bloodText.gameObject.SetActive(on); }
             if (!on) return;
             if (wrath) { DrawWrath(verdict, unscaledDt); return; }
             if (charge) { DrawCharge(storm, unscaledDt); return; }
+            if (gold) { DrawMidas(midas, unscaledDt); return; }
             if (_riteShown != rite) { _riteShown = rite; _lust = rite.GetComponent<Bloodlust>(); _bloodKey = int.MinValue; }
             float target = rite.Frenzied ? rite.FrenzyLeft / Mathf.Max(0.01f, rite.trait.frenzySeconds) : rite.Fill01;
             _bloodFill.fillAmount = Mathf.MoveTowards(_bloodFill.fillAmount, target, unscaledDt * 2f);
@@ -499,6 +505,21 @@ namespace Gladiator.UI
                 else _bloodText.SetText("");
             }
             _bloodText.color = key == -1 ? Color.Lerp(BloodColor, BloodHot, 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 8f)) : BloodColor;
+        }
+
+        /// <summary>The Golden Idol's Midas Body bonus on the Blood bar (it shines when it's maxed).</summary>
+        void DrawMidas(MidasBody m, float unscaledDt)
+        {
+            _bloodFill.fillAmount = Mathf.MoveTowards(_bloodFill.fillAmount, m.Bonus01, unscaledDt * 2f);
+            _bloodFill.color = m.Bonus01 >= 1f ? Color.Lerp(MidasColor, MidasHot, 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 6f)) : MidasColor;
+            int key = Mathf.RoundToInt(m.Bonus * 100f);
+            if (key != _bloodKey)
+            {
+                _bloodKey = key;
+                if (key > 0) _bloodText.SetText("+{0}% DMG", key);
+                else _bloodText.SetText("");
+            }
+            _bloodText.color = MidasColor;
         }
 
         /// <summary>The Thunder Champion's Charge on the Blood bar, with its attack-speed bonus.</summary>

@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c4095337f85fccc88ea528453fa6099, type: 3}
+  m_Name: TR_GoldenStreak
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.GoldenStreakTrait
+  id: golden_streak
+  displayName: Golden Streak
+  description: "Kill streaks multiply your gold for 8 s: \xD71.5 for a Killing Spree, up to \xD73 for Unstoppable."
+  goldByTier:
+  - 1.5
+  - 2
+  - 2.5
+  - 3
+  seconds: 8

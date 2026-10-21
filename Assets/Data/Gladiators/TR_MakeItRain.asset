@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1d7c28266932c34d7b48a01b42ae9dd1, type: 3}
+  m_Name: TR_MakeItRain
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.MakeItRainTrait
+  id: make_it_rain
+  displayName: Make It Rain
+  description: 'Start a slide with 40 gold or more (every 2 s): pay 40 and 16 coins spray out round you.'
+  goldCost: 40
+  cooldown: 2
+  coins: 16
+  damage: 20
+  speed: 15
+  range: 9
+  radius: 0.45
+  pierce: 1
+  knockback: 4
+  coinMesh: {fileID: -5373289104186450392, guid: be3f81b35bbad9eceb0c1ddf53a4d299, type: 3}
+  coinScale: 1.6

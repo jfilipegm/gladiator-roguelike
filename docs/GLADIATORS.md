@@ -113,3 +113,23 @@ Arena 3 exists, so `UL_BloodKnight` switches from the interim "beat Gorm below 3
 - **Model:** `BlenderSrc/characters/ch_thunderchampion.py` (≤ 1,200 tris).
 
 **Tests:** a bolt strikes the nearest and chains to the next ones but not to one beyond jump range, and Shocks them; Charge raises attack speed and drains after the grace time; a slide with the dash ready blinks forward, hits the enemies on the path and not one beside it, and goes on cooldown; a wall stops the blink; beating the Beast Lord unlocks him.
+
+## The Golden Idol (built, Phase 5.11, v0.12.0)
+| | |
+|---|---|
+| **Fantasy** | A champion so rich he had himself gilded. The crowd adores him; the other fighters can't believe he's real. Gold is his armour, his weapon and his religion. |
+| **Silhouette** | 1.7 m, round and gleaming: a gilded body, a golden mask for a face, a crimson sash, and a huge **sun-crown** (a spiked golden disc) behind his head, the biggest head-piece in the roster. A sceptre with a golden orb in his left hand. 64 px test against the Nobody, the Champion and the Beast Lord: the spiked disc. From the camera behind him: the disc again, its back painted player cyan. |
+| **Weapon** | **Coin Toss** (`Projectile` data, no new code): every 1.1 s he flicks 3 gold coins at the 3 nearest enemies within 12 m; each coin does 9 damage and goes through 1 enemy. Levels 2–8: +1 coin, damage, +1 pierce, attack speed, +1 coin, damage, attack speed. |
+| **Passive: Midas Body** | **Gold is power:** +1 % damage for every 10 gold he's carrying, up to +100 % at 1,000. Spending gold (chests, Market... and Make It Rain) spends power. The HUD bar shows the bonus. |
+| **Passive: Golden Streak** | The announcer's kill streaks pay: **KILLING SPREE!** ×1.5 gold for 8 s, **MASSACRE!** ×2, **BLOODBATH!** ×2.5, **UNSTOPPABLE!** ×3 (a GoldGain multiplier). |
+| **Ability: Make It Rain** | Starting a slide with at least 40 gold (every 2 s): he pays 40 gold and **16 coins spray out in a ring**, 20 × his Damage each, through 1 enemy. Gold turned straight into damage, at a cost to Midas Body. |
+| **Strength** | Scales without limit in a rich run, and streaks feed it; Make It Rain clears a ring round him on demand. |
+| **Weakness** | Weak early (no gold, no bonus), and every chest is a choice between an upgrade and his damage. 100 HP. |
+| **Personality** | Struts with a bounce; flicks coins with a wave of the wrist. |
+| **Unlock: 10,000 lifetime gold** | §6.7. `UL_GoldenIdol` (`LifetimeGold 10000`). Codex hint: *"Gold, and plenty of it: 10,000 over all your runs."* The unlock also adds the Coin Toss to everyone's level-up pool. |
+
+**Colours:** his coins are the pickup gold (yellow), never orange-red.
+
+**How it's built:** `WP_CoinToss` is `Projectile` data with the `PR_Coin` mesh. Traits: `TR_MidasBody` (`MidasBody`: a Damage `StatMod` from `RunState.Gold`, like Bloodlust), `TR_GoldenStreak` (`GoldenStreak`: a GoldGain `StatMod` from `AnnounceKind.Streak` tiers, for 8 s), `TR_MakeItRain` (`MakeItRain`: on `SlideEvent`, `RunState.SpendGold` then 16 `PlayerProjectiles.FireStraight` coins). Model `BlenderSrc/characters/ch_goldenidol.py`.
+
+**Tests:** the damage bonus at 0 / 250 / 2,000 gold; a streak announce multiplies GoldGain and it wears off; a slide with 40+ gold sprays 16 coins and costs 40, a slide with less does nothing; Coin Toss fires coins at the nearest; 10,000 lifetime gold unlocks him.

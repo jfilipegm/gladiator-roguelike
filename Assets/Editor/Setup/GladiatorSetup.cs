@@ -14,7 +14,9 @@ namespace Gladiator.EditorTools
     /// Executioner's Plate and Verdict traits, the Stagger status, and UL_MurderMachine (beat Gorm). Every asset is
     /// created once and is designer-owned afterwards; only missing links are filled in (and the knight's interim unlock
     /// is migrated once). Phase 5.10: the Thunder Champion (GL_ThunderChampion), the Storm Spear (Chain) and its card,
-    /// the Stormcaller and Lightning Dash traits, and UL_ThunderChampion (beat the Beast Lord).
+    /// the Stormcaller and Lightning Dash traits, and UL_ThunderChampion (beat the Beast Lord). Phase 5.11: the Golden
+    /// Idol (GL_GoldenIdol), the Coin Toss (Projectile data) and its card, the Midas Body, Golden Streak and Make It Rain
+    /// traits, and UL_GoldenIdol (10,000 lifetime gold).
     /// </summary>
     public static class GladiatorSetup
     {
@@ -67,6 +69,18 @@ namespace Gladiator.EditorTools
         public const string ThunderUnlockPath = MetaSetup.Dir + "UL_ThunderChampion.asset";
         public const string ShockPath = "Assets/Data/Status/SE_Shock.asset";
         public const string ThunderModel = "Assets/Art/Models/Characters/CH_ThunderChampion.fbx";
+
+        public const string IdolPath = Dir + "GL_GoldenIdol.asset";
+        public const string IdolMovePath = "Assets/Data/Config/MovementConfig_Idol.asset";
+        public const string IdolAnimPath = "Assets/Data/Config/PartAnim_Idol.asset";
+        public const string MidasPath = Dir + "TR_MidasBody.asset";
+        public const string GoldenStreakPath = Dir + "TR_GoldenStreak.asset";
+        public const string MakeItRainPath = Dir + "TR_MakeItRain.asset";
+        public const string CoinTossPath = UpgradeSetup.WeaponDir + "WP_CoinToss.asset";
+        public const string CoinTossCardPath = UpgradeSetup.Dir + "UP_W_CoinToss.asset";
+        public const string IdolUnlockPath = MetaSetup.Dir + "UL_GoldenIdol.asset";
+        public const string IdolModel = "Assets/Art/Models/Characters/CH_GoldenIdol.fbx";
+        public const string CoinModel = "Assets/Art/Models/Props/PR_Coin.fbx";
 
         static WeaponDef.Level L(params StatMod[] mods) => new WeaponDef.Level { mods = mods };
         static StatMod Pct(StatId s, float v) => new StatMod(s, ModOp.Percent, v);
@@ -137,6 +151,7 @@ namespace Gladiator.EditorTools
             BloodKnight();
             MurderMachine();
             ThunderChampion();
+            GoldenIdol();
             UpgradeSetup.Refresh();
             MetaSetup.CreateOrUpdate();
             IconSetup.Apply(); // the goblin's and the knight's weapon cards get their icons too
@@ -152,12 +167,14 @@ namespace Gladiator.EditorTools
             var knight = AssetDatabase.LoadAssetAtPath<GladiatorDef>(KnightPath);
             var machine = AssetDatabase.LoadAssetAtPath<GladiatorDef>(MachinePath);
             var thunder = AssetDatabase.LoadAssetAtPath<GladiatorDef>(ThunderPath);
+            var idol = AssetDatabase.LoadAssetAtPath<GladiatorDef>(IdolPath);
             var list = new System.Collections.Generic.List<GladiatorDef>();
             if (nobody != null) list.Add(nobody);
             if (goblin != null) list.Add(goblin);
             if (knight != null) list.Add(knight);
             if (machine != null) list.Add(machine);
             if (thunder != null) list.Add(thunder);
+            if (idol != null) list.Add(idol);
             return list.ToArray();
         }
 
@@ -382,6 +399,97 @@ namespace Gladiator.EditorTools
             if (g.unlock == null) g.unlock = unlock;
             EditorUtility.SetDirty(g);
             return g;
+        }
+
+        static Mesh CoinMesh()
+        {
+            foreach (var o in AssetDatabase.LoadAllAssetsAtPath(CoinModel)) if (o is Mesh m) return m;
+            return null;
+        }
+
+        /// <summary>Phase 5.11: the Golden Idol and everything only he brings.</summary>
+        static GladiatorDef GoldenIdol()
+        {
+            var toss = CoinToss();
+            var card = WeaponCard(CoinTossCardPath, toss, "CT");
+            var unlock = AssetDatabase.LoadAssetAtPath<UnlockDef>(IdolUnlockPath);
+            if (unlock == null)
+            {
+                unlock = PlayerSetup.EnsureAsset<UnlockDef>(IdolUnlockPath);
+                unlock.id = "golden_idol";
+                unlock.displayName = "The Golden Idol";
+                unlock.description = "You've earned 10,000 gold on the sand, and someone has been counting. The Golden Idol can be chosen, and his Coin Toss joins the level-up pool.";
+                unlock.hint = "Gold, and plenty of it: 10,000 over all your runs.";
+                unlock.conditions = new[] { new UnlockCondition { kind = UnlockConditionKind.LifetimeGold, amount = 10000f } };
+                unlock.addsToPool = new[] { card };
+                EditorUtility.SetDirty(unlock);
+            }
+            var move = Copy<MovementConfig>(PlayerSetup.MovementPath, IdolMovePath, m =>
+            {
+                m.capsuleHeight = 1.7f;
+                m.slideCapsuleHeight = 1.0f;
+                m.capsuleRadius = 0.4f;
+            });
+            var anim = Copy<PartAnimProfile>(PlayerSetup.AnimPath, IdolAnimPath, a =>
+            {
+                a.strideLength = 1.45f; // a strut
+                a.bobHeight = 0.08f;
+                a.runLean = 3f;
+                a.swingYawStart = 40f;  // a flick of the wrist
+                a.swingYawEnd = -60f;
+                a.swingRaise = 70f;
+            });
+            var midas = Trait<MidasBodyTrait>(MidasPath, "midas_body", "Midas Body",
+                "Gold is power: +1 % damage for every 10 gold you carry, up to +100 %.");
+            var streak = Trait<GoldenStreakTrait>(GoldenStreakPath, "golden_streak", "Golden Streak",
+                "Kill streaks multiply your gold for 8 s: ×1.5 for a Killing Spree, up to ×3 for Unstoppable.");
+            var rain = Trait<MakeItRainTrait>(MakeItRainPath, "make_it_rain", "Make It Rain",
+                "Start a slide with 40 gold or more (every 2 s): pay 40 and 16 coins spray out round you.");
+            if (rain.coinMesh == null) { rain.coinMesh = CoinMesh(); EditorUtility.SetDirty(rain); }
+
+            var g = AssetDatabase.LoadAssetAtPath<GladiatorDef>(IdolPath);
+            if (g == null)
+            {
+                g = PlayerSetup.EnsureAsset<GladiatorDef>(IdolPath);
+                g.id = "golden_idol";
+                g.displayName = "The Golden Idol";
+                g.description = "A champion so rich he had himself gilded. The more gold he carries the harder he hits, kill streaks pay double, and his slide makes it rain.";
+                g.baseStats = new[] { new GladiatorDef.BaseStat { stat = StatId.MaxHp, value = 100f } };
+                g.cameraTargetHeight = 1.3f;
+                g.tradeoff = "Weak until he's rich: every chest is a choice between an upgrade and his damage.";
+            }
+            if (g.model == null) g.model = AssetDatabase.LoadAssetAtPath<GameObject>(IdolModel);
+            if (g.movement == null) g.movement = move;
+            if (g.animProfile == null) g.animProfile = anim;
+            if (g.startingWeapon == null) g.startingWeapon = toss;
+            if (g.traits == null || g.traits.Length == 0) g.traits = new GladiatorTrait[] { midas, streak, rain };
+            if (g.unlock == null) g.unlock = unlock;
+            EditorUtility.SetDirty(g);
+            return g;
+        }
+
+        static WeaponDef CoinToss()
+        {
+            var w = AssetDatabase.LoadAssetAtPath<WeaponDef>(CoinTossPath);
+            if (w == null)
+            {
+                w = PlayerSetup.EnsureAsset<WeaponDef>(CoinTossPath);
+                w.id = "coin_toss"; w.displayName = "Coin Toss";
+                w.description = "Flicks gold coins at the nearest enemies. Each one goes through the first it hits.";
+                w.pattern = WeaponPattern.Projectile;
+                w.damage = 9f; w.critChance = 0.1f; w.critMultiplier = 2f; w.knockback = 2f;
+                w.cooldown = 1.1f; w.swingDuration = 0.18f; w.windup = 0.06f;
+                w.range = 12f; w.acquireRange = 12f; w.width = 0.4f; w.speed = 18f; w.amount = 3; w.pierce = 1;
+                w.meshScale = 1.6f;
+                w.levels = new[]
+                {
+                    L(Add(StatId.Amount, 1f)), L(Pct(StatId.Damage, 0.2f)), L(Add(StatId.Pierce, 1f)), L(Pct(StatId.AttackSpeed, 0.15f)),
+                    L(Add(StatId.Amount, 1f)), L(Pct(StatId.Damage, 0.25f)), L(Pct(StatId.AttackSpeed, 0.2f)),
+                };
+            }
+            if (w.mesh == null) w.mesh = CoinMesh();
+            EditorUtility.SetDirty(w);
+            return w;
         }
 
         static WeaponDef StormSpear(StatusDef shock)

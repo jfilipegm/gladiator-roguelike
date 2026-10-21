@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Wax Tablet
   glyph: WT
   icon: {fileID: 2800000, guid: 13ceaa4af4e914da3ab8c2724bbfa51d, type: 3}
-  iconRow: 48
+  iconRow: 49
   kind: 0
   tags: 1024
   weight: 10

@@ -838,6 +838,30 @@ ICONS["weapon_gorms_whip"] = grid([  # Gorm's Whip: an iron-capped handle, the l
     "...dd...........",
 ])
 
+
+def cleaver():
+    """Executioner's Cleaver (Phase 5.9): a slab of a blade with a hole in its far corner, a short wrapped handle."""
+    g = blank()
+    for y in range(3, 11):
+        for x in range(5, 15):
+            g[y][x] = "l"
+    for x in range(5, 15):
+        g[3][x] = "d"   # the spine
+        g[10][x] = "w"  # the edge
+    for y in range(4, 10):
+        g[y][14] = "s"
+    for y in (4, 5):
+        for x in (11, 12):
+            g[y][x] = "."  # the hole in the far corner (the outline pass rims it dark)
+    put(g, [(6, 9), (7, 9), (9, 9)], "s")  # nicks along the edge
+    put(g, [(4, 4), (4, 5)], "d")          # the ferrule
+    put(g, [(0, 4), (1, 4), (2, 4), (3, 4)], "B")
+    put(g, [(0, 5), (1, 5), (2, 5), (3, 5)], "b")
+    return g
+
+
+ICONS["weapon_executioners_cleaver"] = cleaver()
+
 ICONS["loaded_dice"] = grid([  # Loaded Dice (iteration 2: read as toast): a die's top, front and side, five dark pips
     "................",
     "................",

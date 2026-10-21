@@ -1,7 +1,7 @@
 # Progress
 
 **Current phase:** Phase 5 — expansion
-**Current milestone:** Phase 5.8 — Arena 3, the Stone Amphitheater + the Beast Lord (branch `phase5-arena3`, spec `docs/ARENAS.md` §3 + `docs/BOSSES.md`, v0.9.0): built, tested, PR open, awaiting the producer's OK to merge and release. v0.8.0 (the Provincial Pit rebuilt as a 100 × 70 m octagon + the spike-trap fix) released 2026-10-20.
+**Current milestone:** Phase 5.9 — the Murder Machine, the fourth gladiator (branch `phase5-murder-machine`, spec `docs/GLADIATORS.md`). v0.9.0 (Arena 3, the Stone Amphitheater + the Beast Lord) released 2026-10-21. v0.8.0 (the Provincial Pit rebuilt as a 100 × 70 m octagon + the spike-trap fix) released 2026-10-20.
 **Last updated:** 2026-10-21
 
 **Repository:** https://github.com/jfilipegm/gladiator-roguelike (public, branch `main`, remote `origin`, `.blend` files via Git LFS). Work on a branch per milestone, push as you go, merge through a PR; release every playable build (`Tools/release`).
@@ -249,7 +249,7 @@
   - with `spawnMaxDistance` 55: 373 fps avg; ≥ 250 enemies 197 fps (5.07 ms, p95 6.59), gameplay 1.91 / 2.41 ms; max 301; GC 59 B/s; Champion at 64 %, level 26, 7,245 kills (a weaker build: 281 bombs, 56 s of hit-stop).
   - Kills match the old arena's runs within build-to-build noise, so they can't show horde pressure (the bot's DPS caps them). C18 tracks density for the producer's playtest.
 
-## Phase 5.8 Arena 3, the Stone Amphitheater (branch `phase5-arena3`, v0.9.0): PR open, awaiting the producer's OK
+## Done — Phase 5.8 Arena 3, the Stone Amphitheater + the Beast Lord (branch `phase5-arena3`, PR #11 merged 2026-10-21 with the producer's OK, release v0.9.0)
 - **Spec:** `docs/ARENAS.md` §3, `docs/BOSSES.md` "The Beast Lord", DECISIONS "Phase 5.8". The producer said "You can proceed" after v0.8.0.
 - **Done and committed (verified in Play mode):**
   - **Layout + scene** (`AmphitheaterLayout.cs`, `AmphitheaterSetup.cs`, menu "Gladiator/Arenas/Build Stone Amphitheater"): a 120 × 88 m D, 8,513 m² of play (Provincial 6,274); stage wall with the great gate (gate 0, boss) + 4 cages at x ±26.67/±44.44; the stage (pulpitum) in **two 17 m halves** (x 3..20 each side, 6 m processional way for the boss; stairs at their fronts x ±11.5 and outer ends x ±22); 3 tunnels (gates 1–3) in the bowl; invisible stone along the bowl; 12 columns, 4 statues (±35.5, 33) and (±42, −16), 4 platforms, 1,711 spectators. Sun (54, −25, 0). Per-gate models (`ArenaLayoutDef.Gate.model`). Bowl re-coloured to travertine (iteration 2). CrowdRenderer draws in chunks of 1,023. Run/unlock (DefeatBoss champion)/table/menu/build lists wired; menu rebuilt.
@@ -264,7 +264,27 @@
     - The Blood Knight (`-gladiator blood_knight`): 478 fps avg, 251 fps at ≥ 250 enemies, max 313; level 28, 9,790 kills; **beat the Beast Lord** ~40 s after his entrance (outcome Survived at 8:41). End-of-run GC is the reward + victory screen + save (known).
     - Enemies alive per minute and the fight lengths are in CONCERNS C18 / C19.
   - **Docs:** ARENAS §3 as built, BOSSES (the fall scatters every enemy), DECISIONS "Phase 5.8" numbers, ART_DEBT (Beast Lord ¾ relies on the goad; Murmillo/Net-Thrower/Boar; the kit), CONCERNS C18 measurements + C19, `docs/releases/v0.9.0.md`. `GameInfo.Version` 0.9.0.
-- **Next:** the producer OKs the PR → merge → `Tools/release 0.9.0` on `main` → smoke-run the archives (Linux, Linux dev in the amphitheatre, Windows under Wine) → record sizes and results here.
+- **PR #11** (https://github.com/jfilipegm/gladiator-roguelike/pull/11) merged (35845c8).
+- **v0.9.0 released 2026-10-21:** https://github.com/jfilipegm/gladiator-roguelike/releases/tag/v0.9.0.
+  - Archives: Linux 43 MB, Linux dev 73 MB, Windows 45 MB, macOS 52 MB. The build log's `errors=1` on the first build is the bridge timeout, as before.
+  - Smoke runs of the downloaded archives (`-bot -timed -botSeconds 40`), all v0.9.0, 0 exceptions: Linux as the Nobody in the Slave Pit (52 kills, clock to 36 s) and in the Stone Amphitheater (`-arena stone_amphitheater`: 61 kills, 36 s), Windows under Wine in the Stone Amphitheater (35 kills, 37 s). Their Profiling files were deleted. macOS not run.
+
+## Phase 5.9 the Murder Machine (branch `phase5-murder-machine`, v0.10.0)
+- **Spec:** `docs/GLADIATORS.md` "The Murder Machine"; DECISIONS "Phase 5.9". Chosen as the next milestone because the GDD's roster order puts him next, his unlock already works, and Arena 4 would be bigger again while C18 waits on the playtest. The producer pre-approved merging any green PR until 07:05 WEST 2026-10-21 (they're asleep).
+- **Done (committed, verified):**
+  - **Model** `CH_MurderMachine` (`BlenderSrc/characters/ch_murdermachine.py`, 808 tris, iteration 2): pointed black executioner's hood with cyan eyes, rust plate barrel, bare arms, a slab of a cleaver in the right fist; cyan axe sigil on the back.
+  - **`GroundSlam` pattern** (`WeaponSystem.SlamHit`): a chop `range` 2 m ahead toward the nearest enemy, circle `width × √Area` (2.4 m), point blank 1.2 m always hit, `PlayerProjectiles.Shockwave` ring, dust, `Slams` counter. `WP_ExecutionersCleaver` + `UP_W_ExecutionersCleaver` + pixel icon (`PixelSrc/upgrade_icons.py`, iteration 2).
+  - **Traits:** `TR_ExecutionersPlate` (`PlayerHealth.FlatReduction` 4: after the arena multiplier and Armor, never below 1, not status ticks; `PlayerMotor.KnockbackTakenMul` 0). `TR_Verdict` (Wrath meter +8 per hit from `DamagedEvent`s with the new `Status` flag false; a landing ≥ 2 m/s with it full: 7 m × √Area, 60 × Damage, knockback 14, `SE_Stagger` 1 s Root).
+  - **Animation:** `PartAnimProfile.overheadChop` / `chopPitchStart/End` / `twoHanded`; `PartAnim_Machine` curve peaks at 0.62 and pose sharpness 30 (`GladiatorSetup.ChopTiming`).
+  - **HUD:** the Blood bar doubles as the Wrath meter (pale steel, "JUMP!" when full).
+  - **Unlocks:** `UL_MurderMachine` (beat Gorm; adds the cleaver to the pool). `UL_BloodKnight` migrated from `DefeatBossBelowHp gorm 0.3` to `ReachArena 2` (§6.7 "Reach Arena 3").
+  - **Codex + menu** rebuilt (4 gladiators). Bot log adds `verdicts N (hit H) damageTaken D slams S`.
+  - **Tests:** `MurderMachineTests` 5/5 (spawn/loadout, the chop's circle vs behind, plate + no knockback with a control push, Wrath + Verdict, Gorm unlock); `KnightPlayTests` unlock test rewritten for the amphitheatre; `RunFlowTests` expects Gorm's three unlocks. Full suites EditMode 77/77, PlayMode 146/146 (2026-10-21).
+  - **Play mode (Slave Pit, staged):** the wind-up shows the slab over his hood with both arms up; the Verdict's two pale rings and burst; the Wrath bar under the HP bar. Screenshots `mm_side_*`, `mm_chop_*`, `mm_verdict*`.
+  - **Bot runs (dev build, `-gladiator murder_machine`), 0 exceptions:**
+    - Slave Pit: 384 fps avg, 199 fps at ≥ 250 enemies, 24 B/s GC; level 27, 8,361 kills, 46 Verdicts (1,455 hits), 353 slams, 430 HP taken; Gorm at 65 % (the bot never levelled the cleaver).
+    - Stone Amphitheater (`-arena stone_amphitheater`): 380 fps avg, 197 fps at ≥ 250 enemies, max 322, 25 B/s GC; level 32, 8,176 kills, 60 Verdicts (2,903 hits), 246 slams, 337 HP taken; the Beast Lord at 35 % in phase 2 when the recording ended.
+- **Next:** PR → merge (inside the producer's window) → `Tools/release 0.10.0` → smoke runs.
 
 ## Known issues
 - **Residual GC (target 0 B/frame, met in steady state):** the 70–85 KB one-offs in paused card panels (v0.6.0/0.7.0) are fixed in Phase 5.6: the description buffers are pre-sized to 400 chars. A 200 s check run had none; the first level-up allocates ~7.5–9.9 KB once (paused; a hidden pre-draw of the cards didn't remove it; BACKLOG), the boss entrance 1.8 KB, the victory screen + save write ~238 KB (game over). Small first-occurrence allocations (≤ 1.2 KB) in the first minutes.

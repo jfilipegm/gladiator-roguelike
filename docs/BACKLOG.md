@@ -31,7 +31,9 @@ Good ideas that are **not** in the current phase. Pull from here only when a pha
 - **The escaping goblin from the crate wears the player's cyan marks** (same model as the playable goblin); a rag-only variant would read better.
 - **Break the rattling crate with weapon hits too** (needs weapons to test props, not only enemies).
 - **Goblin personality beats from the spec:** a cackle on level-up, ears flopping when it runs (separate ear parts), grabbing gems with both hands.
-- **The Blood Knight's real unlock** (§6.7 "Reach Arena 3"): `UL_BloodKnight` uses the interim `DefeatBossBelowHp gorm 0.3` until more arenas exist; then switch its condition to `ReachArena`.
+- ~~The Blood Knight's real unlock~~ — done in Phase 5.9 (`ReachArena 2`).
+- **The Murder Machine's cleaver resting on his shoulder between chops** (needs a rest-pose offset for the weapon arm in `PartAnimProfile`); today it's held low in front.
+- **An Executioner's Cleaver evolution** (Phase 5.5 style: catalyst + chest), e.g. the chop leaves a fissure that Roots.
 - **Knight feedback to judge in the playtest:** a faint crimson pulse on kill heals (nothing yet: 300 kills a minute would be noise), a heartbeat under 20 % HP, the blade resting on the shoulder between swings.
 - **The Champion's second gladius** (BOSSES.md point 9): the crowd throws it to him on his phase-2 roar; a prop thrown from the stands and a dual-wield pose. The gameplay change (faster attacks, five-thrust flurry) is in.
 - **Weapon on-hit status for projectiles** (`WeaponDef.onHitStatus` only works for MeleeArc/Thrust): a net that roots needs it on thrown weapons.

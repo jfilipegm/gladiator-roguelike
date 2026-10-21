@@ -64,3 +64,30 @@ A nameless pit fighter with a rusty gladius and a scrap shield. The baseline: 10
 **How it's built:** `GL_BloodKnight` + traits `TR_Bloodthirst` (`Bloodthirst`), `TR_Bloodlust` (`Bloodlust`), `TR_BloodRite` (`BloodRite`, the meter); `PlayerHealth.HealingMul` (Bloodthirst sets it; its own heals bypass it) and `PlayerHealth.Spend` (HP paid, not damage taken). Setup in `GladiatorSetup`; model `BlenderSrc/characters/ch_bloodknight.py` (iteration 2, 980 tris; the greatsword is part of the model, in the right hand).
 
 **Tests:** kill heals and the 6 HP/s cap; other healing halved; the damage bonus at 100 / 50 / 20 % HP; the meter fills, a slide with a full meter pays HP (never kills) and frenzies, and an early slide does nothing; greatsword hits bleed; the unlock condition, and beating Gorm at low HP unlocks the knight while beating him at high HP doesn't.
+
+## The Murder Machine (built, Phase 5.9, v0.10.0)
+| | |
+|---|---|
+| **Fantasy** | The arena's executioner, sent down to the sand because nobody would pay to see him beheading people any more. Absurdly huge, slow, armoured like a furnace, and quite calm about it. |
+| **Silhouette** | The biggest gladiator: 2.15 m to the tip of a tall pointed executioner's hood (the Nobody is 1.6 m), a barrel of riveted iron plate as wide as he is tall at the shoulders, short iron legs, a leather apron, and an enormous **rectangular cleaver** (1.3 × 0.55 m blade, a hole in its corner) held in both hands. 64 px test against the Knight, the Brute, Gorm and the Beast Lord: the pointed hood and the slab of a blade. From the camera behind him: a pale cyan axe sigil on his back plate. |
+| **Weapon** | **Executioner's Cleaver**, the new **`GroundSlam`** pattern (CLAUDE.md §6.8 "great axe/cleaver: slow huge AoE"). Every 2.1 s he raises it over his head and brings it down 2 m in front of him, toward the nearest enemy: everything in a 2.4 m circle there takes 34 damage and is thrown outward, and a pale ring runs out across the sand. Point blank always connects. Levels 2–8: damage, area, a second chop (Amount), attack speed, crit, knockback. |
+| **Passive: Executioner's Plate** | Every hit he takes is **4 lower** (after the arena's multiplier; never below 1), and **nothing knocks him back**: not boars, not bosses, not Brutes. Damage over time (Burn, fire patches) isn't reduced. |
+| **Ability: Verdict** | A **Wrath meter** (0–100, pale steel with a cyan edge, under the HP bar) fills **only from hits he takes** (+8 per hit). When it's full, his next **jump landing** is the Verdict: "VERDICT!", a 7 m shockwave around him, 60 × his damage to everything in it, a big knockback, and survivors are **Rooted for 1 s** (bosses aren't rooted, only hurt). The meter empties. |
+| **Strength** | Wades into the horde: the swarm's small hits barely scratch him (a Convict's 8 becomes 4, a Cur's 6 becomes 2), every hit brings the Verdict closer, and the cleaver clears a crowd in front of him. 150 HP. |
+| **Weakness** | Slow (85 % move speed) with a slow weapon that only hits in front: fast Curs and assassins get round him. The plate does little against big hits (a boss's 24 is still 20). |
+| **Personality** | Says nothing; he's done this before. Heavy, deliberate strides; the cleaver held low in front of him, raised over his head with both hands for every chop; every chop makes the ground jump. (Resting it on his shoulder between chops: BACKLOG.) |
+| **Unlock: defeat Gorm** | §6.7. `UL_MurderMachine` (`DefeatBoss gorm 1`). Codex hint: *"Gorm keeps an executioner below the pit. Kill Gorm, and he'll want new work."* The unlock also adds the Executioner's Cleaver to everyone's level-up pool. A save that already beat Gorm gets him at the next main menu. |
+
+**Colours:** the cleaver's ring and the Verdict's shockwave are player cyan-white, never orange-red. The meter is pale steel with a cyan edge, so it doesn't read as the Blood meter's crimson.
+
+**How it's built:**
+- **`GroundSlam`** in `WeaponSystem`: aim at the nearest enemy, `windup` then a circle at `range` ahead with radius `width × √area`, everything in it hit outward from the centre; Amount = more chops right after, at whoever is nearest then. The ring is a new pooled `SlamRings` drawer (`TelegraphRenderer.Circle` growing over 0.25 s), dust from `DeathPopFx`.
+- **Traits:** `TR_ExecutionersPlate` (`ExecutionersPlate`: `PlayerHealth.FlatReduction`, `PlayerMotor.KnockbackTakenMul` = 0) and `TR_Verdict` (`Verdict`: the meter from `DamagedEvent`s that aren't status ticks, `OnLand` with a full meter).
+- **Animation:** `PartAnimProfile.overheadChop` (the arm pitches from over the head to the ground instead of sweeping sideways) and `twoHanded` (the left arm follows).
+- **Model:** `BlenderSrc/characters/ch_murdermachine.py` (≤ 1,200 tris, the cleaver part of the model in the right hand).
+- **Setup:** `GladiatorSetup.MurderMachine()` (`GL_MurderMachine`, `MovementConfig_Machine`, `PartAnim_Machine`, `WP_ExecutionersCleaver` + `UP_W_ExecutionersCleaver`, `UL_MurderMachine`).
+
+**Tests:** a chop hits the circle ahead and not behind, and throws enemies out; hits are 4 lower but never below 1, status ticks aren't reduced; boars and bosses don't knock him back; the meter fills from hits only; a landing with a full meter hits and roots the ring and empties the meter, and a landing with a part-full meter does nothing; beating Gorm unlocks him.
+
+### The Blood Knight's real unlock (Phase 5.9)
+Arena 3 exists, so `UL_BloodKnight` switches from the interim "beat Gorm below 30 % HP" to §6.7's **"Reach Arena 3"** (`ReachArena 2`: start a run in the Stone Amphitheater). A save that already unlocked him keeps him (unlocks are saved by id).

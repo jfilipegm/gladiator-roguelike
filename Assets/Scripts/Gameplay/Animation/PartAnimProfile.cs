@@ -46,6 +46,13 @@ namespace Gladiator.Gameplay
         [Tooltip("Arm raised forward during the swing (deg).")]
         public float swingRaise = 80f;
         public AnimationCurve swingCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+        [Tooltip("An overhead chop instead of a sideways sweep: the arm pitches from chopPitchStart (over the head) to " +
+                 "chopPitchEnd (down in front), and the body bends into it. The Murder Machine's cleaver.")]
+        public bool overheadChop;
+        public float chopPitchStart = 165f;
+        public float chopPitchEnd = 35f;
+        [Tooltip("The left arm follows the weapon arm (a two-handed grip).")]
+        public bool twoHanded;
 
         [Header("Blend")]
         [Tooltip("How fast poses blend (1/s).")]

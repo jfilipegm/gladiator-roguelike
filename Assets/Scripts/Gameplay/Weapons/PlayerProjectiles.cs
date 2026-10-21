@@ -57,6 +57,10 @@ namespace Gladiator.Gameplay
         [Tooltip("Particles for the blast (the shared death-pop system).")]
         public DeathPopFx burst;
         public float blastShake = 0.07f;
+        [Header("Shockwaves (GroundSlam, the Verdict)")]
+        [Tooltip("A pale ring that runs out from a slam over `shockwaveTime` and fades: player colours, never orange-red.")]
+        public Color shockwaveColor = new Color(0.82f, 0.97f, 1f, 0.95f);
+        public float shockwaveTime = 0.28f;
 
         const int MaxMeshes = 8;
 
@@ -83,6 +87,10 @@ namespace Gladiator.Gameplay
         readonly float[] _orbScale = new float[MaxOrbiters];
         readonly int[] _orbMesh = new int[MaxOrbiters];
         int _orbCount;
+        const int MaxShockwaves = 12;
+        readonly Vector3[] _waveAt = new Vector3[MaxShockwaves];
+        readonly float[] _waveR = new float[MaxShockwaves], _waveT = new float[MaxShockwaves];
+        int _waveCount;
         RenderParams _streakRp;
         Matrix4x4[][] _matrices;
         int[] _batch, _lastBatch;
@@ -292,8 +300,39 @@ namespace Gladiator.Gameplay
             _orbCount = 0;
         }
 
+        /// <summary>A pale ring that runs out to `radius` round `at` and fades (the cleaver's chop, the Verdict).</summary>
+        public void Shockwave(Vector3 at, float radius)
+        {
+            int k = _waveCount < MaxShockwaves ? _waveCount++ : 0; // full: the oldest goes
+            _waveAt[k] = at; _waveR[k] = radius; _waveT[k] = 0f;
+        }
+
+        public int Shockwaves => _waveCount;
+
+        void StepShockwaves(float dt)
+        {
+            var tele = TelegraphRenderer.Instance;
+            for (int k = _waveCount - 1; k >= 0; k--)
+            {
+                _waveT[k] += dt;
+                float u = _waveT[k] / Mathf.Max(0.01f, shockwaveTime);
+                if (u >= 1f)
+                {
+                    _waveCount--;
+                    _waveAt[k] = _waveAt[_waveCount]; _waveR[k] = _waveR[_waveCount]; _waveT[k] = _waveT[_waveCount];
+                    continue;
+                }
+                if (tele == null) continue;
+                var c = shockwaveColor;
+                c.a *= 1f - u * u;
+                float r = _waveR[k] * (0.25f + 0.75f * Mathf.Sqrt(u));
+                tele.Circle(_waveAt[k], r, 1f, c, TelegraphRenderer.Style.Ring, 0.12f + 0.1f * (1f - u), k * 0.41f);
+            }
+        }
+
         public void Clear()
         {
+            _waveCount = 0;
             _orbCount = 0;
             _boltCount = 0;
             for (int i = 0; i < _high; i++) _used[i] = false;
@@ -323,6 +362,7 @@ namespace Gladiator.Gameplay
             }
             AddOrbiters();
             StepBolts(dt);
+            StepShockwaves(dt);
             Draw(false);
         }
 

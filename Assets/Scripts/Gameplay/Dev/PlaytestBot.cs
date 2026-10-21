@@ -169,6 +169,12 @@ namespace Gladiator.Gameplay
             if (PlayerProjectiles.Instance != null && PlayerProjectiles.Instance.Blasts > 0) sb.Append(" bombs ").Append(PlayerProjectiles.Instance.Blasts);
             var rite = player.GetComponent<BloodRite>();
             if (rite != null) sb.Append(" rites ").Append(rite.Rites).Append(" (paid ").Append(rite.HpPaid.ToString("0")).Append(" HP)");
+            var verdict = player.GetComponent<Verdict>();
+            if (verdict != null) sb.Append(" verdicts ").Append(verdict.Verdicts).Append(" (hit ").Append(verdict.VerdictHits).Append(')');
+            var health = player.GetComponent<PlayerHealth>();
+            if (health != null && health.FlatReduction > 0f) sb.Append(" damageTaken ").Append(health.DamageTaken.ToString("0"));
+            var weapons = player.GetComponent<WeaponSystem>();
+            if (weapons != null && weapons.Slams > 0) sb.Append(" slams ").Append(weapons.Slams);
             var thirst = player.GetComponent<Bloodthirst>();
             if (thirst != null) sb.Append(" kill-healed ").Append(thirst.Healed.ToString("0")).Append(" HP");
             sb.Append(" | hitstops ").Append(TimeController.HitStopCount).Append(" (").Append(TimeController.HitStopSeconds.ToString("0.0")).Append(" s)");

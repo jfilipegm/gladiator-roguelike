@@ -18,6 +18,7 @@ namespace Gladiator.Tests
     {
         const string TestArena = "Assets/Scenes/Dev/TestArena.unity";
         const string SlavePit = "Assets/Scenes/Arenas/SlavePit.unity";
+        const string StoneAmphitheater = "Assets/Scenes/Arenas/StoneAmphitheater.unity";
 
         static T Load<T>(string path) where T : Object => UnityEditor.AssetDatabase.LoadAssetAtPath<T>(path);
         static GladiatorDef Knight => Load<GladiatorDef>("Assets/Data/Gladiators/GL_BloodKnight.asset");
@@ -239,34 +240,29 @@ namespace Gladiator.Tests
         }
 
         [UnityTest, Timeout(120000)]
-        public IEnumerator BeatingGormBleedingOut_UnlocksTheKnight_BeatingHimHealthyDoesNot()
+        public IEnumerator ReachingTheAmphitheater_UnlocksTheKnight_BeatingGormBleedingOutNoLongerDoes()
         {
             SaveSandbox.Wipe();
             yield return Boot(SlavePit, null);
             Assert.IsFalse(Gladiator.UI.MainMenu.IsAvailable(Knight), "locked on a fresh save");
-            RunState.Current.MarkBossDefeated("gorm", 0.55f);
+            RunState.Current.MarkBossDefeated("gorm", 0.22f);
             RunState.Current.End(RunOutcome.Survived);
             yield return null;
             var rewards = RunEndController.Instance.Rewards;
             Assert.IsNotNull(rewards);
-            foreach (var u in rewards.NewUnlocks) Assert.AreNotEqual("blood_knight", u.id, "a healthy win isn't enough");
+            foreach (var u in rewards.NewUnlocks) Assert.AreNotEqual("blood_knight", u.id, "Gorm beaten bleeding out was the interim unlock (Phase 5.3-5.8)");
             Assert.IsTrue(MetaProgress.Data.TryBossKillHp("gorm", out int permille));
-            Assert.AreEqual(550, permille, "the save keeps the HP he fell at");
+            Assert.AreEqual(220, permille, "the save still keeps the HP he fell at");
 
-            RunEndController.Instance.Retry();
-            float end = Time.realtimeSinceStartup + 10f;
-            while (Time.realtimeSinceStartup < end && (RunState.Current == null || RunState.Current.Ended || SceneManager.GetActiveScene().name != "SlavePit")) yield return null;
-            while (RunIntro.Instance != null && !RunIntro.Instance.Done) yield return null;
-            RunState.Current.MarkBossDefeated("gorm", 0.22f);
-            RunState.Current.End(RunOutcome.Survived);
+            // §6.7 "Reach Arena 3": any run in the Stone Amphitheater, even a lost one
+            yield return Boot(StoneAmphitheater, null);
+            RunState.Current.End(RunOutcome.Died);
             yield return null;
             rewards = RunEndController.Instance.Rewards;
             bool got = false;
             foreach (var u in rewards.NewUnlocks) got |= u.id == "blood_knight";
-            Assert.IsTrue(got, "beaten bleeding out: the knight is unlocked");
+            Assert.IsTrue(got, "the amphitheatre reached: the knight is unlocked");
             Assert.IsTrue(SaveSystem.Load(SaveSandbox.TestPath).IsUnlocked("blood_knight"), "on disk");
-            Assert.IsTrue(MetaProgress.Data.TryBossKillHp("gorm", out permille));
-            Assert.AreEqual(220, permille, "the lowest is kept");
             Assert.IsTrue(Gladiator.UI.MainMenu.IsAvailable(Knight));
         }
     }

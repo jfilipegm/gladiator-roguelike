@@ -269,6 +269,23 @@
   - Archives: Linux 43 MB, Linux dev 73 MB, Windows 45 MB, macOS 52 MB. The build log's `errors=1` on the first build is the bridge timeout, as before.
   - Smoke runs of the downloaded archives (`-bot -timed -botSeconds 40`), all v0.9.0, 0 exceptions: Linux as the Nobody in the Slave Pit (52 kills, clock to 36 s) and in the Stone Amphitheater (`-arena stone_amphitheater`: 61 kills, 36 s), Windows under Wine in the Stone Amphitheater (35 kills, 37 s). Their Profiling files were deleted. macOS not run.
 
+## Phase 5.9 the Murder Machine (branch `phase5-murder-machine`, v0.10.0)
+- **Spec:** `docs/GLADIATORS.md` "The Murder Machine"; DECISIONS "Phase 5.9". Chosen as the next milestone because the GDD's roster order puts him next, his unlock already works, and Arena 4 would be bigger again while C18 waits on the playtest. The producer pre-approved merging any green PR until 07:05 WEST 2026-10-21 (they're asleep).
+- **Done (committed, verified):**
+  - **Model** `CH_MurderMachine` (`BlenderSrc/characters/ch_murdermachine.py`, 808 tris, iteration 2): pointed black executioner's hood with cyan eyes, rust plate barrel, bare arms, a slab of a cleaver in the right fist; cyan axe sigil on the back.
+  - **`GroundSlam` pattern** (`WeaponSystem.SlamHit`): a chop `range` 2 m ahead toward the nearest enemy, circle `width × √Area` (2.4 m), point blank 1.2 m always hit, `PlayerProjectiles.Shockwave` ring, dust, `Slams` counter. `WP_ExecutionersCleaver` + `UP_W_ExecutionersCleaver` + pixel icon (`PixelSrc/upgrade_icons.py`, iteration 2).
+  - **Traits:** `TR_ExecutionersPlate` (`PlayerHealth.FlatReduction` 4: after the arena multiplier and Armor, never below 1, not status ticks; `PlayerMotor.KnockbackTakenMul` 0). `TR_Verdict` (Wrath meter +8 per hit from `DamagedEvent`s with the new `Status` flag false; a landing ≥ 2 m/s with it full: 7 m × √Area, 60 × Damage, knockback 14, `SE_Stagger` 1 s Root).
+  - **Animation:** `PartAnimProfile.overheadChop` / `chopPitchStart/End` / `twoHanded`; `PartAnim_Machine` curve peaks at 0.62 and pose sharpness 30 (`GladiatorSetup.ChopTiming`).
+  - **HUD:** the Blood bar doubles as the Wrath meter (pale steel, "JUMP!" when full).
+  - **Unlocks:** `UL_MurderMachine` (beat Gorm; adds the cleaver to the pool). `UL_BloodKnight` migrated from `DefeatBossBelowHp gorm 0.3` to `ReachArena 2` (§6.7 "Reach Arena 3").
+  - **Codex + menu** rebuilt (4 gladiators). Bot log adds `verdicts N (hit H) damageTaken D slams S`.
+  - **Tests:** `MurderMachineTests` 5/5 (spawn/loadout, the chop's circle vs behind, plate + no knockback with a control push, Wrath + Verdict, Gorm unlock); `KnightPlayTests` unlock test rewritten for the amphitheatre; `RunFlowTests` expects Gorm's three unlocks. Full suites EditMode 77/77, PlayMode 146/146 (2026-10-21).
+  - **Play mode (Slave Pit, staged):** the wind-up shows the slab over his hood with both arms up; the Verdict's two pale rings and burst; the Wrath bar under the HP bar. Screenshots `mm_side_*`, `mm_chop_*`, `mm_verdict*`.
+  - **Bot runs (dev build, `-gladiator murder_machine`), 0 exceptions:**
+    - Slave Pit: 384 fps avg, 199 fps at ≥ 250 enemies, 24 B/s GC; level 27, 8,361 kills, 46 Verdicts (1,455 hits), 353 slams, 430 HP taken; Gorm at 65 % (the bot never levelled the cleaver).
+    - Stone Amphitheater (`-arena stone_amphitheater`): 380 fps avg, 197 fps at ≥ 250 enemies, max 322, 25 B/s GC; level 32, 8,176 kills, 60 Verdicts (2,903 hits), 246 slams, 337 HP taken; the Beast Lord at 35 % in phase 2 when the recording ended.
+- **Next:** PR → merge (inside the producer's window) → `Tools/release 0.10.0` → smoke runs.
+
 ## Known issues
 - **Residual GC (target 0 B/frame, met in steady state):** the 70–85 KB one-offs in paused card panels (v0.6.0/0.7.0) are fixed in Phase 5.6: the description buffers are pre-sized to 400 chars. A 200 s check run had none; the first level-up allocates ~7.5–9.9 KB once (paused; a hidden pre-draw of the cards didn't remove it; BACKLOG), the boss entrance 1.8 KB, the victory screen + save write ~238 KB (game over). Small first-occurrence allocations (≤ 1.2 KB) in the first minutes.
 - **Standalone perf runs need an unlocked desktop** (a locked KDE session hangs the windowed player; headless `-batchmode` runs are valid for GC only).

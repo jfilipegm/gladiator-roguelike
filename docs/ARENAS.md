@@ -188,3 +188,6 @@ fighters like you, from boxes hung with gold.
   misses one who moves; he blinks away when you close in.
 - The Gilded Patron: entrance, coin bombs (hit + gold), the volley, the shove; hired mercenaries appear at the boxes
   and guard him (less damage) until they die; phase 2 fires every jet and spins every blade; his gold at his fall.
+
+## 5. The Imperial Arena (Phase 5.16, planned: R1 in docs/ROADMAP.md)
+_Spec in progress (docs/tracks/R1-imperial-arena.md)._

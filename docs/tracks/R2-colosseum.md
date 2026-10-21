@@ -1,4 +1,4 @@
-# R2 contract — Arena 6, the Colosseum + the Eternal Victor (DRAFT: the orchestrator reviews and finalises)
+# R2 contract — Arena 6, the Colosseum + the Eternal Victor (FINAL, orchestrator, 2026-10-21 13:55)
 
 **Item branch:** `phase5-colosseum`, cut from `main` once R1 (v0.17.0) is merged. Worker branches merge into it; the
 orchestrator does every merge. **Release:** v0.18.0. **Source:** CLAUDE.md §6.2 row 6 ("I have become a legend":
@@ -151,6 +151,23 @@ Each enemy silhouette must read distinct at 64 px from every existing enemy and 
   on other enemies).
 - **Enum values appended, never inserted:** `EnemyBehaviour.Breather` (after `Caster`), `BossAttack.Disc` (after
   `Volley`), `BossController.State.Remains` (after `Dead`).
+
+## Orchestrator's answers to the design's open questions (docs/tracks/R2-design.md)
+All ten recommendations accepted:
+- **Q1:** (a) walk-only boxes. Few guards, the boss leaps, the player moves; revisit only if it looks bad in play.
+- **Q2:** keep the false death. It is the first thing cut if the boss part runs long.
+- **Q3:** the **hypogeum** part owns the swarm-multiplier change in `Director.cs`.
+- **Q4:** an invisible floor over the holes, not real falling.
+- **Q5:** no crowd hush in R2 (BACKLOG).
+- **Q6:** the Codex bestiary's tiers 3–5 go to the BACKLOG, not R2.
+- **Q7:** elite Legionnaires reassemble with their affix (one rule for all).
+- **Q8:** lifts every 45 s are first guesses; the bot's `lifts` counters tune them.
+- **Q9:** 2 Chimeras alive.
+- **Q10:** the rise, not the Gate of Death.
+
+**Branches:** the item branch is `phase5-colosseum`. It is cut from R1's branch plus this design; once R1 merges, the
+orchestrator merges `main` into it. Every worker starts with
+`git fetch origin && git merge --ff-only origin/phase5-colosseum` (or a plain merge if the fast-forward fails).
 
 ## Parts
 **Wave 1 (design and art, no code; may start while R1 is tested):**

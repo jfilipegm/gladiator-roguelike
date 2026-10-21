@@ -33,10 +33,10 @@ namespace Gladiator.EditorTools
         public static GladiatorDef CreateOrUpdate()
         {
             EnsureHandler();
-            // a measuring bot run at weight 0.8-1.4 killed 219 handlers in the Amphitheater (C26): rare-ish now, so 25 takes
+            // measuring bot runs in the Amphitheater (C26): weight 0.8-1.4 killed 219 handlers, 0.3-0.5 (cap 4) 73; rare now, so 25 takes
             // a run or two and they don't flood the floor
-            AddToTable(AmphitheaterSetup.EnsureTable(), 130f, 0.3f, 0.5f, 4);
-            AddToTable(GrandArenaSetup.EnsureTable(), 90f, 0.3f, 0.5f, 5);
+            AddToTable(AmphitheaterSetup.EnsureTable(), 130f, 0.12f, 0.2f, 3);
+            AddToTable(GrandArenaSetup.EnsureTable(), 90f, 0.12f, 0.2f, 3);
             var g = Beastmaster();
             AssetDatabase.SaveAssets();
             return g;

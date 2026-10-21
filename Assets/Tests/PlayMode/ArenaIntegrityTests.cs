@@ -247,6 +247,7 @@ namespace Gladiator.Tests
                 }
                 yield return null;
             }
+            if (_em.IsAlive(slot)) held |= _em.IsHeldAtEdge(slot); // the loop leaves on the hit's frame, before sampling it
             Debug.Log($"[Integrity] {scene} wall hug: the player {_em.PlayerPastEdge:0.00} m past the edge, the convict {gap:0.00} m away when it hit (held: {held})");
             Assert.IsTrue(held, "the convict ended up held at the edge");
             Assert.Greater(gap, 0.86f, "out of its old touch (radius + 0.35 + 0.15)");

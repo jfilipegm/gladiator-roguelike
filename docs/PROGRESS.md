@@ -323,6 +323,24 @@
   - Archives: Linux 43 MB, Linux dev 73 MB, Windows 45 MB, macOS 52 MB.
   - Smoke runs of the downloaded archives (`-bot -timed -botSeconds 40`), all v0.12.0, 0 exceptions: Linux as the Golden Idol in the Slave Pit (64 kills, clock to 37 s), Linux as the Murder Machine in the Provincial Pit (55 kills, 1 Verdict, 37 s), Windows under Wine as the Golden Idol (56 kills, 37 s). Their Profiling files were deleted. macOS not run.
 
+## Phase 5.12 the Ashen Oracle (branch `phase5-ashen-oracle`, v0.13.0)
+- **Spec:** `docs/GLADIATORS.md` "The Ashen Oracle"; DECISIONS "Phase 5.12". Merging inside the producer's window (until 07:05 WEST 2026-10-21).
+- **Done (committed, verified):**
+  - **Model** `CH_AshenOracle` (`BlenderSrc/characters/ch_ashenoracle.py`, 584 tris, iteration 2): ash robe flaring at the hem, bone mask with purple cracks, a cyan rune on the hood, a crook with a hanging censer. The masked stranger uses it too.
+  - **Curse** (`StatusKind.Curse`, `EnemyManager.StatusSlots` 6, `SE_Curse`: Stack ×5, 4 s, purple).
+  - **`EffectsTrait`/`TraitEffects`**: a gladiator trait made of Boon effects, read by `BoonEffects.Refresh` (cached once). `TR_Contagion` = `BurstOnDeath` on Curse (6 × Damage, 3.5 m).
+  - **Ashen Censer** `WP_AshenCenser` (`Lob`, `WP_Bomb` mesh, `hitEffects`: StatusOnHit Curse ×2, GroundOnHit Curse patch 1.8 m / 3 s) + card + icon.
+  - **`TR_SmokeVeil`** (`SmokeVeil`: a non-status hit, 5 s cooldown: 4.5 m Curse ×3 + Slow + knockback 9).
+  - **The Masked Stranger** (`AshenStranger`, `ArenaSecrets.AshenStranger`, placed by `ArenaBuilder`; the Stone Amphitheater's layout gets 3 `secretSpots` (migrated in `AmphitheaterSetup.Build`) and was rebuilt): 50 % of runs, 2:00–5:00, 25 s; stand in his 2 m ring for 3 s → flag `ashen_stranger` → `UL_AshenOracle` (Flag, Secret category).
+  - Codex + menu rebuilt (7 gladiators). Bot log adds `veils N (hit H) cursedBursts B`.
+  - **Tests:** `AshenOracleTests` 6/6. Full suites EditMode 77/77, PlayMode 164/164 (2026-10-21).
+  - **Play mode (Stone Amphitheater, staged):** the stranger in his pale-purple ring; the Oracle mobbed, purple curse numbers ticking, cursed patches. Screenshots `ao_stranger`, `ao_game`.
+  - **Bot runs (dev build, `-gladiator ashen_oracle`), 0 exceptions:**
+    - Slave Pit: 464 fps avg, 210 fps at ≥ 250 enemies (only 5,665 such frames); level 31, 9,723 kills, **8,474 cursed bursts**, 67 veils (301 hits), censer level 5; **beat Gorm** (Survived at 8:37). GC 406 B/s is the end-of-run spike.
+    - Stone Amphitheater: 479 fps avg, 258 fps at ≥ 250 enemies (3,026 frames); level 32, 9,705 kills, **8,889 cursed bursts**, 65 veils; **beat the Beast Lord** in 11 attacks (Survived at 8:34). GC 418 B/s, the same spike.
+    - Contagion did most of the killing (C22): the horde rarely reached 250.
+- **Next:** PR → merge (inside the window) → `Tools/release 0.13.0` → smoke runs.
+
 ## Known issues
 - **Residual GC (target 0 B/frame, met in steady state):** the 70–85 KB one-offs in paused card panels (v0.6.0/0.7.0) are fixed in Phase 5.6: the description buffers are pre-sized to 400 chars. A 200 s check run had none; the first level-up allocates ~7.5–9.9 KB once (paused; a hidden pre-draw of the cards didn't remove it; BACKLOG), the boss entrance 1.8 KB, the victory screen + save write ~238 KB (game over). Small first-occurrence allocations (≤ 1.2 KB) in the first minutes.
 - **Standalone perf runs need an unlocked desktop** (a locked KDE session hangs the windowed player; headless `-batchmode` runs are valid for GC only).

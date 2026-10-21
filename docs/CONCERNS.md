@@ -99,3 +99,8 @@ Evolutions arrive after 8 weapon levels plus a catalyst plus a chest, so late in
 ## C21 — The Golden Idol may be weak until he's rich, or snowball once he is (NEW, Phase 5.11)
 - **The risk:** at 0 gold he's a Nobody with a weaker weapon; at 1,000+ he does double damage on top of every other multiplier. A run that buys chests stays weak; one that hoards may trivialise the boss.
 - **Proposal:** judge in the playtest. Tunables: `TR_MidasBody` (`goldPerPercent` 10, `maxBonus` 1), `TR_MakeItRain` (`goldCost` 40, `damage` 20), `TR_GoldenStreak.goldByTier`, `WP_CoinToss`. If he snowballs, lower `maxBonus` before the rate; if he's weak early, give the Coin Toss a 4th coin at level 1.
+
+## C22 — The Ashen Oracle's curses may be too slow, or Contagion may chain through the whole horde (NEW, Phase 5.12)
+- **The risk:** curse damage takes seconds to stack, so early waves may overrun him; later, a cursed death bursts and curses its neighbours, whose deaths burst again, which could wipe a packed horde in one chain (`maxBurstsPerFrame` 12 caps the frame cost, not the chain).
+- **Proposal:** judge in the playtest. Tunables: `SE_Curse` (duration 4, maxStacks 5), `WP_AshenCenser` (damage 8, `hitEffects` powers), `TR_Contagion` (burst power 6, radius 3.5), `TR_SmokeVeil`. If chains wipe hordes, lower the burst radius first.
+- **Measured (v0.13.0 dev build, two 10-minute bot runs as the Oracle):** 8,474 of 9,723 kills (Slave Pit) and 8,889 of 9,705 (Stone Amphitheater) were cursed-death bursts, and the horde rarely reached 250 alive; both bosses fell. So the chain is real and strong. Recommendation: try `TR_Contagion` radius 3.5 → 2.5 in the playtest if he feels like easy mode.

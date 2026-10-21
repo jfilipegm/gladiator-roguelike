@@ -134,7 +134,7 @@ Arena 3 exists, so `UL_BloodKnight` switches from the interim "beat Gorm below 3
 
 **Tests:** the damage bonus at 0 / 250 / 2,000 gold; a streak announce multiplies GoldGain and it wears off; a slide with 40+ gold sprays 16 coins and costs 40, a slide with less does nothing; Coin Toss fires coins at the nearest; 10,000 lifetime gold unlocks him.
 
-## The Ashen Oracle (Phase 5.12, v0.13.0)
+## The Ashen Oracle (built, Phase 5.12, v0.13.0)
 | | |
 |---|---|
 | **Fantasy** | A masked seer who breathes smoke and reads the future in the ash of the dead. Nobody knows where he came from; he only shows himself to fighters he's chosen. |

@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2a180a432490fcd38f28c2658e635ef, type: 3}
+  m_Name: RD_ImperialArena
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.RunDef
+  id: imperial_arena
+  description: "The Emperor's hippodrome, the biggest floor yet: chariots race round the spina and trample everything on the track, and the Praetorian Guard marches in formation. Tougher enemies, more Renown (\xD73)."
+  unlock: {fileID: 11400000, guid: c3892a4ede95e0b8a90e3044d36e848f, type: 2}
+  arenas:
+  - displayName: THE IMPERIAL ARENA
+    scenePath: Assets/Scenes/Arenas/ImperialArena.unity

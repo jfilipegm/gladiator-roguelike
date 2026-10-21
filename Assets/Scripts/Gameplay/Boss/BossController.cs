@@ -4,7 +4,7 @@ using UnityEngine;
 namespace Gladiator.Gameplay
 {
     /// <summary>Every boss attack the controller knows. Appended only: BossDef assets serialize these.</summary>
-    public enum BossAttack : byte { None, Sweep, Whip, Slam, Charge, Bash, Flurry, Pounce, CoinBombs, Volley }
+    public enum BossAttack : byte { None, Sweep, Whip, Slam, Charge, Bash, Flurry, Pounce, CoinBombs, Volley, Disc }
 
     /// <summary>
     /// A boss's brain (docs/BOSSES.md), driven by its BossDef. The body is a Scripted enemy in EnemyManager — so every
@@ -17,12 +17,26 @@ namespace Gladiator.Gameplay
     /// hired swords live), the phase-2 roar (Gorm sets the fence on fire, the Champion fires every spike trap, the Beast
     /// Lord opens every cage, the Patron fires every jet and spins every blade), an optional third phase (the Emperor's
     /// Champion: "FOR THE EMPEROR!", faster still, the charge twice; ChariotRace reads Phase and runs its races back to
-    /// back), and his rigid-part animation. Telegraphs are orange-red (EnemyManager.telegraphColor). Central tick, no
-    /// allocation after Begin.
+    /// back), and his rigid-part animation. The Eternal Victor (R2) rises from below at the arena's centre instead of
+    /// walking in (BeginRise), throws his falx down a lane and catches it on the way back (Disc), holds you with bone hands
+    /// (the grasp: Whip with whipGrasp), leaps and throws twice in phase 3, and the first time he reaches 0 HP lies as
+    /// remains for a few seconds (State.Remains): destroy them or he rises again. The Colosseum's Hypogeum reads his Phase,
+    /// CurrentState, Position, GuardWaves and Defeated; he never calls it. Telegraphs are orange-red
+    /// (EnemyManager.telegraphColor). Central tick, no allocation after Begin.
     /// </summary>
     public sealed class BossController : MonoBehaviour, ITickable
     {
-        public enum State : byte { Idle, Entering, Roaring, Chase, Windup, Strike, Recover, Enraging, Stunned, Dead }
+        /// <summary>Appended only (Remains after Dead): tests and the hypogeum compare these.</summary>
+        public enum State : byte { Idle, Entering, Roaring, Chase, Windup, Strike, Recover, Enraging, Stunned, Dead, Remains }
+
+        /// <summary>The HP floor that keeps a false-death boss alive until his remains (EnemyManager.SetHpFloor).</summary>
+        const float HpFloor = 1f;
+        /// <summary>Seconds his remains can't be hurt as he collapses (a hit that killed him mustn't also end them).</summary>
+        const float RemainsGrace = 0.4f;
+        /// <summary>The bone-white ring round his remains (m).</summary>
+        const float RemainsRing = 2.2f;
+        /// <summary>The falx is caught within this of his hand (m).</summary>
+        const float CatchDistance = 0.6f;
 
         public static BossController Active { get; private set; }
 
@@ -62,6 +76,18 @@ namespace Gladiator.Gameplay
         Quaternion _spearBind, _wingLBind, _wingRBind;
         float _spearTilt, _spearGoal, _flap;
         readonly int[] _nearGates = new int[8];
+        // the Eternal Victor's falx (R2-char-art: a child of ArmR, pivot at the grip): it flies alone for the throw, in
+        // world space, spinning about its own middle, then back to his hand; the rest of the time it's held at its bind
+        Transform _falx;
+        Quaternion _falxBind, _falxRelease;
+        Vector3 _falxBindPos, _falxCenter, _falxOffset;
+        Vector3 _discPos, _discFrom, _discDir;
+        float _discOut, _discSpinT, _discAge;
+        bool _discFlying, _discBack, _discHitOut, _discHitBack;
+        int _discsLeft;
+        // the rise (BeginRise) and the false death
+        bool _rising, _remainsGrace, _quietRoar;
+        float _riseFrom, _riseGround, _shoveCd;
         PlayerHealth _health;
         PlayerMotor _motor;
         Transform _player;
@@ -94,8 +120,29 @@ namespace Gladiator.Gameplay
         public int Charges { get; private set; }
         /// <summary>How long the current state lasts (s): a wind-up's length after the phase's speed (tests).</summary>
         public float StateDuration => _dur;
+        /// <summary>He's rising from below at the arena's centre (entranceRise; CurrentState is Entering meanwhile).</summary>
+        public bool Rising => _rising && _state == State.Entering;
+        /// <summary>The falx is out of his hands (thrown, on its way out or back) and where it is (tests).</summary>
+        public bool DiscFlying => _discFlying;
+        public bool DiscReturning => _discFlying && _discBack;
+        public Vector3 DiscPosition => _discFlying ? _discPos : Hand;
+        /// <summary>Falx throws (chained ones included), hits on the player (out and back count apart), and throws that
+        /// turned back early on stone (bot log, tests).</summary>
+        public int DiscsThrown { get; private set; }
+        public int DiscHits { get; private set; }
+        public int DiscsStopped { get; private set; }
+        /// <summary>Grasps of the Dead that caught the player (whipGrasp).</summary>
+        public int Grasps { get; private set; }
+        /// <summary>He lies as remains (falseDeath): Defeated stays false until they're destroyed.</summary>
+        public bool InRemains => _state == State.Remains;
+        /// <summary>Times he collapsed into remains, rose from them, and hit the player with the rising burst (bot log).</summary>
+        public int FalseDeaths { get; private set; }
+        public int RemainsRisen { get; private set; }
+        public int RiseBurstHits { get; private set; }
 
         float Speed => _phase >= 3 ? def.phase3Speed : _phase == 2 ? def.enrageSpeed : 1f;
+        /// <summary>His last phase: the false death waits for it.</summary>
+        int LastPhase => def.phase3At > 0f ? 3 : 2;
         float MoveSpeed => _phase >= 3 && def.phase3MoveSpeed > 0f ? def.phase3MoveSpeed : _phase >= 2 ? def.enragedMoveSpeed : def.moveSpeed;
         Color Danger => _em != null ? _em.telegraphColor : new Color(1f, 0.22f, 0.06f, 0.95f);
 
@@ -110,17 +157,54 @@ namespace Gladiator.Gameplay
         /// <summary>Gorm walks in through the gate at `gate` heading `inward`. Returns false if he can't spawn.</summary>
         public bool Begin(Vector3 gate, Vector3 inward)
         {
-            _em = EnemyManager.Instance;
-            if (_em == null || def == null || def.enemy == null) return false;
             inward.y = 0f;
             inward.Normalize();
-            _pos = gate + inward * 0.4f;
+            if (!SpawnBody(gate + inward * 0.4f, Mathf.Atan2(inward.x, inward.z) * Mathf.Rad2Deg)) return false;
+            _entryEnd = gate + inward * 7.5f;
+            if (def.beastPack.y > 0 && BeastCages.Instance != null) BeastCages.Instance.RattleAll(entranceWalk + entranceRoar); // every pen shakes
+            Enter(State.Entering, entranceWalk);
+            return true;
+        }
+
+        /// <summary>
+        /// The Eternal Victor rises at `at` (the Colosseum's stage lift, BossFight passes the arena's centre): he starts
+        /// riseDepth below the ground there and comes up over riseTime, kneeling, then straightens; then the usual roar
+        /// (the falx raised: the salute). Invulnerable and harmless meanwhile, as a gate entrance; a player standing over
+        /// the lift is shoved off. The Hypogeum moves the lift's platform with his Position. False if he can't spawn.
+        /// </summary>
+        public bool BeginRise(Vector3 at)
+        {
+            var em = EnemyManager.Instance;
+            if (em == null || def == null) return false;
+            float ground = em.Height != null ? em.Height.Sample(at.x, at.z) : at.y;
+            Vector3 to = Player.Main != null ? Flat(Player.Main.transform.position - at) : Vector3.zero;
+            float yaw = to.sqrMagnitude > 1e-4f ? Mathf.Atan2(to.x, to.z) * Mathf.Rad2Deg : 0f;
+            if (!SpawnBody(new Vector3(at.x, ground - def.riseDepth, at.z), yaw)) return false;
+            _rising = true;
+            _riseGround = ground;
+            _riseFrom = _pos.y;
+            _entryEnd = _pos;
+            _shoveCd = 0f;
+            _em.SetScripted(_slot, _pos, _yaw, false); // below the deck from the first frame (Spawn put him on the ground)
+            var root = _em.GetViewRoot(_slot);
+            if (root != null) root.SetPositionAndRotation(_pos, Quaternion.Euler(0f, _yaw, 0f));
+            SfxPlayer.Play(SfxId.Gate, new Vector3(at.x, ground, at.z)); // the lift's machinery below
+            Enter(State.Entering, def.riseTime);
+            return true;
+        }
+
+        /// <summary>His body (a Scripted enemy) at `at`, invulnerable, facing `yaw`, with his drivable parts found.</summary>
+        bool SpawnBody(Vector3 at, float yaw)
+        {
+            _em = EnemyManager.Instance;
+            if (_em == null || def == null || def.enemy == null) return false;
+            _pos = at;
             _slot = _em.Spawn(def.enemy, _pos);
             if (_slot < 0) return false;
             _uid = _em.GetUid(_slot);
             _em.SetInvulnerable(_slot, true);
-            _yaw = Mathf.Atan2(inward.x, inward.z) * Mathf.Rad2Deg;
-            _entryEnd = gate + inward * 7.5f;
+            if (def.falseDeath) _em.SetHpFloor(_slot, HpFloor); // R2-STUB(enemies): a lethal hit in any phase leaves him at 1 HP for his remains
+            _yaw = yaw;
             _rig = _em.GetRig(_slot);
             var root = _em.GetViewRoot(_slot);
             _flail = Find(root, "Flail");
@@ -132,15 +216,30 @@ namespace Gladiator.Gameplay
             _wingR = Find(root, "WingR");
             if (_wingR != null) _wingRBind = _wingR.localRotation;
             _spearTilt = _spearGoal = _flap = 0f;
+            FindFalx(root);
             FindBearerLegs(root);
             _guarded = false;
             _phase = 1;
             _enrageTo = 2;
+            _rising = _remainsGrace = false;
+            _discsLeft = 0;
             Defeated = false;
             Active = this;
-            if (def.beastPack.y > 0 && BeastCages.Instance != null) BeastCages.Instance.RattleAll(entranceWalk + entranceRoar); // every pen shakes
-            Enter(State.Entering, entranceWalk);
             return true;
+        }
+
+        /// <summary>The part that flies for the Falx Throw (def.discPart), its bind pose, and its middle in its own space
+        /// (it spins about that, not about the grip).</summary>
+        void FindFalx(Transform root)
+        {
+            _discFlying = false;
+            _falx = string.IsNullOrEmpty(def.discPart) ? null : Find(root, def.discPart);
+            if (_falx == null) return;
+            _falxBind = _falx.localRotation;
+            _falxBindPos = _falx.localPosition;
+            var mf = _falx.GetComponentInChildren<MeshFilter>(true);
+            _falxCenter = mf != null && mf.sharedMesh != null
+                ? _falx.InverseTransformPoint(mf.transform.TransformPoint(mf.sharedMesh.bounds.center)) : Vector3.zero;
         }
 
         static Transform Find(Transform t, string name)
@@ -162,10 +261,11 @@ namespace Gladiator.Gameplay
             _dur = Mathf.Max(0.01f, duration);
         }
 
-        /// <summary>Starts `attack` now (tests, admin). Ignored while entering, enraging or dead.</summary>
+        /// <summary>Starts `attack` now (tests, admin). Ignored while entering, enraging, lying as remains or dead.</summary>
         public void ForceAttack(BossAttack attack)
         {
-            if (_state == State.Entering || _state == State.Roaring || _state == State.Enraging || _state == State.Dead) return;
+            if (_state == State.Entering || _state == State.Roaring || _state == State.Enraging || _state == State.Dead || _state == State.Remains) return;
+            if (_discFlying) CatchFalx(); // a forced attack mid-throw: the falx is back in his hands
             StartAttack(attack);
         }
 
@@ -201,7 +301,7 @@ namespace Gladiator.Gameplay
             _goal = PartPose.Identity;
             _spearGoal = 0f;
 
-            bool busy = _state == State.Entering || _state == State.Roaring || _state == State.Enraging;
+            bool busy = _state == State.Entering || _state == State.Roaring || _state == State.Enraging || _state == State.Remains;
             int enrage = busy ? 0 : _phase == 1 && Hp01 <= def.phase2At ? 2
                        : _phase == 2 && def.phase3At > 0f && Hp01 <= def.phase3At ? 3 : 0; // a hit past both: P2's roar, then P3's
             if (enrage > 0)
@@ -209,13 +309,20 @@ namespace Gladiator.Gameplay
                 BeginEnrage(enrage);
                 u = 0f; // the roar starts now (u was the previous state's: a long chase would end the roar this frame)
             }
+            else if (!busy && def.falseDeath && FalseDeaths == 0 && _phase >= LastPhase && _em.GetHp(_slot) <= HpFloor + 0.01f)
+            {
+                EnterRemains(); // "HE WILL NOT STAY DOWN!"
+                u = 0f;
+            }
 
             switch (_state)
             {
                 case State.Entering:
-                    Walk(_entryEnd, def.moveSpeed * 0.8f, dt);
-                    if (u >= 1f || Flat(_entryEnd - _pos).sqrMagnitude < 0.3f)
+                    if (_rising) RiseTick(u, pp, dt);
+                    else Walk(_entryEnd, def.moveSpeed * 0.8f, dt);
+                    if (u >= 1f || (!_rising && Flat(_entryEnd - _pos).sqrMagnitude < 0.3f))
                     {
+                        if (_rising) Risen();
                         Enter(State.Roaring, entranceRoar);
                         SfxPlayer.Play2D(SfxId.BossRoar);
                         ScreenShake.Add(0.4f);
@@ -233,17 +340,20 @@ namespace Gladiator.Gameplay
                     if (u >= 1f)
                     {
                         _phase = _enrageTo;
-                        if (_phase == 2 && def.phase2FireRing) LightTheFence();
+                        bool extras = !_quietRoar; // the roar as he rises from his remains: none of the phase's extras again
+                        _quietRoar = false;
+                        if (extras && _phase == 2 && def.phase2FireRing) LightTheFence();
                         _em.SetInvulnerable(_slot, false);
                         Enter(State.Chase, 0.5f);
                         _chaseMin = 0.5f;
-                        if (_phase > 1 && _phase == def.guardsFromPhase) CallGuards(); // "Praetorians, to me!": the first wave as the roar ends
+                        if (extras && _phase > 1 && _phase == def.guardsFromPhase) CallGuards(); // "Praetorians, to me!": the first wave as the roar ends
                     }
                     break;
                 case State.Chase:
                 {
                     float d = Flat(pp - _pos).magnitude;
                     bool far = def.closeInRange > 0f && d > def.closeInRange; // he strides in instead of attacking at nothing
+                    if (_falx != null) { _goal.ArmR = new Vector3(-25f, 0f, -15f); _goal.ArmL = new Vector3(-45f, 0f, 30f); } // the falx held low across his body
                     if (d > def.enemy.radius + 1.2f) Walk(pp, far ? Mathf.Max(def.closeInSpeed, MoveSpeed) : MoveSpeed, dt);
                     else Face(pp, dt);
                     if (_t >= _chaseMin && !far)
@@ -263,7 +373,7 @@ namespace Gladiator.Gameplay
                 }
                 case State.Strike:
                     StrikeTick(pp, u, dt);
-                    if (u >= 1f && _attack != BossAttack.Charge && _attack != BossAttack.Pounce)
+                    if (u >= 1f && _attack != BossAttack.Charge && _attack != BossAttack.Pounce && _attack != BossAttack.Disc)
                     {
                         if (_attack == BossAttack.Flurry && _flurryLeft > 0) { _flurryLeft--; StartAttack(BossAttack.Flurry, true); } // re-aims
                         else { AttacksDone++; _last = _attack; Enter(State.Recover, def.recover / Speed); }
@@ -279,16 +389,21 @@ namespace Gladiator.Gameplay
                     _goal.ArmL = new Vector3(25f, 0f, 30f); // guard down
                     if (u >= 1f) { EndStun(); AttacksDone++; _last = _attack; _attack = BossAttack.None; Enter(State.Recover, def.recover / Speed); }
                     break;
+                case State.Remains:
+                    RemainsTick(pp, u, tele);
+                    break;
             }
 
+            if (_discFlying) FalxTick(pp, dt, tele); // it comes back even if he roars meanwhile
             // the guard clock runs through the whole fight from guardsFromPhase (not just between attacks: a boss that
-            // attacks back to back would never call them), but not during his entrance or a phase roar
-            if (_state != State.Entering && _state != State.Roaring && _state != State.Enraging && _phase >= def.guardsFromPhase) GuardsClock(dt);
+            // attacks back to back would never call them), but not during his entrance, a phase roar or his remains
+            if (_state != State.Entering && _state != State.Roaring && _state != State.Enraging && _state != State.Remains
+                && _phase >= def.guardsFromPhase) GuardsClock(dt);
             if (def.guardedBy != null) Payroll(tele, dt);
             ShieldUp = def.enemy.blockArc > 0f && _state != State.Stunned && _state != State.Entering;
             _em.SetScriptedShield(_slot, ShieldUp);
             bool leaping = _state == State.Strike && _attack == BossAttack.Pounce; // in the air: the landing is the hit
-            if (!leaping) Contact(pp, dt);
+            if (!leaping && _state != State.Remains) Contact(pp, dt);
             _em.SetScripted(_slot, _pos, _yaw, _state == State.Windup);
             Animate(dt);
         }
@@ -366,6 +481,7 @@ namespace Gladiator.Gameplay
             BossAttack.Pounce => d > 3f ? 2.2f : 0.4f,
             BossAttack.CoinBombs => d > 2.5f ? 2.4f : 0.6f,
             BossAttack.Volley => d > 4f && d < def.volleyRange * 0.8f ? 2.6f : 0f,
+            BossAttack.Disc => d > 4f && d < def.discLength * 0.9f ? 2.4f : 0f,
             _ => 0f,
         };
 
@@ -400,7 +516,8 @@ namespace Gladiator.Gameplay
             {
                 _flurryLeft = a == BossAttack.Flurry ? Mathf.Max(1, _phase >= 2 ? def.flurryThrusts.y : def.flurryThrusts.x) - 1 : 0;
                 _chargesLeft = a == BossAttack.Charge ? Mathf.Max(1, ChargeRepeats) - 1 : 0;
-                _pouncesLeft = a == BossAttack.Pounce ? Mathf.Max(1, _phase >= 2 ? def.pounceRepeats.y : def.pounceRepeats.x) - 1 : 0;
+                _pouncesLeft = a == BossAttack.Pounce ? Mathf.Max(1, PounceRepeats) - 1 : 0;
+                _discsLeft = a == BossAttack.Disc ? Mathf.Max(1, DiscRepeats) - 1 : 0;
             }
             _attack = a;
             Vector3 pp = _player != null ? _player.position : _pos + Vector3.forward;
@@ -418,6 +535,7 @@ namespace Gladiator.Gameplay
                 BossAttack.Pounce => def.pounceWindup,
                 BossAttack.CoinBombs => def.bombWindup,
                 BossAttack.Volley => def.volleyWindup,
+                BossAttack.Disc => def.discWindup,
                 _ => def.chargeWindup,
             };
             Enter(State.Windup, w / Speed);
@@ -447,11 +565,14 @@ namespace Gladiator.Gameplay
             BossAttack.Pounce => PounceFlight(),
             BossAttack.CoinBombs => (BombCount - 1) * def.bombInterval / Speed + 0.2f,
             BossAttack.Volley => 0.25f,
+            BossAttack.Disc => 2f * def.discLength / Mathf.Max(1f, def.discSpeed) + 1.5f, // a cap: the catch ends it
             _ => def.chargeLength / Mathf.Max(1f, def.chargeSpeed) + 0.2f,
         };
 
         float ChargeWidth => def.chargeWidth > 0f ? def.chargeWidth : def.enemy.radius * 2f;
         int ChargeRepeats => _phase >= 3 && def.phase3ChargeRepeats > 0 ? def.phase3ChargeRepeats : _phase >= 2 ? def.chargeRepeats.y : def.chargeRepeats.x;
+        int PounceRepeats => _phase >= 3 && def.phase3PounceRepeats > 0 ? def.phase3PounceRepeats : _phase >= 2 ? def.pounceRepeats.y : def.pounceRepeats.x;
+        int DiscRepeats => _phase >= 3 && def.phase3DiscRepeats > 0 ? def.phase3DiscRepeats : _phase >= 2 ? def.discRepeats.y : def.discRepeats.x;
         int BombCount => Mathf.Max(1, _phase >= 2 ? def.bombCount.y : def.bombCount.x);
         int VolleyCount => Mathf.Max(1, _phase >= 2 ? def.volleyCount.y : def.volleyCount.x);
         float VolleyArc => _phase >= 2 ? def.volleyArc.y : def.volleyArc.x;
@@ -480,11 +601,25 @@ namespace Gladiator.Gameplay
                 case BossAttack.Sweep:
                     if (tele != null) tele.Circle(_pos, def.sweepRadius, u, col, TelegraphRenderer.Style.Telegraph, 0.06f);
                     _spin += Time.deltaTime * (300f + 900f * u);
+                    if (_falx != null) // the Reaper's Circle: twisted back, the falx out low behind him
+                    {
+                        _goal.ArmR = new Vector3(-80f, 0f, -70f);
+                        _goal.ArmL = new Vector3(-65f, 0f, 45f);
+                        _goal.Body = new Vector3(8f * u, -45f * u, 0f);
+                        break;
+                    }
                     _goal.ArmR = new Vector3(-70f, 0f, -55f);
                     _goal.Body = new Vector3(0f, -25f * u, 0f);
                     break;
                 case BossAttack.Whip:
                     if (tele != null) tele.Lane(_pos, _aim, def.whipLength, def.whipWidth, u, col);
+                    if (def.whipGrasp) // Grasp of the Dead: the falx raised in both hands, to be driven into the deck
+                    {
+                        _goal.ArmL = new Vector3(-160f * u, 0f, 15f);
+                        _goal.ArmR = new Vector3(-160f * u, 0f, -15f);
+                        _goal.Body = new Vector3(-10f * u, 0f, 0f);
+                        break;
+                    }
                     if (_spear != null) // the Spear Thrust: the spear arm drawn back, the blade levelled down the lane
                     {
                         _goal.ArmR = new Vector3(25f * u, 0f, 0f);
@@ -515,8 +650,15 @@ namespace Gladiator.Gameplay
                     break;
                 case BossAttack.Flurry:
                     if (tele != null) tele.Lane(_pos, _aim, def.flurryLength, def.flurryWidth, u, col);
-                    _goal.ArmR = new Vector3(35f * u, 0f, 0f); // sword drawn back
+                    if (_falx != null) _goal.ArmL = new Vector3(35f * u, 0f, 15f); // the Victor's Lunges: both hands on the haft
+                    _goal.ArmR = new Vector3(35f * u, 0f, _falx != null ? -15f : 0f); // sword drawn back
                     _goal.Body = new Vector3(0f, -18f * u, 0f);
+                    break;
+                case BossAttack.Disc:
+                    if (tele != null) tele.Lane(_pos, _aim, def.discLength, def.discWidth, u, col);
+                    _goal.ArmR = new Vector3(-150f * u, 0f, -35f); // the falx drawn back high
+                    _goal.ArmL = new Vector3(-40f * u, 0f, 30f);
+                    _goal.Body = new Vector3(-8f * u, -35f * u, 0f); // twisted
                     break;
                 case BossAttack.CoinBombs:
                     _goal.ArmR = new Vector3(-150f * u, 0f, -20f); // the purse drawn back over his shoulder
@@ -571,8 +713,18 @@ namespace Gladiator.Gameplay
                     float side = (rel - _aim * along).magnitude;
                     if (along > -0.5f && along < def.whipLength + playerRadius && side < def.whipWidth * 0.5f + playerRadius)
                     {
-                        HitPlayer(def.whipDamage, _aim, 3f);
+                        bool landed = HitPlayer(def.whipDamage, _aim, 3f);
                         if (_motor != null && def.whipSlow < 1f && def.whipSlowSeconds > 0f) _motor.Slow(def.whipSlow, def.whipSlowSeconds); // the spear doesn't slow
+                        if (landed && def.whipGrasp) Grasps++; // held (whipSlow 0.1)
+                    }
+                    if (def.whipGrasp) // Grasp of the Dead: bone hands burst up all along the lane (not the crack)
+                    {
+                        if (burst != null)
+                            for (int k = 0; k < 6; k++)
+                                burst.Burst(_pos + _aim * (def.whipLength * (k + 0.5f) / 6f) + Vector3.up * 0.2f, 8, 4.5f, 0.18f, def.remainsColor, Color.white);
+                        SfxPlayer.Play(SfxId.Slam, _pos + _aim * (def.whipLength * 0.5f));
+                        ScreenShake.Add(0.15f);
+                        break;
                     }
                     if (burst != null) burst.Burst(_pos + _aim * def.whipLength + Vector3.up * 0.3f, 8, 4f, 0.15f, Danger, Color.white);
                     SfxPlayer.Play(SfxId.Crit, _pos + _aim * (def.whipLength * 0.5f));
@@ -634,6 +786,9 @@ namespace Gladiator.Gameplay
                 case BossAttack.Charge:
                     Charges++;
                     break;
+                case BossAttack.Disc:
+                    ThrowFalx();
+                    break;
                 case BossAttack.Flurry:
                 {
                     Vector3 rel = Flat(pp - _pos);
@@ -654,10 +809,25 @@ namespace Gladiator.Gameplay
             {
                 case BossAttack.Sweep:
                     _spin += dt * 1500f;
+                    if (_falx != null) // a full turn of his whole body with the falx out at knee height (StrikeTime 0.3 s)
+                    {
+                        _yaw += dt * 360f / 0.3f;
+                        _goal.ArmR = new Vector3(-85f, 0f, -85f);
+                        _goal.ArmL = new Vector3(-80f, 0f, 60f);
+                        _goal.Body = new Vector3(15f, 0f, 0f);
+                        break;
+                    }
                     _goal.ArmR = new Vector3(-80f, 0f, -80f);
                     _goal.Body = new Vector3(0f, 40f, 0f);
                     break;
                 case BossAttack.Whip:
+                    if (def.whipGrasp) // the falx driven into the deck, leaning into it
+                    {
+                        _goal.ArmL = new Vector3(-50f, 0f, 10f);
+                        _goal.ArmR = new Vector3(-50f, 0f, -10f);
+                        _goal.Body = new Vector3(35f, 0f, 0f);
+                        break;
+                    }
                     if (_spear != null) // lunged down the lane, the blade level
                     {
                         _goal.ArmR = new Vector3(-55f, 0f, 0f);
@@ -677,8 +847,23 @@ namespace Gladiator.Gameplay
                     _goal.Body = new Vector3(15f, 12f, 0f);
                     break;
                 case BossAttack.Flurry:
-                    _goal.ArmR = new Vector3(-90f, 0f, 0f); // thrust
+                    if (_falx != null) _goal.ArmL = new Vector3(-90f, 0f, 12f); // both arms thrust
+                    _goal.ArmR = new Vector3(-90f, 0f, _falx != null ? -12f : 0f); // thrust
                     _goal.Body = new Vector3(8f, 15f, 0f);
+                    break;
+                case BossAttack.Disc:
+                    // empty-handed, facing the falx until it's back: the window to hit him; then again (re-aimed) or recover
+                    if (_discFlying && u >= 1f) CatchFalx(); // a cap, should it never find his hand
+                    if (_discFlying)
+                    {
+                        Face(_discPos, dt);
+                        _goal.ArmR = new Vector3(_discBack ? -70f : -85f, 0f, -20f); // flung, then reaching for it
+                        _goal.ArmL = new Vector3(-20f, 0f, 25f);
+                        _goal.Body = new Vector3(10f, 20f, 0f);
+                        break;
+                    }
+                    if (_discsLeft > 0) { _discsLeft--; StartAttack(BossAttack.Disc, true); } // phase 3: again
+                    else { AttacksDone++; _last = BossAttack.Disc; Enter(State.Recover, def.recover / Speed); }
                     break;
                 case BossAttack.CoinBombs:
                 {
@@ -805,13 +990,214 @@ namespace Gladiator.Gameplay
             if (_state == State.Stunned && _slot >= 0) _em.SetDamageTakenMul(_slot, 1f);
         }
 
-        void HitPlayer(float damage, Vector3 dir, float knockback)
+        /// <summary>True if the hit landed (not dodged by the player's invulnerability).</summary>
+        bool HitPlayer(float damage, Vector3 dir, float knockback)
         {
-            if (_health == null) return;
+            if (_health == null) return false;
             dir.y = 0f;
-            if (_health.TakeDamage(new DamageInfo { Amount = damage, Flags = DamageFlags.Melee, Point = _player.position, Direction = dir })
-                && _motor != null && knockback > 0f)
-                _motor.AddImpulse(dir * knockback + Vector3.up * knockback * 0.45f);
+            if (!_health.TakeDamage(new DamageInfo { Amount = damage, Flags = DamageFlags.Melee, Point = _player.position, Direction = dir })) return false;
+            if (_motor != null && knockback > 0f) _motor.AddImpulse(dir * knockback + Vector3.up * knockback * 0.45f);
+            return true;
+        }
+
+        /// <summary>Feet height above the ground under `pp` (a jump clears the circle attacks).</summary>
+        float FeetAbove(Vector3 pp) => _player != null ? _player.position.y - (_em.Height != null ? _em.Height.Sample(pp.x, pp.z) : 0f) : 0f;
+
+        // ---------- the falx (the Eternal Victor) ----------
+
+        /// <summary>He hurls the falx down the lane from his hand: it flies out in world space (FalxTick).</summary>
+        void ThrowFalx()
+        {
+            _discFrom = _pos;
+            _discPos = Hand;
+            _discDir = _aim;
+            _discOut = _discSpinT = _discAge = 0f;
+            _discBack = _discHitOut = _discHitBack = false;
+            _discFlying = true;
+            _falxOffset = Vector3.zero;
+            if (_falx != null)
+            {
+                _falxRelease = _falx.rotation;
+                _falxOffset = _falx.TransformPoint(_falxCenter) - _discPos; // drawn from where it was, easing onto its path
+            }
+            DiscsThrown++;
+            SfxPlayer.Play(SfxId.Throw, _pos);
+        }
+
+        /// <summary>
+        /// The thrown falx, every frame while it's out (whatever his state): out along the lane at discSpeed until it has
+        /// gone discLength or meets stone (an obstacle or the arena's edge; pits don't count), then back to his hand,
+        /// caught within CatchDistance. The player within discWidth / 2 of its path and not more than 2 m above it is hit
+        /// once on the way out and once on the way back (it can't be jumped). The lane stays lit while it's out.
+        /// </summary>
+        void FalxTick(Vector3 pp, float dt, TelegraphRenderer tele)
+        {
+            Vector3 prev = _discPos;
+            bool back = _discBack; // this frame's leg (a turn on stone this frame still counts as the way out)
+            float step = def.discSpeed * dt;
+            Vector3 dir = _discDir;
+            _discAge += dt;
+            _discSpinT += def.discSpin * dt;
+            if (!back)
+            {
+                _discPos += _discDir * step;
+                _discOut += step;
+                bool stone = (_em.Obstacles != null && _em.Obstacles.Overlaps(new Vector2(_discPos.x, _discPos.z), 0.4f))
+                             || _em.EdgeDistance01(_discPos) > 1f;
+                if (stone)
+                {
+                    _discBack = true;
+                    DiscsStopped++;
+                    if (_em.deathPop != null) _em.deathPop.Burst(_discPos, 14, 6f, 0.14f, Color.white, new Color(1f, 0.86f, 0.4f));
+                    SfxPlayer.Play(SfxId.Blocked, _discPos);
+                }
+                else if (_discOut >= def.discLength) _discBack = true;
+            }
+            else
+            {
+                Vector3 to = Hand - _discPos;
+                float len = to.magnitude;
+                if (len <= CatchDistance + step) { CatchFalx(); SfxPlayer.Play(SfxId.Swing, _pos); return; } // caught
+                dir = to / len;
+                _discPos += dir * step;
+            }
+            if (tele != null) // its lane stays lit until it's back: stay out of it
+                tele.Lane(_discFrom, _discDir, _discBack ? Mathf.Max(0.5f, _discOut) : def.discLength, def.discWidth, 1f, Danger, 0.08f);
+            if (back ? _discHitBack : _discHitOut) return;
+            float dy = pp.y - _discPos.y;
+            if (dy < 2f && dy > -1.8f && SegmentDistanceXZ(prev, _discPos, pp) < def.discWidth * 0.5f + playerRadius)
+            {
+                if (back) _discHitBack = true; else _discHitOut = true;
+                if (HitPlayer(def.discDamage, Flat(dir), def.discKnockback)) DiscHits++;
+            }
+        }
+
+        /// <summary>The falx is in his hands again (caught, or snapped back by his remains, a forced attack or his death).</summary>
+        void CatchFalx()
+        {
+            _discFlying = _discBack = false;
+            if (_falx == null) return;
+            _falx.localPosition = _falxBindPos;
+            _falx.localRotation = _falxBind;
+        }
+
+        /// <summary>Distance in XZ from `p` to the segment a → b.</summary>
+        static float SegmentDistanceXZ(Vector3 a, Vector3 b, Vector3 p)
+        {
+            float abx = b.x - a.x, abz = b.z - a.z, apx = p.x - a.x, apz = p.z - a.z;
+            float len2 = abx * abx + abz * abz;
+            float t = len2 > 1e-8f ? Mathf.Clamp01((apx * abx + apz * abz) / len2) : 0f;
+            float dx = apx - abx * t, dz = apz - abz * t;
+            return Mathf.Sqrt(dx * dx + dz * dz);
+        }
+
+        // ---------- the rise and the false death (the Eternal Victor) ----------
+
+        /// <summary>Rising from below (BeginRise): eased up to the ground, kneeling, straightening over the last 40 %; a
+        /// player standing over the lift is shoved off (no damage).</summary>
+        void RiseTick(float u, Vector3 pp, float dt)
+        {
+            _pos.y = Mathf.Lerp(_riseFrom, _riseGround, u * u * (3f - 2f * u));
+            Face(pp, dt * 0.35f);
+            float k = Mathf.Clamp01((u - 0.6f) / 0.4f);
+            float kneel = 1f - k * k * (3f - 2f * k);
+            _goal.Body = new Vector3(30f * kneel, 0f, 0f);
+            _goal.Head = new Vector3(25f * kneel, 0f, 0f);
+            _goal.LegL = new Vector3(-80f * kneel, 0f, 0f); // one knee up...
+            _goal.LegR = new Vector3(35f * kneel, 0f, 0f); // ...the other back on the deck
+            _goal.RootY = -0.7f * kneel;
+            _goal.ArmL = new Vector3(-35f * kneel, 0f, 20f * kneel); // the falx across his knees
+            _goal.ArmR = new Vector3(-35f * kneel, 0f, -20f * kneel);
+            _shoveCd -= dt;
+            Vector3 d = Flat(pp - _pos);
+            if (_motor != null && _shoveCd <= 0f && d.sqrMagnitude < 2.9f * 2.9f && Mathf.Abs(pp.y - _riseGround) < 0.8f)
+            {
+                float m = d.magnitude;
+                _motor.AddImpulse((m > 0.05f ? d / m : Quaternion.Euler(0f, _yaw, 0f) * Vector3.forward) * 9f + Vector3.up * 4f);
+                _shoveCd = 0.35f;
+            }
+        }
+
+        /// <summary>He's up: on the ground, dust round the lift.</summary>
+        void Risen()
+        {
+            _rising = false;
+            _pos.y = _riseGround;
+            if (_em.deathPop != null) _em.deathPop.Burst(_pos + Vector3.up * 0.3f, 26, 7f, 0.25f, new Color(0.62f, 0.52f, 0.38f), new Color(0.89f, 0.84f, 0.74f));
+            SfxPlayer.Play(SfxId.Slam, _pos);
+        }
+
+        /// <summary>
+        /// The first 0 HP of his last phase (falseDeath): he collapses into a heap of bronze and bone with remainsHp for
+        /// remainsTime. Killed in time → Die as usual; else RiseFromRemains. The HP floor goes, so the next 0 HP is final.
+        /// </summary>
+        void EnterRemains()
+        {
+            if (_discFlying) CatchFalx();
+            EndStun();
+            _em.SetHpFloor(_slot, 0f); // R2-STUB(enemies)
+            _em.SetHp(_slot, def.remainsHp); // R2-STUB(enemies)
+            _em.SetInvulnerable(_slot, true); // a moment's grace: the blow that felled him doesn't also end his remains
+            _remainsGrace = true;
+            Step(Vector3.zero); // on the ground (mid-leap he drops where he is)
+            _attack = BossAttack.None;
+            _flurryLeft = _chargesLeft = _pouncesLeft = _discsLeft = _bombsLeft = 0;
+            Enter(State.Remains, def.remainsTime);
+            FalseDeaths++;
+            if (!string.IsNullOrEmpty(def.remainsText))
+                GameEvents.OnAnnounce.Raise(new AnnounceEvent { Kind = AnnounceKind.BossPhase, Text = def.remainsText, Color = def.remainsColor, Seconds = 2.5f });
+            if (_em.deathPop != null) _em.deathPop.Burst(_pos + Vector3.up * 1f, 36, 7f, 0.26f, def.remainsColor, new Color(0.62f, 0.5f, 0.3f));
+            SfxPlayer.Play(SfxId.Splinter, _pos);
+            ScreenShake.Add(0.4f);
+            if (CrowdExcitement.Instance != null) CrowdExcitement.Instance.Spike(1f);
+        }
+
+        /// <summary>His remains: a heap, still and harmless; a bone ring round them fills over remainsTime and, in its last
+        /// riseBurstWarn, an orange-red circle under him warns that he's rising.</summary>
+        void RemainsTick(Vector3 pp, float u, TelegraphRenderer tele)
+        {
+            if (_remainsGrace && _t >= RemainsGrace) { _remainsGrace = false; _em.SetInvulnerable(_slot, false); }
+            float left = _dur - _t;
+            float warn = Mathf.Min(def.riseBurstWarn, _dur);
+            if (tele != null)
+            {
+                tele.Circle(_pos, RemainsRing, u, def.remainsColor, TelegraphRenderer.Style.Ring, 0.08f);
+                if (warn > 0f && left <= warn) tele.Circle(_pos, def.riseBurstRadius, 1f - left / warn, Danger, TelegraphRenderer.Style.Telegraph, 0.07f);
+            }
+            _goal.Body = new Vector3(80f, 0f, 0f); // folded forward
+            _goal.Head = new Vector3(40f, 0f, 0f); // head down
+            _goal.ArmL = new Vector3(-20f, 0f, 75f); // arms out
+            _goal.ArmR = new Vector3(-20f, 0f, -75f);
+            _goal.LegL = new Vector3(-70f, 0f, 20f);
+            _goal.LegR = new Vector3(-70f, 0f, -20f);
+            _goal.RootY = -1.1f;
+            if (warn > 0f && left <= warn) _goal.RootScale = Vector3.one * (1f + 0.04f * Mathf.Sin(_clock * 40f)); // stirring
+            if (u >= 1f) RiseFromRemains(pp);
+        }
+
+        /// <summary>"NOT YET.": up with riseHp01 of his HP, a burst that throws back anyone close, and a roar (no phase text,
+        /// no arena extras), then the fight goes on in the same phase.</summary>
+        void RiseFromRemains(Vector3 pp)
+        {
+            _remainsGrace = false;
+            _em.SetHp(_slot, _em.GetMaxHp(_slot) * def.riseHp01); // R2-STUB(enemies)
+            RemainsRisen++;
+            Vector3 d = Flat(pp - _pos);
+            float reach = def.riseBurstRadius + playerRadius;
+            if (d.sqrMagnitude < reach * reach && FeetAbove(pp) < 0.6f
+                && HitPlayer(def.riseBurstDamage, d.sqrMagnitude > 1e-4f ? d.normalized : _aim, def.riseBurstKnockback))
+                RiseBurstHits++;
+            if (_em.deathPop != null) _em.deathPop.Burst(_pos + Vector3.up * 0.6f, 32, 9f, 0.26f, def.remainsColor, Danger);
+            SfxPlayer.Play(SfxId.Slam, _pos);
+            if (!string.IsNullOrEmpty(def.riseText))
+                GameEvents.OnAnnounce.Raise(new AnnounceEvent { Kind = AnnounceKind.BossPhase, Text = def.riseText, Color = Danger, Seconds = 2.2f });
+            _em.SetInvulnerable(_slot, true);
+            Enter(State.Enraging, def.enrageRoar);
+            _enrageTo = _phase; // the roar ends back in this phase
+            _quietRoar = true; // no guards, fence or other phase extras
+            SfxPlayer.Play2D(SfxId.BossRoar);
+            if (CrowdExcitement.Instance != null) CrowdExcitement.Instance.Spike(1f);
+            ScreenShake.Add(0.45f);
         }
 
         void Contact(Vector3 pp, float dt)
@@ -984,6 +1370,8 @@ namespace Gladiator.Gameplay
             _state = State.Dead;
             Defeated = true;
             _slot = -1;
+            _rising = false;
+            if (_discFlying) CatchFalx(); // his view goes back to the pool with the falx in its hand
             if (def.defeatGold > 0) // his fortune bursts out of the litter
             {
                 if (RunState.Current != null) RunState.Current.AddGold(def.defeatGold);
@@ -1007,12 +1395,17 @@ namespace Gladiator.Gameplay
                 _goal.ArmR = new Vector3(-150f, 0f, -10f);
                 _spearGoal = -_goal.ArmR.x;
             }
+            if (_falx != null) // the falx raised high: the salute
+            {
+                _goal.ArmR = new Vector3(-170f, 0f, -10f);
+                _goal.ArmL = new Vector3(-30f, 0f, 35f);
+            }
         }
 
         void Animate(float dt)
         {
             if (_rig == null || !_rig.IsValid) return;
-            bool walking = _state == State.Chase || _state == State.Entering || (_state == State.Strike && _attack == BossAttack.Charge);
+            bool walking = _state == State.Chase || (_state == State.Entering && !_rising) || (_state == State.Strike && _attack == BossAttack.Charge);
             if (walking)
             {
                 float s = Mathf.Sin(_walk);
@@ -1052,6 +1445,12 @@ namespace Gladiator.Gameplay
                 _flap = Mathf.Lerp(_flap, goal, 1f - Mathf.Exp(-18f * dt));
                 if (_wingL != null) _wingL.localRotation = _wingLBind * Quaternion.Euler(0f, 0f, _flap);
                 if (_wingR != null) _wingR.localRotation = _wingRBind * Quaternion.Euler(0f, 0f, -_flap);
+            }
+            if (_falx != null && _discFlying) // in flight: world space, spinning about the vertical through its middle
+            {
+                var rot = Quaternion.AngleAxis(_discSpinT, Vector3.up) * _falxRelease;
+                Vector3 mid = _discPos + _falxOffset * Mathf.Clamp01(1f - _discAge / 0.15f);
+                _falx.SetPositionAndRotation(mid - rot * Vector3.Scale(_falx.lossyScale, _falxCenter), rot);
             }
         }
     }

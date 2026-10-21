@@ -213,8 +213,10 @@ namespace Gladiator.Gameplay
                   .Append(", burned ").Append(enemies.PilesBurned).Append(", denied ").Append(enemies.PilesDenied).Append(')'); // R2-STUB(enemies)
             if (enemies != null && enemies.Breaths > 0) // R2-STUB(enemies): Breaths / BreathHits aren't named in R2-design.md
                 sb.Append(" breaths ").Append(enemies.Breaths).Append(" (hit you ").Append(enemies.BreathHits).Append(')'); // R2-STUB(enemies)
-            if (boss != null && boss.DiscsThrown + boss.FalseDeaths > 0) // R2-STUB(boss): the Eternal Victor
-                sb.Append(" falx ").Append(boss.DiscsThrown).Append(" (hit you ").Append(boss.DiscHits).Append(") falseDeaths ").Append(boss.FalseDeaths); // R2-STUB(boss)
+            if (boss != null && boss.DiscsThrown + boss.Grasps + boss.FalseDeaths > 0) // R2-STUB(boss): the Eternal Victor
+                sb.Append(" falx ").Append(boss.DiscsThrown).Append(" (hit you ").Append(boss.DiscHits).Append(", stopped ").Append(boss.DiscsStopped) // R2-STUB(boss)
+                  .Append(") grasps ").Append(boss.Grasps).Append(" falseDeaths ").Append(boss.FalseDeaths).Append(" (rose ").Append(boss.RemainsRisen) // R2-STUB(boss)
+                  .Append(", burst hit ").Append(boss.RiseBurstHits).Append(')'); // R2-STUB(boss)
             if (run != null) // Beast Handlers killed (the Beastmaster's unlock counts them; C26)
                 for (int k = 0; k < run.KilledTypeCount; k++)
                 {

@@ -180,9 +180,9 @@ namespace Gladiator.Tests
             // tier 5: Renown × 3.5 (MetaConfig.deeperArenaBonus 0.5 per tier)
             var sample = new RunSummary { Outcome = RunOutcome.Died, Elapsed = 480f, Kills = 2000 };
             int baseRenown = menu.meta.RenownFor(sample);
-            sample.ArenaIndex = 5;
-            Assert.AreEqual(Mathf.RoundToInt(menu.meta.RenownFor(new RunSummary { Outcome = RunOutcome.Died, Elapsed = 480f, Kills = 2000 }) * 3.5f), menu.meta.RenownFor(sample), 1, "Renown × 3.5");
             Assert.Greater(baseRenown, 0);
+            sample.ArenaIndex = 5;
+            Assert.AreEqual(baseRenown * 3.5f, menu.meta.RenownFor(sample), 2f, "Renown × 3.5 (each side rounds)");
 
             yield return LoadMenu();
             menu = Object.FindAnyObjectByType<Gladiator.UI.MainMenu>();
@@ -407,26 +407,34 @@ namespace Gladiator.Tests
             Assert.IsNotNull(fight);
             CollectionAssert.AreEqual(l.lifts, fight.controller.guardSpots);
 
-            // the models: a trapdoor at every door (flush, with its yaw), a lift at every lift, the Victor's in the stage
-            var doors = Named("SM_ColTrapdoor");
-            Assert.AreEqual(30, doors.Count);
-            foreach (var t in l.trapdoors)
+            // the models (the hook names them Trapdoor<d>, Lift<l>, CenterLift): flush at every door with its yaw, at
+            // every lift, the Victor's in the stage at 5 × 5 m; each the real model (its moving parts), not a stand-in
+            Assert.AreEqual(30, hyp.doors.Length);
+            for (int d = 0; d < l.trapdoors.Length; d++)
             {
-                bool found = false;
-                foreach (var m in doors)
-                    found |= Vector3.Distance(m.position, new Vector3(t.x, 0f, t.y)) < 0.05f && Mathf.Abs(Mathf.DeltaAngle(m.eulerAngles.y, t.z)) < 0.5f;
-                Assert.IsTrue(found, $"a trapdoor at ({t.x}, {t.y}) yaw {t.z}");
+                var t = l.trapdoors[d];
+                var m = hyp.doors[d];
+                Assert.IsNotNull(m, "door " + d);
+                Assert.Less(Vector3.Distance(m.position, new Vector3(t.x, 0f, t.y)), 0.05f, "door " + d + " at its hole");
+                Assert.Less(Mathf.Abs(Mathf.DeltaAngle(m.eulerAngles.y, t.z)), 0.5f, "door " + d + "'s yaw");
+                Assert.IsTrue(HasChild(m, "LeafF") && HasChild(m, "LeafB"), "door " + d + " is SM_ColTrapdoor (LeafF / LeafB)");
             }
-            var lifts = Named("SM_ColLift");
-            Assert.AreEqual(9, lifts.Count, "8 + the Victor's");
-            int atLifts = 0, centre = 0;
-            foreach (var m in lifts)
+            Assert.AreEqual(8, hyp.lifts.Length);
+            for (int k = 0; k < l.lifts.Length; k++)
             {
-                foreach (var q in l.lifts) if (Vector3.Distance(m.position, q) < 0.05f) atLifts++;
-                if (Vector3.Distance(m.position, new Vector3(0f, 1.2f, 0f)) < 0.05f) { centre++; Assert.AreEqual(1.25f, m.lossyScale.x, 0.01f, "5 × 5 m"); }
+                Assert.IsNotNull(hyp.lifts[k], "lift " + k);
+                Assert.Less(Vector3.Distance(hyp.lifts[k].position, l.lifts[k]), 0.05f, "lift " + k + " at its hole");
+                Assert.IsTrue(HasChild(hyp.lifts[k], "Platform"), "lift " + k + " is SM_ColLift (Platform)");
             }
-            Assert.AreEqual(8, atLifts);
-            Assert.AreEqual(1, centre);
+            Assert.IsNotNull(hyp.centerLift, "the Victor's lift");
+            Assert.Less(Vector3.Distance(hyp.centerLift.position, new Vector3(0f, 1.2f, 0f)), 0.05f, "in the stage, flush with its top");
+            Assert.AreEqual(1.25f, hyp.centerLift.lossyScale.x, 0.01f, "5 × 5 m");
+        }
+
+        static bool HasChild(Transform root, string name)
+        {
+            foreach (var t in root.GetComponentsInChildren<Transform>(true)) if (t.name == name) return true;
+            return false;
         }
 
         [UnityTest, Timeout(60000)]

@@ -5,8 +5,8 @@ namespace Gladiator.Gameplay
     /// <summary>
     /// A boss's tuning (docs/BOSSES.md). The body (HP, radius, model, shield arc) is its EnemyDef (behaviour Scripted);
     /// this holds his words, which attacks he uses in each phase, movement, each attack's wind-up / damage / size, the
-    /// guards he calls, what phase 2 does to the arena and the reward. Every number here is a starting guess for a
-    /// playtest. Defaults are Gorm's, so his asset predates most of these fields.
+    /// guards he calls, what phase 2 does to the arena, an optional phase 3 (the Emperor's Champion) and the reward. Every
+    /// number here is a starting guess for a playtest. Defaults are Gorm's, so his asset predates most of these fields.
     /// </summary>
     [CreateAssetMenu(menuName = "Gladiator/Boss", fileName = "BD_")]
     public sealed class BossDef : ScriptableObject
@@ -40,6 +40,9 @@ namespace Gladiator.Gameplay
         public float contactInterval = 0.8f;
         [Tooltip("Pause after each attack before he picks the next (s).")]
         public float recover = 0.7f;
+        [Tooltip("While the player is farther than this (m) he strides at closeInSpeed and doesn't attack (0 = never): a big floor mustn't be a minute of walking.")]
+        public float closeInRange;
+        public float closeInSpeed;
 
         [Header("Flail Sweep (near) — jump it or get out of the ring")]
         public float sweepRadius = 5.5f;
@@ -140,6 +143,8 @@ namespace Gladiator.Gameplay
         public float volleySpeed = 15f;
         public float volleyDamage = 12f;
         public float volleyRange = 24f;
+        [Tooltip("Javelins instead of coins (the Emperor's Champion): drawn as arrows and thrown at the player's height, so a raised platform is no shelter.")]
+        public bool volleyJavelins;
 
         [Header("Payroll (the Gilded Patron's guard)")]
         [Tooltip("While any enemy of this type lives he takes guardedDamageMul of the damage (none = never guarded).")]
@@ -163,6 +168,10 @@ namespace Gladiator.Gameplay
         public float guardsEvery = 22f;
         public EnemyDef[] guards = System.Array.Empty<EnemyDef>();
         public Vector2Int guardCount = new Vector2Int(6, 10);
+        [Tooltip("The guard clock runs from this phase on (1 = the whole fight); reaching a later phase calls them at once, at the end of its roar.")]
+        [Min(1)] public int guardsFromPhase = 1;
+        [Tooltip("Through the guardSpotsUsed gates nearest the player (guard k at gate k % that), instead of gate 0, 1, 2... in order.")]
+        public bool guardsNearestGates;
 
         [Header("Phase 2")]
         [Range(0.1f, 0.95f)] public float phase2At = 0.55f;
@@ -181,6 +190,19 @@ namespace Gladiator.Gameplay
         public float fireRingSpacing = 2.4f;
         public float fireRingPatch = 1.5f;
         public float fireRingDps = 12f;
+
+        [Header("Phase 3 (the Emperor's Champion)")]
+        [Tooltip("Phase 3 starts below this fraction of his HP, after phase 2 (0 = no phase 3). Phase 2's extras (fire ring, spike volley, cages, jets, blades) don't fire again.")]
+        [Range(0f, 0.9f)] public float phase3At;
+        [Tooltip("Attacks he picks from in phase 3 (empty = phase 2's). Pair values such as volleyCount use their phase-2 value.")]
+        public BossAttack[] phase3Attacks = System.Array.Empty<BossAttack>();
+        public string phase3Text = "";
+        [Tooltip("Attack wind-ups and recovery are this much faster in phase 3.")]
+        public float phase3Speed = 1.4f;
+        [Tooltip("Phase 3 move speed (0 = enragedMoveSpeed).")]
+        public float phase3MoveSpeed;
+        [Tooltip("Charges in a row in phase 3 (0 = chargeRepeats' phase-2 value).")]
+        public int phase3ChargeRepeats;
 
         [Header("Defeat")]
         public Rarity rewardFloor = Rarity.Rare;

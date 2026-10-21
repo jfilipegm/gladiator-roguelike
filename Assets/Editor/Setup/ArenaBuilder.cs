@@ -200,6 +200,7 @@ namespace Gladiator.EditorTools
                 blades.bladeMesh = FirstMesh("Assets/Art/Models/" + BladeModel + ".fbx");
                 blades.material = AssetDatabase.LoadAssetAtPath<Material>(LookSetup.EnvMat);
             }
+            if (layout.trackRadius > 0f) AddChariotRace(layout, arena, env); // Phase 5.16: the Imperial Arena
             var firePits = new GameObject("FirePits").AddComponent<ArenaFirePits>();
             firePits.transform.SetParent(arena, false);
             firePits.pits = fires.ToArray();
@@ -351,6 +352,48 @@ namespace Gladiator.EditorTools
                 box.center = new Vector3(0f, h * 0.5f, -0.5f); // yaw faces inward: the inner face on the line, the box behind it
                 GameObjectUtility.SetStaticEditorFlags(go, StaticEditorFlags.BatchingStatic);
             }
+        }
+
+        /// <summary>The chariot races (Phase 5.16): the race with the layout's track and schedule, its chariots (inactive
+        /// until they launch, not static: they move) and the lap counter's eggs (not static: one tips per race).</summary>
+        static void AddChariotRace(ArenaLayoutDef layout, Transform arena, Transform env)
+        {
+            var race = new GameObject("ChariotRace").AddComponent<ChariotRace>();
+            race.transform.SetParent(arena, false);
+            race.trackRadius = layout.trackRadius;
+            race.trackWestMeta = layout.trackWestMeta;
+            race.trackEastMeta = layout.trackEastMeta;
+            race.trackWidth = layout.trackWidth;
+            race.trackStallX = layout.trackStallX;
+            race.chariotFirst = layout.chariotFirst;
+            race.chariotEvery = layout.chariotEvery;
+            race.chariotTelegraph = layout.chariotTelegraph;
+            race.chariotSpeed = layout.chariotSpeed;
+            race.chariotCount = Mathf.Max(1, layout.chariotCount);
+            race.chariotLaps = Mathf.Max(1, layout.chariotLaps);
+
+            string model = string.IsNullOrEmpty(layout.chariotModel) ? "Props/PR_Chariot" : layout.chariotModel;
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Art/Models/" + model + ".fbx");
+            if (prefab == null) Debug.LogError("[ArenaBuilder] missing chariot model " + model);
+            var envMat = AssetDatabase.LoadAssetAtPath<Material>(LookSetup.EnvMat);
+            var chariots = new Transform[prefab != null ? race.chariotCount : 0];
+            for (int c = 0; c < chariots.Length; c++)
+            {
+                var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, race.transform);
+                go.name = "Chariot" + c;
+                LookSetup.AssignMaterial(go, envMat);
+                foreach (var t in go.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = Layers.Props;
+                UnStatic(go);
+                go.SetActive(false);
+                chariots[c] = go.transform;
+            }
+            race.chariots = chariots;
+
+            foreach (var t in env.GetComponentsInChildren<Transform>(true))
+                if (t.name == "PR_LapCounter") { race.lapCounter = t; break; }
+            if (race.lapCounter != null)
+                foreach (var t in race.lapCounter.GetComponentsInChildren<Transform>(true))
+                    if (t.name.StartsWith("Egg")) UnStatic(t.gameObject);
         }
 
         static void AddFireLight(GameObject go)

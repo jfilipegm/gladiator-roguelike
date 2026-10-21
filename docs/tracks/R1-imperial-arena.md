@@ -53,10 +53,16 @@ purple, ceremonial; coordinated formations; a multi-phase boss; imperial events.
   and javelins across his back. He uses all three weapons in his attacks.
 - **Chariot:** gold and crimson car with orange-red plumes on the horses (it hurts), four horses, one driver.
 
-**Wave 2 (code, after v0.16.0 merges; contracts written then, from the design):**
-| Part | Will own |
-|---|---|
-| chariot races | `ChariotRace.cs` (new) + tests; the chariot fields in `ArenaLayoutDef.cs`; the hook in `ArenaBuilder.cs` |
-| formations | `EnemyDef.cs`, `EnemyManager.Leash.cs` (formation slots in the leader's frame, `freeEscortsOnDeath`) + tests |
-| boss | `BossDef.cs` (`phase3At`, `phase3Attacks`), `BossController.cs`, `BossSetup.cs` + tests |
-| layout and setup | `ImperialArenaLayout.cs`, `ImperialArenaSetup.cs` (new): layout, run, unlock, spawn table, enemy data |
+**Wave 2 (code): ownership is final (orchestrator, 13:02).** The detailed fields, methods and tests for each part are
+in `docs/tracks/R1-design.md` § "For each code part", plus the numbers in `docs/ARENAS.md` §5 and `docs/BOSSES.md`
+"The Emperor's Champion". Branch from `phase5-imperial-arena`.
+| Part | Owns | Answers to the design's questions |
+|---|---|---|
+| **formations** | `EnemyDef.cs`, `EnemyManager.Leash.cs`, **`EnemyManager.cs`** (the hooks), new tests | Q3: yes, it owns `EnemyManager.cs`. Expose public counters `FormationsSpawned` and `LinesBroken` for the bot log. |
+| **chariot races** | `ChariotRace.cs` (new), the chariot fields in `ArenaLayoutDef.cs`, the hook in `ArenaBuilder.cs`, new tests | Expose public counters (races, trampled, player hits, jumped, boss hits) and `Danger(Vector3)`. Q6: `PR_LapCounter` has `Egg0`–`Egg6` (pivots at their bottoms): tip one per race. Q5: keep 600 vs the boss. |
+| **boss** | `BossDef.cs`, `BossController.cs`, `BossSetup.cs` (`EnsureEmperorsChampion()`), new tests | Calls into `ChariotRace` and the formation spawn through the names in R1-design.md; until those parts merge, ccheck may fail only on those names: say so in the notes. |
+| **layout and setup** (starts after one of the three finishes) | `ImperialArenaLayout.cs`, `ImperialArenaSetup.cs` (new), **`PlaytestBot.cs`** (the race and formation log lines, `-arena imperial_arena`), the run list in `ProvincialPitSetup.cs`, the scene list in `BuildScripts.cs` | Q4: it owns the bot log. Q8: use `SM_ImpStand_Curve` round the sphendone. Gate models per env-art's notes. |
+
+**Env-art follow-up (Q1, Q2, Q7), same worker:** darker run-in strips at z = ±14 from x = −95 to −60; `SM_ImpTerrace`
+(12 × 5 m, 1.2 m high, A6, stairs = `SM_SpinaStairs`); the carceres bays at z = ±14 open, with an arch at least
+2.8 m wide and 2.8 m tall. Q9: R2's contract will use `UL_Colosseum` = `DefeatBoss emperors_champion`.

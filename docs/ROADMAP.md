@@ -61,6 +61,14 @@ already start. They use no Unity and touch other files. Item N+1's code parts st
   is all this session receives automatically; the full report goes in the track file.
 - **Commits:** commit and push its branch. Never `main`, never merge, never force-push.
 
+**Starting workers (learned 2026-10-21):** the app starts a session directly only on a turn that one of the producer's
+messages started. On a turn started by a worker's report or another automated event, it can only **propose** one, as a
+card the producer starts with a click. Cards can't choose the branch to start from: they start from `main`. So every
+brief begins with `git fetch origin && git merge --ff-only origin/<item branch>`.
+**Standing permission (producer, 2026-10-21):** start workers at the orchestrator's discretion, never ask. To avoid stalls on cards, start
+every part of a wave in the same producer-started turn; dependent parts code against the contract's names (with marked
+stubs if needed, as the boss part did). If only cards are possible, the next producer message of any kind starts them.
+
 ## 4. The parts of each item
 The exact split is fixed in each item's contract. This is the starting proposal, with file ownership.
 

@@ -52,6 +52,10 @@ namespace Gladiator.Gameplay
         public Vector2 slideEvery = new Vector2(2.5f, 6f);
         public Vector2 slideHold = new Vector2(0.4f, 1.1f);
         public float cameraOrbitAmount = 0.35f;
+        [Tooltip("The Imperial Arena: leaves the chariot lane when a chariot will reach it within this many seconds, and doesn't step onto it then (0 = never dodges).")]
+        public float chariotDodge = 1.5f;
+        [Tooltip("How far ahead (m) it looks before stepping onto the lane.")]
+        public float chariotLookAhead = 2f;
         [Tooltip("-evolved: start from a late run's build (4 evolutions, 3 synergies), applied on the first frame (after PlayerBuild.Start).")]
         public bool evolvedBuild;
         bool _evolvedApplied;
@@ -66,6 +70,8 @@ namespace Gladiator.Gameplay
         char _goal = '-';
         float _bossSeconds, _bossNear, _bossChasing; // the boss fight: how long, how long within 10 m of him, how long chasing pickups (C24)
         bool _stressRequested, _finished;
+        bool _dodging;          // stepping off the chariot lane
+        int _chariotDodges;
 
         public float Elapsed => _elapsed;
         public bool Finished => _finished;
@@ -170,6 +176,8 @@ namespace Gladiator.Gameplay
             var ep = EnemyProjectiles.Instance;
             if (boss != null && boss.BombsThrown + boss.CoinsFired > 0)
                 sb.Append(" purses ").Append(boss.BombsThrown).Append(" (hit you ").Append(ep != null ? ep.BombHits : 0).Append(") coins ").Append(boss.CoinsFired);
+            if (boss != null && boss.JavelinsFired + boss.Charges > 0) // the Emperor's Champion (Phase 5.16)
+                sb.Append(" javelins ").Append(boss.JavelinsFired).Append(" charges ").Append(boss.Charges);
             // the Grand Arena (Phase 5.13): its hazards, the mercenaries' thefts, the sorcerers
             var jets = FireJets.Instance;
             if (jets != null) sb.Append(" | jets ").Append(jets.Fired).Append(" (burnt ").Append(jets.EnemiesHit).Append(", hit you ").Append(jets.PlayerHits).Append(')');
@@ -180,6 +188,13 @@ namespace Gladiator.Gameplay
                 sb.Append(" goldStolen ").Append(enemies.GoldStolen).Append(" (back ").Append(enemies.GoldReturned).Append(") blinks ").Append(enemies.Blinks);
             if (ep != null && ep.RunesErupted > 0) sb.Append(" runes ").Append(ep.RunesErupted).Append(" (hit you ").Append(ep.RuneHits).Append(')');
             if (enemies != null && enemies.EscortsFreed > 0) sb.Append(" cursFreed ").Append(enemies.EscortsFreed);
+            // the Imperial Arena (Phase 5.16): the chariot races and the Centurions' lines
+            var race = ChariotRace.Instance;
+            if (race != null)
+                sb.Append(" | races ").Append(race.Races).Append(" (trampled ").Append(race.Trampled).Append(", hit you ").Append(race.PlayerHits)
+                  .Append(", jumped ").Append(race.Jumped).Append(", boss ").Append(race.BossHits).Append(") dodged ").Append(_chariotDodges);
+            if (enemies != null && enemies.FormationsSpawned > 0)
+                sb.Append(" formations ").Append(enemies.FormationsSpawned).Append(" linesBroken ").Append(enemies.LinesBroken);
             if (run != null) // Beast Handlers killed (the Beastmaster's unlock counts them; C26)
                 for (int k = 0; k < run.KilledTypeCount; k++)
                 {
@@ -309,6 +324,29 @@ namespace Gladiator.Gameplay
                 desired += threat;
             }
 
+            // 2b) The chariot races (the Imperial Arena): off the track when a chariot is about to pass, and not onto it.
+            var race = ChariotRace.Instance;
+            if (race != null && (race.Running || race.Telegraphing))
+            {
+                if (race.Danger(pos) < chariotDodge)
+                {
+                    desired = LaneOut(race, pos) * 2f; // the way out beats any goal
+                    if (!_dodging) { _dodging = true; _chariotDodges++; }
+                }
+                else
+                {
+                    _dodging = false;
+                    Vector3 ahead = pos + (desired.sqrMagnitude > 1e-4f ? desired.normalized : Vector3.zero) * chariotLookAhead;
+                    if (desired.sqrMagnitude > 1e-4f && race.Danger(ahead) < chariotDodge)
+                    {
+                        Vector3 outward = LaneOut(race, ahead);
+                        float into = -Vector3.Dot(desired, outward);
+                        if (into > 0f) desired += outward * into; // wait at the lane's edge
+                    }
+                }
+            }
+            else _dodging = false;
+
             // 3) Stay inside the arena: its oval shrunk by edgeMargin (chest anchors sit near the edge of the big pit).
             if (em != null)
             {
@@ -347,6 +385,15 @@ namespace Gladiator.Gameplay
         }
 
         static Vector3 Flat(Vector3 v) { v.y = 0f; return v; }
+
+        /// <summary>The way off the chariot lane at `p` (XZ, unit): up the gradient of the distance to its centre line.</summary>
+        static Vector3 LaneOut(ChariotRace race, Vector3 p)
+        {
+            const float h = 0.25f;
+            float d = race.LaneOffset(p);
+            var g = new Vector3(race.LaneOffset(p + new Vector3(h, 0f, 0f)) - d, 0f, race.LaneOffset(p + new Vector3(0f, 0f, h)) - d);
+            return g.sqrMagnitude > 1e-6f ? g.normalized : Vector3.right;
+        }
 
         uint Next()
         {

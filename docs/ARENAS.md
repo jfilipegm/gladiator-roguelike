@@ -189,5 +189,115 @@ fighters like you, from boxes hung with gold.
 - The Gilded Patron: entrance, coin bombs (hit + gold), the volley, the shove; hired mercenaries appear at the boxes
   and guard him (less damage) until they die; phase 2 fires every jet and spins every blade; his gold at his fall.
 
-## 5. The Imperial Arena (Phase 5.16, planned: R1 in docs/ROADMAP.md)
-_Spec in progress (docs/tracks/R1-imperial-arena.md)._
+## 5. The Imperial Arena (R1, Phase 5.16, v0.17.0)
+**Player feels:** "One of the greatest alive." The Emperor's own hippodrome: travertine and imperial purple under gold,
+a spina of obelisk and metae down the middle, chariots thundering round it, the Praetorian Guard marching in
+formation, and the Emperor watching from his box. Contract: `docs/tracks/R1-imperial-arena.md`; reasons for every
+number: `docs/tracks/R1-design.md`.
+
+| | |
+|---|---|
+| **Unlock** | Beat the Gilded Patron (`UL_ImperialArena`, `DefeatBoss patron`). Locked: *"The Patron is bankrupt. The Emperor has heard your name."* |
+| **Size / shape** | A **hippodrome** along X (metres, y up). The wall line: straight sides at z = ±44 from x = −95 to x = 51, a flat **west end** at x = −95 (the **carceres**), a **semicircle** of radius 44 round (51, 0) reaching x = 95 (the **sphendone**). Wall line 15,889 m²; play area (inset 1.1 m, the curve as 24 segments) **15,315 m², 1.31× the Grand Arena's 11,674** and above the GDD's 13,500. Convex: the radial edge table works from the centre (0, 0). The spina covers ~600 m² of floor, but its top is playable (the Grand Arena's dais isn't subtracted either). Travertine and purple (A6) with gold (A5) trim, pale sand floor. |
+| **Layout** | Three bands either side of the spina: the **inner strip** (9 m between the spina and the track), the **track** (4 m, drawn darker), the **outer field** (27 m to the stands). The sphendone (38 m of floor beyond the east turn's lane) holds the triumphal gate; the west end (18 m beyond the west turn's lane) holds the carceres, where the chariots come and go. |
+| **The spina** | A raised walkway along z = 0 from x = −60 to x = 40, **1.2 m high and 6 m wide**, with **SM_SpinaStairs on both long sides at x = −45, −20, 5, 30** (8 flights, one every 25 m). On top: the **obelisk** at x = −10 (~12 m tall, Solid: blocks movement, shots and sight; 1.7 m to walk past it on each side), the **lap counter** at x = 20 (Prop), braziers flanking the obelisk. At each end a **meta** (three gold cones on a round plinth, Solid) centred at (−60, 0) and (40, 0). Never touched by a chariot: the safe island, but the horde climbs the stairs too. |
+| **Vertical variety** | The spina (100 m of 1.2 m walkway, 8 stairs); four **travertine terraces** (12 × 5 m, 1.2 m, against the long walls at (−75, +41.5), (10, +41.5), (−80, −41.5), (0, −41.5), SM_SpinaStairs on their track side), if env-art adds `SM_ImpTerrace` (else `SM_GrandTerrace`, see R1-design.md Q2); the chariots themselves (jump one). |
+| **Gates** | Five: the **triumphal gate** at (95, 0) (`SM_TriumphalGate`, the boss's, gate 0, also used by the horde) and four side gates (`SM_ImpGate`) at x = −50 and x = 30 on both long walls, facing in. The carceres are not a horde gate: two of their 22 bays (z = ±14) are the chariots' stalls. |
+| **The pulvinar** | The imperial box, ~14 m wide, in the north wall at x = −10, facing the obelisk across the track: purple awnings, ~16 senators and the Emperor. Decor (no rule). |
+| **New rule: the chariot races** | From **1:20**, every **60 s** (start to start: 7 races in an 8-minute run, one per egg on the lap counter): trumpets twice, "CHARIOTS!", and the whole track (with its run-in and run-out lanes) **fills orange-red over 3 s**. Then two quadrigae burst out of the carceres one after the other and race **counter-clockwise** round the spina at **22 m/s**, half a lap apart, **2 laps**, and leave through the carceres. A race lasts ~37 s (27.5 s per chariot, the second 6.5 s behind), leaving ~23 s of quiet. **They trample everything in the lane**: the player (28, knocked out of the lane, once per pass) and the horde (200, ×2 for ordinary enemies: every ordinary type dies; the boss takes 600). **Counters:** step off the track, cross it between chariots, stand on the spina, or **jump a chariot** (feet above 1.1 m clear it: a full jump stays that high for 0.37 s, a chariot takes 0.26 s to pass). While a race runs, only the lane's rims stay lit and a bright 26 m tongue shows where each chariot will be in the next 1.2 s. Trampled enemies drop their gems on the track: go and get them between passes. The boss's phase 3 makes the races run back to back. |
+| **The track (numbers)** | Centre line: straights at z = ±14 from x = −60 to 40, half-circles of radius 14 round (−60, 0) and (40, 0); **lap 288 m**; lane 4 m wide (the centre line ± 2 m). Chariots enter at (−97, −14) (inside the stall) heading east along the south straight's extension (the **run-in**, 37 m) and leave west along the north straight's extension to (−97, 14) (the **run-out**). Path per chariot: run-in + 2 laps − the last west turn + run-out = **606 m**. Each point on the straights and the east turn is passed 4 times per race, the west turn twice. Nothing may stand within the lane + 1.5 m: no piece, chest, altar, brazier, gate mouth or spawn point. |
+| **Enemies** | The Grand Arena's walkers (not the Beast Handler: beasts belong to arenas 3–4), sooner and with fewer loose shields, plus the **Centurion**, who brings a **Praetorian formation**. **+115 % enemy HP, +45 % damage taken** (`enemyHpMul 2.15`, `playerDamageTakenMul 1.45`: the ladder's steps were +0.25/+0.25/+0.3 HP and +0.15/+0.10/+0.10 damage). Elites every 60 s. |
+| **Pressure** | Up to **400** alive, the Director ×**1.25** (`densityMul`: the biggest floor so far), ring spawns within **55 m** of the player (`spawnMaxDistance`: the horde comes from your end, not from 190 m away). |
+| **Crowd** | The biggest yet: ~2,200 (0.75 per metre per tier along the long sides and the sphendone; none over the carceres), plus the pulvinar. Roars at every race start and at a pass that tramples 8 or more. |
+| **Chests and altars** | 14 chest anchors, all off the track: the spina top (−35, 0) and (5, 0) at 1.2 m; the inner strips (−35, 7.5) and (15, −7.5); the outer fields (−70, 28), (−20, 30), (25, 28), (−45, −28), (0, −30), (45, −28); the sphendone (72, ±22); the west end (−85, ±30). Three altars: the spina top (−25, 0) at 1.2 m, the sphendone (66, 0), the west end (−82, 0). |
+| **Player spawn** | (−10, 0.1, −26), facing north: the track, the obelisk and the pulvinar ahead. |
+| **Boss** | **The Emperor's Champion** (docs/BOSSES.md), through the triumphal gate. |
+| **Renown** | Arena tier 4: Renown × 3 (`MetaConfig.deeperArenaBonus` 0.5 per tier, no code). |
+
+### New enemies
+- **Praetorian** (`EN_Praetorian`, `ShieldBearer`): the Emperor's guard. A tall curved scutum, an upright purple
+  plume, a pilum held upright, travertine and purple armour (288 tris). 70 HP, 3.0 m/s, radius 0.5, contact 10,
+  **blocks 75 % from a 120° front** (less than a Shield Thug's 85 %: they come five at a time), knockback ×0.25, turn
+  180°/s. Only ever spawned in a Centurion's line (not in the table). **In formation** he holds his slot (catching up
+  at up to 1.6× his speed; rigidly with the line during a push) and faces the line's front, not you: flanking the line
+  works. **Line broken:** an ordinary ShieldBearer that turns to face you.
+- **Centurion** (`EN_Centurion`, `Lunger`): the officer. A transverse crest (his silhouette), a red cloak, a vine
+  staff raised, no shield (284 tris). 160 HP, **2.6 m/s** (the line's march), radius 0.42, contact 10, knockback ×0.3,
+  **turns 80°/s** (the line wheels slowly: slide round its end). He walks behind a **line of five Praetorians** (slots
+  in his frame, x right and y forward: (−2.6, 1.8), (−1.3, 1.8), (0, 1.8), (1.3, 1.8), (2.6, 1.8): a 6.2 m wall of
+  shields 1.8 m ahead of him) and stops 2.6 m from you while his line stands (the shields press you; they don't walk
+  through you).
+  - **The push (the line's attack):** when you're within 4.2 m of him the line stops and braces: an orange-red lane
+    the line's width + 0.8 m (7 m) and 2.6 m deep fills in front of the shields over **0.7 s**, then the whole line
+    shoves forward 2 m (8 m/s × 0.25 s): **16 + knockback 9**, once per push, from any shield that touches you. Every
+    3.5 s at most. Counter: step aside (3.5 m), step back, jump (above 1.1 m), or be behind them.
+  - **Kill him and the line breaks:** every Praetorian still in it is **Staggered** (`SE_Stagger`, 1 s) with its
+    **shield down for 3 s** (no block), then fights on as an ordinary ShieldBearer. They are not freed
+    (`freeEscortsOnDeath false`; the Beast Handler's curs still vanish). A dead Praetorian leaves a gap (no closing
+    ranks). A Centurion whose whole line is dead is a plain Lunger (his own staff strike, no hold, no wide lane).
+  - Never an elite (an affix would break the march). From 1:00, at most 3 alive (18 bodies). Gold 0.35.
+- **Formations as guards:** the Emperor's Champion calls 2 Centurions (with their lines) through the two gates
+  nearest you, from his phase 2.
+
+### Spawn table (`ST_ImperialArena`)
+Weights ramp linearly from `from` to the end of the run. Affixes: the Slave Pit's (as every table). Changes from the
+Grand Arena: everything a little sooner; fewer Shield Thugs, Murmillos and Mercenaries (the formations are this
+arena's shields: the end-of-run shield share stays ~the Grand Arena's); no Beast Handler; the Centurion.
+
+| Enemy | From | Weight start → end | Cap | Swarm | Elite |
+|---|---|---|---|---|---|
+| Starving Convict | 0:00 | 6 → 2.5 | — | ✓ | ✓ |
+| Pit Cur | 0:05 | 3 → 4.5 | 110 | ✓ | ✓ |
+| Shield Thug | 0:20 | 1.2 → 1.6 | 30 | | ✓ |
+| Slinger | 0:25 | 1.2 → 1.6 | 14 | | ✓ |
+| Shield Archer | 0:35 | 1.0 → 1.4 | 12 | | ✓ |
+| Murmillo | 0:45 | 0.6 → 1.0 | 12 | | ✓ |
+| Fire-Pot Thrower | 0:50 | 0.8 → 1.2 | 8 | | ✓ |
+| Assassin | 0:50 | 1.0 → 1.5 | 16 | | ✓ |
+| **Centurion** (+5 Praetorians) | 1:00 | 0.15 → 0.25 | 3 | | ✗ |
+| Net-Thrower | 1:00 | 0.7 → 1.1 | 10 | | ✓ |
+| Gilded Mercenary | 1:00 | 0.5 → 0.9 | 12 | | ✓ |
+| Brute | 1:10 | 0.6 → 1.1 | 10 | | ✓ |
+| Sorcerer | 1:15 | 0.7 → 1.2 | 12 | | ✓ |
+
+The Centurion's weight is a first guess (the Beast Handler's 0.12–0.2 / cap 3 is being measured to land ~25–35 a
+run); the bot logs `formations` / `linesBroken` to tune it.
+
+### Building blocks
+- **Data:** `ArenaLayoutDef` chariot fields (the track's metae, radius, width, stall x; first, every, count, laps,
+  speed, telegraph; the chariot model); `EnemyDef.formationSlots`, `formationHold`, `freeEscortsOnDeath`,
+  `breakStatus`, `breakShieldsDown`; `BossDef.phase3At` / `phase3Attacks` / `phase3Text` / `phase3Speed` /
+  `phase3MoveSpeed` / `phase3ChargeRepeats`, `guardsFromPhase`, `guardsNearestGates`, `volleyJavelins`,
+  `closeInRange` / `closeInSpeed`. No new enum values (every attack and behaviour exists).
+- **Runtime:** `ChariotRace` (central tick: the schedule, the path, telegraphs, trampling both sides, back to back
+  from the boss's phase 3, halted at his fall); formations in `EnemyManager.Leash` (slots in the leader's frame, the
+  hold, the push, the broken line); a third boss phase in `BossController`.
+- **Models (Blender):** `BlenderSrc/environment/imperial_arena.py`: `SM_ImpFloor` (with the darker track lane),
+  `SM_ImpStand_4m`, `SM_Carceres`, `SM_ImpGate`, `SM_TriumphalGate`, `SM_Pulvinar`, `SM_Spina_10m`, `SM_SpinaEnd`,
+  `SM_SpinaStairs`, `SM_Obelisk`, `PR_LapCounter` (+ `SM_ImpTerrace` if added); `BlenderSrc/props/pr_chariot.py`
+  `PR_Chariot`; enemies `EN_Praetorian`, `EN_Centurion`; boss `EN_EmperorsChampion`.
+- **Field-by-field list for each code part:** `docs/tracks/R1-design.md`.
+
+### Tests
+- Locked until the Gilded Patron falls; then the menu offers it, a run there is tier 4 (Renown ×3) with ×2.15 HP,
+  ×1.45 damage, cap 400 and density ×1.25.
+- The hippodrome is bigger than the Grand Arena (`PlayArea()` ≈ 15,315 > 11,674, and ≥ 13,500) and keeps the horde
+  in along the carceres, both long sides, the sphendone's curve and at the triumphal gate.
+- Nothing stands on the track: no piece footprint, chest, altar, brazier, gate mouth or spawn point within the lane
+  (run-in and run-out included) + 1.5 m.
+- The spina is walkable at 1.2 m and the horde climbs its stairs; the obelisk blocks enemy shots.
+- A race telegraphs for 3 s with no chariot on the track, then two chariots leave the carceres ~6.5 s apart, run
+  counter-clockwise 2 laps (~606 m each) and leave; the next race starts 60 s after the last one started.
+- A chariot hits a grounded player in the lane once per pass (28 × 1.45, knocked out of the lane), misses one beside
+  the lane, and misses one whose feet are above 1.1 m.
+- A chariot kills an ordinary enemy in its path (a Brute and a Centurion included), takes 200 off an elite, 600 off
+  the boss, and leaves an enemy just beside the lane alone.
+- A Centurion spawns with five Praetorians in a line 1.8 m ahead; they keep their slots as he walks and turns; they
+  block from the front, not from behind; the push telegraphs its lane and hits a player in it, not one beside it;
+  killing him staggers the line with its shields down, then they fight on (alive, not freed). The Beast Handler still
+  frees his curs.
+- The Emperor's Champion: the entrance through the triumphal gate, the stride when you're far; the thrust, bash and
+  javelins telegraph and hit (javelins reach a player on the spina); at 60 % two formations come through the two
+  gates nearest you and the charge stuns him on the obelisk, a meta or the wall; at 30 % "FOR THE EMPEROR!", the
+  races run back to back, he's faster and charges twice; at his fall the races halt and the Guard stands down. Gorm,
+  the Champion, the Beast Lord and the Patron stay two-phase.

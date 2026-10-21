@@ -155,6 +155,30 @@ namespace Gladiator.Gameplay
         [Tooltip("Where a boss's guards appear instead of the gates (the Grand Arena's patron boxes): the two nearest the player.")]
         public Vector3[] guardSpots = Array.Empty<Vector3>();
 
+        [Header("Chariot races (Phase 5.16)")]
+        [Tooltip("The track's turns' radius round the metae (m; 0 = no chariot races in this arena). The straights run at z = meta.z ∓ this.")]
+        public float trackRadius;
+        [Tooltip("The turns' centres (world XZ, the same z: the track runs along X). The chariots go counter-clockwise.")]
+        public Vector2 trackWestMeta = new Vector2(-60f, 0f);
+        public Vector2 trackEastMeta = new Vector2(40f, 0f);
+        [Tooltip("The lane's width (m): all of it hurts.")]
+        public float trackWidth = 4f;
+        [Tooltip("World x where the chariots appear and vanish, inside the carceres at z = ∓trackRadius: the run-in and run-out continue the straights to here.")]
+        public float trackStallX = -97f;
+        [Tooltip("Seconds into the run of the first race's telegraph, then from one race's start to the next.")]
+        public float chariotFirst = 80f;
+        public float chariotEvery = 60f;
+        [Tooltip("The whole path fills orange-red for this long before the chariots come out (s).")]
+        public float chariotTelegraph = 3f;
+        [Tooltip("m/s.")]
+        public float chariotSpeed = 22f;
+        [Tooltip("Chariots per race: the n-th leaves its stall lap ÷ count later (opposite phases).")]
+        public int chariotCount = 2;
+        [Tooltip("Laps per race: the last one leaves from the north straight instead of turning.")]
+        public int chariotLaps = 2;
+        [Tooltip("The chariot model under Assets/Art/Models/ (needs WheelL/R and Horse0-3 children to animate).")]
+        public string chariotModel = "Props/PR_Chariot";
+
         /// <summary>The play area's floor (m²): the outline's, else the ellipse's. Each arena of the ladder must be bigger
         /// than the one before it (docs/GDD.md).</summary>
         public float PlayArea()

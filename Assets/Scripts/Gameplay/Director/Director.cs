@@ -22,7 +22,7 @@ namespace Gladiator.Gameplay
         public int prewarmPerFrame = 16;
 
         float _spawnAcc, _nextSwarm, _nextElite;
-        int _swarmLeft, _prewarmIndex;
+        int _swarmLeft, _prewarmIndex, _escortIndex;
         float _swarmAcc, _swarmAngle, _swarmRate;
         int _swarmEntry = -1, _swarmGate = -1;
         ArenaGates _gates;
@@ -113,8 +113,8 @@ namespace Gladiator.Gameplay
             return need;
         }
 
-        /// <summary>True once every table type has its pool.</summary>
-        public bool Prewarmed => table == null || _prewarmIndex >= table.entries.Length;
+        /// <summary>True once every table type and every escort they bring has its pool.</summary>
+        public bool Prewarmed => table == null || (_prewarmIndex >= table.entries.Length && _escortIndex >= table.entries.Length);
 
         void PrewarmStep(EnemyManager em)
         {
@@ -127,6 +127,16 @@ namespace Gladiator.Gameplay
                 int made = e.enemy != null ? em.PrewarmStep(e.enemy, _poolTargets[_prewarmIndex], budget) : 0;
                 budget -= made;
                 if (made == 0 || budget > 0) _prewarmIndex++;
+            }
+            // escorts that aren't table entries themselves (a Centurion's Praetorians) fill to their own prewarm:
+            // without this their pool grew at runtime 17-20 times a run (R1 bot runs)
+            while (budget > 0 && _prewarmIndex >= table.entries.Length && _escortIndex < table.entries.Length)
+            {
+                var lead = table.entries[_escortIndex].enemy;
+                var escort = lead != null ? lead.escort : null;
+                int made = escort != null ? em.PrewarmStep(escort, escort.prewarm, budget) : 0;
+                budget -= made;
+                if (made == 0 || budget > 0) _escortIndex++;
             }
         }
 

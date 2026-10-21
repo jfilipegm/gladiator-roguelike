@@ -1,0 +1,127 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d4c6ea183ef480c5acde212f0835f1d, type: 3}
+  m_Name: BD_EmperorsChampion
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.BossDef
+  id: emperors_champion
+  displayName: THE EMPEROR'S CHAMPION
+  title: FIRST SPEAR OF THE EMPIRE
+  enemy: {fileID: 11400000, guid: bae1a83605a277caea26b275192a327b, type: 2}
+  enterText: THE EMPEROR'S CHAMPION!
+  fallText: THE EMPEROR'S CHAMPION FALLS!
+  guardsText: THE PRAETORIAN GUARD!
+  phase2Text: '"PRAETORIANS, TO ME!"'
+  shortName: Emperor's Champion
+  deathLine: The Emperor's Champion turns to the imperial box. The thumb goes down.
+  victoryLine: The Emperor's own champion lies in the sand, and the Emperor is on his feet.
+  phase1Attacks: 020509y
+  phase2Attacks: 02050904y
+  moveSpeed: 3.4
+  enragedMoveSpeed: 3.9
+  turnRate: 160
+  contactDamage: 12
+  contactInterval: 0.8
+  recover: 0.6
+  closeInRange: 28
+  closeInSpeed: 9.5
+  sweepRadius: 5.5
+  sweepWindup: 1.1
+  sweepDamage: 28
+  sweepKnockback: 9
+  sweepJumpClear: 0.7
+  whipLength: 10
+  whipWidth: 1.3
+  whipWindup: 0.65
+  whipDamage: 22
+  whipSlow: 1
+  whipSlowSeconds: 0
+  slamRadius: 2.6
+  slamWindup: 1
+  slamDamage: 30
+  slamTrack: 0.6
+  slamFire: {x: 2.2, y: 4, z: 10}
+  bashRange: 4.5
+  bashAngle: 110
+  bashWindup: 0.65
+  bashDamage: 20
+  bashKnockback: 12
+  flurryLength: 6
+  flurryWidth: 1.1
+  flurryWindup: 0.35
+  flurryDamage: 12
+  flurryThrusts: {x: 3, y: 5}
+  chargeWindup: 0.9
+  chargeSpeed: 17
+  chargeLength: 20
+  chargeWidth: 2.6
+  chargeDamage: 26
+  chargeKnockback: 13
+  chargeStun: 1.8
+  stunDamageTakenMul: 1.5
+  chargeRepeats: {x: 1, y: 1}
+  pounceRadius: 3.5
+  pounceWindup: 1
+  pounceTrack: 0.7
+  pounceFlight: 0.55
+  pounceHeight: 3
+  pounceRange: 24
+  pounceDamage: 28
+  pounceKnockback: 9
+  pounceRecover: 0.8
+  pounceRepeats: {x: 1, y: 2}
+  bombCount: {x: 3, y: 5}
+  bombWindup: 0.6
+  bombInterval: 0.35
+  bombFlight: 1
+  bombRadius: 2.4
+  bombDamage: 22
+  bombCoins: 3
+  bombSpread: 3.5
+  volleyCount: {x: 5, y: 7}
+  volleyArc: {x: 36, y: 50}
+  volleyWindup: 0.85
+  volleySpeed: 22
+  volleyDamage: 16
+  volleyRange: 30
+  volleyJavelins: 1
+  guardedBy: {fileID: 0}
+  guardedDamageMul: 0.4
+  guardThreadColor: {r: 1, g: 0.82, b: 0.25, a: 0.9}
+  guardSpotsUsed: 2
+  defeatGold: 0
+  beastPack: {x: 0, y: 0}
+  phase2CagePack: 0
+  scatterOnDefeat: 1
+  guardsEvery: 26
+  guards:
+  - {fileID: 11400000, guid: 1f2b9d6aab8c9c4829f5e2128f231ce2, type: 2}
+  guardCount: {x: 2, y: 2}
+  guardsFromPhase: 2
+  guardsNearestGates: 1
+  phase2At: 0.6
+  phase2FireRing: 0
+  phase2SpikeVolley: 0
+  phase2FireJets: 0
+  phase2Blades: 0
+  enrageSpeed: 1.2
+  enrageRoar: 1.5
+  fireRingInset: 1.1
+  fireRingSpacing: 2.4
+  fireRingPatch: 1.5
+  fireRingDps: 12
+  phase3At: 0.3
+  phase3Attacks: 02050904y
+  phase3Text: '"FOR THE EMPEROR!"'
+  phase3Speed: 1.4
+  phase3MoveSpeed: 4.6
+  phase3ChargeRepeats: 2
+  rewardFloor: 2

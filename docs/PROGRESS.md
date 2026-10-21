@@ -1,7 +1,7 @@
 # Progress
 
 **Current phase:** Phase 5 — expansion
-**Current milestone:** Phase 5.13 Arena 4, the Grand Arena + the Gilded Patron, IN PROGRESS on branch `phase5-grand-arena` (pushed, no PR yet). Built, tested, 4 bot runs done, C24 retuned (15,000 HP, guarded ×0.6); open: the PR, the producer's OK to merge, release v0.14.0. See "In progress — Phase 5.13" below the Done list. Released before it: v0.9.0–v0.13.0 (2026-10-21).
+**Current milestone:** Phase 5.14 the Net-Weaver (next). v0.14.0 (Arena 4, the Grand Arena + the Gilded Patron) released 2026-10-21. **Merge window:** the producer said "please continue with all Merges up until i get home at 19h00" (09:27 WEST, 2026-10-21): merge and release green milestone PRs without asking until 19:00 WEST that day, then ask again.
 **Last updated:** 2026-10-21
 
 **Repository:** https://github.com/jfilipegm/gladiator-roguelike (public, branch `main`, remote `origin`, `.blend` files via Git LFS). Work on a branch per milestone, push as you go, merge through a PR; release every playable build (`Tools/release`).
@@ -344,7 +344,7 @@
   - Archives: Linux 43 MB, Linux dev 73 MB, Windows 45 MB, macOS 52 MB.
   - Smoke runs of the downloaded archives (`-bot -timed -botSeconds 40`), all v0.13.0, 0 exceptions: Linux as the Ashen Oracle in the Stone Amphitheater (64 kills, clock to 37 s), Linux as the Thunder Champion in the Slave Pit (68 kills, 7 dashes, 38 s), Windows under Wine as the Ashen Oracle (61 kills, 37 s). Their Profiling files were deleted. macOS not run.
 
-## In progress — Phase 5.13 Arena 4, the Grand Arena + the Gilded Patron (branch `phase5-grand-arena`, not merged)
+## Done — Phase 5.13 Arena 4, the Grand Arena + the Gilded Patron (branch `phase5-grand-arena`, PR #17 merged 2026-10-21 with the producer's OK, release v0.14.0)
 - **Why this milestone:** the producer said "proceed with what you think is best" (2026-10-21); DECISIONS "Phase 5.13" has the reasons. Spec: `docs/ARENAS.md` §4, `docs/BOSSES.md` "The Gilded Patron".
 - **Done (committed, verified):**
   - **Arena** `AL_GrandArena` / `GrandArena.unity` (`GrandArenaLayout.cs`, `GrandArenaSetup.cs`): a Greek cross (L 70, H 26, C 14), 11,674 m² (1.37× the Amphitheater); 4 monumental gates (north = the boss's), stand sections + invisible stone along all 16 edges, 8 corner towers, 4 patron boxes (guard spots at their feet), a dais with the Patron's statue, 8 terraces (stairs / `SM_GrandRamp`), ~2,000 spectators. Tier 3, enemy HP ×1.8, damage taken ×1.35, elites every 60 s, cap 400, `densityMul` 1.2 (C18), `UL_GrandArena` (beat the Beast Lord), `RD_GrandArena`, `ST_GrandArena`.
@@ -362,15 +362,17 @@
     - **C24 retune** (`EN_GildedPatron` 18,000 → 15,000 HP, `BD_GildedPatron.guardedDamageMul` 0.4 → 0.6; the bot now logs the fight's length, time within 10 m of the boss, time chasing pickups, time guarded): Run 4, the Nobody: 345 fps avg, 189 fps at ≥ 250 enemies (p95 7.7 ms), gameplay 1.81 / 2.49 ms, GC 147 B/s; alive at minutes 1–8: 60 / 123 / 170 / 213 / 310 / 371 / 353 / 379, **300 at 4:54**; level 32, 7,896 kills, 7 chests; blades mowed 1,641 (12 hits on the bot), jets burnt 1,741 (8 hits); goldStolen 425 (all back), runes 475. Fight 56 s: **near him 7 s, chasing pickups 48 s, guarded 26 s; Patron at 76 %** (phase 1), 57 purses, 14 coins. So the earlier 99–100 % was mostly the bot chasing his scattered gold.
     - **Fixed:** the blade-jump test was flaky (~1 in 3: the player stood on the floor for a frame before the first hop); it now starts in the air (4/4 green).
     - **Full suites after the retune:** EditMode 77/77, PlayMode 176/176.
-- **Next:** open the PR, **ask the producer before merging**, then `Tools/release 0.14.0` and smoke-run the archives.
+- **v0.14.0 released 2026-10-21:** https://github.com/jfilipegm/gladiator-roguelike/releases/tag/v0.14.0.
+  - Smoke runs of the downloaded archives (`-bot -timed -botSeconds 40`), all v0.14.0, 0 exceptions: Linux as the Nobody in the Grand Arena (38 kills, 7 jet bursts, clock to 37 s), Linux as the Golden Idol in the Slave Pit (61 kills, 37 s), Windows under Wine as the Nobody in the Grand Arena (58 kills, 6 jet bursts, 35 s). Their Profiling files were deleted. macOS not run.
 
-## Next (after the producer's playtest of v0.9.0–v0.13.0)
+## Next (after the producer's playtest of v0.9.0–v0.14.0)
 - **The overnight run (2026-10-21, 01:25–05:40 WEST)** merged and released five milestones under the producer's "proceed with any merge in the next 5h40": v0.9.0 Arena 3 (PR #11, the producer's OK), v0.10.0 the Murder Machine (#12), v0.11.0 the Thunder Champion (#13), v0.12.0 the Golden Idol (#14), v0.13.0 the Ashen Oracle (#15). After 07:05 WEST, ask before every merge again.
-- **Waiting on the playtest:** C18 (big floors fill late), C19 (the Beast Lord), C20 (the Verdict), C21 (the Golden Idol's snowball), C22 (Contagion chains), plus the older C13–C17.
-- **Candidates for the next milestone:**
-  - **Arena 4, the Grand Arena** (≥ 10,500 m², octagon or cross-shaped plaza with patron boxes; the Gilded Patron boss). Best after C18 is answered: it's bigger again.
-  - **The Net-Weaver** (retiarius: trident = the last unbuilt pattern, `MultiHit`, + the existing Net; root/pull; unlock "win with the spear/trident" needs a `WinWithWeapon` condition).
+- **The day run (2026-10-21, from 09:27 WEST):** the producer: "please continue with all Merges up until i get home at 19h00". v0.14.0 the Grand Arena (#17) merged and released under it.
+- **Waiting on the playtest:** C18 (big floors fill late; answered for the Grand Arena by `densityMul`), C19 (the Beast Lord), C20 (the Verdict), C21 (the Golden Idol's snowball), C22 (Contagion chains), C23 (the Grand Arena's hazards), C24 (the Patron's guard), plus the older C13–C17.
+- **Candidates for the next milestone (in this order):**
+  - **The Net-Weaver** (next, Phase 5.14) (retiarius: trident = the last unbuilt pattern, `MultiHit`, + the existing Net; root/pull; unlock "win with the spear/trident" needs a `WinWithWeapon` condition).
   - **The Beastmaster** (companions: needs an allied-unit system, and the Beast Handler enemy his unlock counts).
+  - **Arena 5, the Imperial Arena** (> 11,674 m², not round; formations; the Emperor's Champion, multi-phase).
 
 ## Known issues
 - **Residual GC (target 0 B/frame, met in steady state):** the 70–85 KB one-offs in paused card panels (v0.6.0/0.7.0) are fixed in Phase 5.6: the description buffers are pre-sized to 400 chars. A 200 s check run had none; the first level-up allocates ~7.5–9.9 KB once (paused; a hidden pre-draw of the cards didn't remove it; BACKLOG), the boss entrance 1.8 KB, the victory screen + save write ~238 KB (game over). Small first-occurrence allocations (≤ 1.2 KB) in the first minutes.

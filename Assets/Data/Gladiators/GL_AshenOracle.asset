@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3f244af30c794398bf8108a48772002, type: 3}
+  m_Name: GL_AshenOracle
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.GladiatorDef
+  id: ashen_oracle
+  displayName: The Ashen Oracle
+  description: A masked seer who breathes smoke. His censer curses the crowd, the cursed burst when they die and curse the rest, and a hit on him explodes into smoke.
+  baseStats:
+  - stat: 0
+    value: 85
+  model: {fileID: 919132149155446097, guid: 1772483be073b5a83a5f36a3d185f0c3, type: 3}
+  movement: {fileID: 11400000, guid: a04da5e24457f6b4d904e5803e117e38, type: 2}
+  animProfile: {fileID: 11400000, guid: 28ab9e570f9dcde25930b4e4437cf259, type: 2}
+  cameraTargetHeight: 1.25
+  startingWeapon: {fileID: 11400000, guid: 0bad9bca950a52c24abd8742c180949c, type: 2}
+  traits:
+  - {fileID: 11400000, guid: f0dff2b372b0451a7a27194016ff04b0, type: 2}
+  - {fileID: 11400000, guid: 6afdc41c3bee18bd796b3b9149b2a35b, type: 2}
+  unlock: {fileID: 11400000, guid: ea1ac0e5481fa80adb04576c010b5fcd, type: 2}
+  selectLine: 
+  tradeoff: 'Slow to start and fragile: curses take time, and a lone boss doesn''t spread them.'

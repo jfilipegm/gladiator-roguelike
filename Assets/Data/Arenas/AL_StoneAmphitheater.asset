@@ -2356,8 +2356,11 @@ MonoBehaviour:
   - {x: -10, y: 1.2, z: 41}
   - {x: 10, y: 1.2, z: 41}
   - {x: 41.3, y: 1.2, z: 4}
-  secretSpots: []
-  secrets: 0
+  secretSpots:
+  - {x: -34, y: 0, z: -6}
+  - {x: 34, y: 0, z: -6}
+  - {x: 0, y: 0, z: -34}
+  secrets: 8
   barricades: []
   braziers:
   - {x: -17, y: 1.2, z: 42.5}

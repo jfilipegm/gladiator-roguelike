@@ -36,6 +36,9 @@ namespace Gladiator.EditorTools
 
         public static ArenaLayoutDef Ensure() => Write(false);
 
+        /// <summary>Where the masked stranger may wait (Phase 5.12): open sand off the column ring, west, east and south.</summary>
+        public static readonly Vector3[] StrangerSpots = { new Vector3(-34f, 0f, -6f), new Vector3(34f, 0f, -6f), new Vector3(0f, 0f, -34f) };
+
         /// <summary>The wall line's curve at parameter t (0 = east end, π/2 = the south apex, π = west end), `inset`
         /// metres inside it: (point, inward normal).</summary>
         public static (Vector2 p, Vector2 inward) Curve(float t, float inset = 0f)
@@ -106,8 +109,8 @@ namespace Gladiator.EditorTools
             l.enemyHpMul = 1.5f;
             l.playerDamageTakenMul = 1.25f;
             l.gateModel = Env + "SM_AmphiTunnel";
-            l.secrets = ArenaSecrets.None;
-            l.secretSpots = new Vector3[0];
+            l.secrets = ArenaSecrets.AshenStranger; // Phase 5.12: the Ashen Oracle's masked stranger
+            l.secretSpots = StrangerSpots;
 
             var pieces = new List<ArenaLayoutDef.Piece>();
             var gates = new List<ArenaLayoutDef.Gate>();

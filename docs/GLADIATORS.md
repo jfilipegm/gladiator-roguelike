@@ -133,3 +133,29 @@ Arena 3 exists, so `UL_BloodKnight` switches from the interim "beat Gorm below 3
 **How it's built:** `WP_CoinToss` is `Projectile` data with the `PR_Coin` mesh. Traits: `TR_MidasBody` (`MidasBody`: a Damage `StatMod` from `RunState.Gold`, like Bloodlust), `TR_GoldenStreak` (`GoldenStreak`: a GoldGain `StatMod` from `AnnounceKind.Streak` tiers, for 8 s), `TR_MakeItRain` (`MakeItRain`: on `SlideEvent`, `RunState.SpendGold` then 16 `PlayerProjectiles.FireStraight` coins). Model `BlenderSrc/characters/ch_goldenidol.py`.
 
 **Tests:** the damage bonus at 0 / 250 / 2,000 gold; a streak announce multiplies GoldGain and it wears off; a slide with 40+ gold sprays 16 coins and costs 40, a slide with less does nothing; Coin Toss fires coins at the nearest; 10,000 lifetime gold unlocks him.
+
+## The Ashen Oracle (Phase 5.12, v0.13.0)
+| | |
+|---|---|
+| **Fantasy** | A masked seer who breathes smoke and reads the future in the ash of the dead. Nobody knows where he came from; he only shows himself to fighters he's chosen. |
+| **Silhouette** | 1.65 m, thin and hunched in a long ash-grey robe that flares at the hem, a **pale bone mask** with glowing purple cracks, a hood, and a crooked **censer staff** (a hook at the top with a smoking censer swinging from it). 64 px test against the Net-Thrower, the Slinger and the Goblin: the hook-and-censer staff and the robe's flare. From the camera behind him: a cyan rune on his hood. |
+| **Weapon** | **Ashen Censer** (`Lob` data plus hit effects): every 1.8 s he lobs a smoking censer-orb into the thickest nearby crowd; it bursts in a 2.4 m cloud for 8 damage, **Curses** everything it hits (2 stacks), and leaves a **cursed patch** on the ground for 3 s that keeps cursing whatever walks in. Levels 2–8: a second orb, damage, area, attack speed, a third orb, damage, area. |
+| **New status: Curse** | Damage over time that stacks (up to 5, 4 s), purple. On its own it's slow. |
+| **Passive: Contagion** | A **cursed enemy that dies bursts**: 6 × his Damage within 3.5 m, and the curse passes to everything in the burst. Curses that spread on death, so the horde does his killing for him. |
+| **Ability: Smoke Veil** | The first hit he takes every 5 s makes smoke **explode out of him**: everything within 4.5 m is Cursed (3 stacks), Slowed for 2 s and pushed back. He's fragile; the veil buys him space. |
+| **Strength** | The bigger the crowd, the faster it dies: curses chain through it. Area denial that keeps working after he's moved on. |
+| **Weakness** | Fragile (85 HP) and slow to kill one big target (damage over time, and bosses don't spread). Early on, before the curses stack, he's weak. |
+| **Personality** | Silent; drifts rather than runs (a low, smooth stride); the censer smokes. |
+| **Unlock: a secret encounter** | §6.7. **The Masked Stranger:** on about half the runs in the **Stone Amphitheater**, once, between 2:00 and 5:00, a masked figure stands in a ring of smoke at one of the arena's secret spots for 25 s (smoke rises from it, so it's seen). Stand **inside his ring for 3 s** while he reads you (the ring fills) and he vanishes in a burst of ash: "WHO WAS THAT?". The save gets the flag `ashen_stranger` at once; `UL_AshenOracle` (Flag) unlocks the Oracle at the run's end. Once found, he stops appearing. Codex hint: *"A masked stranger watches the amphitheatre's fights. He wants a closer look at you."* The unlock also adds the Ashen Censer to everyone's level-up pool. |
+
+**Colours:** curses and smoke are purple and ash-grey, the player's side of the palette's cursed family, never orange-red. The stranger's waiting ring is pale purple.
+
+**How it's built:**
+- **`StatusKind.Curse`** (a sixth enemy status slot) and `SE_Curse`.
+- **`TraitEffects`**: a gladiator trait that adds Boon effects (`BoonEffects` reads them with the Boons'). Contagion is a `BurstOnDeath` on Curse, so it's data.
+- **`WP_AshenCenser`** is `Lob` data with `hitEffects` (`StatusOnHit` Curse, `GroundOnHit` Curse), so no new weapon code.
+- **`TR_SmokeVeil`** (`SmokeVeil`: `DamagedEvent`, cooldown, a radial curse + slow + push).
+- **`AshenStranger`** (`ArenaSecrets.AshenStranger`, placed by `ArenaBuilder` at the layout's `secretSpots`; the Stone Amphitheater gets spots in its three tunnel mouths and by the statues).
+- **Model:** `BlenderSrc/characters/ch_ashenoracle.py`; the stranger uses the same model.
+
+**Tests:** a censer burst curses what it hits and leaves a patch that curses an enemy walking in; a cursed enemy's death bursts and passes the curse on; a hit releases the veil (curses, slows, pushes) and a second hit inside the cooldown doesn't; standing in the stranger's ring for 3 s saves the flag, stepping out resets the reading, and he leaves after 25 s; the flag unlocks the Oracle.

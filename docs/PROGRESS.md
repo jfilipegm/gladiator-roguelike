@@ -1,7 +1,7 @@
 # Progress
 
 **Current phase:** Phase 5 — expansion
-**Current milestone:** Phase 5.11 — the Golden Idol, the sixth gladiator (branch `phase5-golden-idol`, spec `docs/GLADIATORS.md`). v0.11.0 (the Thunder Champion), v0.10.0 (the Murder Machine) and v0.9.0 (Arena 3) released 2026-10-21. v0.8.0 (the Provincial Pit rebuilt as a 100 × 70 m octagon + the spike-trap fix) released 2026-10-20.
+**Current milestone:** Phase 5.12 — the Ashen Oracle, the seventh gladiator (branch `phase5-ashen-oracle`, spec `docs/GLADIATORS.md`). Released 2026-10-21: v0.12.0 (the Golden Idol), v0.11.0 (the Thunder Champion), v0.10.0 (the Murder Machine), v0.9.0 (Arena 3).
 **Last updated:** 2026-10-21
 
 **Repository:** https://github.com/jfilipegm/gladiator-roguelike (public, branch `main`, remote `origin`, `.blend` files via Git LFS). Work on a branch per milestone, push as you go, merge through a PR; release every playable build (`Tools/release`).
@@ -306,7 +306,7 @@
   - Archives: Linux 43 MB, Linux dev 73 MB, Windows 45 MB, macOS 52 MB.
   - Smoke runs of the downloaded archives (`-bot -timed -botSeconds 40`), all v0.11.0, 0 exceptions: Linux as the Thunder Champion in the Stone Amphitheater (79 kills, 8 dashes, clock to 37 s), Linux as the Nobody in the Slave Pit (60 kills, 37 s), Windows under Wine as the Thunder Champion (69 kills, 5 dashes, 38 s). Their Profiling files were deleted. macOS not run.
 
-## Phase 5.11 the Golden Idol (branch `phase5-golden-idol`, v0.12.0)
+## Done — Phase 5.11 the Golden Idol (branch `phase5-golden-idol`, PR #14 merged 2026-10-21 inside the producer's pre-approved window, release v0.12.0)
 - **Spec:** `docs/GLADIATORS.md` "The Golden Idol"; DECISIONS "Phase 5.11" (why before the Ashen Oracle, which stays next). Merging inside the producer's window (until 07:05 WEST 2026-10-21).
 - **Done (committed, verified):**
   - **Model** `CH_GoldenIdol` (`BlenderSrc/characters/ch_goldenidol.py`, 844 tris, iteration 2): gilded body and mask, crimson sash, a spiked sun-crown disc behind his head (its back player cyan), a sceptre with an orb.
@@ -318,7 +318,10 @@
   - **Bot runs (dev build, `-gladiator golden_idol`), 0 exceptions:**
     - Slave Pit: 372 fps avg, 184 fps at ≥ 250 enemies (one 25.8 ms frame; p99 7.7 ms), 29 B/s GC; level 28, 7,645 kills, Coin Toss level 4, 10 Make It Rains (400 gold), 21 gold streaks, 3 chests (34 gold at the end); Gorm at 34 % in phase 2 when the recording ended.
     - Stone Amphitheater: 505 fps avg, 214 fps at ≥ 250 enemies (only 1,074 such frames: the build killed faster than the horde arrived, alive per minute 52 / 90 / 119 / 117 / 157 / 125 / 179 / 134, more C18 data); level 31, 9,643 kills, 13 Make It Rains (520 gold), 26 gold streaks; **beat the Beast Lord** in 9 attacks (Survived at 8:29). GC 438 B/s is the end-of-run spike.
-- **Next:** PR → merge (inside the window) → `Tools/release 0.12.0` → smoke runs.
+- **PR #14** (https://github.com/jfilipegm/gladiator-roguelike/pull/14) merged (3b2c036) at 04:28 WEST.
+- **v0.12.0 released 2026-10-21:** https://github.com/jfilipegm/gladiator-roguelike/releases/tag/v0.12.0.
+  - Archives: Linux 43 MB, Linux dev 73 MB, Windows 45 MB, macOS 52 MB.
+  - Smoke runs of the downloaded archives (`-bot -timed -botSeconds 40`), all v0.12.0, 0 exceptions: Linux as the Golden Idol in the Slave Pit (64 kills, clock to 37 s), Linux as the Murder Machine in the Provincial Pit (55 kills, 1 Verdict, 37 s), Windows under Wine as the Golden Idol (56 kills, 37 s). Their Profiling files were deleted. macOS not run.
 
 ## Known issues
 - **Residual GC (target 0 B/frame, met in steady state):** the 70–85 KB one-offs in paused card panels (v0.6.0/0.7.0) are fixed in Phase 5.6: the description buffers are pre-sized to 400 chars. A 200 s check run had none; the first level-up allocates ~7.5–9.9 KB once (paused; a hidden pre-draw of the cards didn't remove it; BACKLOG), the boss entrance 1.8 KB, the victory screen + save write ~238 KB (game over). Small first-occurrence allocations (≤ 1.2 KB) in the first minutes.

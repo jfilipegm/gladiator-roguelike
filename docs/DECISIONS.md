@@ -332,3 +332,13 @@ One line each: what, and why. Newest at the bottom of each section.
 - **The run summary names the arena's boss from its `BossDef`** (`shortName`, `deathLine`, `victoryLine`); it said Gorm in every arena.
 - **The seating bowl is decor; invisible stone along the podium is what blocks.** Each solid collider becomes a nav obstacle box, and a curved mesh collider would bake as one huge box over the floor.
 - **The crowd renderer draws in batches of 1,023** (the `RenderMeshInstanced` limit per call), so the bowl's 1,711 spectators are two draws.
+
+## Phase 5.9 — the Murder Machine (branch `phase5-murder-machine`, spec `docs/GLADIATORS.md`)
+- **A gladiator before Arena 4.** The GDD's roster order puts the Murder Machine next, his §6.7 unlock (beat Gorm) already works, and Arena 4 would be bigger again while C18 (big floors fill up late) waits on the producer's playtest. A new gladiator also gives the three arenas a new way to be played.
+- **The cleaver is the `GroundSlam` pattern** that `WeaponPattern` listed since M2.5 but nothing used: a chop that lands 2 m ahead in a 2.4 m circle, toward the nearest enemy. It's the slow huge AoE of CLAUDE.md §6.8, and it differs from the knight's 220° arc: it hits a spot in front, not everything round you, and point blank always connects.
+- **"Flat damage reduction" is −4 per hit after the arena's multiplier, never below 1, and not on status ticks.** That's what makes him the horde-wader: a Convict's 8 becomes 4, a Cur's 6 becomes 2, but a boss's 24 is still 20. A percentage would scale with the big hits too and make him a second Armor stat.
+- **No knockback is a motor multiplier (`KnockbackTakenMul` 0)**, since every `AddImpulse` caller is a hit's knockback.
+- **"Slam charges by taking hits" → the Wrath meter, spent on a jump landing (the Verdict).** The Blood Rite is on the slide, so the Verdict is on the jump: two gladiators, two movement verbs. It counts hits, not HP lost, so the plate doesn't slow it down. Numbers: +8 per hit (13 hits; with 0.4 s of i-frames that's ≥ 5 s in a crowd), 7 m, 60 × Damage, knockback 14, survivors staggered 1 s (`SE_Stagger`, a Root; bosses ignore Root).
+- **His numbers:** 150 HP, 85 % move speed, capsule 2.0 × 0.46 m. Cleaver: 34 damage, 2.1 s, knockback 10.
+- **The Blood Knight now unlocks as §6.7 says: reach Arena 3** (`ReachArena 2`). DECISIONS 5.3 planned the switch once the arena existed. Unlocks are saved by id, so a save that already has him keeps him.
+

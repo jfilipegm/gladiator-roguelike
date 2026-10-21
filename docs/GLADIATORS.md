@@ -65,7 +65,7 @@ A nameless pit fighter with a rusty gladius and a scrap shield. The baseline: 10
 
 **Tests:** kill heals and the 6 HP/s cap; other healing halved; the damage bonus at 100 / 50 / 20 % HP; the meter fills, a slide with a full meter pays HP (never kills) and frenzies, and an early slide does nothing; greatsword hits bleed; the unlock condition, and beating Gorm at low HP unlocks the knight while beating him at high HP doesn't.
 
-## The Murder Machine (Phase 5.9, v0.10.0)
+## The Murder Machine (built, Phase 5.9, v0.10.0)
 | | |
 |---|---|
 | **Fantasy** | The arena's executioner, sent down to the sand because nobody would pay to see him beheading people any more. Absurdly huge, slow, armoured like a furnace, and quite calm about it. |
@@ -75,7 +75,7 @@ A nameless pit fighter with a rusty gladius and a scrap shield. The baseline: 10
 | **Ability: Verdict** | A **Wrath meter** (0–100, pale steel with a cyan edge, under the HP bar) fills **only from hits he takes** (+8 per hit). When it's full, his next **jump landing** is the Verdict: "VERDICT!", a 7 m shockwave around him, 60 × his damage to everything in it, a big knockback, and survivors are **Rooted for 1 s** (bosses aren't rooted, only hurt). The meter empties. |
 | **Strength** | Wades into the horde: the swarm's small hits barely scratch him (a Convict's 8 becomes 4, a Cur's 6 becomes 2), every hit brings the Verdict closer, and the cleaver clears a crowd in front of him. 150 HP. |
 | **Weakness** | Slow (85 % move speed) with a slow weapon that only hits in front: fast Curs and assassins get round him. The plate does little against big hits (a boss's 24 is still 20). |
-| **Personality** | Says nothing; he's done this before. Heavy, deliberate strides; the cleaver rests on his shoulder while he walks; every chop makes the ground jump. |
+| **Personality** | Says nothing; he's done this before. Heavy, deliberate strides; the cleaver held low in front of him, raised over his head with both hands for every chop; every chop makes the ground jump. (Resting it on his shoulder between chops: BACKLOG.) |
 | **Unlock: defeat Gorm** | §6.7. `UL_MurderMachine` (`DefeatBoss gorm 1`). Codex hint: *"Gorm keeps an executioner below the pit. Kill Gorm, and he'll want new work."* The unlock also adds the Executioner's Cleaver to everyone's level-up pool. A save that already beat Gorm gets him at the next main menu. |
 
 **Colours:** the cleaver's ring and the Verdict's shockwave are player cyan-white, never orange-red. The meter is pale steel with a cyan edge, so it doesn't read as the Blood meter's crimson.

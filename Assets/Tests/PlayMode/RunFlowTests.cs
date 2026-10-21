@@ -93,9 +93,10 @@ namespace Gladiator.Tests
             var rewards = RunEndController.Instance.Rewards;
             Assert.IsNotNull(rewards, "the run was recorded");
             Assert.Greater(rewards.Renown, 0);
-            Assert.AreEqual(2, rewards.NewUnlocks.Count, "the flail, and (Phase 5.4) the Provincial Pit");
-            bool flail = false, pit = false;
-            foreach (var u in rewards.NewUnlocks) { flail |= u.id == "gorms_flail"; pit |= u.id == "provincial_pit"; }
+            Assert.AreEqual(3, rewards.NewUnlocks.Count, "the flail, (Phase 5.4) the Provincial Pit and (Phase 5.9) the Murder Machine");
+            bool flail = false, pit = false, machine = false;
+            foreach (var u in rewards.NewUnlocks) { flail |= u.id == "gorms_flail"; pit |= u.id == "provincial_pit"; machine |= u.id == "murder_machine"; }
+            Assert.IsTrue(machine, "Gorm's executioner wants new work");
             Assert.IsTrue(flail, "Gorm's Flail joins the cards");
             Assert.IsTrue(pit, "word reaches the provinces");
             Assert.IsTrue(System.IO.File.Exists(SaveSandbox.TestPath), "saved to disk (the sandbox file)");

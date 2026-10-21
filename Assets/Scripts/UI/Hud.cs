@@ -101,6 +101,9 @@ namespace Gladiator.UI
         // Murder Machine (Phase 5.9): the same bar is his Wrath meter (pale steel, cyan-white when full: "JUMP!").
         static readonly Color WrathColor = new Color(0.7f, 0.8f, 0.88f);
         static readonly Color WrathHot = new Color(0.62f, 0.97f, 1f);
+        // Thunder Champion (Phase 5.10): the same bar is his Charge (electric blue; "+N% SPD").
+        static readonly Color ChargeColor = new Color(0.35f, 0.62f, 1f);
+        static readonly Color ChargeHot = new Color(0.88f, 0.97f, 1f);
 
         static readonly Color XpColor = new Color(0.31f, 0.89f, 0.82f);
         static readonly Color HpColor = new Color(0.88f, 0.2f, 0.17f);
@@ -471,11 +474,14 @@ namespace Gladiator.UI
         {
             var rite = BloodRite.Instance;
             var verdict = Verdict.Instance;
+            var storm = Stormcaller.Instance;
             bool wrath = rite == null && verdict != null && verdict.trait != null;
-            bool on = (rite != null && rite.trait != null) || wrath;
+            bool charge = rite == null && !wrath && storm != null && storm.trait != null;
+            bool on = (rite != null && rite.trait != null) || wrath || charge;
             if (_bloodRoot.activeSelf != on) { _bloodRoot.SetActive(on); _bloodText.gameObject.SetActive(on); }
             if (!on) return;
             if (wrath) { DrawWrath(verdict, unscaledDt); return; }
+            if (charge) { DrawCharge(storm, unscaledDt); return; }
             if (_riteShown != rite) { _riteShown = rite; _lust = rite.GetComponent<Bloodlust>(); _bloodKey = int.MinValue; }
             float target = rite.Frenzied ? rite.FrenzyLeft / Mathf.Max(0.01f, rite.trait.frenzySeconds) : rite.Fill01;
             _bloodFill.fillAmount = Mathf.MoveTowards(_bloodFill.fillAmount, target, unscaledDt * 2f);
@@ -493,6 +499,22 @@ namespace Gladiator.UI
                 else _bloodText.SetText("");
             }
             _bloodText.color = key == -1 ? Color.Lerp(BloodColor, BloodHot, 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 8f)) : BloodColor;
+        }
+
+        /// <summary>The Thunder Champion's Charge on the Blood bar, with its attack-speed bonus.</summary>
+        void DrawCharge(Stormcaller c, float unscaledDt)
+        {
+            _bloodFill.fillAmount = Mathf.MoveTowards(_bloodFill.fillAmount, c.Charge01, unscaledDt * 4f);
+            float hot = Mathf.Clamp01((c.Charge01 - 0.75f) * 4f) * (0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 16f));
+            _bloodFill.color = Color.Lerp(ChargeColor, ChargeHot, hot);
+            int key = Mathf.RoundToInt(c.AttackSpeedBonus * 100f);
+            if (key != _bloodKey)
+            {
+                _bloodKey = key;
+                if (key > 0) _bloodText.SetText("+{0}% SPD", key);
+                else _bloodText.SetText("");
+            }
+            _bloodText.color = ChargeColor;
         }
 
         /// <summary>The Murder Machine's Wrath meter on the Blood bar: "JUMP!" when full (the next landing is the Verdict).</summary>

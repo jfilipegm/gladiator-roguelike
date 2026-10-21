@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0ea0c2151f44fc41b534863b8707d7a, type: 3}
+  m_Name: UL_ThunderChampion
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.UnlockDef
+  id: thunder_champion
+  displayName: The Thunder Champion
+  description: The Beast Lord is dead, and the storm god was watching. The Thunder Champion can be chosen, and his Storm Spear joins the level-up pool.
+  hint: The storm god is watching the amphitheatre. Win there.
+  conditions:
+  - kind: 0
+    id: beastlord
+    amount: 1
+  category: 0
+  renownCost: 0
+  renownBounty: 0
+  addsToPool:
+  - {fileID: 11400000, guid: 431224fa2499cc38f8ccf1a429f4fc07, type: 2}

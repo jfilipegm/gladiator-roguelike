@@ -862,6 +862,24 @@ def cleaver():
 
 ICONS["weapon_executioners_cleaver"] = cleaver()
 
+
+def storm_spear():
+    """Storm Spear (Phase 5.10): a diagonal spear with a bronze leaf blade, a white-cyan bolt crackling off its tip."""
+    g = blank()
+    for k in range(10):  # the shaft, bottom-left to the blade
+        put(g, [(1 + k, 14 - k)], "B")
+    put(g, [(10, 4), (11, 4), (11, 3), (10, 5)], "n")  # the bronze blade
+    put(g, [(12, 2), (12, 3), (11, 2), (13, 1)], "n")
+    put(g, [(11, 3)], "w")
+    put(g, [(8, 6), (9, 6)], "Y")                       # the socket
+    # the bolt: a zigzag from the tip down the right side
+    put(g, [(14, 3), (14, 4), (13, 5), (13, 6), (14, 6), (15, 7), (14, 8), (13, 9), (13, 10), (14, 10)], "c")
+    put(g, [(15, 4), (12, 6), (15, 8), (12, 10)], "w")
+    return g
+
+
+ICONS["weapon_storm_spear"] = storm_spear()
+
 ICONS["loaded_dice"] = grid([  # Loaded Dice (iteration 2: read as toast): a die's top, front and side, five dark pips
     "................",
     "................",

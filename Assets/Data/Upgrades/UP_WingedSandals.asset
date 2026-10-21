@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Winged Sandals
   glyph: WS
   icon: {fileID: 2800000, guid: 13ceaa4af4e914da3ab8c2724bbfa51d, type: 3}
-  iconRow: 46
+  iconRow: 47
   kind: 0
   tags: 256
   weight: 10

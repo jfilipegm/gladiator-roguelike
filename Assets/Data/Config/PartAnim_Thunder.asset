@@ -1,0 +1,66 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e71851036120cb039f3d54d2afbb805, type: 3}
+  m_Name: PartAnim_Thunder
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.PartAnimProfile
+  strideLength: 1.75
+  legSwing: 45
+  armSwing: 38
+  weaponArmSwingScale: 0.2
+  bobHeight: 0.07
+  runLean: 12
+  fullRunSpeed: 7.5
+  idleBobHeight: 0.015
+  idleBobHz: 1.4
+  idleArmSway: 4
+  airLegTuck: 30
+  airArmRaise: 55
+  jumpStretch: 0.14
+  jumpStretchTime: 0.18
+  slideBodyLean: -28
+  slideLegForward: 70
+  slideDrop: 0.32
+  slideArmBack: 35
+  landSquash: 0.2
+  landSquashTime: 0.16
+  swingYawStart: 20
+  swingYawEnd: -20
+  swingRaise: 110
+  swingCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  overheadChop: 0
+  chopPitchStart: 165
+  chopPitchEnd: 35
+  twoHanded: 0
+  poseSharpness: 16

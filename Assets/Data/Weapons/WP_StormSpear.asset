@@ -1,0 +1,79 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 39f0cecc993934a19800cd9b6e8df985, type: 3}
+  m_Name: WP_StormSpear
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.WeaponDef
+  id: storm_spear
+  displayName: Storm Spear
+  description: Lightning leaps from the spear's tip to the nearest enemy, then on through the crowd. Everything it strikes is Shocked.
+  pattern: 7
+  damage: 11
+  critChance: 0.06
+  critMultiplier: 2
+  knockback: 1.5
+  onHitStatus: {fileID: 11400000, guid: c4e3ba58329c4cad9b688e5c182978b7, type: 2}
+  onHitStatusPower: 0
+  onHitStacks: 1
+  cooldown: 0.9
+  swingDuration: 0.22
+  windup: 0.08
+  range: 9
+  arcDegrees: 150
+  width: 5
+  acquireRange: 9
+  amount: 1
+  speed: 16
+  pierce: 3
+  mesh: {fileID: 0}
+  meshScale: 1
+  flightTime: 0.6
+  fuse: 0.4
+  arcHeight: 2.2
+  echoDelay: 0
+  echoAngle: 180
+  echoScale: 1
+  targetFarthest: 0
+  tipLength: 0
+  spreadStrikes: 1
+  hitEffects: []
+  levels:
+  - mods:
+    - stat: 20
+      op: 0
+      value: 1
+  - mods:
+    - stat: 4
+      op: 1
+      value: 0.2
+  - mods:
+    - stat: 5
+      op: 1
+      value: 0.15
+  - mods:
+    - stat: 9
+      op: 0
+      value: 1
+  - mods:
+    - stat: 20
+      op: 0
+      value: 1
+  - mods:
+    - stat: 4
+      op: 1
+      value: 0.25
+  - mods:
+    - stat: 5
+      op: 1
+      value: 0.2
+    - stat: 8
+      op: 1
+      value: 0.15

@@ -1,7 +1,7 @@
 # Progress
 
 **Current phase:** Phase 5 — expansion
-**Current milestone:** Phase 5.9 — the Murder Machine, the fourth gladiator (branch `phase5-murder-machine`, spec `docs/GLADIATORS.md`). v0.9.0 (Arena 3, the Stone Amphitheater + the Beast Lord) released 2026-10-21. v0.8.0 (the Provincial Pit rebuilt as a 100 × 70 m octagon + the spike-trap fix) released 2026-10-20.
+**Current milestone:** between milestones. v0.10.0 (the Murder Machine) and v0.9.0 (Arena 3, the Stone Amphitheater + the Beast Lord) released 2026-10-21. Next candidates: Arena 4 (the Grand Arena, once C18 is answered) or the next gladiator (the Beastmaster). v0.8.0 (the Provincial Pit rebuilt as a 100 × 70 m octagon + the spike-trap fix) released 2026-10-20.
 **Last updated:** 2026-10-21
 
 **Repository:** https://github.com/jfilipegm/gladiator-roguelike (public, branch `main`, remote `origin`, `.blend` files via Git LFS). Work on a branch per milestone, push as you go, merge through a PR; release every playable build (`Tools/release`).
@@ -269,7 +269,7 @@
   - Archives: Linux 43 MB, Linux dev 73 MB, Windows 45 MB, macOS 52 MB. The build log's `errors=1` on the first build is the bridge timeout, as before.
   - Smoke runs of the downloaded archives (`-bot -timed -botSeconds 40`), all v0.9.0, 0 exceptions: Linux as the Nobody in the Slave Pit (52 kills, clock to 36 s) and in the Stone Amphitheater (`-arena stone_amphitheater`: 61 kills, 36 s), Windows under Wine in the Stone Amphitheater (35 kills, 37 s). Their Profiling files were deleted. macOS not run.
 
-## Phase 5.9 the Murder Machine (branch `phase5-murder-machine`, v0.10.0)
+## Done — Phase 5.9 the Murder Machine (branch `phase5-murder-machine`, PR #12 merged 2026-10-21 inside the producer's pre-approved window, release v0.10.0)
 - **Spec:** `docs/GLADIATORS.md` "The Murder Machine"; DECISIONS "Phase 5.9". Chosen as the next milestone because the GDD's roster order puts him next, his unlock already works, and Arena 4 would be bigger again while C18 waits on the playtest. The producer pre-approved merging any green PR until 07:05 WEST 2026-10-21 (they're asleep).
 - **Done (committed, verified):**
   - **Model** `CH_MurderMachine` (`BlenderSrc/characters/ch_murdermachine.py`, 808 tris, iteration 2): pointed black executioner's hood with cyan eyes, rust plate barrel, bare arms, a slab of a cleaver in the right fist; cyan axe sigil on the back.
@@ -284,7 +284,10 @@
   - **Bot runs (dev build, `-gladiator murder_machine`), 0 exceptions:**
     - Slave Pit: 384 fps avg, 199 fps at ≥ 250 enemies, 24 B/s GC; level 27, 8,361 kills, 46 Verdicts (1,455 hits), 353 slams, 430 HP taken; Gorm at 65 % (the bot never levelled the cleaver).
     - Stone Amphitheater (`-arena stone_amphitheater`): 380 fps avg, 197 fps at ≥ 250 enemies, max 322, 25 B/s GC; level 32, 8,176 kills, 60 Verdicts (2,903 hits), 246 slams, 337 HP taken; the Beast Lord at 35 % in phase 2 when the recording ended.
-- **Next:** PR → merge (inside the producer's window) → `Tools/release 0.10.0` → smoke runs.
+- **PR #12** (https://github.com/jfilipegm/gladiator-roguelike/pull/12) merged (294c428) at 02:37 WEST under the producer's "proceed with any merge in the next 5h40" (01:25).
+- **v0.10.0 released 2026-10-21:** https://github.com/jfilipegm/gladiator-roguelike/releases/tag/v0.10.0.
+  - Archives: Linux 43 MB, Linux dev 73 MB, Windows 45 MB, macOS 52 MB.
+  - Smoke runs of the downloaded archives (`-bot -timed -botSeconds 40`), all v0.10.0, 0 exceptions: Linux as the Murder Machine in the Slave Pit (55 kills, 1 Verdict, clock to 37 s), Linux as the Nobody in the Stone Amphitheater (66 kills, 36 s), Windows under Wine as the Murder Machine (54 kills, 1 Verdict, 37 s). Their Profiling files were deleted. macOS not run.
 
 ## Known issues
 - **Residual GC (target 0 B/frame, met in steady state):** the 70–85 KB one-offs in paused card panels (v0.6.0/0.7.0) are fixed in Phase 5.6: the description buffers are pre-sized to 400 chars. A 200 s check run had none; the first level-up allocates ~7.5–9.9 KB once (paused; a hidden pre-draw of the cards didn't remove it; BACKLOG), the boss entrance 1.8 KB, the victory screen + save write ~238 KB (game over). Small first-occurrence allocations (≤ 1.2 KB) in the first minutes.

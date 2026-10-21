@@ -139,6 +139,25 @@ namespace Gladiator.Gameplay
         [Tooltip("Escorts can't stray further than this from it while it lives (m). When it dies they're freed: they vanish, no kill.")]
         public float leashLength = 3.5f;
 
+        [Header("Formation (the Centurion, Phase 5.16)")]
+        [Tooltip("Escorts hold these slots in its frame (x right, y forward, m) instead of a leash; escort k takes slot k, so " +
+                 "min(escortCount, slots) come. Empty = a leash (the Beast Handler).")]
+        public Vector2[] formationSlots = System.Array.Empty<Vector2>();
+        [Tooltip("With a formed line it stops this far from the player (m): the shields press you, they don't walk through you (0 = walks on).")]
+        public float formationHold;
+        [Tooltip("The push (a Lunger leader's lunge with a line): its lane is the line's width (+ the escorts' bodies) + this (m).")]
+        public float pushPad = 0.8f;
+        [Tooltip("The push lane's depth in front of the shields (m).")]
+        public float pushDepth = 2.6f;
+        [Tooltip("The push throws the player this hard along its facing (m/s).")]
+        public float pushKnockback = 9f;
+        [Tooltip("On: its escorts vanish when it dies (the Beast Handler). Off: they're let go and fight on (the line breaks).")]
+        public bool freeEscortsOnDeath = true;
+        [Tooltip("Applied to every escort still with it when it dies (freeEscortsOnDeath off).")]
+        public StatusDef breakStatus;
+        [Tooltip("Those escorts' shields are down this long (s): no block.")]
+        public float breakShieldsDown;
+
         [Header("Rewards")]
         public float xp = 1f;
         [Range(0f, 1f)] public float goldChance = 0.05f;

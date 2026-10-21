@@ -116,6 +116,7 @@ namespace Gladiator.Gameplay
         PlayerHealth _playerHealth;
         MudZones _mud;
         float _maxRadius = 0.5f;
+        bool _killingAll;
 
         public int AliveCount { get; private set; }
         /// <summary>Alive enemies of one type (spawners cap kiting types that would otherwise pile up).</summary>
@@ -445,8 +446,10 @@ namespace Gladiator.Gameplay
 
         public void KillAll()
         {
+            _killingAll = true; // the run's end, not a fight: no line counts as broken
             for (int i = 0; i < _high; i++)
                 if (_active[i]) Kill(i, new DamageInfo(), allowBlast: false);
+            _killingAll = false;
             _blastCount = 0;
         }
 
@@ -530,7 +533,7 @@ namespace Gladiator.Gameplay
             // the Shield Archer's pavise is down only while it recovers from a shot
             bool shield = def.behaviour == EnemyBehaviour.ShieldBearer || (def.behaviour == EnemyBehaviour.ShieldedRanged && _state[i] != AiState.Recover)
                           || (def.behaviour == EnemyBehaviour.Scripted && _scriptedShield[i]); // a boss's shield, raised by its controller
-            if (!shield || def.blockArc <= 0f) return false;
+            if (!shield || def.blockArc <= 0f || ShieldsDown(i)) return false; // a broken line's shields are down a while
             dir.y = 0f;
             float m = dir.magnitude;
             if (m < 1e-3f) return false;
@@ -623,6 +626,7 @@ namespace Gladiator.Gameplay
                 Xp = def.xp * (elite ? affix.xpMultiplier : 1f), GoldChance = def.goldChance,
             });
             if (_carried[i] > 0) DropCarried(i);
+            if (_slotIndex[i] >= 0) LeaveLine(i);
             if (def.escort != null) FreeEscorts(i);
             if (deathPop != null && feedback != null)
                 deathPop.Emit(_pos[i] + Vector3.up * 0.7f, info.Direction, feedback);
@@ -751,6 +755,11 @@ namespace Gladiator.Gameplay
                 // behaviour: desired velocity + where to face
                 bool facePlayer;
                 Vector3 desired = Think(i, def, p, player, dirTo, dist, dt, tele, out facePlayer);
+                // formations (Phase 5.16): an escort in a line holds its slot; a leader with a line holds short of you
+                bool inLine = _slotIndex[i] >= 0 && InFormation(i);
+                float lineYaw = 0f;
+                if (inLine) desired = FormationSteer(i, def, p, dt, out lineYaw);
+                else if (_formedMask[i] != 0) desired = LeaderHold(i, def, desired, dist, ref facePlayer);
                 if (_stMask[i] != 0)
                 {
                     float sm = StatusSpeedMul(i);
@@ -780,14 +789,14 @@ namespace Gladiator.Gameplay
                 }
 
                 bool dasher = def.behaviour == EnemyBehaviour.Dasher;
-                if ((_state[i] == AiState.Attack && (def.behaviour == EnemyBehaviour.Lunger || dasher)) || (dasher && _state[i] == AiState.Recover))
-                    _vel[i] = desired; // the leap / dash ignores acceleration; a dasher stops dead when it's done
+                if ((_state[i] == AiState.Attack && (def.behaviour == EnemyBehaviour.Lunger || dasher)) || (dasher && _state[i] == AiState.Recover) || inLine)
+                    _vel[i] = desired; // the leap / dash ignores acceleration; a dasher stops dead when it's done; a line holds its slots
                 else _vel[i] = Vector3.MoveTowards(_vel[i], desired, def.acceleration * dt);
                 Vector3 np = p + (_vel[i] + _knock[i]) * dt + sep * Mathf.Min(1f, separationStrength * dt);
                 _knock[i] *= knockDecay;
 
                 _obstacles?.PushOut(ref np, _radius[i]);
-                if (_leaderSlot[i] >= 0) LeashClamp(i, ref np);
+                if (_leaderSlot[i] >= 0 && !inLine) LeashClamp(i, ref np);
                 if (dasher && def.trampleMul > 0f && _state[i] == AiState.Attack) Trample(i, def, np);
 
                 // keep inside the arena (its outline, or the ellipse)
@@ -820,7 +829,8 @@ namespace Gladiator.Gameplay
                 // contact damage (a lunging cur deals its leap damage instead)
                 _contactCd[i] -= dt;
                 bool touching = dist < _radius[i] + playerRadius + 0.15f && Mathf.Abs(player.y - np.y) < 1.1f;
-                if (_playerHealth != null && touching)
+                bool pushed = inLine && _playerHealth != null && PushHit(i, def, dist, player); // the line's shove (its own reach)
+                if (_playerHealth != null && touching && !pushed)
                 {
                     if (_state[i] == AiState.Attack && (def.behaviour == EnemyBehaviour.Lunger || dasher))
                     {
@@ -843,9 +853,11 @@ namespace Gladiator.Gameplay
                     }
                 }
 
-                // facing: shield bearers / shooters / wind-ups look at the player (turn-rate limited), others look where they go
-                Vector3 face = facePlayer ? dirTo : (_state[i] == AiState.Attack || (dasher && _state[i] == AiState.Windup) ? _aim[i] : _vel[i]);
-                if (face.x * face.x + face.z * face.z > (facePlayer ? 1e-4f : 0.04f))
+                // facing: shield bearers / shooters / wind-ups look at the player (turn-rate limited), others look where they go;
+                // a line faces its leader's front, not you (flanking works), and a bracing leader keeps the push's facing
+                Vector3 face = facePlayer ? dirTo : (_state[i] == AiState.Attack || ((dasher || _formedMask[i] != 0) && _state[i] == AiState.Windup) ? _aim[i] : _vel[i]);
+                if (inLine) _yaw[i] = Mathf.MoveTowardsAngle(_yaw[i], lineYaw, def.turnRate * dt);
+                else if (face.x * face.x + face.z * face.z > (facePlayer ? 1e-4f : 0.04f))
                     _yaw[i] = Mathf.MoveTowardsAngle(_yaw[i], Mathf.Atan2(face.x, face.z) * Mathf.Rad2Deg, def.turnRate * dt);
 
                 // elite marker + threat list
@@ -860,6 +872,7 @@ namespace Gladiator.Gameplay
                 // flash restore
                 if (_flash[i] > 0f) { _flash[i] -= dt; if (_flash[i] <= 0f && v.Flashing) SetMaterial(v, bodyMaterial); }
                 if (_recoil[i] > 0f) _recoil[i] -= dt;
+                if (_shieldsDownT[i] > 0f) _shieldsDownT[i] -= dt;
 
                 v.Root.SetPositionAndRotation(np, Quaternion.Euler(0f, _yaw[i], 0f));
 
@@ -936,10 +949,12 @@ namespace Gladiator.Gameplay
                     switch (_state[i])
                     {
                         case AiState.Windup:
-                            facePlayer = true;
+                            // with a line it's the push: braced, its facing locked when the wind-up began (step out of the lane)
+                            facePlayer = _formedMask[i] == 0;
+                            if (!facePlayer) DrawPush(i, 1f - _stateT[i] / _stateDur[i], tele);
                             if (_stateT[i] <= 0f)
                             {
-                                _aim[i] = dirTo;
+                                if (facePlayer) _aim[i] = dirTo;
                                 _attackHit[i] = false;
                                 SetState(i, AiState.Attack, def.lungeTime);
                                 _attackCd[i] = def.attackCooldown * atkMul;
@@ -953,7 +968,11 @@ namespace Gladiator.Gameplay
                             return dirTo * (speed * 0.3f);
                         default:
                             if (_attackCd[i] <= 0f && dist < def.attackRange && Mathf.Abs(dy) < 1f)
+                            {
                                 SetState(i, AiState.Windup, def.windup * atkMul);
+                                float yaw = _yaw[i] * Mathf.Deg2Rad;
+                                if (_formedMask[i] != 0) _aim[i] = new Vector3(Mathf.Sin(yaw), 0f, Mathf.Cos(yaw)); // the line pushes where it faces
+                            }
                             return dirTo * speed;
                     }
 
@@ -1155,7 +1174,8 @@ namespace Gladiator.Gameplay
             pose.ArmR = PartPose.Swing(s * arm);
             pose.RootY = Mathf.Abs(s) * (prof != null ? prof.bobHeight : 0.05f) * run01;
             if (def.behaviour == EnemyBehaviour.ShieldBearer || def.behaviour == EnemyBehaviour.ShieldedRanged)
-                pose.ArmL = PartPose.Swing(-s * arm * 0.15f); // shield stays up
+                pose.ArmL = _shieldsDownT[i] > 0f ? PartPose.Swing(-30f) + new Vector3(0f, 0f, -40f) // a broken line: guard open
+                                                  : PartPose.Swing(-s * arm * 0.15f); // shield stays up
 
             // attack poses (the body language IS the telegraph)
             var st = _state[i];

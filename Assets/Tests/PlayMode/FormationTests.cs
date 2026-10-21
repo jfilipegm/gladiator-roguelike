@@ -52,6 +52,8 @@ namespace Gladiator.Tests
             var spawner = Object.FindAnyObjectByType<DebugEnemySpawner>();
             if (spawner != null) spawner.enabled = false;
             if (Director.Instance != null) Director.Instance.enabled = false; // tests place their own enemies
+            var lvl = Object.FindAnyObjectByType<LevelUpController>();
+            if (lvl != null) lvl.enabled = false; // kills drop XP: a level-up would pause the clock and the waits never end
             _em.KillAll();
             DevSettings.GodMode = true; // HP never runs out; damage is still recorded
             _health.invulnerableTime = 0f; // a shield's contact hit must not swallow the push

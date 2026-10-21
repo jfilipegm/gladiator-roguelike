@@ -11,7 +11,10 @@ args=(run_tests --mode "$mode" --timeout "$to")
 if [ "$mode" = "PlayMode" ]; then
   "$DIR/u" "${args[@]}" --async_tests true >/dev/null 2>&1
   sleep 3
-  for i in $(seq 1 $((to / 3))); do
+  # poll until done or a wall-clock deadline (a fixed poll count cut long classes short when sleep returned early,
+  # and the next run then aborted the one still going)
+  deadline=$((SECONDS + to))
+  while [ $SECONDS -lt $deadline ]; do
     out=$("$DIR/u" test_status 2>/dev/null)
     if [ -n "$out" ] && ! echo "$out" | grep -q '"status": "running"'; then break; fi
     sleep 3

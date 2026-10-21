@@ -27,6 +27,9 @@ namespace Gladiator.Gameplay
         /// <summary>Circles to your side instead of your face, crouches behind a telegraphed lane, dashes through you,
         /// then stands winded: the window to kill it (Assassin).</summary>
         Dasher,
+        /// <summary>Keeps its distance like a Ranged, raises its staff, then opens a rune circle under you that erupts
+        /// after `runeDelay`; blinks away when you get within `blinkRange` (Sorcerer).</summary>
+        Caster,
     }
 
     /// <summary>An enemy type as data (CLAUDE.md §2.4). New enemies = new assets; new behaviours = new code.</summary>
@@ -115,6 +118,19 @@ namespace Gladiator.Gameplay
         [Tooltip("Caught: move speed × this (the player's slows bottom out at 0.1) for netTime seconds; attackDamage on landing.")]
         [Range(0.1f, 1f)] public float netSlow = 0.1f;
         public float netTime = 1.2f;
+
+        [Header("Gilded Mercenary")]
+        [Tooltip("A hit on the player pockets up to this much of the run's gold; killing it drops everything it took (0 = none).")]
+        public int stealGold;
+
+        [Header("Sorcerer (Caster)")]
+        [Tooltip("Seconds between the rune opening under the player and the eruption (the circle fills meanwhile).")]
+        public float runeDelay = 1.1f;
+        [Tooltip("Blinks away when the player comes this close (m; 0 = never).")]
+        public float blinkRange;
+        public float blinkCooldown = 5f;
+        [Tooltip("How far from the player it reappears (m).")]
+        public Vector2 blinkDistance = new Vector2(9f, 12f);
 
         [Header("Rewards")]
         public float xp = 1f;

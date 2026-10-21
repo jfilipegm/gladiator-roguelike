@@ -36,12 +36,15 @@ namespace Gladiator.Gameplay
         public int maxAliveOverride;
         [Tooltip("The arena's ArenaLayoutDef.spawnMaxDistance: ring spawns within this distance of the player when the edge allows it (0 = anywhere).")]
         public float maxSpawnDistance;
+        [Tooltip("The arena's ArenaLayoutDef.densityMul: multiplies the target curve and the spawn rate (C18).")]
+        public float arenaDensity = 1f;
+        float Density => densityMultiplier * (arenaDensity > 0f ? arenaDensity : 1f);
         [Tooltip("The arena's ArenaLayoutDef.eliteEvery (0 = DirectorConfig.eliteEvery).")]
         public float eliteEveryOverride;
         float EliteEvery => eliteEveryOverride > 0f ? eliteEveryOverride : config.eliteEvery;
         int HardCap => maxAliveOverride > 0 ? Mathf.Min(config.hardCap, maxAliveOverride) : config.hardCap;
 
-        public int TargetAlive => config == null ? 0 : Mathf.Min(HardCap, Mathf.RoundToInt(config.targetAlive.Evaluate(Clock) * densityMultiplier));
+        public int TargetAlive => config == null ? 0 : Mathf.Min(HardCap, Mathf.RoundToInt(config.targetAlive.Evaluate(Clock) * Density));
         public float NextSwarmAt => _nextSwarm;
         public float NextEliteAt => _nextElite;
 
@@ -67,7 +70,7 @@ namespace Gladiator.Gameplay
             var open = new bool[n];
             for (float t = 0f; t <= runLength + 0.01f; t += 5f)
             {
-                float total = Mathf.Min(HardCap, config.targetAlive.Evaluate(t) * densityMultiplier);
+                float total = Mathf.Min(HardCap, config.targetAlive.Evaluate(t) * Density);
                 for (int i = 0; i < n; i++)
                 {
                     share[i] = 0f;
@@ -162,7 +165,7 @@ namespace Gladiator.Gameplay
             int target = TargetAlive;
             if (em.AliveCount < target)
             {
-                _spawnAcc = Mathf.Min(_spawnAcc + config.spawnPerSecond.Evaluate(t) * dt, 8f);
+                _spawnAcc = Mathf.Min(_spawnAcc + config.spawnPerSecond.Evaluate(t) * (arenaDensity > 0f ? arenaDensity : 1f) * dt, 8f);
                 while (_spawnAcc >= 1f && em.AliveCount < target)
                 {
                     _spawnAcc -= 1f;

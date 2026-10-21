@@ -117,6 +117,8 @@ namespace Gladiator.EditorTools
             proj.potMesh = AssetDatabase.LoadAssetAtPath<Mesh>(CombatSetup.PotMesh);
             proj.arrowMesh = AssetDatabase.LoadAssetAtPath<Mesh>(CombatSetup.ArrowMesh);
             proj.netMesh = AssetDatabase.LoadAssetAtPath<Mesh>("Assets/Art/Models/Weapons/WP_Net.fbx");
+            proj.purseMesh = AssetDatabase.LoadAssetAtPath<Mesh>(CombatSetup.PurseMesh); // the Gilded Patron (Phase 5.13)
+            proj.coinMesh = AssetDatabase.LoadAssetAtPath<Mesh>(CombatSetup.HotCoinMesh);
             proj.feedback = feedback;
             proj.burst = pop;
 

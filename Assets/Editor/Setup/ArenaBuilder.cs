@@ -22,6 +22,10 @@ namespace Gladiator.EditorTools
         const string SpikeGrateModel = "Environment/PR_SpikeGrate";
         const string SpikesModel = "Environment/PR_Spikes";
         const string CageModel = "Environment/SM_CageGate";
+        const string JetNozzleModel = "Environment/PR_FireJetNozzle";
+        const string JetFlameModel = "Environment/PR_JetFlame";
+        const string BladeHubModel = "Environment/PR_BladeHub";
+        const string BladeModel = "Environment/PR_Blade";
         public const string GoldenRatModel = "Assets/Art/Models/Props/PR_GoldenRat.fbx";
         public const string BookmakerModel = "Assets/Art/Models/Characters/CH_Bookmaker.fbx";
 
@@ -76,6 +80,17 @@ namespace Gladiator.EditorTools
                 }
             }
             foreach (var t in layout.spikeTraps) ArenaSceneCommon.PlaceDecor(SpikeGrateModel, env, t, 0f);
+            // fire-jet rows (Phase 5.13): a bronze nozzle every 2 m across each row (decor: they're set in the floor)
+            const float JetSpacing = 2f;
+            foreach (var r in layout.fireJets)
+            {
+                float yaw = r.z * Mathf.Deg2Rad;
+                var along = new Vector3(Mathf.Cos(yaw), 0f, -Mathf.Sin(yaw));
+                int n = Mathf.Max(1, Mathf.RoundToInt(r.w / JetSpacing));
+                for (int k = 0; k < n; k++)
+                    ArenaSceneCommon.PlaceDecor(JetNozzleModel, env, new Vector3(r.x, 0f, r.y) + along * (-r.w * 0.5f + r.w / n * (k + 0.5f)), r.z);
+            }
+            foreach (var h in layout.bladeSweepers) ArenaSceneCommon.PlaceProp(BladeHubModel, env, h, 0f); // stone the horde walks round
 
             var mud = new List<Vector3>();
             var fires = new List<Vector4>();
@@ -168,6 +183,23 @@ namespace Gladiator.EditorTools
                 cages.every = layout.cageEvery;
                 cages.pack = layout.cagePack;
             }
+            if (layout.fireJets != null && layout.fireJets.Length > 0)
+            {
+                var jets = new GameObject("FireJets").AddComponent<FireJets>();
+                jets.transform.SetParent(arena, false);
+                jets.rows = layout.fireJets;
+                jets.flameMesh = FirstMesh("Assets/Art/Models/" + JetFlameModel + ".fbx");
+                jets.material = AssetDatabase.LoadAssetAtPath<Material>(LookSetup.EnvMat);
+                jets.burnStatus = AssetDatabase.LoadAssetAtPath<StatusDef>("Assets/Data/Status/SE_Burn.asset");
+            }
+            if (layout.bladeSweepers != null && layout.bladeSweepers.Length > 0)
+            {
+                var blades = new GameObject("BladeSweepers").AddComponent<BladeSweepers>();
+                blades.transform.SetParent(arena, false);
+                blades.hubs = layout.bladeSweepers;
+                blades.bladeMesh = FirstMesh("Assets/Art/Models/" + BladeModel + ".fbx");
+                blades.material = AssetDatabase.LoadAssetAtPath<Material>(LookSetup.EnvMat);
+            }
             var firePits = new GameObject("FirePits").AddComponent<ArenaFirePits>();
             firePits.transform.SetParent(arena, false);
             firePits.pits = fires.ToArray();
@@ -191,6 +223,7 @@ namespace Gladiator.EditorTools
                 fight.controller = new GameObject("BossController").AddComponent<BossController>();
                 fight.controller.transform.SetParent(fight.transform, false);
                 fight.controller.def = layout.boss;
+                fight.controller.guardSpots = layout.guardSpots ?? new Vector3[0];
                 var hazards = Object.FindAnyObjectByType<HazardZones>();
                 if (hazards != null) hazards.capacity = Mathf.Max(hazards.capacity, 160); // + the phase-2 fire ring
             }
@@ -201,6 +234,7 @@ namespace Gladiator.EditorTools
                 director.maxAliveOverride = layout.maxAlive;
                 director.maxSpawnDistance = layout.spawnMaxDistance;
                 director.eliteEveryOverride = layout.eliteEvery;
+                director.arenaDensity = layout.densityMul > 0f ? layout.densityMul : 1f;
                 if (layout.spawnTable != null) director.table = layout.spawnTable;
             }
             // the arena's tier and difficulty (Phase 5.4)

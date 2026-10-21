@@ -33,6 +33,8 @@ namespace Gladiator.UI
         CanvasGroup _bossGroup;
         Image _bossFill;
         TextMeshProUGUI _bossName;
+        TextMeshProUGUI _bossGuard; // the Gilded Patron's payroll (Phase 5.13)
+        bool _bossGuardOn;
         BossController _bossShown;
         bool _timerBoss;
         static readonly Color BossRed = new Color(0.86f, 0.16f, 0.12f);
@@ -233,6 +235,8 @@ namespace Gladiator.UI
             _bossName = UiFactory.Text("BossName", bossRoot.transform, "", 30, new Color(1f, 0.9f, 0.8f), TextAlignmentOptions.Center, top, top, new Vector2(0, -112), new Vector2(900, 36), font, fontMaterial);
             PreSize(_bossName, "GORM, THE PIT MASTER OF THE SLAVE PITS");
             _bossFill = UiFactory.Bar("BossBar", bossRoot.transform, new Color(0.08f, 0.05f, 0.06f, 0.85f), BossRed, top, top, new Vector2(0, -150), new Vector2(760, 26));
+            _bossGuard = UiFactory.Text("BossGuard", bossRoot.transform, GuardedText, 22, BossGold, TextAlignmentOptions.Center, top, top, new Vector2(0, -180), new Vector2(900, 28), font, fontMaterial);
+            _bossGuard.enabled = false;
             _pause = UiFactory.Text("Pause", canvas, "PAUSED\n<size=36>click to resume  ·  O: options  ·  Q: main menu</size>", 90, Color.white, TextAlignmentOptions.Center, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(900, 260), font, fontMaterial);
             _pause.textWrappingMode = TextWrappingModes.Normal;
             _pause.alpha = 0f;
@@ -359,7 +363,18 @@ namespace Gladiator.UI
             float a = show ? 1f : 0f;
             if (!Mathf.Approximately(_bossGroup.alpha, a)) _bossGroup.alpha = a;
             if (show) _bossFill.fillAmount = Mathf.MoveTowards(_bossFill.fillAmount, b.Hp01, Time.unscaledDeltaTime * 1.5f);
+            bool guard = show && b.Guarded;
+            if (guard != _bossGuardOn)
+            {
+                _bossGuardOn = guard;
+                _bossGuard.enabled = guard;
+                _bossFill.color = guard ? BossGold : BossRed; // a gilded bar: he's paying someone to take the hits
+            }
         }
+
+        const string GuardedText = "GUARDED: KILL HIS HIRED SWORDS";
+        static readonly Color BossGold = new Color(1f, 0.82f, 0.3f);
+        public bool BossGuardShown => _bossGuardOn;
 
         const string SwarmText = "SWARM INCOMING!";
         const string EliteText = "AN ELITE ENTERS!";

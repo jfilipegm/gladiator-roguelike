@@ -1,7 +1,7 @@
 # Progress
 
 **Current phase:** Phase 5 — expansion
-**Current milestone:** between milestones, waiting on the producer's playtest. Released 2026-10-21: v0.13.0 (the Ashen Oracle), v0.12.0 (the Golden Idol), v0.11.0 (the Thunder Champion), v0.10.0 (the Murder Machine), v0.9.0 (Arena 3). See "Next" at the end of the Done list.
+**Current milestone:** Phase 5.13 Arena 4, the Grand Arena + the Gilded Patron, IN PROGRESS on branch `phase5-grand-arena` (pushed, no PR yet). Built, tested, 4 bot runs done, C24 retuned (15,000 HP, guarded ×0.6); open: the PR, the producer's OK to merge, release v0.14.0. See "In progress — Phase 5.13" below the Done list. Released before it: v0.9.0–v0.13.0 (2026-10-21).
 **Last updated:** 2026-10-21
 
 **Repository:** https://github.com/jfilipegm/gladiator-roguelike (public, branch `main`, remote `origin`, `.blend` files via Git LFS). Work on a branch per milestone, push as you go, merge through a PR; release every playable build (`Tools/release`).
@@ -343,6 +343,26 @@
 - **v0.13.0 released 2026-10-21:** https://github.com/jfilipegm/gladiator-roguelike/releases/tag/v0.13.0.
   - Archives: Linux 43 MB, Linux dev 73 MB, Windows 45 MB, macOS 52 MB.
   - Smoke runs of the downloaded archives (`-bot -timed -botSeconds 40`), all v0.13.0, 0 exceptions: Linux as the Ashen Oracle in the Stone Amphitheater (64 kills, clock to 37 s), Linux as the Thunder Champion in the Slave Pit (68 kills, 7 dashes, 38 s), Windows under Wine as the Ashen Oracle (61 kills, 37 s). Their Profiling files were deleted. macOS not run.
+
+## In progress — Phase 5.13 Arena 4, the Grand Arena + the Gilded Patron (branch `phase5-grand-arena`, not merged)
+- **Why this milestone:** the producer said "proceed with what you think is best" (2026-10-21); DECISIONS "Phase 5.13" has the reasons. Spec: `docs/ARENAS.md` §4, `docs/BOSSES.md` "The Gilded Patron".
+- **Done (committed, verified):**
+  - **Arena** `AL_GrandArena` / `GrandArena.unity` (`GrandArenaLayout.cs`, `GrandArenaSetup.cs`): a Greek cross (L 70, H 26, C 14), 11,674 m² (1.37× the Amphitheater); 4 monumental gates (north = the boss's), stand sections + invisible stone along all 16 edges, 8 corner towers, 4 patron boxes (guard spots at their feet), a dais with the Patron's statue, 8 terraces (stairs / `SM_GrandRamp`), ~2,000 spectators. Tier 3, enemy HP ×1.8, damage taken ×1.35, elites every 60 s, cap 400, `densityMul` 1.2 (C18), `UL_GrandArena` (beat the Beast Lord), `RD_GrandArena`, `ST_GrandArena`.
+  - **Hazards:** `FireJets` (4 rows, one across each arm at 52 m: 10 s period, 1.2 s telegraph, 1.6 s burn, 3.5 m tall; player 20, enemies 45 ×2 ordinary + Burn, boss ×0.25) and `BladeSweepers` (4 hubs at (±15, ±15): 5.5 m blades, 12 s period, 1.5 s telegraph, 5 s spin; player 16 + knockback, jump clears at 0.55 m; enemies 35 ×2).
+  - **Enemies:** `EN_GildedMercenary` (Lunger + `stealGold` 12, drops what he took: `EnemyManager.Gilded.cs`), `EN_Sorcerer` (new `EnemyBehaviour.Caster`: rune via `EnemyProjectiles.Rune`, blink).
+  - **Boss** `BD_GildedPatron` / `EN_GildedPatron` (15,000 HP, first 18,000): `BossAttack.CoinBombs` (`EnemyProjectiles.Bomb`, scatters gold) and `Volley` (`FireCoin`), Shove = Bash; guards at the 2 nearest `guardSpots`; payroll (`guardedBy` → ×0.6 damage taken (first ×0.4), gold threads, HUD "GUARDED" + gold bar); phase 2 `FireJets.FireAll` + `BladeSweepers.SpinForever`; `defeatGold` 300; bearer legs `BLeg*` animated.
+  - **Models** (Blender, headless `Tools/bheadless`): `BlenderSrc/environment/grand_arena.py` (parts terrain/structures/plaza/hazards), `enemies/en_gildedmercenary.py` (288 tris), `en_sorcerer.py` (284), `en_gildedpatron.py` (920, iteration 3), `props/patron_projectiles.py`. ART_DEBT updated.
+  - **Fixes during the milestone:** bearer-leg `.name` allocated 272 B/frame in the boss fight (cached); the blade spin counter counted frames.
+  - **Tests:** `GrandArenaTests` 6/6, `GildedPatronTests` 6/6. Full suites EditMode 77/77, PlayMode 176/176. Menu + Codex rebuilt. Version 0.14.0. Release notes drafted (`docs/releases/v0.14.0.md`, the "Tested" line is still the TESTED_LINE placeholder).
+  - **Play-mode screenshots:** `ga_first`, `ga_overview`, `ga_northarm`, `ga_box`, `ga_jets`, `ga_blade_warn/spin`, `ga_boss_enter`, `ga_boss_bombs`, `ga_boss_top`.
+  - **Bot runs (dev build, `-arena grand_arena`, 10 min), 0 exceptions:**
+    - Run 1, the Nobody: 180 fps at ≥ 250 enemies, gameplay 1.8 ms; alive at minutes 1–8: 63 / 123 / 173 / 191 / 291 / 276 / 327 / 369, **300 at 4:57** (C18 met); level 36, 10,636 kills; jets 200 (1,855 burnt), goldStolen 639 (all back), runes 631; Patron at 63 % (phase 1) 40 s into the fight. GC 15.6 KB/s: the bearer-leg bug, fixed.
+    - Run 2, the Nobody: 196 fps at ≥ 250, GC 148 B/s (the end spike only); level 34, 10,481 kills; blades 170 spins (462 mowed, 8 hits on the bot), jets 207, runes 578 (41 hits); **Patron at 99 % after 57 s**, 2 guard waves, 56 purses.
+    - Run 3, the Golden Idol: 189 fps at ≥ 250, GC 145 B/s; level 32, 9,212 kills; goldStolen 483 (471 back); blades mowed 2,236; **Patron at 100 % after 59 s**, 2 guard waves, 63 purses, no volley (the bot keeps > 19 m away).
+    - **C24 retune** (`EN_GildedPatron` 18,000 → 15,000 HP, `BD_GildedPatron.guardedDamageMul` 0.4 → 0.6; the bot now logs the fight's length, time within 10 m of the boss, time chasing pickups, time guarded): Run 4, the Nobody: 345 fps avg, 189 fps at ≥ 250 enemies (p95 7.7 ms), gameplay 1.81 / 2.49 ms, GC 147 B/s; alive at minutes 1–8: 60 / 123 / 170 / 213 / 310 / 371 / 353 / 379, **300 at 4:54**; level 32, 7,896 kills, 7 chests; blades mowed 1,641 (12 hits on the bot), jets burnt 1,741 (8 hits); goldStolen 425 (all back), runes 475. Fight 56 s: **near him 7 s, chasing pickups 48 s, guarded 26 s; Patron at 76 %** (phase 1), 57 purses, 14 coins. So the earlier 99–100 % was mostly the bot chasing his scattered gold.
+    - **Fixed:** the blade-jump test was flaky (~1 in 3: the player stood on the floor for a frame before the first hop); it now starts in the air (4/4 green).
+    - **Full suites after the retune:** EditMode 77/77, PlayMode 176/176.
+- **Next:** open the PR, **ask the producer before merging**, then `Tools/release 0.14.0` and smoke-run the archives.
 
 ## Next (after the producer's playtest of v0.9.0–v0.13.0)
 - **The overnight run (2026-10-21, 01:25–05:40 WEST)** merged and released five milestones under the producer's "proceed with any merge in the next 5h40": v0.9.0 Arena 3 (PR #11, the producer's OK), v0.10.0 the Murder Machine (#12), v0.11.0 the Thunder Champion (#13), v0.12.0 the Golden Idol (#14), v0.13.0 the Ashen Oracle (#15). After 07:05 WEST, ask before every merge again.

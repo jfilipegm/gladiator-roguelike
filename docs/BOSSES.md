@@ -49,3 +49,18 @@ interaction, ≥ 2 phases, a memorable entrance, personality.
 10. **Defeat:** slow-mo, "THE BEAST LORD FALLS!", the beasts scatter (every enemy left is dragged off), the crowd goes wild, a pick of 3 Rare-or-better upgrades, victory screen.
 
 **Tunables (`BossDef BD_BeastLord`):** HP, speeds, every attack's wind-up / damage / size / weight, pounce radius / flight time / recovery, beast-call interval and pack size, phase threshold, phase-2 speed-up and pounce count.
+
+## The Gilded Patron (Arena 4 — Grand Arena)
+
+1. **Who:** the richest man in the city. He owns the Grand Arena, half the fighters in it and most of the people watching. Fat, gilded and bored. He thinks you're an investment that stopped paying.
+2. **Silhouette:** he lounges on a gilded **litter** under a red canopy, carried on the shoulders of four bearers: ~3.6 m tall and wider than anything else (the poles ~4.4 m long). Round, in gold and crimson robes, a laurel wreath, a purse in one fist and a goblet in the other. Nothing else has a roof.
+3. **Entrance (timer hits 0:00):** the horde is dragged off, coins rain from the patron boxes, "THE GILDED PATRON!", the camera turns to the north gate, the bearers carry him in, he raises his goblet to the boxes (shake, crowd spike). ~4 s; the player keeps control.
+4. **Coin Bombs (any range):** he hurls purses one after another (3; 5 in phase 2) at orange-red circles (2.4 m) on you and around you; each lands 1.0 s after it's thrown and bursts: damage, and it scatters **real gold** (grab it after the blast). Keep moving.
+5. **Golden Volley (mid):** a fan of red-hot coins (7, 50°; 11, 70° in phase 2) toward you after a 0.8 s wind-up (the fan's lanes glow): step into a gap or out of the fan.
+6. **Shove (near):** "Out of my way!" A cone (4.5 m, 120°) in front of the litter fills over 0.7 s, then the bearers barge forward: damage + big knockback. Don't stand in front of him.
+7. **Hire the Guard (every ~22 s):** "GOLD TALKS!" He tosses purses to the boxes and 4–6 **Gilded Mercenaries** jump down from the two patron boxes nearest you. **Payroll:** while any mercenary lives, a gold thread runs from each to him and **he takes 60 % less damage** ("GUARDED" on his bar). Kill the guard, then hit him.
+8. **Phase 2 — "Everything is for sale!" (at 50 % HP):** roars (invulnerable 1.5 s), throws a fortune to the crowd: **every fire-jet row fires at once, and the blade sweepers spin for the rest of the fight**. Attacks 25 % faster, five bombs, the wide volley.
+9. **Arena interaction:** the patron boxes (his guard), the gates (his entrance), the fire jets and the blades (phase 2; they hurt him too, a quarter, like the Champion's spikes), the dais and the statue (cover from the volley: a coin stops on stone).
+10. **Defeat:** slow-mo, "THE PATRON IS BANKRUPT!", the litter crashes down and his fortune bursts out (a fountain of gold coins), the boxes go wild, a pick of 3 Rare-or-better upgrades, victory screen.
+
+**Tunables (`BossDef BD_GildedPatron`):** HP, speeds, bomb count / radius / flight / damage / gold, volley count / arc / speed / damage, shove cone, guard interval / count, `guardedDamageMul`, phase threshold, phase-2 speed-up, defeat gold.

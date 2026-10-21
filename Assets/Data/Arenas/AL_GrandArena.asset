@@ -1,0 +1,1375 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fda5633a9dd401b4e940b484397de0bc, type: 3}
+  m_Name: AL_GrandArena
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.ArenaLayoutDef
+  id: grand_arena
+  displayName: The Grand Arena
+  tier: 3
+  spawnTable: {fileID: 11400000, guid: c29adeb9cfb17a2ce80372f89fe7581c, type: 2}
+  enemyHpMul: 1.8
+  playerDamageTakenMul: 1.35
+  center: {x: 0, y: 0, z: 0}
+  radius: 24.9
+  aspect: 1
+  outline:
+  - {x: -24.9, y: 68.9}
+  - {x: 24.900002, y: 68.9}
+  - {x: 24.9, y: 39.544365}
+  - {x: 39.544365, y: 24.9}
+  - {x: 68.9, y: 24.9}
+  - {x: 68.9, y: -24.900002}
+  - {x: 39.544365, y: -24.9}
+  - {x: 24.9, y: -39.544365}
+  - {x: 24.9, y: -68.9}
+  - {x: -24.900002, y: -68.9}
+  - {x: -24.9, y: -39.544365}
+  - {x: -39.544365, y: -24.9}
+  - {x: -68.9, y: -24.9}
+  - {x: -68.9, y: 24.900002}
+  - {x: -39.544365, y: 24.9}
+  - {x: -24.9, y: 39.544365}
+  boundary:
+  - {x: 0, y: 71.2, z: 180, w: 55}
+  - {x: 27.2, y: 55, z: -90, w: 33}
+  - {x: 33.84853, y: 33.84853, z: -135, w: 22.79899}
+  - {x: 55, y: 27.2, z: 180, w: 33}
+  - {x: 71.2, y: 0, z: -90, w: 55}
+  - {x: 55, y: -27.2, z: 0, w: 33}
+  - {x: 33.84853, y: -33.84853, z: -45, w: 22.79899}
+  - {x: 27.2, y: -55, z: -90, w: 33}
+  - {x: 0, y: -71.2, z: 0, w: 55}
+  - {x: -27.2, y: -55, z: 90, w: 33}
+  - {x: -33.84853, y: -33.84853, z: 45, w: 22.79899}
+  - {x: -55, y: -27.2, z: 0, w: 33}
+  - {x: -71.2, y: 0, z: 90, w: 55}
+  - {x: -55, y: 27.2, z: 180, w: 33}
+  - {x: -33.84853, y: 33.84853, z: 135, w: 22.79899}
+  - {x: -27.2, y: 55, z: 90, w: 33}
+  fog: {x: 70, y: 300}
+  playerSpawn: {x: 0, y: 0.1, z: -16}
+  playerYaw: 0
+  maxAlive: 400
+  spawnMaxDistance: 50
+  densityMul: 1.2
+  sunEuler: {x: 50, y: -38, z: 0}
+  boss: {fileID: 11400000, guid: 17019499c2e19b09ba188a5801301336, type: 2}
+  bossGate: 0
+  pieces:
+  - model: Environment/SM_GrandFloor
+    role: 0
+    position: {x: 0, y: 0, z: 0}
+    yaw: 0
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -23.95, y: 0, z: 70}
+    yaw: 180
+    scale: {x: 1.025, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -19.85, y: 0, z: 70}
+    yaw: 180
+    scale: {x: 1.025, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -15.75, y: 0, z: 70}
+    yaw: 180
+    scale: {x: 1.025, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -11.650001, y: 0, z: 70}
+    yaw: 180
+    scale: {x: 1.025, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -7.550001, y: 0, z: 70}
+    yaw: 180
+    scale: {x: 1.025, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 7.55, y: 0, z: 70}
+    yaw: 180
+    scale: {x: 1.025, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 11.65, y: 0, z: 70}
+    yaw: 180
+    scale: {x: 1.025, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 15.75, y: 0, z: 70}
+    yaw: 180
+    scale: {x: 1.025, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 19.849998, y: 0, z: 70}
+    yaw: 180
+    scale: {x: 1.025, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 23.949999, y: 0, z: 70}
+    yaw: 180
+    scale: {x: 1.025, y: 1, z: 1}
+  - model: Environment/SM_GrandTower
+    role: 3
+    position: {x: -30, y: 0, z: 74}
+    yaw: 180
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_GrandTower
+    role: 3
+    position: {x: 30, y: 0, z: 74}
+    yaw: 180
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 26, y: 0, z: 68.125}
+    yaw: -90
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 26, y: 0, z: 64.375}
+    yaw: -90
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 26, y: 0, z: 60.625}
+    yaw: -90
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 26, y: 0, z: 56.875}
+    yaw: -90
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 26, y: 0, z: 53.125}
+    yaw: -90
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 26, y: 0, z: 49.375}
+    yaw: -90
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 26, y: 0, z: 45.625}
+    yaw: -90
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 26, y: 0, z: 41.875}
+    yaw: -90
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_PatronBox
+    role: 3
+    position: {x: 33, y: 0, z: 33}
+    yaw: -135
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 41.875, y: 0, z: 26}
+    yaw: 180
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 45.625, y: 0, z: 26}
+    yaw: 180
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 49.375, y: 0, z: 26}
+    yaw: 180
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 53.125, y: 0, z: 26}
+    yaw: 180
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 56.875, y: 0, z: 26}
+    yaw: 180
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 60.625, y: 0, z: 26}
+    yaw: 180
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 64.375, y: 0, z: 26}
+    yaw: 180
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 68.125, y: 0, z: 26}
+    yaw: 180
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 70, y: 0, z: 23.95}
+    yaw: -90
+    scale: {x: 1.025, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 70, y: 0, z: 19.85}
+    yaw: -90
+    scale: {x: 1.025, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 70, y: 0, z: 15.75}
+    yaw: -90
+    scale: {x: 1.025, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 70, y: 0, z: 11.650001}
+    yaw: -90
+    scale: {x: 1.025, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 70, y: 0, z: 7.550001}
+    yaw: -90
+    scale: {x: 1.025, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 70, y: 0, z: -7.55}
+    yaw: -90
+    scale: {x: 1.025, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 70, y: 0, z: -11.65}
+    yaw: -90
+    scale: {x: 1.025, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 70, y: 0, z: -15.75}
+    yaw: -90
+    scale: {x: 1.025, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 70, y: 0, z: -19.849998}
+    yaw: -90
+    scale: {x: 1.025, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 70, y: 0, z: -23.949999}
+    yaw: -90
+    scale: {x: 1.025, y: 1, z: 1}
+  - model: Environment/SM_GrandTower
+    role: 3
+    position: {x: 74, y: 0, z: 30}
+    yaw: -90
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_GrandTower
+    role: 3
+    position: {x: 74, y: 0, z: -30}
+    yaw: -90
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 68.125, y: 0, z: -26}
+    yaw: 0
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 64.375, y: 0, z: -26}
+    yaw: 0
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 60.625, y: 0, z: -26}
+    yaw: 0
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 56.875, y: 0, z: -26}
+    yaw: 0
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 53.125, y: 0, z: -26}
+    yaw: 0
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 49.375, y: 0, z: -26}
+    yaw: 0
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 45.625, y: 0, z: -26}
+    yaw: 0
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 41.875, y: 0, z: -26}
+    yaw: 0
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_PatronBox
+    role: 3
+    position: {x: 33, y: 0, z: -33}
+    yaw: -45
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 26, y: 0, z: -41.875}
+    yaw: -90
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 26, y: 0, z: -45.625}
+    yaw: -90
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 26, y: 0, z: -49.375}
+    yaw: -90
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 26, y: 0, z: -53.125}
+    yaw: -90
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 26, y: 0, z: -56.875}
+    yaw: -90
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 26, y: 0, z: -60.625}
+    yaw: -90
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 26, y: 0, z: -64.375}
+    yaw: -90
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 26, y: 0, z: -68.125}
+    yaw: -90
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 23.95, y: 0, z: -70}
+    yaw: 0
+    scale: {x: 1.025, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 19.85, y: 0, z: -70}
+    yaw: 0
+    scale: {x: 1.025, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 15.75, y: 0, z: -70}
+    yaw: 0
+    scale: {x: 1.025, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 11.650001, y: 0, z: -70}
+    yaw: 0
+    scale: {x: 1.025, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: 7.550001, y: 0, z: -70}
+    yaw: 0
+    scale: {x: 1.025, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -7.55, y: 0, z: -70}
+    yaw: 0
+    scale: {x: 1.025, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -11.65, y: 0, z: -70}
+    yaw: 0
+    scale: {x: 1.025, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -15.75, y: 0, z: -70}
+    yaw: 0
+    scale: {x: 1.025, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -19.849998, y: 0, z: -70}
+    yaw: 0
+    scale: {x: 1.025, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -23.949999, y: 0, z: -70}
+    yaw: 0
+    scale: {x: 1.025, y: 1, z: 1}
+  - model: Environment/SM_GrandTower
+    role: 3
+    position: {x: 30, y: 0, z: -74}
+    yaw: 0
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_GrandTower
+    role: 3
+    position: {x: -30, y: 0, z: -74}
+    yaw: 0
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -26, y: 0, z: -68.125}
+    yaw: 90
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -26, y: 0, z: -64.375}
+    yaw: 90
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -26, y: 0, z: -60.625}
+    yaw: 90
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -26, y: 0, z: -56.875}
+    yaw: 90
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -26, y: 0, z: -53.125}
+    yaw: 90
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -26, y: 0, z: -49.375}
+    yaw: 90
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -26, y: 0, z: -45.625}
+    yaw: 90
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -26, y: 0, z: -41.875}
+    yaw: 90
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_PatronBox
+    role: 3
+    position: {x: -33, y: 0, z: -33}
+    yaw: 45
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -41.875, y: 0, z: -26}
+    yaw: 0
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -45.625, y: 0, z: -26}
+    yaw: 0
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -49.375, y: 0, z: -26}
+    yaw: 0
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -53.125, y: 0, z: -26}
+    yaw: 0
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -56.875, y: 0, z: -26}
+    yaw: 0
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -60.625, y: 0, z: -26}
+    yaw: 0
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -64.375, y: 0, z: -26}
+    yaw: 0
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -68.125, y: 0, z: -26}
+    yaw: 0
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -70, y: 0, z: -23.95}
+    yaw: 90
+    scale: {x: 1.025, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -70, y: 0, z: -19.85}
+    yaw: 90
+    scale: {x: 1.025, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -70, y: 0, z: -15.75}
+    yaw: 90
+    scale: {x: 1.025, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -70, y: 0, z: -11.650001}
+    yaw: 90
+    scale: {x: 1.025, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -70, y: 0, z: -7.550001}
+    yaw: 90
+    scale: {x: 1.025, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -70, y: 0, z: 7.55}
+    yaw: 90
+    scale: {x: 1.025, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -70, y: 0, z: 11.65}
+    yaw: 90
+    scale: {x: 1.025, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -70, y: 0, z: 15.75}
+    yaw: 90
+    scale: {x: 1.025, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -70, y: 0, z: 19.849998}
+    yaw: 90
+    scale: {x: 1.025, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -70, y: 0, z: 23.949999}
+    yaw: 90
+    scale: {x: 1.025, y: 1, z: 1}
+  - model: Environment/SM_GrandTower
+    role: 3
+    position: {x: -74, y: 0, z: -30}
+    yaw: 90
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_GrandTower
+    role: 3
+    position: {x: -74, y: 0, z: 30}
+    yaw: 90
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -68.125, y: 0, z: 26}
+    yaw: 180
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -64.375, y: 0, z: 26}
+    yaw: 180
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -60.625, y: 0, z: 26}
+    yaw: 180
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -56.875, y: 0, z: 26}
+    yaw: 180
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -53.125, y: 0, z: 26}
+    yaw: 180
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -49.375, y: 0, z: 26}
+    yaw: 180
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -45.625, y: 0, z: 26}
+    yaw: 180
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -41.875, y: 0, z: 26}
+    yaw: 180
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_PatronBox
+    role: 3
+    position: {x: -33, y: 0, z: 33}
+    yaw: 135
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -26, y: 0, z: 41.875}
+    yaw: 90
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -26, y: 0, z: 45.625}
+    yaw: 90
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -26, y: 0, z: 49.375}
+    yaw: 90
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -26, y: 0, z: 53.125}
+    yaw: 90
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -26, y: 0, z: 56.875}
+    yaw: 90
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -26, y: 0, z: 60.625}
+    yaw: 90
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -26, y: 0, z: 64.375}
+    yaw: 90
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandStand_4m
+    role: 3
+    position: {x: -26, y: 0, z: 68.125}
+    yaw: 90
+    scale: {x: 0.9375, y: 1, z: 1}
+  - model: Environment/SM_GrandDais
+    role: 0
+    position: {x: 0, y: 0, z: 0}
+    yaw: 0
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_GrandStairs
+    role: 0
+    position: {x: 0, y: 0, z: 8.8}
+    yaw: 0
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_GrandStairs
+    role: 0
+    position: {x: 8.8, y: 0, z: -0}
+    yaw: 90
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_GrandStairs
+    role: 0
+    position: {x: -0, y: 0, z: -8.8}
+    yaw: -180
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_GrandStairs
+    role: 0
+    position: {x: -8.8, y: 0, z: 0}
+    yaw: -90
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/PR_PatronStatue
+    role: 1
+    position: {x: 0, y: 1.2, z: 0}
+    yaw: 180
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_GrandTerrace
+    role: 0
+    position: {x: -23, y: 0, z: 37}
+    yaw: 90
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_GrandRamp
+    role: 0
+    position: {x: -16, y: 0, z: 37}
+    yaw: 90
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_GrandTerrace
+    role: 0
+    position: {x: 23, y: 0, z: 37}
+    yaw: -90
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_GrandStairs
+    role: 0
+    position: {x: 18, y: 0, z: 37}
+    yaw: -90
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_GrandTerrace
+    role: 0
+    position: {x: 37, y: 0, z: 23}
+    yaw: 180
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_GrandStairs
+    role: 0
+    position: {x: 37, y: 0, z: 18}
+    yaw: 180
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_GrandTerrace
+    role: 0
+    position: {x: 37, y: 0, z: -23}
+    yaw: 0
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_GrandRamp
+    role: 0
+    position: {x: 37, y: 0, z: -16}
+    yaw: 0
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_GrandTerrace
+    role: 0
+    position: {x: 23, y: 0, z: -37}
+    yaw: -90
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_GrandRamp
+    role: 0
+    position: {x: 16, y: 0, z: -37}
+    yaw: -90
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_GrandTerrace
+    role: 0
+    position: {x: -23, y: 0, z: -37}
+    yaw: 90
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_GrandStairs
+    role: 0
+    position: {x: -18, y: 0, z: -37}
+    yaw: 90
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_GrandTerrace
+    role: 0
+    position: {x: -37, y: 0, z: -23}
+    yaw: -0
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_GrandStairs
+    role: 0
+    position: {x: -37, y: 0, z: -18}
+    yaw: -0
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_GrandTerrace
+    role: 0
+    position: {x: -37, y: 0, z: 23}
+    yaw: -180
+    scale: {x: 1, y: 1, z: 1}
+  - model: Environment/SM_GrandRamp
+    role: 0
+    position: {x: -37, y: 0, z: 16}
+    yaw: -180
+    scale: {x: 1, y: 1, z: 1}
+  gateModel: Environment/SM_GrandGate
+  gates:
+  - position: {x: 0, y: 0, z: 70}
+    yaw: 180
+    model: 
+  - position: {x: 70, y: 0, z: 0}
+    yaw: -90
+    model: 
+  - position: {x: 0, y: 0, z: -70}
+    yaw: 0
+    model: 
+  - position: {x: -70, y: 0, z: 0}
+    yaw: 90
+    model: 
+  zones: []
+  crowd:
+  - center: {x: -15.75, y: 3.65, z: 71}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 180
+    count: 12
+  - center: {x: -15.75, y: 4.1, z: 71.8}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 180
+    count: 12
+  - center: {x: -15.75, y: 4.55, z: 72.6}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 180
+    count: 13
+  - center: {x: -15.75, y: 5, z: 73.4}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 180
+    count: 12
+  - center: {x: -15.75, y: 5.45, z: 74.2}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 180
+    count: 12
+  - center: {x: -15.75, y: 5.9, z: 75}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 180
+    count: 13
+  - center: {x: -15.75, y: 6.35, z: 75.8}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 180
+    count: 12
+  - center: {x: -15.75, y: 6.8, z: 76.6}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 180
+    count: 12
+  - center: {x: 15.75, y: 3.65, z: 71}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 180
+    count: 13
+  - center: {x: 15.75, y: 4.1, z: 71.8}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 180
+    count: 12
+  - center: {x: 15.75, y: 4.55, z: 72.6}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 180
+    count: 12
+  - center: {x: 15.75, y: 5, z: 73.4}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 180
+    count: 13
+  - center: {x: 15.75, y: 5.45, z: 74.2}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 180
+    count: 12
+  - center: {x: 15.75, y: 5.9, z: 75}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 180
+    count: 12
+  - center: {x: 15.75, y: 6.35, z: 75.8}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 180
+    count: 13
+  - center: {x: 15.75, y: 6.8, z: 76.6}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 180
+    count: 12
+  - center: {x: 27, y: 3.65, z: 55}
+    size: {x: 27, y: 0.4}
+    yaw: -90
+    count: 18
+  - center: {x: 27.8, y: 4.1, z: 55}
+    size: {x: 27, y: 0.4}
+    yaw: -90
+    count: 18
+  - center: {x: 28.6, y: 4.55, z: 55}
+    size: {x: 27, y: 0.4}
+    yaw: -90
+    count: 18
+  - center: {x: 29.4, y: 5, z: 55}
+    size: {x: 27, y: 0.4}
+    yaw: -90
+    count: 18
+  - center: {x: 30.2, y: 5.45, z: 55}
+    size: {x: 27, y: 0.4}
+    yaw: -90
+    count: 18
+  - center: {x: 31, y: 5.9, z: 55}
+    size: {x: 27, y: 0.4}
+    yaw: -90
+    count: 18
+  - center: {x: 31.8, y: 6.35, z: 55}
+    size: {x: 27, y: 0.4}
+    yaw: -90
+    count: 18
+  - center: {x: 32.6, y: 6.8, z: 55}
+    size: {x: 27, y: 0.4}
+    yaw: -90
+    count: 18
+  - center: {x: 55, y: 3.65, z: 27}
+    size: {x: 27, y: 0.4}
+    yaw: 180
+    count: 18
+  - center: {x: 55, y: 4.1, z: 27.8}
+    size: {x: 27, y: 0.4}
+    yaw: 180
+    count: 18
+  - center: {x: 55, y: 4.55, z: 28.6}
+    size: {x: 27, y: 0.4}
+    yaw: 180
+    count: 18
+  - center: {x: 55, y: 5, z: 29.4}
+    size: {x: 27, y: 0.4}
+    yaw: 180
+    count: 18
+  - center: {x: 55, y: 5.45, z: 30.2}
+    size: {x: 27, y: 0.4}
+    yaw: 180
+    count: 18
+  - center: {x: 55, y: 5.9, z: 31}
+    size: {x: 27, y: 0.4}
+    yaw: 180
+    count: 18
+  - center: {x: 55, y: 6.35, z: 31.8}
+    size: {x: 27, y: 0.4}
+    yaw: 180
+    count: 18
+  - center: {x: 55, y: 6.8, z: 32.6}
+    size: {x: 27, y: 0.4}
+    yaw: 180
+    count: 18
+  - center: {x: 71, y: 3.65, z: 15.75}
+    size: {x: 18.449999, y: 0.4}
+    yaw: -90
+    count: 13
+  - center: {x: 71.8, y: 4.1, z: 15.75}
+    size: {x: 18.449999, y: 0.4}
+    yaw: -90
+    count: 12
+  - center: {x: 72.6, y: 4.55, z: 15.75}
+    size: {x: 18.449999, y: 0.4}
+    yaw: -90
+    count: 12
+  - center: {x: 73.4, y: 5, z: 15.75}
+    size: {x: 18.449999, y: 0.4}
+    yaw: -90
+    count: 13
+  - center: {x: 74.2, y: 5.45, z: 15.75}
+    size: {x: 18.449999, y: 0.4}
+    yaw: -90
+    count: 12
+  - center: {x: 75, y: 5.9, z: 15.75}
+    size: {x: 18.449999, y: 0.4}
+    yaw: -90
+    count: 12
+  - center: {x: 75.8, y: 6.35, z: 15.75}
+    size: {x: 18.449999, y: 0.4}
+    yaw: -90
+    count: 13
+  - center: {x: 76.6, y: 6.8, z: 15.75}
+    size: {x: 18.449999, y: 0.4}
+    yaw: -90
+    count: 12
+  - center: {x: 71, y: 3.65, z: -15.75}
+    size: {x: 18.449999, y: 0.4}
+    yaw: -90
+    count: 12
+  - center: {x: 71.8, y: 4.1, z: -15.75}
+    size: {x: 18.449999, y: 0.4}
+    yaw: -90
+    count: 13
+  - center: {x: 72.6, y: 4.55, z: -15.75}
+    size: {x: 18.449999, y: 0.4}
+    yaw: -90
+    count: 12
+  - center: {x: 73.4, y: 5, z: -15.75}
+    size: {x: 18.449999, y: 0.4}
+    yaw: -90
+    count: 12
+  - center: {x: 74.2, y: 5.45, z: -15.75}
+    size: {x: 18.449999, y: 0.4}
+    yaw: -90
+    count: 13
+  - center: {x: 75, y: 5.9, z: -15.75}
+    size: {x: 18.449999, y: 0.4}
+    yaw: -90
+    count: 12
+  - center: {x: 75.8, y: 6.35, z: -15.75}
+    size: {x: 18.449999, y: 0.4}
+    yaw: -90
+    count: 12
+  - center: {x: 76.6, y: 6.8, z: -15.75}
+    size: {x: 18.449999, y: 0.4}
+    yaw: -90
+    count: 13
+  - center: {x: 55, y: 3.65, z: -27}
+    size: {x: 27, y: 0.4}
+    yaw: 0
+    count: 18
+  - center: {x: 55, y: 4.1, z: -27.8}
+    size: {x: 27, y: 0.4}
+    yaw: 0
+    count: 18
+  - center: {x: 55, y: 4.55, z: -28.6}
+    size: {x: 27, y: 0.4}
+    yaw: 0
+    count: 18
+  - center: {x: 55, y: 5, z: -29.4}
+    size: {x: 27, y: 0.4}
+    yaw: 0
+    count: 18
+  - center: {x: 55, y: 5.45, z: -30.2}
+    size: {x: 27, y: 0.4}
+    yaw: 0
+    count: 18
+  - center: {x: 55, y: 5.9, z: -31}
+    size: {x: 27, y: 0.4}
+    yaw: 0
+    count: 18
+  - center: {x: 55, y: 6.35, z: -31.8}
+    size: {x: 27, y: 0.4}
+    yaw: 0
+    count: 18
+  - center: {x: 55, y: 6.8, z: -32.6}
+    size: {x: 27, y: 0.4}
+    yaw: 0
+    count: 18
+  - center: {x: 27, y: 3.65, z: -55}
+    size: {x: 27, y: 0.4}
+    yaw: -90
+    count: 18
+  - center: {x: 27.8, y: 4.1, z: -55}
+    size: {x: 27, y: 0.4}
+    yaw: -90
+    count: 18
+  - center: {x: 28.6, y: 4.55, z: -55}
+    size: {x: 27, y: 0.4}
+    yaw: -90
+    count: 18
+  - center: {x: 29.4, y: 5, z: -55}
+    size: {x: 27, y: 0.4}
+    yaw: -90
+    count: 18
+  - center: {x: 30.2, y: 5.45, z: -55}
+    size: {x: 27, y: 0.4}
+    yaw: -90
+    count: 18
+  - center: {x: 31, y: 5.9, z: -55}
+    size: {x: 27, y: 0.4}
+    yaw: -90
+    count: 18
+  - center: {x: 31.8, y: 6.35, z: -55}
+    size: {x: 27, y: 0.4}
+    yaw: -90
+    count: 18
+  - center: {x: 32.6, y: 6.8, z: -55}
+    size: {x: 27, y: 0.4}
+    yaw: -90
+    count: 18
+  - center: {x: 15.75, y: 3.65, z: -71}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 0
+    count: 12
+  - center: {x: 15.75, y: 4.1, z: -71.8}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 0
+    count: 13
+  - center: {x: 15.75, y: 4.55, z: -72.6}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 0
+    count: 12
+  - center: {x: 15.75, y: 5, z: -73.4}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 0
+    count: 12
+  - center: {x: 15.75, y: 5.45, z: -74.2}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 0
+    count: 13
+  - center: {x: 15.75, y: 5.9, z: -75}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 0
+    count: 12
+  - center: {x: 15.75, y: 6.35, z: -75.8}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 0
+    count: 12
+  - center: {x: 15.75, y: 6.8, z: -76.6}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 0
+    count: 13
+  - center: {x: -15.75, y: 3.65, z: -71}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 0
+    count: 12
+  - center: {x: -15.75, y: 4.1, z: -71.8}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 0
+    count: 12
+  - center: {x: -15.75, y: 4.55, z: -72.6}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 0
+    count: 13
+  - center: {x: -15.75, y: 5, z: -73.4}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 0
+    count: 12
+  - center: {x: -15.75, y: 5.45, z: -74.2}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 0
+    count: 12
+  - center: {x: -15.75, y: 5.9, z: -75}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 0
+    count: 13
+  - center: {x: -15.75, y: 6.35, z: -75.8}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 0
+    count: 12
+  - center: {x: -15.75, y: 6.8, z: -76.6}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 0
+    count: 12
+  - center: {x: -27, y: 3.65, z: -55}
+    size: {x: 27, y: 0.4}
+    yaw: 90
+    count: 18
+  - center: {x: -27.8, y: 4.1, z: -55}
+    size: {x: 27, y: 0.4}
+    yaw: 90
+    count: 18
+  - center: {x: -28.6, y: 4.55, z: -55}
+    size: {x: 27, y: 0.4}
+    yaw: 90
+    count: 18
+  - center: {x: -29.4, y: 5, z: -55}
+    size: {x: 27, y: 0.4}
+    yaw: 90
+    count: 18
+  - center: {x: -30.2, y: 5.45, z: -55}
+    size: {x: 27, y: 0.4}
+    yaw: 90
+    count: 18
+  - center: {x: -31, y: 5.9, z: -55}
+    size: {x: 27, y: 0.4}
+    yaw: 90
+    count: 18
+  - center: {x: -31.8, y: 6.35, z: -55}
+    size: {x: 27, y: 0.4}
+    yaw: 90
+    count: 18
+  - center: {x: -32.6, y: 6.8, z: -55}
+    size: {x: 27, y: 0.4}
+    yaw: 90
+    count: 18
+  - center: {x: -55, y: 3.65, z: -27}
+    size: {x: 27, y: 0.4}
+    yaw: 0
+    count: 18
+  - center: {x: -55, y: 4.1, z: -27.8}
+    size: {x: 27, y: 0.4}
+    yaw: 0
+    count: 18
+  - center: {x: -55, y: 4.55, z: -28.6}
+    size: {x: 27, y: 0.4}
+    yaw: 0
+    count: 18
+  - center: {x: -55, y: 5, z: -29.4}
+    size: {x: 27, y: 0.4}
+    yaw: 0
+    count: 18
+  - center: {x: -55, y: 5.45, z: -30.2}
+    size: {x: 27, y: 0.4}
+    yaw: 0
+    count: 18
+  - center: {x: -55, y: 5.9, z: -31}
+    size: {x: 27, y: 0.4}
+    yaw: 0
+    count: 18
+  - center: {x: -55, y: 6.35, z: -31.8}
+    size: {x: 27, y: 0.4}
+    yaw: 0
+    count: 18
+  - center: {x: -55, y: 6.8, z: -32.6}
+    size: {x: 27, y: 0.4}
+    yaw: 0
+    count: 18
+  - center: {x: -71, y: 3.65, z: -15.75}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 90
+    count: 12
+  - center: {x: -71.8, y: 4.1, z: -15.75}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 90
+    count: 12
+  - center: {x: -72.6, y: 4.55, z: -15.75}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 90
+    count: 13
+  - center: {x: -73.4, y: 5, z: -15.75}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 90
+    count: 12
+  - center: {x: -74.2, y: 5.45, z: -15.75}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 90
+    count: 12
+  - center: {x: -75, y: 5.9, z: -15.75}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 90
+    count: 13
+  - center: {x: -75.8, y: 6.35, z: -15.75}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 90
+    count: 12
+  - center: {x: -76.6, y: 6.8, z: -15.75}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 90
+    count: 12
+  - center: {x: -71, y: 3.65, z: 15.75}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 90
+    count: 13
+  - center: {x: -71.8, y: 4.1, z: 15.75}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 90
+    count: 12
+  - center: {x: -72.6, y: 4.55, z: 15.75}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 90
+    count: 12
+  - center: {x: -73.4, y: 5, z: 15.75}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 90
+    count: 13
+  - center: {x: -74.2, y: 5.45, z: 15.75}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 90
+    count: 12
+  - center: {x: -75, y: 5.9, z: 15.75}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 90
+    count: 12
+  - center: {x: -75.8, y: 6.35, z: 15.75}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 90
+    count: 13
+  - center: {x: -76.6, y: 6.8, z: 15.75}
+    size: {x: 18.449999, y: 0.4}
+    yaw: 90
+    count: 12
+  - center: {x: -55, y: 3.65, z: 27}
+    size: {x: 27, y: 0.4}
+    yaw: 180
+    count: 18
+  - center: {x: -55, y: 4.1, z: 27.8}
+    size: {x: 27, y: 0.4}
+    yaw: 180
+    count: 18
+  - center: {x: -55, y: 4.55, z: 28.6}
+    size: {x: 27, y: 0.4}
+    yaw: 180
+    count: 18
+  - center: {x: -55, y: 5, z: 29.4}
+    size: {x: 27, y: 0.4}
+    yaw: 180
+    count: 18
+  - center: {x: -55, y: 5.45, z: 30.2}
+    size: {x: 27, y: 0.4}
+    yaw: 180
+    count: 18
+  - center: {x: -55, y: 5.9, z: 31}
+    size: {x: 27, y: 0.4}
+    yaw: 180
+    count: 18
+  - center: {x: -55, y: 6.35, z: 31.8}
+    size: {x: 27, y: 0.4}
+    yaw: 180
+    count: 18
+  - center: {x: -55, y: 6.8, z: 32.6}
+    size: {x: 27, y: 0.4}
+    yaw: 180
+    count: 18
+  - center: {x: -27, y: 3.65, z: 55}
+    size: {x: 27, y: 0.4}
+    yaw: 90
+    count: 18
+  - center: {x: -27.8, y: 4.1, z: 55}
+    size: {x: 27, y: 0.4}
+    yaw: 90
+    count: 18
+  - center: {x: -28.6, y: 4.55, z: 55}
+    size: {x: 27, y: 0.4}
+    yaw: 90
+    count: 18
+  - center: {x: -29.4, y: 5, z: 55}
+    size: {x: 27, y: 0.4}
+    yaw: 90
+    count: 18
+  - center: {x: -30.2, y: 5.45, z: 55}
+    size: {x: 27, y: 0.4}
+    yaw: 90
+    count: 18
+  - center: {x: -31, y: 5.9, z: 55}
+    size: {x: 27, y: 0.4}
+    yaw: 90
+    count: 18
+  - center: {x: -31.8, y: 6.35, z: 55}
+    size: {x: 27, y: 0.4}
+    yaw: 90
+    count: 18
+  - center: {x: -32.6, y: 6.8, z: 55}
+    size: {x: 27, y: 0.4}
+    yaw: 90
+    count: 18
+  - center: {x: 34.555634, y: 4.2, z: 34.555634}
+    size: {x: 12, y: 1.2}
+    yaw: -135
+    count: 18
+  - center: {x: 34.555634, y: 4.2, z: -34.555634}
+    size: {x: 12, y: 1.2}
+    yaw: -45
+    count: 18
+  - center: {x: -34.555634, y: 4.2, z: -34.555634}
+    size: {x: 12, y: 1.2}
+    yaw: 45
+    count: 18
+  - center: {x: -34.555634, y: 4.2, z: 34.555634}
+    size: {x: 12, y: 1.2}
+    yaw: 135
+    count: 18
+  chestAnchors:
+  - {x: 0, y: 0, z: -14}
+  - {x: 0, y: 0, z: 14}
+  - {x: -14, y: 0, z: 0}
+  - {x: 14, y: 0, z: 0}
+  - {x: -8, y: 0, z: 44}
+  - {x: 10, y: 0, z: 62}
+  - {x: 44, y: 0, z: 8}
+  - {x: 62, y: 0, z: -10}
+  - {x: 8, y: 0, z: -44}
+  - {x: -10, y: 0, z: -62}
+  - {x: -44, y: 0, z: -8}
+  - {x: -62, y: 0, z: 10}
+  altarAnchors:
+  - {x: -23, y: 1.2, z: 35}
+  - {x: 23, y: 1.2, z: -35}
+  - {x: 0, y: 0, z: -22}
+  secretSpots: []
+  secrets: 0
+  barricades: []
+  braziers:
+  - {x: -24.4, y: 1.2, z: 41}
+  - {x: 24.4, y: 1.2, z: 41}
+  - {x: 41, y: 1.2, z: 24.4}
+  - {x: 41, y: 1.2, z: -24.4}
+  - {x: 24.4, y: 1.2, z: -41}
+  - {x: -24.4, y: 1.2, z: -41}
+  - {x: -41, y: 1.2, z: -24.4}
+  - {x: -41, y: 1.2, z: 24.4}
+  spikeTraps: []
+  cages: []
+  cageBeast: {fileID: 0}
+  cageFirst: 75
+  cageEvery: 40
+  cagePack: {x: 3, y: 6}
+  solidWalls:
+  - {x: 0, y: 70, z: 180, w: 52.3}
+  - {x: 26, y: 55, z: -90, w: 30.3}
+  - {x: 33, y: 33, z: -135, w: 20.09899}
+  - {x: 55, y: 26, z: 180, w: 30.3}
+  - {x: 70, y: 0, z: -90, w: 52.3}
+  - {x: 55, y: -26, z: 0, w: 30.3}
+  - {x: 33, y: -33, z: -45, w: 20.09899}
+  - {x: 26, y: -55, z: -90, w: 30.3}
+  - {x: 0, y: -70, z: 0, w: 52.3}
+  - {x: -26, y: -55, z: 90, w: 30.3}
+  - {x: -33, y: -33, z: 45, w: 20.09899}
+  - {x: -55, y: -26, z: 0, w: 30.3}
+  - {x: -70, y: 0, z: 90, w: 52.3}
+  - {x: -55, y: 26, z: 180, w: 30.3}
+  - {x: -33, y: 33, z: 135, w: 20.09899}
+  - {x: -26, y: 55, z: 90, w: 30.3}
+  solidWallHeight: 8.4
+  eliteEvery: 60
+  fireJets:
+  - {x: 0, y: 52, z: 0, w: 49.399998}
+  - {x: 52, y: -0, z: 90, w: 49.399998}
+  - {x: -0, y: -52, z: 180, w: 49.399998}
+  - {x: -52, y: 0, z: 270, w: 49.399998}
+  bladeSweepers:
+  - {x: 15, y: 0, z: 15}
+  - {x: 15, y: 0, z: -15}
+  - {x: -15, y: 0, z: -15}
+  - {x: -15, y: 0, z: 15}
+  guardSpots:
+  - {x: 30.87868, y: 0, z: 30.87868}
+  - {x: 30.87868, y: 0, z: -30.87868}
+  - {x: -30.87868, y: 0, z: -30.87868}
+  - {x: -30.87868, y: 0, z: 30.87868}

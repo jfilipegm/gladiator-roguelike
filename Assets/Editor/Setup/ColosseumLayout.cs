@@ -253,7 +253,6 @@ namespace Gladiator.EditorTools
             var gates = new List<ArenaLayoutDef.Gate>();
             var crowd = new List<ArenaLayoutDef.CrowdZone>();
             var stone = new List<Vector4>();
-            var bounds = new List<Vector4>();
             void Add(string model, PieceRole role, Vector3 pos, float yaw, Vector3? scale = null) =>
                 pieces.Add(new ArenaLayoutDef.Piece { model = Env + model, role = role, position = pos, yaw = yaw, scale = scale ?? Vector3.one });
 
@@ -273,8 +272,6 @@ namespace Gladiator.EditorTools
                 Vector2 dir = (b - a).normalized, inward = new Vector2(dir.y, -dir.x);
                 float len = (b - a).magnitude;
                 stone.Add(new Vector4((a.x + b.x) * 0.5f, (a.y + b.y) * 0.5f, YawOf(inward), len + 0.3f));
-                Vector2 back = (a + b) * 0.5f - inward * 1.2f;
-                bounds.Add(new Vector4(back.x, back.y, YawOf(inward), len + 3f));
                 if (i == EastChordEdge || i == WestChordEdge) continue; // the great gates rise above the bowl: no seats
                 Vector2 na = Outward(a), nb = Outward(b); // every corner lies on the ellipse
                 foreach (var r in rows)
@@ -295,7 +292,10 @@ namespace Gladiator.EditorTools
             }
             l.solidWalls = stone.ToArray();
             l.solidWallHeight = 8.4f;
-            l.boundary = bounds.ToArray(); // ArenaBuilder's player walls are 30 m tall (to 27 m): the bowl is 22 m
+            // the player's boundary (P1): one closed loop on the stone's face; ArenaBuilder's walls along it are 30 m tall
+            // (to 27 m): the bowl is 22 m. No gate has a ledge in reach (the side gates' lowest is 4.7 m, recessed)
+            l.boundaryLoop = WallLine();
+            l.boundary = System.Array.Empty<Vector4>();
 
             // ---------- the gates, counter-clockwise from the east: G0 the Gate of Death and G3 the Gate of Life on their
             // chords (the great arches), the side gates on the ellipse at t = 60, 120, 240, 300°, all facing in

@@ -82,6 +82,8 @@ namespace Gladiator.Gameplay
         public float capsuleRadius = 0.32f;
         public float stepOffset = 0.35f;
         public float slopeLimit = 50f;
+        [Tooltip("How fast a NoPerch top (a tall prop, a statue's sleeve) slides the player off it (m/s). Faster than any run so it can't be walked against.")]
+        public float perchSlideSpeed = 9f;
 
         public float JumpVelocity => Mathf.Sqrt(2f * gravity * jumpHeight);
     }

@@ -9,8 +9,9 @@ namespace Gladiator.EditorTools
     /// Writes the layout of Arena 1, the Slave Pit. Playtest rebuild (producer: "twice as wide", "a rough enclosure,
     /// not a wooden bowl", "people actually work and train there", "it shouldn't float"): an 84 × 70 m oval stockade on
     /// open ground. The boundary is 48 sections around the oval: log palisade runs with three log gates, patched
-    /// fences, dirt embankments with wattle on top, and plank platforms of onlookers. Invisible walls behind them keep
-    /// the player in whatever their air jumps. Inside: a drill yard of training posts and straw dummies, a sparring
+    /// fences, dirt embankments with wattle on top, and plank platforms of onlookers. One closed loop of invisible walls
+    /// in front of them keeps the player in whatever their air jumps (P1: BoundaryLoop), and behind each gate a pen of
+    /// waiting convicts closes the view (SM_YardPen). Inside: a drill yard of training posts and straw dummies, a sparring
     /// ring, a work corner (trough, barrow, hay, sacks), a woodpile and a tool shed, cages by the south wall, four earth
     /// terraces with ramps, mounds, mud, fire pits. Outside, never reachable: grassland rising into hills, woods,
     /// the slaves' huts, the slavers' longhouses and tents, watchtowers, carts on the roads from the gates.
@@ -59,6 +60,54 @@ namespace Gladiator.EditorTools
 
         static float InwardYaw(float bearing) { var n = Out(bearing); return Mathf.Atan2(-n.x, -n.z) * Mathf.Rad2Deg; }
 
+        // ---------- the player's boundary (P1, the producer's playtest of v0.17.0: the player stood on an onlookers'
+        // platform out of the horde's reach, and got behind it: every section had its own wall at its own distance, and
+        // where the distance stepped nothing closed the side)
+        /// <summary>The loop's distance outside the boundary line in a section (m): just in front of the pieces' front
+        /// faces once they're exported round their own origin (P1): the palisade's logs at 0.30, the gate's towers 0.30,
+        /// the platforms' skirts 0.32 (their decks never in reach), the fences' leaning boards 0.42 (their tops never in
+        /// reach). On a berm, partway up its slope: it's 1 m high at the line, so the player stays below ~0.8 m and its
+        /// crest (2.3 m) is out of reach.</summary>
+        public const float SectionLoop = 0.28f, BermLoop = -0.15f;
+        /// <summary>A berm's piece is widened past its section: its loop runs this far (m) into the neighbour.</summary>
+        const float BermOverlap = 0.5f;
+
+        /// <summary>The player's boundary: one closed polyline round the oval, a chord per section at that section's
+        /// distance and a step where the distance changes (clockwise from above, from bearing -3.75).</summary>
+        public static Vector2[] BoundaryLoop()
+        {
+            var pts = new List<Vector2>();
+            float step = 360f / Sections;
+            void Point(float bearing, float d)
+            {
+                var p = Edge(bearing) + Out(bearing) * d;
+                var v = new Vector2(p.x, p.z);
+                if (pts.Count == 0 || (v - pts[pts.Count - 1]).sqrMagnitude > 1e-4f) pts.Add(v);
+            }
+            for (int i = 0; i < Sections; i++)
+            {
+                Kind k = KindOf(i), prev = KindOf((i + Sections - 1) % Sections), next = KindOf((i + 1) % Sections);
+                float b0 = (i - 0.5f) * step, b1 = (i + 0.5f) * step;
+                float over0 = BermOverlap / SectionLength(b0) * step, over1 = BermOverlap / SectionLength(b1) * step;
+                if (k == Kind.Berm) { if (prev != Kind.Berm) b0 -= over0; if (next != Kind.Berm) b1 += over1; }
+                else { if (prev == Kind.Berm) b0 += over0; if (next == Kind.Berm) b1 -= over1; }
+                float d = k == Kind.Berm ? BermLoop : SectionLoop;
+                Point(b0, d);
+                Point(b1, d);
+            }
+            if ((pts[0] - pts[pts.Count - 1]).sqrMagnitude < 1e-4f) pts.RemoveAt(pts.Count - 1);
+            return pts.ToArray();
+        }
+
+        /// <summary>The convicts waiting in each gate's pen (gate-local: x right, metres back from the gate's front, a
+        /// turn off facing the yard): static decor, the next of the horde.</summary>
+        static readonly Vector3[] WaitingConvicts =
+        {
+            new Vector3(-1.3f, 2.0f, 10f), new Vector3(1.1f, 2.7f, -20f), new Vector3(-0.2f, 3.9f, 25f),
+            new Vector3(1.5f, 4.9f, -5f), new Vector3(-1.4f, 5.6f, 15f),
+        };
+        const string ConvictModel = "Enemies/EN_Convict";
+
         /// <summary>`d` metres inside the boundary line (negative: outside).</summary>
         static Vector3 Inside(float bearing, float d) => Edge(bearing) - Out(bearing) * d;
 
@@ -87,7 +136,6 @@ namespace Gladiator.EditorTools
 
             var pieces = new List<ArenaLayoutDef.Piece>();
             var gates = new List<ArenaLayoutDef.Gate>();
-            var boundary = new List<Vector4>();
             var crowd = new List<ArenaLayoutDef.CrowdZone>();
             void Add(string model, PieceRole role, Vector3 pos, float yaw, Vector3? scale = null) =>
                 pieces.Add(new ArenaLayoutDef.Piece { model = Env + model, role = role, position = pos, yaw = yaw, scale = scale ?? Vector3.one });
@@ -104,37 +152,38 @@ namespace Gladiator.EditorTools
                 float len = SectionLength(bearing);
                 var widen = new Vector3(len / SectionWidth * 1.06f, 1f, 1f); // neighbours overlap a little: no gaps
                 var kind = KindOf(i);
-                float wall;  // where the invisible wall stands, outward from the line
                 switch (kind)
                 {
                     case Kind.Gate:
-                        gates.Add(new ArenaLayoutDef.Gate { position = Edge(bearing) + n * 0.3f, yaw = yaw });
-                        wall = 1.3f;
+                    {
+                        var at = Edge(bearing) + n * 0.3f;
+                        gates.Add(new ArenaLayoutDef.Gate { position = at, yaw = yaw });
+                        // P1 ("the arenas must remain closed"): behind the door a closed pen of waiting convicts, not
+                        // the road (the road starts beyond the pen's back wall)
+                        Add("SM_YardPen", PieceRole.Decor, at, yaw);
+                        var rot = Quaternion.Euler(0f, yaw, 0f);
+                        foreach (var c in WaitingConvicts)
+                            pieces.Add(new ArenaLayoutDef.Piece { model = ConvictModel, role = PieceRole.Decor, position = at + rot * new Vector3(c.x, 0f, -c.y), yaw = yaw + c.z, scale = Vector3.one });
                         break;
+                    }
                     case Kind.Palisade:
                         Add("SM_YardPalisade", PieceRole.Solid, Edge(bearing) + n * 0.3f, yaw, widen);
-                        wall = 1.0f;
                         break;
                     case Kind.Fence:
                         Add("SM_YardFence", PieceRole.Solid, Edge(bearing) + n * 0.8f, yaw, widen);
-                        wall = 1.1f;
                         // locals leaning on the fence from outside
                         crowd.Add(new ArenaLayoutDef.CrowdZone { center = Edge(bearing) + n * 1.9f + Vector3.up * 0.25f, size = new Vector2(3.6f, 0.8f), yaw = yaw, count = 3 });
                         break;
                     case Kind.Berm:
                         Add("SM_YardBerm", PieceRole.Walkable, Edge(bearing), yaw, widen);
-                        wall = 2.3f; // just behind the wattle on the crest
                         if (i % 2 == 0)
                             crowd.Add(new ArenaLayoutDef.CrowdZone { center = Edge(bearing) + n * 2.6f + Vector3.up * 1.95f, size = new Vector2(3.6f, 0.6f), yaw = yaw, count = 3 });
                         break;
                     default:
                         Add(i % 2 == 0 ? "SM_YardPlatform" : "SM_YardPlatformB", PieceRole.Solid, Edge(bearing) + n * 0.4f, yaw, widen);
-                        wall = 0.6f;
                         crowd.Add(new ArenaLayoutDef.CrowdZone { center = Edge(bearing) + n * 1.95f + Vector3.up * 2.4f, size = new Vector2(4.2f, 2.0f), yaw = yaw, count = 6 });
                         break;
                 }
-                var w = Edge(bearing) + n * wall;
-                boundary.Add(new Vector4(w.x, w.z, yaw, len * 1.25f));
             }
 
             // ---------- the yard ----------
@@ -246,7 +295,8 @@ namespace Gladiator.EditorTools
             l.gateModel = "Environment/SM_YardGate";
             l.gates = gates.ToArray();
             l.bossGate = 0;
-            l.boundary = boundary.ToArray();
+            l.boundaryLoop = BoundaryLoop();
+            l.boundary = System.Array.Empty<Vector4>();
             l.crowd = crowd.ToArray();
             l.zones = new[]
             {

@@ -108,7 +108,9 @@ namespace Gladiator.Gameplay
         public float aspect = 1f;
         [Tooltip("The play area's outline (world XZ, in order around it), where enemies stay: any polygon whose whole edge the centre can see (rectangle, octagon, D-shape...). Empty: the ellipse of radius × aspect.")]
         public Vector2[] outline = Array.Empty<Vector2>();
-        [Tooltip("Invisible walls (x, z, yaw, width) that keep the player in even over a low fence with air jumps; only the player collides with them.")]
+        [Tooltip("The player's boundary (P1): ONE closed polyline (world XZ, in order round the arena, either winding) on the front face of the arena's walls, every step between pieces joined. ArenaBuilder stands 30 m invisible walls along it and ArenaBounds clamps the player inside it. Replaces `boundary` when set.")]
+        public Vector2[] boundaryLoop = Array.Empty<Vector2>();
+        [Tooltip("Legacy (before P1): separate invisible walls (x, z, yaw, width); used only when boundaryLoop is empty.")]
         public Vector4[] boundary = Array.Empty<Vector4>();
         [Tooltip("Linear fog start / end (m); zero = the look's default. Big arenas push it out.")]
         public Vector2 fog;

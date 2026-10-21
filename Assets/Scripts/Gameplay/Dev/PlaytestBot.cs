@@ -203,20 +203,20 @@ namespace Gladiator.Gameplay
             if (enemies != null && enemies.FormationsSpawned > 0)
                 sb.Append(" formations ").Append(enemies.FormationsSpawned).Append(" linesBroken ").Append(enemies.LinesBroken);
             // the Colosseum (R2): the hypogeum's drops and lift waves, the dead's bone piles, the Chimeras' breath, the falx
-            var hyp = Hypogeum.Instance; // R2-STUB(hypogeum)
+            var hyp = Hypogeum.Instance;
             if (hyp != null)
-                sb.Append(" | hypogeum drops ").Append(hyp.Drops).Append(" (fallen ").Append(hyp.Fallen).Append(", hit you ").Append(hyp.PlayerHits) // R2-STUB(hypogeum)
-                  .Append(", jumped ").Append(hyp.Jumped).Append(", boss ").Append(hyp.BossHits).Append(") lifts ").Append(hyp.LiftWaves) // R2-STUB(hypogeum)
-                  .Append(" (raised ").Append(hyp.LiftsRaised).Append(", released ").Append(hyp.Released).Append(") dodged ").Append(_hypogeumDodges); // R2-STUB(hypogeum)
-            if (enemies != null && enemies.PilesMade > 0) // R2-STUB(enemies)
-                sb.Append(" piles ").Append(enemies.PilesMade).Append(" (risen ").Append(enemies.PilesRisen).Append(", stomped ").Append(enemies.PilesStomped) // R2-STUB(enemies)
-                  .Append(", burned ").Append(enemies.PilesBurned).Append(", denied ").Append(enemies.PilesDenied).Append(')'); // R2-STUB(enemies)
-            if (enemies != null && enemies.Breaths > 0) // R2-STUB(enemies): Breaths / BreathHits aren't named in R2-design.md
-                sb.Append(" breaths ").Append(enemies.Breaths).Append(" (hit you ").Append(enemies.BreathHits).Append(')'); // R2-STUB(enemies)
-            if (boss != null && boss.DiscsThrown + boss.Grasps + boss.FalseDeaths > 0) // R2-STUB(boss): the Eternal Victor
-                sb.Append(" falx ").Append(boss.DiscsThrown).Append(" (hit you ").Append(boss.DiscHits).Append(", stopped ").Append(boss.DiscsStopped) // R2-STUB(boss)
-                  .Append(") grasps ").Append(boss.Grasps).Append(" falseDeaths ").Append(boss.FalseDeaths).Append(" (rose ").Append(boss.RemainsRisen) // R2-STUB(boss)
-                  .Append(", burst hit ").Append(boss.RiseBurstHits).Append(')'); // R2-STUB(boss)
+                sb.Append(" | hypogeum drops ").Append(hyp.Drops).Append(" (fallen ").Append(hyp.Fallen).Append(", hit you ").Append(hyp.PlayerHits)
+                  .Append(", jumped ").Append(hyp.Jumped).Append(", boss ").Append(hyp.BossHits).Append(") lifts ").Append(hyp.LiftWaves)
+                  .Append(" (raised ").Append(hyp.LiftsRaised).Append(", released ").Append(hyp.Released).Append(") dodged ").Append(_hypogeumDodges);
+            if (enemies != null && enemies.PilesMade > 0)
+                sb.Append(" piles ").Append(enemies.PilesMade).Append(" (risen ").Append(enemies.PilesRisen).Append(", stomped ").Append(enemies.PilesStomped)
+                  .Append(", burned ").Append(enemies.PilesBurned).Append(", denied ").Append(enemies.PilesDenied).Append(')');
+            if (enemies != null && enemies.Breaths > 0) // the Chimeras
+                sb.Append(" breaths ").Append(enemies.Breaths).Append(" (hit you ").Append(enemies.BreathHits).Append(')');
+            if (boss != null && boss.DiscsThrown + boss.Grasps + boss.FalseDeaths > 0) // the Eternal Victor
+                sb.Append(" falx ").Append(boss.DiscsThrown).Append(" (hit you ").Append(boss.DiscHits).Append(", stopped ").Append(boss.DiscsStopped)
+                  .Append(") grasps ").Append(boss.Grasps).Append(" falseDeaths ").Append(boss.FalseDeaths).Append(" (rose ").Append(boss.RemainsRisen)
+                  .Append(", burst hit ").Append(boss.RiseBurstHits).Append(')');
             if (run != null) // Beast Handlers killed (the Beastmaster's unlock counts them; C26)
                 for (int k = 0; k < run.KilledTypeCount; k++)
                 {
@@ -370,10 +370,10 @@ namespace Gladiator.Gameplay
             else _dodging = false;
 
             // 2c) The hypogeum (the Colosseum): off a door or lift about to open or move, not onto one then, round held doors.
-            var hyp = Hypogeum.Instance; // R2-STUB(hypogeum)
+            var hyp = Hypogeum.Instance;
             if (hyp != null && hypogeumDodge > 0f)
             {
-                if (hyp.Danger(pos) < hypogeumDodge) // R2-STUB(hypogeum)
+                if (hyp.Danger(pos) < hypogeumDodge)
                 {
                     desired = SafeStep(hyp, pos, desired) * 2f; // the way off beats any goal
                     if (!_hypDodging) { _hypDodging = true; _hypogeumDodges++; }
@@ -453,7 +453,7 @@ namespace Gladiator.Gameplay
                 for (int k = 0; k < 16; k++)
                 {
                     Vector3 dir = Turn(Vector3.forward, k * 22.5f);
-                    if (hyp.Danger(p + dir * (1.5f * ring)) < hypogeumDodge) continue; // R2-STUB(hypogeum)
+                    if (hyp.Danger(p + dir * (1.5f * ring)) < hypogeumDodge) continue;
                     float dot = Vector3.Dot(dir, want);
                     if (dot > bestDot) { bestDot = dot; best = dir; }
                 }
@@ -468,12 +468,12 @@ namespace Gladiator.Gameplay
         {
             float m = desired.magnitude;
             Vector3 dir = desired / m;
-            if (hyp.Danger(p + dir * hypogeumLookAhead) >= hypogeumDodge) return desired; // R2-STUB(hypogeum)
+            if (hyp.Danger(p + dir * hypogeumLookAhead) >= hypogeumDodge) return desired;
             for (int k = 1; k <= 6; k++)
                 for (int side = -1; side <= 1; side += 2)
                 {
                     Vector3 d = Turn(dir, side * 25f * k);
-                    if (hyp.Danger(p + d * hypogeumLookAhead) >= hypogeumDodge) return d * m; // R2-STUB(hypogeum)
+                    if (hyp.Danger(p + d * hypogeumLookAhead) >= hypogeumDodge) return d * m;
                 }
             return Vector3.zero;
         }

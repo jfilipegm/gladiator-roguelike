@@ -31,7 +31,7 @@ namespace Gladiator.EditorTools
         {
             var layout = ColosseumLayout.Ensure();
             EnsureEnemies();
-            var boss = BossSetup.EnsureEternalVictor(); // R2-STUB(boss): after the Legionnaire exists (his guards)
+            var boss = BossSetup.EnsureEternalVictor(); // after the Legionnaire exists (his guards)
             if (layout.boss == null) { layout.boss = boss; layout.bossGate = 0; EditorUtility.SetDirty(layout); } // he rises from the stage; the Gate of Death is the fallback
             var table = EnsureTable();
             if (layout.spawnTable == null) { layout.spawnTable = table; EditorUtility.SetDirty(layout); }
@@ -83,31 +83,31 @@ namespace Gladiator.EditorTools
                 d.maxHp = 34f; d.moveSpeed = 3.7f; d.speedJitter = 0.15f; d.radius = 0.36f; d.acceleration = 14f;
                 d.contactDamage = 9f; d.contactInterval = 0.9f; d.knockbackTaken = 1f; d.turnRate = 540f;
                 d.xp = 2.5f; d.goldChance = 0.05f; d.prewarm = 140; // a swarm type late in the run, and the boss's guards
-                d.reviveCount = 1;          // R2-STUB(enemies)
-                d.reviveDelay = 2.5f;       // R2-STUB(enemies)
-                d.reviveHpMul = 0.5f;       // R2-STUB(enemies)
-                d.stompRadius = 0.9f;       // R2-STUB(enemies)
-                d.burnStopsRevive = true;   // R2-STUB(enemies)
+                d.reviveCount = 1;
+                d.reviveDelay = 2.5f;
+                d.reviveHpMul = 0.5f;
+                d.stompRadius = 0.9f;
+                d.burnStopsRevive = true;
             });
             CombatSetup.Enemy("EN_Chimera", "Chimera", "chimera", beast != null ? beast : humanoid, d =>
             {
-                d.behaviour = EnemyBehaviour.Breather; // R2-STUB(enemies)
+                d.behaviour = EnemyBehaviour.Breather;
                 d.maxHp = 420f; d.moveSpeed = 3.0f; d.speedJitter = 0.05f; d.radius = 0.95f; d.acceleration = 8f;
                 d.contactDamage = 14f; d.contactInterval = 1.0f; d.knockbackTaken = 0.3f; d.turnRate = 160f; // flank it
                 d.windup = 1.0f; d.attackRange = 7f; d.attackRadius = 8f; d.attackDamage = 24f; d.trampleMul = 3f;
                 d.zoneDuration = 4f; d.zoneDps = 10f; d.attackCooldown = 4.5f; d.recover = 1.4f;
-                d.breathAngle = 60f;        // R2-STUB(enemies)
-                d.breathTime = 1.0f;        // R2-STUB(enemies)
-                d.breathPatches = 3;        // R2-STUB(enemies)
-                d.breathPatchRadius = 1.4f; // R2-STUB(enemies)
-                d.breathKnockback = 4f;     // R2-STUB(enemies)
+                d.breathAngle = 60f;
+                d.breathTime = 1.0f;
+                d.breathPatches = 3;
+                d.breathPatchRadius = 1.4f;
+                d.breathKnockback = 4f;
                 d.xp = 30f; d.goldChance = 0.6f; d.prewarm = 6;
             });
             var legionnaire = AssetDatabase.LoadAssetAtPath<EnemyDef>(LegionnairePath);
-            if (legionnaire != null && legionnaire.pileMesh == null) // R2-STUB(enemies)
+            if (legionnaire != null && legionnaire.pileMesh == null)
             {
-                legionnaire.pileMesh = FirstMesh(BonePileModel); // R2-STUB(enemies)
-                if (legionnaire.pileMesh == null) Debug.LogWarning("[ColosseumSetup] " + BonePileModel + " missing: the Legionnaires' bone piles won't draw (export it, then run this again)"); // R2-STUB(enemies)
+                legionnaire.pileMesh = FirstMesh(BonePileModel);
+                if (legionnaire.pileMesh == null) Debug.LogWarning("[ColosseumSetup] " + BonePileModel + " missing: the Legionnaires' bone piles won't draw (export it, then run this again)");
                 EditorUtility.SetDirty(legionnaire);
             }
             AssetDatabase.SaveAssets();
@@ -181,7 +181,7 @@ namespace Gladiator.EditorTools
             return t;
         }
 
-        static ArenaLayoutDef.LiftPack Pack(string path, float from, float to, float weight, int min, int max, int cap, string call) => new ArenaLayoutDef.LiftPack // R2-STUB(hypogeum)
+        static ArenaLayoutDef.LiftPack Pack(string path, float from, float to, float weight, int min, int max, int cap, string call) => new ArenaLayoutDef.LiftPack
         {
             enemy = AssetDatabase.LoadAssetAtPath<EnemyDef>(path),
             from = from, to = to, weight = weight, count = new Vector2Int(min, max), maxAlive = cap, call = call,
@@ -199,7 +199,7 @@ namespace Gladiator.EditorTools
                 Pack(ChimeraPath, 240f, 0f, 1f, 1, 1, 2, "A CHIMERA!"),
                 Pack(LegionnairePath, 270f, 0f, 3f, 5, 7, 160, "THE DEAD RISE!"),
             };
-            var list = new List<ArenaLayoutDef.LiftPack>(layout.liftPacks ?? new ArenaLayoutDef.LiftPack[0]); // R2-STUB(hypogeum)
+            var list = new List<ArenaLayoutDef.LiftPack>(layout.liftPacks ?? new ArenaLayoutDef.LiftPack[0]);
             bool added = false;
             foreach (var p in want)
             {
@@ -209,7 +209,7 @@ namespace Gladiator.EditorTools
                 if (!has) { list.Add(p); added = true; }
             }
             if (!added) return;
-            layout.liftPacks = list.ToArray(); // R2-STUB(hypogeum)
+            layout.liftPacks = list.ToArray();
             EditorUtility.SetDirty(layout);
         }
     }

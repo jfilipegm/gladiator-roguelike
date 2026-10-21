@@ -74,9 +74,9 @@ namespace Gladiator.Tests
         static float HoleClearance(ArenaLayoutDef l, Vector2 p)
         {
             float best = float.MaxValue;
-            foreach (var t in l.trapdoors) best = Mathf.Min(best, RectDistance(new Vector2(t.x, t.y), t.z, l.trapdoorSize, p)); // R2-STUB(hypogeum)
-            foreach (var q in l.lifts) best = Mathf.Min(best, RectDistance(XZ(q), 0f, Vector2.one * l.liftSize, p)); // R2-STUB(hypogeum)
-            if (l.hasCenterLift) best = Mathf.Min(best, RectDistance(XZ(l.centerLift), 0f, Vector2.one * (l.liftSize * l.centerLiftScale), p)); // R2-STUB(hypogeum)
+            foreach (var t in l.trapdoors) best = Mathf.Min(best, RectDistance(new Vector2(t.x, t.y), t.z, l.trapdoorSize, p));
+            foreach (var q in l.lifts) best = Mathf.Min(best, RectDistance(XZ(q), 0f, Vector2.one * l.liftSize, p));
+            if (l.hasCenterLift) best = Mathf.Min(best, RectDistance(XZ(l.centerLift), 0f, Vector2.one * (l.liftSize * l.centerLiftScale), p));
             return best;
         }
 
@@ -107,7 +107,7 @@ namespace Gladiator.Tests
             if (Director.Instance != null) Director.Instance.enabled = false;
             var lvl = Object.FindAnyObjectByType<LevelUpController>();
             if (lvl != null) lvl.enabled = false;
-            if (Hypogeum.Instance != null) Hypogeum.Instance.Halt(); // R2-STUB(hypogeum): no drops or lift waves
+            if (Hypogeum.Instance != null) Hypogeum.Instance.Halt(); // no drops or lift waves
             Player.Main.OverrideSource = new ScriptedInput();
             Player.Main.GetComponent<WeaponSystem>().RemoveAll();
             _em = EnemyManager.Instance;
@@ -205,11 +205,11 @@ namespace Gladiator.Tests
             Assert.AreSame(Load<SpawnTableDef>(TablePath), director.table);
             Assert.AreEqual(450, director.maxAliveOverride, "huge waves, inside §8's ~500 at peak");
             Assert.AreEqual(1.3f, director.arenaDensity, 1e-4f);
-            Assert.AreEqual(1.5f, director.swarmMultiplier, 1e-4f, "swarms × 1.5"); // R2-STUB(hypogeum)
+            Assert.AreEqual(1.5f, director.swarmMultiplier, 1e-4f, "swarms × 1.5");
             Assert.AreEqual(55f, director.maxSpawnDistance, 1e-4f, "the horde comes from your end of the oval");
             Assert.AreEqual(60f, director.eliteEveryOverride, 1e-4f);
             Assert.AreEqual(6, ArenaGates.Instance.Count, "the Gates of Life and Death and four side gates");
-            Assert.IsNotNull(Hypogeum.Instance, "the floor over the hypogeum"); // R2-STUB(hypogeum)
+            Assert.IsNotNull(Hypogeum.Instance, "the floor over the hypogeum");
             Assert.AreEqual("eternal_victor", Object.FindAnyObjectByType<BossFight>().boss.id);
 
             RunState.Current.End(RunOutcome.Died);
@@ -222,8 +222,8 @@ namespace Gladiator.Tests
         {
             const float pad = 1f;
             var l = Layout;
-            Assert.AreEqual(30, l.trapdoors.Length); // R2-STUB(hypogeum)
-            Assert.AreEqual(8, l.lifts.Length); // R2-STUB(hypogeum)
+            Assert.AreEqual(30, l.trapdoors.Length);
+            Assert.AreEqual(8, l.lifts.Length);
             yield return Boot(true);
             var props = Interactables.Instance;
             Assert.AreEqual(18, props.chestAnchors.Length);
@@ -268,7 +268,7 @@ namespace Gladiator.Tests
             foreach (var t in hills)
             {
                 Footprint("hill", XZ(t.position), XZ(t.right).normalized, XZ(t.forward).normalized, 14f, 10f);
-                foreach (var d in l.trapdoors) // R2-STUB(hypogeum): and no door hidden wholly under one
+                foreach (var d in l.trapdoors) // and no door hidden wholly under one
                 {
                     Vector3 rel = new Vector3(d.x, 0f, d.y) - Flat(t.position);
                     Assert.IsFalse(Mathf.Abs(Vector3.Dot(rel, t.right)) < 7f && Mathf.Abs(Vector3.Dot(rel, t.forward)) < 5f, "a trapdoor under the hill at " + t.position);
@@ -301,8 +301,8 @@ namespace Gladiator.Tests
                         if (n > 0) Assert.Fail($"{hits[0].name} ({hits[0].transform.root.name}) stands over the hypogeum at {q}");
                     }
             }
-            foreach (var t in l.trapdoors) Sweep(new Vector2(t.x, t.y), t.z, l.trapdoorSize); // R2-STUB(hypogeum)
-            foreach (var q in l.lifts) Sweep(XZ(q), 0f, Vector2.one * l.liftSize); // R2-STUB(hypogeum)
+            foreach (var t in l.trapdoors) Sweep(new Vector2(t.x, t.y), t.z, l.trapdoorSize);
+            foreach (var q in l.lifts) Sweep(XZ(q), 0f, Vector2.one * l.liftSize);
             Assert.Greater(checks, 9000);
         }
 
@@ -359,7 +359,7 @@ namespace Gladiator.Tests
         public IEnumerator TheHypogeum_IsTheLayouts_AndTheBossGuardSpotsAreTheLifts()
         {
             var l = Layout;
-            // R2-STUB(hypogeum): every field below is the hypogeum part's
+            // the hypogeum fields (the hypogeum part's), as the contract
             Assert.AreEqual(30, l.trapdoors.Length);
             var perGroup = new int[6];
             foreach (var t in l.trapdoors) perGroup[(int)t.w]++;
@@ -489,16 +489,16 @@ namespace Gladiator.Tests
             Assert.AreEqual(0.36f, legionnaire.radius, 1e-4f);
             Assert.AreEqual(2.5f, legionnaire.xp, 1e-4f);
             Assert.AreEqual(140, legionnaire.prewarm);
-            Assert.AreEqual(1, legionnaire.reviveCount); // R2-STUB(enemies)
-            Assert.AreEqual(2.5f, legionnaire.reviveDelay, 1e-4f); // R2-STUB(enemies)
-            Assert.AreEqual(0.5f, legionnaire.reviveHpMul, 1e-4f); // R2-STUB(enemies)
-            Assert.AreEqual(0.9f, legionnaire.stompRadius, 1e-4f); // R2-STUB(enemies)
-            Assert.IsTrue(legionnaire.burnStopsRevive); // R2-STUB(enemies)
-            Assert.IsNotNull(legionnaire.pileMesh, "PR_BonePile's mesh"); // R2-STUB(enemies)
+            Assert.AreEqual(1, legionnaire.reviveCount);
+            Assert.AreEqual(2.5f, legionnaire.reviveDelay, 1e-4f);
+            Assert.AreEqual(0.5f, legionnaire.reviveHpMul, 1e-4f);
+            Assert.AreEqual(0.9f, legionnaire.stompRadius, 1e-4f);
+            Assert.IsTrue(legionnaire.burnStopsRevive);
+            Assert.IsNotNull(legionnaire.pileMesh, "PR_BonePile's mesh");
             Assert.IsNotNull(legionnaire.model, "EN_SkeletalLegionnaire.fbx");
             var chimera = Enemy("EN_Chimera");
             Assert.AreEqual("chimera", chimera.id);
-            Assert.AreEqual(EnemyBehaviour.Breather, chimera.behaviour); // R2-STUB(enemies)
+            Assert.AreEqual(EnemyBehaviour.Breather, chimera.behaviour);
             Assert.AreEqual(420f, chimera.maxHp);
             Assert.AreEqual(3.0f, chimera.moveSpeed, 1e-4f);
             Assert.AreEqual(0.95f, chimera.radius, 1e-4f);
@@ -508,18 +508,18 @@ namespace Gladiator.Tests
             Assert.AreEqual(8f, chimera.attackRadius, 1e-4f, "the cone's length");
             Assert.AreEqual(24f, chimera.attackDamage, 1e-4f);
             Assert.AreEqual(3f, chimera.trampleMul, 1e-4f, "it burns the horde × 3");
-            Assert.AreEqual(60f, chimera.breathAngle, 1e-4f); // R2-STUB(enemies)
-            Assert.AreEqual(1.0f, chimera.breathTime, 1e-4f); // R2-STUB(enemies)
-            Assert.AreEqual(3, chimera.breathPatches); // R2-STUB(enemies)
-            Assert.AreEqual(1.4f, chimera.breathPatchRadius, 1e-4f); // R2-STUB(enemies)
-            Assert.AreEqual(4f, chimera.breathKnockback, 1e-4f); // R2-STUB(enemies)
+            Assert.AreEqual(60f, chimera.breathAngle, 1e-4f);
+            Assert.AreEqual(1.0f, chimera.breathTime, 1e-4f);
+            Assert.AreEqual(3, chimera.breathPatches);
+            Assert.AreEqual(1.4f, chimera.breathPatchRadius, 1e-4f);
+            Assert.AreEqual(4f, chimera.breathKnockback, 1e-4f);
             Assert.AreEqual(4.5f, chimera.attackCooldown, 1e-4f);
             Assert.AreEqual(1.4f, chimera.recover, 1e-4f, "the window");
             Assert.AreEqual(30f, chimera.xp, 1e-4f);
             Assert.IsNotNull(chimera.model, "EN_Chimera.fbx");
 
             // docs/ARENAS.md §6 "Lift packs": (enemy, from, to (0 = the end), weight, count, cap, call)
-            var packs = Layout.liftPacks; // R2-STUB(hypogeum)
+            var packs = Layout.liftPacks;
             Assert.AreEqual(4, packs.Length);
             var boar = Enemy("EN_WarBoar");
             var wantPacks = new (EnemyDef enemy, float from, float to, float weight, Vector2Int count, int cap, string call)[]
@@ -533,7 +533,7 @@ namespace Gladiator.Tests
             {
                 var w = wantPacks[k];
                 Assert.IsNotNull(w.enemy);
-                Assert.AreSame(w.enemy, packs[k].enemy, "pack " + k); // R2-STUB(hypogeum): ArenaLayoutDef.LiftPack's fields
+                Assert.AreSame(w.enemy, packs[k].enemy, "pack " + k); // ArenaLayoutDef.LiftPack's fields
                 Assert.AreEqual(w.from, packs[k].from, "pack " + k);
                 Assert.AreEqual(w.to, packs[k].to, "pack " + k);
                 Assert.AreEqual(w.weight, packs[k].weight, 1e-4f, "pack " + k);
@@ -564,7 +564,7 @@ namespace Gladiator.Tests
             Assert.IsNotNull(fight);
             Assert.AreEqual(0, fight.gate, "the Gate of Death: the fallback");
             Assert.AreEqual("eternal_victor", fight.boss.id);
-            Assert.IsTrue(fight.boss.entranceRise, "he rises from the stage"); // R2-STUB(boss)
+            Assert.IsTrue(fight.boss.entranceRise, "he rises from the stage");
             Assert.Contains(Enemy("EN_SkeletalLegionnaire"), fight.boss.guards, "his guards are the dead");
 
             var gates = ArenaGates.Instance;

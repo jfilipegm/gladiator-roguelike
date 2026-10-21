@@ -1,13 +1,13 @@
 # R2 layout and setup — notes (the Colosseum's layout, data, scene build, bot log)
 
-Branch `claude/r2-layout-8bb080` (cut from `phase5-colosseum` at 2c22c20). Code only, no Unity. **Nothing here has run in
+Branch `claude/r2-layout-8bb080` (cut from `phase5-colosseum` at 2c22c20; `origin/phase5-colosseum` merged in at 775be98). Code only, no Unity. **Nothing here has run in
 Unity**: the orchestrator runs the menu items and the tests below.
 
-**Compile check:** alone, `Tools/ccheck` stops at `Gladiator.Gameplay` with errors=2: `Hypogeum` doesn't exist on this
-branch (the marked stubs below). **Merged with the other three R2 code parts** (`origin/claude/r2-hypogeum-8f1829` @
-8662567, `r2-enemies-74db63` @ 423d5a3, `r2-boss-c2a944` @ 56b1eb6, in a throwaway detached worktree), `Tools/ccheck -w`
-prints **errors=0, 0 warnings in all six assemblies**: every stubbed name below exists with the type I use. The merge had
-no conflicts, and no R2 stub file was needed (the boss part's `SetHpFloor` / `SetHp` calls resolve against the enemies part).
+**Compile check:** after merging `origin/phase5-colosseum` (the hypogeum, enemies, boss and char-art parts, merged by
+the orchestrator) into this branch, `Tools/ccheck -w` prints **errors=0, 0 warnings in all six assemblies**, with every
+`R2-STUB` marker removed from my files (the names were already the real ones; the merge had no conflicts). Before that
+merge, this branch alone stopped at `Gladiator.Gameplay` (the missing `Hypogeum` type), and a throwaway merge with the three
+code branches compiled clean.
 
 ## What I built
 | File | What |
@@ -92,21 +92,13 @@ no conflicts, and no R2 stub file was needed (the boss part's `SetHpFloor` / `Se
 12. **`ArenaNavTests` became one body run on two scenes** rather than a copy (the Colosseum's case checks that the
     invisible floors over the holes bake the same at runtime).
 
-## R2-STUB markers (every one resolves against the other parts' pushed branches)
-Strip the `// R2-STUB(...)` comments at integration; no code changes are needed.
-- **hypogeum (44):** `ArenaLayoutDef.trapdoors`, `trapdoorSize`, `trapdoorModel`, `lifts`, `liftSize`, `liftModel`,
-  `hasCenterLift`, `centerLift`, `centerLiftScale`, `dropFirst`, `dropEvery`, `dropTelegraph`, `dropOpen`, `liftFirst`,
-  `liftEvery`, `liftsPerWave`, `liftMinDistance`, `swarmMul`, `liftPacks` and `ArenaLayoutDef.LiftPack` (`enemy`, `from`,
-  `to`, `weight`, `count`, `maxAlive`, `call`) in `ColosseumLayout`, `ColosseumSetup` and the tests; `Hypogeum.Instance`,
-  `Danger`, `Halt`, `Count`, `LiftCount`, `GroupOf`, `doors`, `lifts`, `centerLift`, the counters `Drops`, `Fallen`,
-  `PlayerHits`, `Jumped`, `BossHits`, `LiftWaves`, `LiftsRaised`, `Released` in `PlaytestBot` and the tests;
-  `Director.swarmMultiplier` in the tests.
-- **enemies (31):** `EnemyBehaviour.Breather`; `EnemyDef.reviveCount`, `reviveDelay`, `reviveHpMul`, `stompRadius`,
-  `burnStopsRevive`, `pileMesh`, `breathAngle`, `breathTime`, `breathPatches`, `breathPatchRadius`, `breathKnockback`;
-  `EnemyManager.PilesMade`, `PilesRisen`, `PilesStomped`, `PilesBurned`, `PilesDenied`, `Breaths`, `BreathHits` (the last
-  two aren't in R2-design.md: I asked the enemies part, which named them so).
-- **boss (6):** `BossSetup.EnsureEternalVictor()`; `BossDef.entranceRise`; `BossController.DiscsThrown`, `DiscHits`,
-  `DiscsStopped`, `Grasps`, `FalseDeaths`, `RemainsRisen`, `RiseBurstHits`.
+## R2-STUB markers
+All removed from this part's files (the calls were written with the real names). Still in the boss part's
+`BossController.cs` (4 lines, its `SetHpFloor` / `SetHp` calls, which now resolve against the enemies part): the
+orchestrator's to strip. The cross-part names this part uses: `ArenaLayoutDef`'s hypogeum fields and `LiftPack`,
+`Hypogeum` (`Instance`, `Danger`, `Halt`, `Count`, `LiftCount`, `GroupOf`, `doors`, `lifts`, `centerLift`, the counters),
+`Director.swarmMultiplier`; `EnemyBehaviour.Breather`, the `EnemyDef` revive and breath fields, `EnemyManager`'s pile and
+breath counters; `BossSetup.EnsureEternalVictor`, `BossDef.entranceRise`, `BossController`'s falx and false-death counters.
 
 ## Menu items for the orchestrator (after merging all four code parts and the art)
 1. `Gladiator/Arenas/Build Colosseum`. Console: `[ColosseumLayout] play area 20005 m² (1.31× the Imperial Arena's
@@ -133,8 +125,8 @@ Plus `ArenaNavTests.Colosseum_BakedNavData_IsUsed_AndMatchesRuntimeBake`. Also r
 list grew).
 
 ## Verified / unverified
-- **Verified:** `Tools/ccheck -w` errors=0, 0 warnings in all six assemblies with the four R2 code parts merged (this
-  branch alone: errors=2, both the missing `Hypogeum` type). By arithmetic (a Python copy of `WallLine`, `Inset`, the
+- **Verified:** `Tools/ccheck -w` errors=0, 0 warnings in all six assemblies on this branch (with `phase5-colosseum`
+  merged in). By arithmetic (a Python copy of `WallLine`, `Inset`, the
   crowd rows and the clearance check): 90 clockwise corners, the play area 20,005 m², the crowd 3,524, the gates'
   positions and yaws (match the contract), every anchor, gate mouth and footprint ≥ 3.8 m from every hole.
 - **Unverified (needs the Editor):** the menu item and the scene build; every test above; the look: the cavea runs
@@ -146,12 +138,12 @@ list grew).
 - **env-art:** `SM_ColPulvinar`'s real width (my crowd cut assumes 15.6 m: `ColosseumLayout.BoxHalf`); each hill's flat
   top must contain its origin (the chests and altars sit at the hills' origins at 2.2 m); the stand profile as the
   contract (the crowd stands on those numbers).
-- **char-art:** `Assets/Art/Models/Props/PR_BonePile.fbx` (one mesh) for the Legionnaire's `pileMesh`.
+- **char-art (done, merged):** `Props/PR_BonePile.fbx`, `EN_SkeletalLegionnaire.fbx`, `EN_Chimera.fbx`, `EN_EternalVictor.fbx`.
 - **Enemies part (answered):** the Legionnaire's pool headroom: the Director sizes table pools from the table (its cap
   160, plus a full swarm × density × `swarmMul`, × 1.1 + 8: ~300 with the code's default curve), well above cap + 48; check
   `PoolGrowths` in the first bot run.
 - **Hypogeum part (done on its branch):** prewarming the lift packs' enemies (the War Boar isn't in the table).
-- **Orchestrator:** the menu items above; strip the R2-STUB markers; in `docs/ARENAS.md` §6 (not my section): the crowd
+- **Orchestrator:** the menu items above; in `docs/ARENAS.md` §6 (not my section): the crowd
   is 3,524 (no seats over the great gates), the side gates' yaws ±158.46 / ±21.54.
 
 ## Concerns (for CONCERNS.md)

@@ -230,24 +230,24 @@ namespace Gladiator.EditorTools
 
             // the hypogeum (ArenaBuilder's hook places the trapdoors and lifts and adds Hypogeum): the floor drops open
             // from 0:40 every 14 s (2 s telegraph, 4 s open), lift waves from 1:30 every 45 s; the packs: ColosseumSetup
-            l.trapdoors = (Vector4[])Trapdoors.Clone();       // R2-STUB(hypogeum)
-            l.trapdoorSize = DoorSize;                        // R2-STUB(hypogeum)
-            l.trapdoorModel = Env + "SM_ColTrapdoor";         // R2-STUB(hypogeum)
-            l.lifts = (Vector3[])Lifts.Clone();               // R2-STUB(hypogeum)
-            l.liftSize = LiftSize;                            // R2-STUB(hypogeum)
-            l.liftModel = Env + "SM_ColLift";                 // R2-STUB(hypogeum)
-            l.hasCenterLift = true;                           // R2-STUB(hypogeum)
-            l.centerLift = CenterLift;                        // R2-STUB(hypogeum)
-            l.centerLiftScale = CenterLiftScale;              // R2-STUB(hypogeum)
-            l.dropFirst = 40f;                                // R2-STUB(hypogeum)
-            l.dropEvery = 14f;                                // R2-STUB(hypogeum)
-            l.dropTelegraph = 2f;                             // R2-STUB(hypogeum)
-            l.dropOpen = 4f;                                  // R2-STUB(hypogeum)
-            l.liftFirst = 90f;                                // R2-STUB(hypogeum)
-            l.liftEvery = 45f;                                // R2-STUB(hypogeum)
-            l.liftsPerWave = 3;                               // R2-STUB(hypogeum)
-            l.liftMinDistance = 12f;                          // R2-STUB(hypogeum)
-            l.swarmMul = 1.5f;                                // R2-STUB(hypogeum): the Director's swarms × this
+            l.trapdoors = (Vector4[])Trapdoors.Clone();
+            l.trapdoorSize = DoorSize;
+            l.trapdoorModel = Env + "SM_ColTrapdoor";
+            l.lifts = (Vector3[])Lifts.Clone();
+            l.liftSize = LiftSize;
+            l.liftModel = Env + "SM_ColLift";
+            l.hasCenterLift = true;
+            l.centerLift = CenterLift;
+            l.centerLiftScale = CenterLiftScale;
+            l.dropFirst = 40f;
+            l.dropEvery = 14f;
+            l.dropTelegraph = 2f;
+            l.dropOpen = 4f;
+            l.liftFirst = 90f;
+            l.liftEvery = 45f;
+            l.liftsPerWave = 3;
+            l.liftMinDistance = 12f;
+            l.swarmMul = 1.5f; // the Director's swarms × this
 
             var pieces = new List<ArenaLayoutDef.Piece>();
             var gates = new List<ArenaLayoutDef.Gate>();

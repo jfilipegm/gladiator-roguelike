@@ -377,7 +377,9 @@
   - **Bot runs (dev build, `-gladiator net_weaver`, 10 min), 0 exceptions:**
     - Slave Pit: 387 fps avg, 199 fps at ≥ 250 enemies (p95 6.7 ms), gameplay 1.93 / 2.40 ms; GC 419 B/s, of which 220 KB is the victory screen + save; level 29, 8,336 kills; nets 77 (hauled 220), prongs 1,668; **Gorm beaten, Survived at 531**.
     - Stone Amphitheater: 366 fps avg, 182 fps at ≥ 250 (p95 7.1 ms), gameplay 2.09 / 2.71 ms; GC 53 B/s; level 25, 7,834 kills; nets 68 (hauled 482), prongs 1,293; the Beast Lord at 44 % (phase 2) when the recording ended.
-- **Next:** full suites, PR, merge (inside the window), `Tools/release 0.15.0`, smoke-run the archives.
+  - **Found by the full suite and fixed:** the select screen laid every card in one 1920 px row, and eight gladiators (plus a stale Murder Machine placeholder) overflowed it, so the goblin's card was off-screen (`GoblinPlayTests` failed; its unwiped flag failed a second test). The row now slides to keep the pick in view (the last earned card shows the right end), the placeholder is gone, and descriptions auto-size (the Thunder Champion's spilled over his title). Screenshots `menu_select`, `menu_select_right`.
+  - **Full suites:** EditMode 78/78, PlayMode 183/183.
+- **Next:** PR, merge (inside the window), `Tools/release 0.15.0`, smoke-run the archives.
 
 ## Next (after the producer's playtest of v0.9.0–v0.14.0)
 - **The overnight run (2026-10-21, 01:25–05:40 WEST)** merged and released five milestones under the producer's "proceed with any merge in the next 5h40": v0.9.0 Arena 3 (PR #11, the producer's OK), v0.10.0 the Murder Machine (#12), v0.11.0 the Thunder Champion (#13), v0.12.0 the Golden Idol (#14), v0.13.0 the Ashen Oracle (#15). After 07:05 WEST, ask before every merge again.

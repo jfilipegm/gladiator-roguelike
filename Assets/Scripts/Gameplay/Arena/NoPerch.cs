@@ -13,10 +13,12 @@ namespace Gladiator.Gameplay
     {
         /// <summary>Which way (XZ, unit) to slide a player at `pos` off `col`: away from its middle, unless that leads out
         /// of the arena (a prop against the wall), then toward the arena's centre.</summary>
-        public static Vector3 SlideDirection(Vector3 pos, Collider col)
+        public static Vector3 SlideDirection(Vector3 pos, Collider col) => SlideDirection(pos, col, ArenaBounds.Instance);
+
+        /// <summary>The same against a given boundary (null: away from the middle, or toward the origin).</summary>
+        public static Vector3 SlideDirection(Vector3 pos, Collider col, ArenaBounds bounds)
         {
             var b = col.bounds;
-            var bounds = ArenaBounds.Instance;
             Vector2 c = bounds != null ? bounds.center : Vector2.zero;
             var toCentre = new Vector3(c.x - pos.x, 0f, c.y - pos.z);
             var away = new Vector3(pos.x - b.center.x, 0f, pos.z - b.center.z);

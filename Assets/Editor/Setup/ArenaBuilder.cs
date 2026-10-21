@@ -681,6 +681,7 @@ namespace Gladiator.EditorTools
             block.transform.SetParent(go.transform, false);
             block.transform.localPosition = new Vector3(0f, 2f, 0.3f); // on the door line: closed doors look and act solid
             block.AddComponent<BoxCollider>().size = new Vector3(4.4f, 4f, 0.3f);
+            block.AddComponent<NoPerch>(); // P1: its top (4 m) is inside the boundary loop and in reach of two air jumps
             return go.transform;
         }
 

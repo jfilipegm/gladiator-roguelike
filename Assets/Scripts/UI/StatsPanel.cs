@@ -155,7 +155,7 @@ namespace Gladiator.UI
         public void Tick(float dt, float unscaledDt)
         {
             var run = RunState.Current;
-            bool live = Bind() && run != null && !run.Ended;
+            bool live = Bind() && run != null && !run.Ended && !RunState.CombatOver; // not through the death beat either
             var lvl = LevelUpController.Instance;
             var mode = Mode.Hidden;
             if (live && !OptionsPanel.IsOpen && (AdminController.Instance == null || !AdminController.Instance.IsOpen))

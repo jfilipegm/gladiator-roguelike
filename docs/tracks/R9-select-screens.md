@@ -56,8 +56,10 @@ Mouse: click picks, a second click on the picked tile fights (as today). Keyboar
     (string). Don't touch `BossDef.cs`: R2's boss part owns it.
 - **Save:** `SaveData.gladiatorRuns` (`List<IdCount>`, like the existing `gladiatorWins`), counted where a run ends.
   Bump the save version only if the loader needs it.
-- **Baker:** an Editor menu item `Gladiator/Setup/UI/Bake Portraits` (`Assets/Editor/Setup/PortraitBaker.cs`). It
-  renders, with the game's URP look and a fixed camera:
+- **Baker:** `CodexSetup.cs` already bakes the Codex's portrait atlas from the models in a preview scene
+  (`BakePortraits`, 128 px cells, `Assets/Art/Textures/UI/CodexPortraits.png`). Reuse it: extend it, or factor its
+  camera setup into `Assets/Editor/Setup/PortraitBaker.cs` with an Editor menu item `Gladiator/Setup/UI/Bake Portraits`.
+  It renders, with the game's URP look and a fixed camera:
   - each `GladiatorDef.model` → `Assets/Art/UI/Portraits/PT_<gladiatorId>.png` and `PT_<gladiatorId>_sil.png`;
   - each boss model → `PT_boss_<bossId>.png`;
   - each `RunDef`'s first arena scene, from a fixed high 3/4 camera → `Assets/Art/UI/Arenas/AT_<runId>.png`.
@@ -71,7 +73,7 @@ Mouse: click picks, a second click on the picked tile fights (as today). Keyboar
 - new UI files (e.g. `RosterGrid.cs`, `LanistaTablet.cs`, `ArenaLadder.cs`);
 - the additions to `UiFactory.cs` / `PixelIcons.cs`;
 - `GladiatorDef.cs` (the portrait fields), `RunDef.cs`, `SaveData.cs` and the run-end recorder (`gladiatorRuns`);
-- `Assets/Editor/Setup/PortraitBaker.cs` (new), `MenuSceneBuilder.cs`, and the taglines / boss names in the existing
+- `Assets/Editor/Setup/PortraitBaker.cs` (new), `CodexSetup.cs`, `MenuSceneBuilder.cs`, and the taglines / boss names in the existing
   run setups. **Not** `ProvincialPitSetup.cs`'s run list or anything R2 owns: put taglines on the runs from the baker,
   or a small new `RunTaglines` table in its own Editor file.
 - tests: keep `MainMenu.Pick` / `PickArena` / `AsksForArena` and every existing menu and Codex test passing; add

@@ -38,7 +38,7 @@ Every arena needs **vertical variety** (mounds, ramps, stairs, platforms, pit ed
 | 2 | Provincial Pit | ≈ 6,300 m² (built v0.8.0: 100 × 70 m octagon) | rectangular town arena, corners cut |
 | 3 | Stone Amphitheater | ≥ 8,000 m² | D-shape: half-oval of seating against a straight stage wall |
 | 4 | Grand Arena | ≈ 11,700 m² (built: a Greek cross, arms 52 × 70 m) | cross-shaped plaza with patron boxes |
-| 5 | Imperial Arena | ≥ 13,500 m² | long hippodrome with a central spina |
+| 5 | Imperial Arena | 15,302 m² (built, v0.17.0) | long hippodrome with a central spina, chariot races |
 | 6 | Colosseum | ≥ 17,500 m² | the great oval, earned last, with a hypogeum |
 
 ## Enemies

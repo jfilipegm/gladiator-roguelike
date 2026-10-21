@@ -61,6 +61,14 @@ MonoBehaviour:
   escort: {fileID: 11400000, guid: 51fd6705a6918542c8a48f6531e10146, type: 2}
   escortCount: 2
   leashLength: 3.5
+  formationSlots: []
+  formationHold: 0
+  pushPad: 0.8
+  pushDepth: 2.6
+  pushKnockback: 9
+  freeEscortsOnDeath: 1
+  breakStatus: {fileID: 0}
+  breakShieldsDown: 0
   xp: 8
   goldChance: 0.25
   prewarm: 10

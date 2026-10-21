@@ -53,6 +53,33 @@ MonoBehaviour:
   lobNet: 0
   netSlow: 0.1
   netTime: 1.2
+  stealGold: 0
+  runeDelay: 1.1
+  blinkRange: 0
+  blinkCooldown: 5
+  blinkDistance: {x: 9, y: 12}
+  escort: {fileID: 0}
+  escortCount: 0
+  leashLength: 3.5
+  formationSlots: []
+  formationHold: 0
+  pushPad: 0.8
+  pushDepth: 2.6
+  pushKnockback: 9
+  freeEscortsOnDeath: 1
+  breakStatus: {fileID: 0}
+  breakShieldsDown: 0
+  reviveCount: 0
+  reviveDelay: 2.5
+  reviveHpMul: 0.5
+  stompRadius: 0.9
+  burnStopsRevive: 1
+  pileMesh: {fileID: 0}
+  breathAngle: 60
+  breathTime: 1
+  breathPatches: 3
+  breathPatchRadius: 1.4
+  breathKnockback: 4
   xp: 7
   goldChance: 0.12
   prewarm: 24

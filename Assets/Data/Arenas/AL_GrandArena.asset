@@ -38,29 +38,31 @@ MonoBehaviour:
   - {x: -68.9, y: 24.900002}
   - {x: -39.544365, y: 24.9}
   - {x: -24.9, y: 39.544365}
-  boundary:
-  - {x: 0, y: 71.2, z: 180, w: 55}
-  - {x: 27.2, y: 55, z: -90, w: 33}
-  - {x: 33.84853, y: 33.84853, z: -135, w: 22.79899}
-  - {x: 55, y: 27.2, z: 180, w: 33}
-  - {x: 71.2, y: 0, z: -90, w: 55}
-  - {x: 55, y: -27.2, z: 0, w: 33}
-  - {x: 33.84853, y: -33.84853, z: -45, w: 22.79899}
-  - {x: 27.2, y: -55, z: -90, w: 33}
-  - {x: 0, y: -71.2, z: 0, w: 55}
-  - {x: -27.2, y: -55, z: 90, w: 33}
-  - {x: -33.84853, y: -33.84853, z: 45, w: 22.79899}
-  - {x: -55, y: -27.2, z: 0, w: 33}
-  - {x: -71.2, y: 0, z: 90, w: 55}
-  - {x: -55, y: 27.2, z: 180, w: 33}
-  - {x: -33.84853, y: 33.84853, z: 135, w: 22.79899}
-  - {x: -27.2, y: 55, z: 90, w: 33}
+  boundaryLoop:
+  - {x: -26, y: 70}
+  - {x: 26, y: 70}
+  - {x: 26, y: 40}
+  - {x: 40, y: 26}
+  - {x: 70, y: 26}
+  - {x: 70, y: -26}
+  - {x: 40, y: -26}
+  - {x: 26, y: -40}
+  - {x: 26, y: -70}
+  - {x: -26, y: -70}
+  - {x: -26, y: -40}
+  - {x: -40, y: -26}
+  - {x: -70, y: -26}
+  - {x: -70, y: 26}
+  - {x: -40, y: 26}
+  - {x: -26, y: 40}
+  boundary: []
   fog: {x: 70, y: 300}
   playerSpawn: {x: 0, y: 0.1, z: -16}
   playerYaw: 0
   maxAlive: 400
   spawnMaxDistance: 50
   densityMul: 1.2
+  swarmMul: 1
   sunEuler: {x: 50, y: -38, z: 0}
   boss: {fileID: 11400000, guid: 17019499c2e19b09ba188a5801301336, type: 2}
   bossGate: 0
@@ -1373,3 +1375,33 @@ MonoBehaviour:
   - {x: 30.87868, y: 0, z: -30.87868}
   - {x: -30.87868, y: 0, z: -30.87868}
   - {x: -30.87868, y: 0, z: 30.87868}
+  trackRadius: 0
+  trackWestMeta: {x: -60, y: 0}
+  trackEastMeta: {x: 40, y: 0}
+  trackWidth: 4
+  trackStallX: -97
+  chariotFirst: 80
+  chariotEvery: 60
+  chariotTelegraph: 3
+  chariotSpeed: 22
+  chariotCount: 2
+  chariotLaps: 2
+  chariotModel: Props/PR_Chariot
+  trapdoors: []
+  trapdoorSize: {x: 8, y: 4}
+  trapdoorModel: Environment/SM_ColTrapdoor
+  lifts: []
+  liftSize: 4
+  liftModel: Environment/SM_ColLift
+  hasCenterLift: 0
+  centerLift: {x: 0, y: 1.2, z: 0}
+  centerLiftScale: 1.25
+  dropFirst: 40
+  dropEvery: 14
+  dropTelegraph: 2
+  dropOpen: 4
+  liftFirst: 90
+  liftEvery: 45
+  liftsPerWave: 3
+  liftMinDistance: 12
+  liftPacks: []

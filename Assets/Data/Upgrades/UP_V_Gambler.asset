@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 40ebe3582a67739c6bdb000081f621a7, type: 3}
+  m_Name: UP_V_Gambler
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.UpgradeDef
+  id: vow_gambler
+  displayName: Gambler's Vow
+  glyph: GA
+  icon: {fileID: 2800000, guid: 13ceaa4af4e914da3ab8c2724bbfa51d, type: 3}
+  iconRow: 63
+  kind: 0
+  tags: 128
+  weight: 10
+  maxLevel: 3
+  minRarity: 0
+  maxRarity: 3
+  requiresAny: []
+  weapon: {fileID: 0}
+  evolvesFrom: {fileID: 0}
+  catalyst: {fileID: 0}
+  perLevel:
+  - stat: 16
+    op: 0
+    value: 0.2
+  vow: 1
+  drawbacks:
+  - stat: 17
+    op: 0
+    value: -1
+  effects: []
+  healFraction: 0
+  gold: 0

@@ -31,6 +31,8 @@ MonoBehaviour:
   - stat: 13
     op: 1
     value: 0.25
+  vow: 0
+  drawbacks: []
   effects: []
   healFraction: 0
   gold: 0

@@ -28,6 +28,8 @@ MonoBehaviour:
   evolvesFrom: {fileID: 11400000, guid: bc7cd2120404cfde7a76e36a7eeb476f, type: 2}
   catalyst: {fileID: 11400000, guid: 838d02232275c2bce9fa2512796b179b, type: 2}
   perLevel: []
+  vow: 0
+  drawbacks: []
   effects: []
   healFraction: 0
   gold: 0

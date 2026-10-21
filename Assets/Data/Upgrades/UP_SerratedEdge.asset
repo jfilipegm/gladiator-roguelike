@@ -31,6 +31,8 @@ MonoBehaviour:
   - stat: 6
     op: 0
     value: 0.04
+  vow: 0
+  drawbacks: []
   effects:
   - kind: 1
     status: {fileID: 11400000, guid: 623c093ec11af065695b6f001d1c0e34, type: 2}

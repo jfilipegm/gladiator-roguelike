@@ -44,6 +44,7 @@ MonoBehaviour:
   whipDamage: 22
   whipSlow: 1
   whipSlowSeconds: 0
+  whipGrasp: 0
   slamRadius: 2.6
   slamWindup: 1
   slamDamage: 30
@@ -93,6 +94,15 @@ MonoBehaviour:
   volleyDamage: 16
   volleyRange: 30
   volleyJavelins: 1
+  discLength: 18
+  discWidth: 1.6
+  discWindup: 0.8
+  discSpeed: 24
+  discDamage: 18
+  discKnockback: 6
+  discSpin: 1080
+  discRepeats: {x: 1, y: 1}
+  discPart: Falx
   guardedBy: {fileID: 0}
   guardedDamageMul: 0.4
   guardThreadColor: {r: 1, g: 0.82, b: 0.25, a: 0.9}
@@ -124,4 +134,20 @@ MonoBehaviour:
   phase3Speed: 1.4
   phase3MoveSpeed: 4.6
   phase3ChargeRepeats: 2
+  phase3DiscRepeats: 0
+  phase3PounceRepeats: 0
+  entranceRise: 0
+  riseDepth: 3
+  riseTime: 2.6
+  falseDeath: 0
+  remainsHp: 1500
+  remainsTime: 8
+  riseHp01: 0.2
+  remainsText: 
+  riseText: 
+  riseBurstRadius: 4
+  riseBurstDamage: 20
+  riseBurstKnockback: 10
+  riseBurstWarn: 1
+  remainsColor: {r: 0.89, g: 0.84, b: 0.74, a: 0.85}
   rewardFloor: 2

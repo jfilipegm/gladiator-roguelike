@@ -69,7 +69,7 @@ brief begins with `git fetch origin && git merge --ff-only origin/<item branch>`
 every part of a wave in the same producer-started turn; dependent parts code against the contract's names (with marked
 stubs if needed, as the boss part did). If only cards are possible, ask the producer to click them: at 17:30 on 2026-10-21 the app refused even an explicit
 "start the R2 art workers" (probably because a background bot run was still going), so a click on the card is the
-reliable path.
+reliable path. At 19:15 a plain "please continue" from the producer (no background task running) started both waiting cards (`start_session` with their `proposal_id`) and four new `user_asked` workers at once.
 
 ## 4. The parts of each item
 The exact split is fixed in each item's contract. This is the starting proposal, with file ownership.

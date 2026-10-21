@@ -30,6 +30,10 @@ namespace Gladiator.Gameplay
         /// <summary>Keeps its distance like a Ranged, raises its staff, then opens a rune circle under you that erupts
         /// after `runeDelay`; blinks away when you get within `blinkRange` (Sorcerer).</summary>
         Caster,
+        /// <summary>Closes to `attackRange` once you're in front of it, plants, a cone of fire (`attackRadius` long,
+        /// `breathAngle` wide) fills over `windup`, then breathes for `breathTime`: the player once, every other enemy in
+        /// it × `trampleMul`, fire patches after; then recovers (the Chimera, R2).</summary>
+        Breather,
     }
 
     /// <summary>An enemy type as data (CLAUDE.md §2.4). New enemies = new assets; new behaviours = new code.</summary>
@@ -67,10 +71,10 @@ namespace Gladiator.Gameplay
         public float windup = 0.6f;
         [Tooltip("Seconds between special attacks.")]
         public float attackCooldown = 2.5f;
-        [Tooltip("Lunger/Slammer: distance that triggers the attack. Ranged/Lobber: max throw distance.")]
+        [Tooltip("Lunger/Slammer/Breather: distance that triggers the attack. Ranged/Lobber: max throw distance.")]
         public float attackRange = 3f;
         public float attackDamage = 10f;
-        [Tooltip("Slammer: slam radius. Lobber: fire patch radius.")]
+        [Tooltip("Slammer: slam radius. Lobber: fire patch radius. Breather: the cone's length.")]
         public float attackRadius = 2.5f;
         [Tooltip("Recovery after the attack (vulnerable, slow) (s).")]
         public float recover = 0.4f;
@@ -95,7 +99,7 @@ namespace Gladiator.Gameplay
         public float projectileRadius = 0.25f;
         [Tooltip("Shield Archer: seconds before the shot when the aim line stops tracking you (sidestep then).")]
         public float aimLockTime = 0.3f;
-        [Tooltip("Lobber: fire patch duration (s) and damage per second while you stand in it.")]
+        [Tooltip("Lobber / Breather: fire patch duration (s) and damage per second while you stand in it.")]
         public float zoneDuration = 3.5f;
         public float zoneDps = 10f;
 
@@ -109,7 +113,7 @@ namespace Gladiator.Gameplay
         public float flankTimeout = 4f;
         [Tooltip("Circles to your side before it dashes (Assassin). Off: makes straight for you and charges once in range (War Boar).")]
         public bool flank = true;
-        [Tooltip("War Boar: enemies in its charge take this × its hit, once per charge (0 = it passes through them).")]
+        [Tooltip("War Boar: enemies in its charge take this × its hit, once per charge (0 = it passes through them). Chimera: the same, once per breath.")]
         public float trampleMul;
 
         [Header("Net-Thrower")]
@@ -157,6 +161,31 @@ namespace Gladiator.Gameplay
         public StatusDef breakStatus;
         [Tooltip("Those escorts' shields are down this long (s): no block.")]
         public float breakShieldsDown;
+
+        [Header("Undead (the Skeletal Legionnaire, R2)")]
+        [Tooltip("Times it collapses into a bone pile instead of dying (no kill, no XP) and stands up again (0 = never).")]
+        [Min(0)] public int reviveCount;
+        [Tooltip("Seconds it lies as a pile before it stands up.")]
+        public float reviveDelay = 2.5f;
+        [Tooltip("Its max HP (and HP) when it stands up, × this.")]
+        public float reviveHpMul = 0.5f;
+        [Tooltip("The player's feet within this of a pile (and less than 0.5 m above it) scatter it: that's the kill (m).")]
+        public float stompRadius = 0.9f;
+        [Tooltip("Dying while burning: no pile, it stays down.")]
+        public bool burnStopsRevive = true;
+        [Tooltip("Drawn instanced (the enemies' material) while it's a pile (PR_BonePile).")]
+        public Mesh pileMesh;
+
+        [Header("Breather (the Chimera, R2)")]
+        [Tooltip("The cone's width (deg); its length is attackRadius.")]
+        public float breathAngle = 60f;
+        [Tooltip("Seconds of fire after the wind-up.")]
+        public float breathTime = 1f;
+        [Tooltip("Fire patches left along the cone afterwards (radius below; zoneDuration / zoneDps).")]
+        [Min(0)] public int breathPatches = 3;
+        public float breathPatchRadius = 1.4f;
+        [Tooltip("The breath pushes the player along the cone this hard (m/s).")]
+        public float breathKnockback = 4f;
 
         [Header("Rewards")]
         public float xp = 1f;

@@ -1,7 +1,7 @@
 # Progress
 
 **Current phase:** Phase 5 — expansion
-**Current milestone:** Phase 5.12 — the Ashen Oracle, the seventh gladiator (branch `phase5-ashen-oracle`, spec `docs/GLADIATORS.md`). Released 2026-10-21: v0.12.0 (the Golden Idol), v0.11.0 (the Thunder Champion), v0.10.0 (the Murder Machine), v0.9.0 (Arena 3).
+**Current milestone:** between milestones, waiting on the producer's playtest. Released 2026-10-21: v0.13.0 (the Ashen Oracle), v0.12.0 (the Golden Idol), v0.11.0 (the Thunder Champion), v0.10.0 (the Murder Machine), v0.9.0 (Arena 3). See "Next" at the end of the Done list.
 **Last updated:** 2026-10-21
 
 **Repository:** https://github.com/jfilipegm/gladiator-roguelike (public, branch `main`, remote `origin`, `.blend` files via Git LFS). Work on a branch per milestone, push as you go, merge through a PR; release every playable build (`Tools/release`).
@@ -323,7 +323,7 @@
   - Archives: Linux 43 MB, Linux dev 73 MB, Windows 45 MB, macOS 52 MB.
   - Smoke runs of the downloaded archives (`-bot -timed -botSeconds 40`), all v0.12.0, 0 exceptions: Linux as the Golden Idol in the Slave Pit (64 kills, clock to 37 s), Linux as the Murder Machine in the Provincial Pit (55 kills, 1 Verdict, 37 s), Windows under Wine as the Golden Idol (56 kills, 37 s). Their Profiling files were deleted. macOS not run.
 
-## Phase 5.12 the Ashen Oracle (branch `phase5-ashen-oracle`, v0.13.0)
+## Done — Phase 5.12 the Ashen Oracle (branch `phase5-ashen-oracle`, PR #15 merged 2026-10-21 inside the producer's pre-approved window, release v0.13.0)
 - **Spec:** `docs/GLADIATORS.md` "The Ashen Oracle"; DECISIONS "Phase 5.12". Merging inside the producer's window (until 07:05 WEST 2026-10-21).
 - **Done (committed, verified):**
   - **Model** `CH_AshenOracle` (`BlenderSrc/characters/ch_ashenoracle.py`, 584 tris, iteration 2): ash robe flaring at the hem, bone mask with purple cracks, a cyan rune on the hood, a crook with a hanging censer. The masked stranger uses it too.
@@ -339,7 +339,18 @@
     - Slave Pit: 464 fps avg, 210 fps at ≥ 250 enemies (only 5,665 such frames); level 31, 9,723 kills, **8,474 cursed bursts**, 67 veils (301 hits), censer level 5; **beat Gorm** (Survived at 8:37). GC 406 B/s is the end-of-run spike.
     - Stone Amphitheater: 479 fps avg, 258 fps at ≥ 250 enemies (3,026 frames); level 32, 9,705 kills, **8,889 cursed bursts**, 65 veils; **beat the Beast Lord** in 11 attacks (Survived at 8:34). GC 418 B/s, the same spike.
     - Contagion did most of the killing (C22): the horde rarely reached 250.
-- **Next:** PR → merge (inside the window) → `Tools/release 0.13.0` → smoke runs.
+- **PR #15** (https://github.com/jfilipegm/gladiator-roguelike/pull/15) merged (0b8c27d) at 05:35 WEST.
+- **v0.13.0 released 2026-10-21:** https://github.com/jfilipegm/gladiator-roguelike/releases/tag/v0.13.0.
+  - Archives: Linux 43 MB, Linux dev 73 MB, Windows 45 MB, macOS 52 MB.
+  - Smoke runs of the downloaded archives (`-bot -timed -botSeconds 40`), all v0.13.0, 0 exceptions: Linux as the Ashen Oracle in the Stone Amphitheater (64 kills, clock to 37 s), Linux as the Thunder Champion in the Slave Pit (68 kills, 7 dashes, 38 s), Windows under Wine as the Ashen Oracle (61 kills, 37 s). Their Profiling files were deleted. macOS not run.
+
+## Next (after the producer's playtest of v0.9.0–v0.13.0)
+- **The overnight run (2026-10-21, 01:25–05:40 WEST)** merged and released five milestones under the producer's "proceed with any merge in the next 5h40": v0.9.0 Arena 3 (PR #11, the producer's OK), v0.10.0 the Murder Machine (#12), v0.11.0 the Thunder Champion (#13), v0.12.0 the Golden Idol (#14), v0.13.0 the Ashen Oracle (#15). After 07:05 WEST, ask before every merge again.
+- **Waiting on the playtest:** C18 (big floors fill late), C19 (the Beast Lord), C20 (the Verdict), C21 (the Golden Idol's snowball), C22 (Contagion chains), plus the older C13–C17.
+- **Candidates for the next milestone:**
+  - **Arena 4, the Grand Arena** (≥ 10,500 m², octagon or cross-shaped plaza with patron boxes; the Gilded Patron boss). Best after C18 is answered: it's bigger again.
+  - **The Net-Weaver** (retiarius: trident = the last unbuilt pattern, `MultiHit`, + the existing Net; root/pull; unlock "win with the spear/trident" needs a `WinWithWeapon` condition).
+  - **The Beastmaster** (companions: needs an allied-unit system, and the Beast Handler enemy his unlock counts).
 
 ## Known issues
 - **Residual GC (target 0 B/frame, met in steady state):** the 70–85 KB one-offs in paused card panels (v0.6.0/0.7.0) are fixed in Phase 5.6: the description buffers are pre-sized to 400 chars. A 200 s check run had none; the first level-up allocates ~7.5–9.9 KB once (paused; a hidden pre-draw of the cards didn't remove it; BACKLOG), the boss entrance 1.8 KB, the victory screen + save write ~238 KB (game over). Small first-occurrence allocations (≤ 1.2 KB) in the first minutes.

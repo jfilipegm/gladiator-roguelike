@@ -92,7 +92,7 @@ A nameless pit fighter with a rusty gladius and a scrap shield. The baseline: 10
 ### The Blood Knight's real unlock (Phase 5.9)
 Arena 3 exists, so `UL_BloodKnight` switches from the interim "beat Gorm below 30 % HP" to §6.7's **"Reach Arena 3"** (`ReachArena 2`: start a run in the Stone Amphitheater). A save that already unlocked him keeps him (unlocks are saved by id).
 
-## The Thunder Champion (Phase 5.10, v0.11.0)
+## The Thunder Champion (built, Phase 5.10, v0.11.0)
 | | |
 |---|---|
 | **Fantasy** | A champion who swears the storm god fights beside him, and on the sand it looks like he's right. Fast, flashy, never standing still. |
@@ -102,7 +102,7 @@ Arena 3 exists, so `UL_BloodKnight` switches from the interim "beat Gorm below 3
 | **Ability: Lightning Dash** | Starting a slide with the dash ready (every 3 s) is a **blink**: he flashes up to 7 m along the slide (stopped by walls), and everything within 1.2 m of the path takes 25 × his Damage and is Shocked. A white-cyan bolt marks the path. Then he slides on as usual. |
 | **Strength** | Attack speed that snowballs in a crowd, chains that clear packs, Shock that makes everything else hit harder, and the best escape in the game. |
 | **Weakness** | Fragile (90 HP). Against one big target there's nothing to chain to, so bosses and lone elites take only the first strike. Charge drains if he hides. |
-| **Personality** | Grins, struts, poses. The crest flickers when Charge is high. |
+| **Personality** | Long bouncy strides and a lean into the run; a short jab of the spear at whatever he strikes. (The crest flickering at high Charge: BACKLOG.) |
 | **Unlock: complete Arena 3** | §6.7. `UL_ThunderChampion` (`DefeatBoss beastlord 1`). Codex hint: *"The storm god is watching the amphitheatre. Win there."* The unlock also adds the Storm Spear to everyone's level-up pool. |
 
 **Colours:** his lightning is the player's white-cyan (the boon sparks' `Bolt`), never orange-red. The Charge bar is electric blue with a white edge when it's near full.

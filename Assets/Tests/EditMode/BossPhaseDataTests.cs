@@ -75,7 +75,7 @@ namespace Gladiator.Tests
             Assert.IsTrue(def.volleyJavelins);
             Assert.AreEqual(new Vector2Int(5, 7), def.volleyCount);
             Assert.AreEqual(28f, def.closeInRange);
-            Assert.AreEqual(6.5f, def.closeInSpeed, 1e-4f);
+            Assert.AreEqual(9.5f, def.closeInSpeed, 1e-4f);
             Assert.AreEqual(2, def.guardsFromPhase);
             Assert.IsTrue(def.guardsNearestGates);
             Assert.AreEqual(2, def.guardSpotsUsed);

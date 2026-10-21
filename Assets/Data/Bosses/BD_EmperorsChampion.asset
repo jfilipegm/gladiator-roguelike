@@ -32,7 +32,7 @@ MonoBehaviour:
   contactInterval: 0.8
   recover: 0.6
   closeInRange: 28
-  closeInSpeed: 6.5
+  closeInSpeed: 9.5
   sweepRadius: 5.5
   sweepWindup: 1.1
   sweepDamage: 28

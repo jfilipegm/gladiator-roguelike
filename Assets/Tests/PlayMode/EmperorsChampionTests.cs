@@ -187,7 +187,7 @@ namespace Gladiator.Tests
             float t0 = Time.time;
             yield return new WaitForSeconds(1f);
             float speed = Flat(Boss.Position - from).magnitude / (Time.time - t0);
-            Assert.Greater(speed, 6f, "he strides (closeInSpeed 6.5 m/s) while you're farther than closeInRange");
+            Assert.Greater(speed, 6f, "he strides (closeInSpeed 9.5 m/s) while you're farther than closeInRange");
             Assert.AreEqual(BossController.State.Chase, Boss.CurrentState, "no attack at that range");
             Assert.AreEqual(attacks, Boss.AttacksDone);
 

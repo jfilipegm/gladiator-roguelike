@@ -348,7 +348,7 @@ namespace Gladiator.EditorTools
                 boss.phase2Attacks = new[] { BossAttack.Whip, BossAttack.Bash, BossAttack.Volley, BossAttack.Charge };
                 boss.phase3Attacks = new[] { BossAttack.Whip, BossAttack.Bash, BossAttack.Volley, BossAttack.Charge };
                 boss.moveSpeed = 3.4f; boss.enragedMoveSpeed = 3.9f; boss.phase3MoveSpeed = 4.6f; boss.turnRate = 160f;
-                boss.closeInRange = 28f; boss.closeInSpeed = 6.5f; // a 190 m floor: he strides in
+                boss.closeInRange = 28f; boss.closeInSpeed = 9.5f; // a 190 m floor: he strides in, faster than a 7.5 m/s runner (6.5 never caught a kiting bot: 0 attacks in 39 s)
                 boss.contactDamage = 12f; boss.contactInterval = 0.8f; boss.recover = 0.6f;
                 // Spear Thrust: a lane, a lunge down it, no slow
                 boss.whipLength = 10f; boss.whipWidth = 1.3f; boss.whipWindup = 0.65f; boss.whipDamage = 22f;

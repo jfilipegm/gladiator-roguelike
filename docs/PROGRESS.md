@@ -1,7 +1,7 @@
 # Progress
 
 **Current phase:** Phase 5 — expansion
-**Current milestone:** Phase 5.15 the Beastmaster, IN PROGRESS on branch `phase5-beastmaster` (built, tested, bot runs; see "In progress — Phase 5.15"). v0.15.0 (the Net-Weaver) released 2026-10-21. **Merge window:** the producer said "please continue with all Merges up until i get home at 19h00" (09:27 WEST, 2026-10-21): merge and release green milestone PRs without asking until 19:00 WEST that day, then ask again.
+**Current milestone:** R1 — Arena 5, the Imperial Arena (Phase 5.16), built the new way: this session orchestrates parallel worker sessions (plan and rules: `docs/ROADMAP.md`, `docs/tracks/`). Wave 1 (design + art workers) running since 12:35. v0.16.0 (the Beastmaster) released 2026-10-21. **Merge window:** the producer said "please continue with all Merges up until i get home at 19h00" (09:27 WEST, 2026-10-21): merge and release green milestone PRs without asking until 19:00 WEST that day, then ask again.
 **Last updated:** 2026-10-21
 
 **Repository:** https://github.com/jfilipegm/gladiator-roguelike (public, branch `main`, remote `origin`, `.blend` files via Git LFS). Work on a branch per milestone, push as you go, merge through a PR; release every playable build (`Tools/release`).
@@ -382,7 +382,7 @@
 - **v0.15.0 released 2026-10-21:** https://github.com/jfilipegm/gladiator-roguelike/releases/tag/v0.15.0.
   - Smoke runs of the downloaded archives (`-bot -timed -botSeconds 40`), all v0.15.0, 0 exceptions: Linux as the Net-Weaver in the Slave Pit (44 kills, 5 nets, clock to 37 s), Linux as the Nobody in the Stone Amphitheater (42 kills, 37 s), Windows under Wine as the Net-Weaver (37 kills, 6 nets, 37 s). Their Profiling files were deleted. macOS not run.
 
-## In progress — Phase 5.15 the Beastmaster (branch `phase5-beastmaster`)
+## Done — Phase 5.15 the Beastmaster (branch `phase5-beastmaster`, PR #21 merged 2026-10-21 inside the producer's window, release v0.16.0)
 - **Why:** the producer's "continue with all Merges up until 19h00"; the GDD's next gladiator, and the last weapon pattern (`Summon`). Spec: `docs/GLADIATORS.md` "The Beastmaster"; DECISIONS "Phase 5.15".
 - **Done (verified):**
   - **`Summon`** (`WeaponSystem.TickSummon` + `CompanionPack`): wolves as a weapon (Amount = wolves, Damage = a bite, cooldown = bite interval, speed = run speed, acquireRange = hunting radius around him, range = the leash, meshScale = their size); bites through `WeaponSystem.CompanionHit` (crits, on-hit, Boon procs, kill credit). A holder per wolf with the model under it (`PartRig.Apply` owns the model root), the player's palette material, a heel circle, separation, obstacle push-out and height snapping; pounces as a lerped arc; despawn when not driven (game time, so pauses keep them). `WP_WolfPack` (2 wolves, 9 per bite, 0.8 s, levels +3 wolves) + card + icon.
@@ -396,12 +396,14 @@
     - Stone Amphitheater: 355 fps avg, 197 fps at ≥ 250 enemies (p95 6.4 ms), gameplay 1.88 / 2.40 ms; GC 518 B/s, of which ~230 KB is the victory screen + save; level 33, 8,253 kills; wolves 3, 2,944 bites, 124 pounces; **the Beast Lord beaten, Survived at 528**; 5 curs freed (handler weight 0.5–0.9 then: too few, raised to 0.8–1.4).
     - Grand Arena: 314 fps avg, 178 fps at ≥ 250 (400 cap; p95 7.8 ms), gameplay 1.88 / 2.57 ms; GC 153 B/s; level 39, 9,571 kills; 2,972 bites, 120 pounces; the Patron at 85 % (the bot near him 8 s of 46).
     - **Handler tuning:** freed curs were a bad proxy (most curs die before their handler). The bot now logs `handlersKilled`: a measuring run at weight 0.8–1.4 (Amphitheater, cap 8) killed **219 handlers** (214 fps at ≥ 250, the Beast Lord beaten). Lowered to weight 0.3–0.5, cap 4, from 2:10: a second run (12:00, 2026-10-21) killed **73** (352 fps avg, 192 at ≥ 250, p95 6.5 ms; gameplay 0.85 / 2.08 ms; GC 509 B/s, ~237 KB of it the victory screen + save; level 34, 8,322 kills; wolves 3, 2,497 bites, 102 pounces, 904 frenzies; the Beast Lord beaten, Survived at 523; 0 exceptions): still ~3× the aim. Lowered again to **0.12–0.2, cap 3** in both tables (from 2:10 / 1:30); a third run (12:11) killed **42** (335 fps avg, 182 at ≥ 250, p95 7.1 ms; gameplay 0.91 / 2.33 ms; GC 35 B/s; level 35, 7,703 kills; 3,409 bites, 130 pounces; the Beast Lord at 31 % when the run ended; 0 exceptions): 25 takes most of one full run, inside the aim (a run or two). **Shipped at 0.12–0.2.**
-- **Next (in order):**
-  1. ~~Measure the handler rate~~ (done: 42 per full run at 0.12–0.2). Paused at 12:15 for the orchestration setup (`docs/ROADMAP.md`); resumed under it.
-  2. Fill TESTED_LINE in `docs/releases/v0.16.0.md`; full suites (EditMode, PlayMode); PR; merge (inside the window, until 19:00 WEST); `Tools/release 0.16.0`; smoke-run the archives; a docs PR recording the release.
-  3. **Then Arena 5, the Imperial Arena** (design notes below).
+- **Closed:** EditMode 79/79, PlayMode 189/189; PR #21 merged 12:50; v0.16.0 released and smoke-run (Linux, Linux dev, Windows under Wine: 40 s bot runs, the clock reached 37 s, 0 exceptions).
 
-### Arena 5 design notes (drafted 2026-10-21, not built)
+## In progress — R1 Arena 5, the Imperial Arena (orchestrated; item branch `phase5-imperial-arena`, not cut yet)
+- **How:** `docs/ROADMAP.md` (one Unity lane = this session, one item at a time, parallel workers per item; usage pacing §5b) and the contract `docs/tracks/R1-imperial-arena.md`.
+- **Wave 1 (design + art, no Unity), started 12:35, cut from `phase5-beastmaster`:** `r1-design` (BOSSES / ARENAS spec), `r1-env-art` (`imperial_arena.py`), `r1-char-art` (Praetorian, Centurion, chariot, the Champion). Each ends with a summary under 400 chars; notes in `docs/tracks/R1-*.md` on its branch.
+- **Next:** integrate wave 1 (merge each branch into `phase5-imperial-arena`, import the models, review); write the wave-2 code contracts from the design (chariot races, formations, the 3-phase boss, layout + setup); start them within the usage pacing; then build, test, measure, PR, v0.17.0.
+
+### Arena 5 design notes (drafted 2026-10-21; the contract in `docs/tracks/R1-imperial-arena.md` supersedes them)
 - **Shape:** a hippodrome along X: straight sides at z = ±44 from x = −95 (the west end: the carceres, a row of arched starting stalls) to x = 51, a semicircle (r 44) around (51, 0) to x = 95 (the sphendone; the boss's triumphal gate at its apex). ≈ 15,900 m² minus the spina ≈ 15,300 m² (1.31× the Grand Arena). Convex, so the radial edge table works. Palette A6: travertine + imperial purple + gold.
 - **The spina:** a raised walkway (1.2 m, 6 m wide) from x = −60 to x = 40 with stairs, an obelisk at the middle (line-of-sight blocker), the metae (three gold cones) at both ends, a lap counter (7 gold eggs). Vertical variety + a safe island.
 - **New rule: chariot races** (`ChariotRace`): from ~1:30, every ~45 s trumpets, the track lane (a ~4 m loop at ~14 m from the spina's axis: straights at z = ±14, half-circles round the metae) glows orange-red for 3 s, then two quadrigae run 2 laps (~22 m/s, opposite phases) trampling everything in the lane (the player: big damage + knockback; enemies: massive). The lane is drawn darker on the floor at all times (readable as "the track").
@@ -411,12 +413,10 @@
 
 ## Next (after the producer's playtest of v0.9.0–v0.15.0)
 - **The overnight run (2026-10-21, 01:25–05:40 WEST)** merged and released five milestones under the producer's "proceed with any merge in the next 5h40": v0.9.0 Arena 3 (PR #11, the producer's OK), v0.10.0 the Murder Machine (#12), v0.11.0 the Thunder Champion (#13), v0.12.0 the Golden Idol (#14), v0.13.0 the Ashen Oracle (#15). After 07:05 WEST, ask before every merge again.
-- **The day run (2026-10-21, from 09:27 WEST):** the producer: "please continue with all Merges up until i get home at 19h00". v0.14.0 the Grand Arena (#17) and v0.15.0 the Net-Weaver (#19) merged and released under it.
+- **The day run (2026-10-21, from 09:27 WEST):** the producer: "please continue with all Merges up until i get home at 19h00". v0.14.0 the Grand Arena (#17), v0.15.0 the Net-Weaver (#19) and v0.16.0 the Beastmaster (#21) merged and released under it.
+- **New way of working (2026-10-21, 12:15):** the producer approved `docs/ROADMAP.md`: the roadmap in order (R1 Arena 5 → R2 Arena 6 → R3 Asterion → R7 run modifiers → R8 daily seeds → R6 cosmetics → R4/R5 audio generated in code), parallel workers per item, the overlap (next item's design and art may start while this one is tested) and usage pacing.
 - **Waiting on the playtest:** C18 (big floors fill late; answered for the Grand Arena by `densityMul`), C19 (the Beast Lord), C20 (the Verdict), C21 (the Golden Idol's snowball), C22 (Contagion chains), C23 (the Grand Arena's hazards), C24 (the Patron's guard), C25 (the Net-Weaver's net), plus the older C13–C17.
-- **Candidates for the next milestone (in this order):**
-  - ~~The Net-Weaver~~ (done, v0.15.0) (retiarius: trident = the last unbuilt pattern, `MultiHit`, + the existing Net; root/pull; unlock "win with the spear/trident" needs a `WinWithWeapon` condition).
-  - **The Beastmaster** (next, Phase 5.15: the `Summon` pattern (a wolf pack), the Beast Handler enemy his unlock counts).
-  - **Arena 5, the Imperial Arena** (> 11,674 m², not round; formations; the Emperor's Champion, multi-phase).
+- **The order of the remaining items:** `docs/ROADMAP.md` §1.
 
 ## Known issues
 - **Residual GC (target 0 B/frame, met in steady state):** the 70–85 KB one-offs in paused card panels (v0.6.0/0.7.0) are fixed in Phase 5.6: the description buffers are pre-sized to 400 chars. A 200 s check run had none; the first level-up allocates ~7.5–9.9 KB once (paused; a hidden pre-draw of the cards didn't remove it; BACKLOG), the boss entrance 1.8 KB, the victory screen + save write ~238 KB (game over). Small first-occurrence allocations (≤ 1.2 KB) in the first minutes.

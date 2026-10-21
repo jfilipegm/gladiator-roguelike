@@ -492,7 +492,8 @@ namespace Gladiator.Gameplay
         }
 
         /// <summary>The packs' enemies get their pools during the intro, after the Director's (the War Boar isn't in the
-        /// Colosseum's table: without this its pool would grow mid-run).</summary>
+        /// Colosseum's table: without this its pool would grow mid-run). Two waves' worth (within the pack's cap) + 4; an
+        /// enemy the table doesn't have gets at least its own `prewarm` (the Director fills the table's).</summary>
         void Prewarm(EnemyManager em)
         {
             if (!_directorLooked) LookUpDirector();
@@ -503,11 +504,20 @@ namespace Gladiator.Gameplay
                 var p = liftPacks[_prewarmIndex];
                 int wave = Mathf.Max(1, p.count.y) * Mathf.Max(1, liftsPerWave) * 2;
                 int want = (p.maxAlive > 0 ? Mathf.Min(p.maxAlive, wave) : wave) + 4;
+                if (p.enemy != null && !InTable(p.enemy)) want = Mathf.Max(want, p.enemy.prewarm);
                 int made = p.enemy != null ? em.PrewarmStep(p.enemy, want, budget) : 0;
                 budget -= made;
                 if (made == 0 || budget > 0) _prewarmIndex++;
             }
             _prewarmed = _prewarmIndex >= liftPacks.Length;
+        }
+
+        bool InTable(EnemyDef def)
+        {
+            var table = _director != null ? _director.table : null;
+            if (table == null) return false;
+            for (int i = 0; i < table.entries.Length; i++) if (table.entries[i].enemy == def) return true;
+            return false;
         }
 
         void LookUpDirector()

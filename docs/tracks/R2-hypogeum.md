@@ -74,8 +74,9 @@ When the layout has trapdoors, lifts or a centre lift: an `Environment/Hypogeum`
 - **Walk-only boxes**: added on the first tick that has `EnemyManager.Obstacles`, half (4.05, 2.05), off; on at `Held`,
   off at close.
 - **Prewarm**: after the Director's prewarm (or at once if it's off), each pack's enemy is filled to
-  min(maxAlive, count.y × liftsPerWave × 2) + 4 views, 8 per frame, during the intro: the War Boar isn't in the
-  Colosseum's table, so without this its pool would grow mid-run (R1's lesson).
+  min(maxAlive, count.y × liftsPerWave × 2) + 4 views, and an enemy the Director's table doesn't have to at least its own
+  `prewarm` (the War Boar: max(16, 24) = 24), 8 per frame, during the intro: the War Boar isn't in the Colosseum's
+  table, so without this its pool would grow mid-run (R1's lesson; the layout part asked for it too).
 - **No allocation per frame**: arrays sized in `Configure` / on the first tick; strings are the layout's constants.
 
 ## Public API (for the bot, the enemies part, tests)

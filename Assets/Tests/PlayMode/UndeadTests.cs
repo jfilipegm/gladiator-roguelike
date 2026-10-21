@@ -92,6 +92,7 @@ namespace Gladiator.Tests
             Assert.AreEqual(2.5f, Time.time - t0, 0.15f, "2.5 s later");
             Assert.AreEqual(0, _em.PileCount);
             Assert.AreEqual(risen + 1, _em.PilesRisen);
+            yield return null; // a pile that stands up joins the spatial grid on the next tick
             int r = Risen(at);
             Assert.Less(R2TestArena.Flat(_em.GetPosition(r) - at).magnitude, 0.5f, "where it fell");
             Assert.AreEqual(max0 * 0.5f, _em.GetMaxHp(r), 1e-3f, "half its max HP");
@@ -223,6 +224,7 @@ namespace Gladiator.Tests
             Assert.AreEqual(0, _kills.Count);
 
             yield return R2TestArena.Until(() => _em.AliveOf(_legion) > 0, 5f);
+            yield return null; // a pile that stands up joins the spatial grid on the next tick
             int r = Risen(at);
             Assert.IsTrue(_em.IsElite(r), "still an elite");
             Assert.AreSame(armored, _em.GetAffix(r), "with its affix");

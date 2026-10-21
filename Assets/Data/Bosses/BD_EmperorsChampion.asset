@@ -20,7 +20,7 @@ MonoBehaviour:
   fallText: THE EMPEROR'S CHAMPION FALLS!
   guardsText: THE PRAETORIAN GUARD!
   phase2Text: '"PRAETORIANS, TO ME!"'
-  shortName: The Emperor's Champion
+  shortName: Emperor's Champion
   deathLine: The Emperor's Champion turns to the imperial box. The thumb goes down.
   victoryLine: The Emperor's own champion lies in the sand, and the Emperor is on his feet.
   phase1Attacks: 020509y

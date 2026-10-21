@@ -341,7 +341,7 @@ namespace Gladiator.EditorTools
                 boss.guardsText = "THE PRAETORIAN GUARD!";
                 boss.phase2Text = "\"PRAETORIANS, TO ME!\"";
                 boss.phase3Text = "\"FOR THE EMPEROR!\"";
-                boss.shortName = "The Emperor's Champion";
+                boss.shortName = "Emperor's Champion"; // "The Emperor's Champion" overran the summary row
                 boss.deathLine = "The Emperor's Champion turns to the imperial box. The thumb goes down.";
                 boss.victoryLine = "The Emperor's own champion lies in the sand, and the Emperor is on his feet.";
                 boss.phase1Attacks = new[] { BossAttack.Whip, BossAttack.Bash, BossAttack.Volley };

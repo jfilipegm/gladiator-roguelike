@@ -22,6 +22,10 @@ namespace Gladiator.Gameplay
         public string fallText = "GORM FALLS!";
         public string guardsText = "GORM CALLS HIS GUARDS!";
         public string phase2Text = "\"BURN IT!\"";
+        [Tooltip("The run summary: his row's label, the line when he beats you, the line when you beat him.")]
+        public string shortName = "Gorm";
+        public string deathLine = "Gorm drags you off by the chain.";
+        public string victoryLine = "The Pit Master lies in the dirt. The crowd chants a name: yours.";
 
         [Header("Attacks he picks from, per phase")]
         public BossAttack[] phase1Attacks = { BossAttack.Sweep, BossAttack.Whip, BossAttack.Slam };
@@ -93,6 +97,32 @@ namespace Gladiator.Gameplay
         public float stunDamageTakenMul = 1f;
         [Tooltip("Charges in a row in phase 1 / phase 2 (he re-aims between them).")]
         public Vector2Int chargeRepeats = new Vector2Int(1, 1);
+
+        [Header("Pounce (any range) — keep moving")]
+        [Tooltip("The circle he lands in (m).")]
+        public float pounceRadius = 3.5f;
+        public float pounceWindup = 1.0f;
+        [Tooltip("The circle follows you (lagging) for this fraction of the wind-up, then locks.")]
+        [Range(0f, 1f)] public float pounceTrack = 0.7f;
+        [Tooltip("Seconds in the air for a 10 m leap (longer leaps take a little longer).")]
+        public float pounceFlight = 0.55f;
+        public float pounceHeight = 3f;
+        [Tooltip("Farthest he leaps (m): beyond it he lands short, toward you.")]
+        public float pounceRange = 24f;
+        public float pounceDamage = 28f;
+        public float pounceKnockback = 9f;
+        [Tooltip("Slow to get up after landing (s): the window to punish him.")]
+        public float pounceRecover = 0.8f;
+        [Tooltip("Pounces in a row in phase 1 / phase 2 (he re-aims between them).")]
+        public Vector2Int pounceRepeats = new Vector2Int(1, 2);
+
+        [Header("Beasts (the Stone Amphitheater's cages)")]
+        [Tooltip("Calling the guards also opens the idle cage nearest him with this many beasts (0 = no cages). Every cage rattles at his entrance.")]
+        public Vector2Int beastPack = Vector2Int.zero;
+        [Tooltip("Phase 2's roar opens every cage at once, this many beasts each (0 = none).")]
+        public int phase2CagePack;
+        [Tooltip("At his defeat every enemy left is dragged off (the beasts scatter).")]
+        public bool scatterOnDefeat;
 
         [Header("Call the Guards")]
         public float guardsEvery = 22f;

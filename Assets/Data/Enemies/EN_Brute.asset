@@ -48,6 +48,11 @@ MonoBehaviour:
   dashLength: 7
   flankRadius: 5.5
   flankTimeout: 4
+  flank: 1
+  trampleMul: 0
+  lobNet: 0
+  netSlow: 0.1
+  netTime: 1.2
   xp: 10
   goldChance: 0.5
   prewarm: 8

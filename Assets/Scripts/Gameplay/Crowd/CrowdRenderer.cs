@@ -4,7 +4,7 @@ using UnityEngine;
 namespace Gladiator.Gameplay
 {
     /// <summary>
-    /// The arena crowd (CLAUDE.md §4): one instanced draw of the spectator mesh at baked spots. Per-instance tunic colour
+    /// The arena crowd (CLAUDE.md §4): instanced draws of the spectator mesh at baked spots. Per-instance tunic colour
     /// and animation phase come from a hash of each spot's position inside the Crowd shader, and the global
     /// _CrowdExcitement makes them cheer; nothing per spectator runs on the CPU. Drawn every frame, paused or not.
     /// </summary>
@@ -17,6 +17,7 @@ namespace Gladiator.Gameplay
         [Tooltip("Size jitter between spectators (±).")]
         public float scaleJitter = 0.08f;
 
+        const int MaxPerDraw = 1023;
         Matrix4x4[] _matrices;
         RenderParams _rp;
 
@@ -46,7 +47,9 @@ namespace Gladiator.Gameplay
         public void Tick(float dt, float unscaledDt)
         {
             if (mesh == null || material == null || _matrices.Length == 0) return;
-            Graphics.RenderMeshInstanced(_rp, mesh, 0, _matrices, _matrices.Length);
+            // the amphitheatre seats ~1,700: draw in chunks of the classic instancing cap
+            for (int s = 0; s < _matrices.Length; s += MaxPerDraw)
+                Graphics.RenderMeshInstanced(_rp, mesh, 0, _matrices, Mathf.Min(MaxPerDraw, _matrices.Length - s), s);
         }
     }
 }

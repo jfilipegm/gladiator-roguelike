@@ -1,0 +1,95 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d4c6ea183ef480c5acde212f0835f1d, type: 3}
+  m_Name: BD_BeastLord
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.BossDef
+  id: beastlord
+  displayName: THE BEAST LORD
+  title: MASTER OF THE PENS
+  enemy: {fileID: 11400000, guid: 9469a9b236dda0fe692d1f036aad6f3d, type: 2}
+  enterText: THE BEAST LORD!
+  fallText: THE BEAST LORD FALLS!
+  guardsText: THE PENS OPEN!
+  phase2Text: '"FEED THEM!"'
+  shortName: The Beast Lord
+  deathLine: The Beast Lord throws you to his boars.
+  victoryLine: The Beast Lord is down and his beasts scatter. The whole city is on its feet.
+  phase1Attacks: 050207y
+  phase2Attacks: 050207y
+  moveSpeed: 3.4
+  enragedMoveSpeed: 4.2
+  turnRate: 200
+  contactDamage: 12
+  contactInterval: 0.8
+  recover: 0.6
+  sweepRadius: 5.5
+  sweepWindup: 1.1
+  sweepDamage: 28
+  sweepKnockback: 9
+  sweepJumpClear: 0.7
+  whipLength: 11
+  whipWidth: 1.4
+  whipWindup: 0.6
+  whipDamage: 20
+  whipSlow: 0.5
+  whipSlowSeconds: 2
+  slamRadius: 2.6
+  slamWindup: 1
+  slamDamage: 30
+  slamTrack: 0.6
+  slamFire: {x: 2.2, y: 4, z: 10}
+  bashRange: 5
+  bashAngle: 150
+  bashWindup: 0.8
+  bashDamage: 24
+  bashKnockback: 11
+  flurryLength: 6
+  flurryWidth: 1.1
+  flurryWindup: 0.35
+  flurryDamage: 12
+  flurryThrusts: {x: 3, y: 5}
+  chargeWindup: 0.9
+  chargeSpeed: 16
+  chargeLength: 14
+  chargeWidth: 0
+  chargeDamage: 24
+  chargeKnockback: 12
+  chargeStun: 1
+  stunDamageTakenMul: 1
+  chargeRepeats: {x: 1, y: 1}
+  pounceRadius: 3.5
+  pounceWindup: 1
+  pounceTrack: 0.7
+  pounceFlight: 0.55
+  pounceHeight: 3
+  pounceRange: 24
+  pounceDamage: 28
+  pounceKnockback: 9
+  pounceRecover: 0.8
+  pounceRepeats: {x: 1, y: 2}
+  beastPack: {x: 3, y: 5}
+  phase2CagePack: 3
+  scatterOnDefeat: 1
+  guardsEvery: 20
+  guards:
+  - {fileID: 11400000, guid: 51fd6705a6918542c8a48f6531e10146, type: 2}
+  guardCount: {x: 2, y: 2}
+  phase2At: 0.5
+  phase2FireRing: 0
+  phase2SpikeVolley: 0
+  enrageSpeed: 1.25
+  enrageRoar: 1.5
+  fireRingInset: 1.1
+  fireRingSpacing: 2.4
+  fireRingPatch: 1.5
+  fireRingDps: 12
+  rewardFloor: 2

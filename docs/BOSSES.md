@@ -34,3 +34,18 @@ interaction, ≥ 2 phases, a memorable entrance, personality.
 **Built (Phase 5.4):** all ten points except the crowd throwing him a second gladius (BACKLOG). Body `EN_Champion` (13,000 HP, 540 tris), tuning `BD_Champion`. The boss bar reads "THE PROVINCIAL CHAMPION, UNDEFEATED".
 
 **Tunables (`BossDef BD_Champion`):** HP, speeds, block arc and reduction, every attack's wind-up / damage / size / weight, charge stun and damage bonus, guard interval and counts, phase threshold, phase-2 speed-up, the flurry count per phase.
+
+## The Beast Lord (Arena 3 — Stone Amphitheater)
+
+1. **Who:** the master of the amphitheatre's beast pens, raised among his animals and more beast than man now. He feeds the losers to his boars. He thinks you're meat.
+2. **Silhouette:** huge and hunched (~3.3 m), a **whole lion's pelt** worn as a cloak with the lion's head as his hood and its mane over his shoulders, a **long hooked goad-spear** held upright (taller than him), a coiled chain and a war horn at the belt. Nothing else wears a mane or carries a pole that long.
+3. **Entrance (timer hits 0:00):** the horde is dragged off, every cage rattles at once, "THE BEAST LORD!", the camera turns to the great gate, he walks in dragging his goad and blows his horn (shake, crowd spike). ~4 s; the player keeps control.
+4. **Goad Sweep (near):** a wide orange-red cone (5 m, 150°) fills over 0.8 s, then he sweeps the goad round: damage + knockback. Get behind him or out of reach.
+5. **Hook Thrust (mid):** a lane (11 m) fills over 0.6 s, then he lunges the hooked goad down it: damage and Slow (2 s). Step sideways.
+6. **Pounce (any range):** a circle (3.5 m) on your position, lagging a little, fills over 1.0 s; he leaps in an arc and lands there: damage + a knockback ring. He's slow to get up (0.8 s): the window to punish him. Keep moving.
+7. **Call the Beasts (every ~20 s):** blows the horn, "THE PENS OPEN!": the nearest cage opens and 3–5 war boars charge out (plus two Pit Curs). The boars trample his own horde too.
+8. **Phase 2 — "Feed them!" (at 50 % HP):** roars (invulnerable 1.5 s), **every cage opens at once** (a stampede from all four), he moves and attacks 25 % faster, and the Pounce comes twice in a row (re-aiming between).
+9. **Arena interaction:** the cages (his beasts), the stage platform (he pounces onto it after you), the columns and statues (cover from a stampede: a boar stops dead on stone). Spike traps and barricades don't exist here.
+10. **Defeat:** slow-mo, "THE BEAST LORD FALLS!", the beasts scatter (every enemy left is dragged off), the crowd goes wild, a pick of 3 Rare-or-better upgrades, victory screen.
+
+**Tunables (`BossDef BD_BeastLord`):** HP, speeds, every attack's wind-up / damage / size / weight, pounce radius / flight time / recovery, beast-call interval and pack size, phase threshold, phase-2 speed-up and pounce count.

@@ -21,6 +21,7 @@ namespace Gladiator.EditorTools
         const string BarricadeModel = "Environment/PR_Barricade";
         const string SpikeGrateModel = "Environment/PR_SpikeGrate";
         const string SpikesModel = "Environment/PR_Spikes";
+        const string CageModel = "Environment/SM_CageGate";
         public const string GoldenRatModel = "Assets/Art/Models/Props/PR_GoldenRat.fbx";
         public const string BookmakerModel = "Assets/Art/Models/Characters/CH_Bookmaker.fbx";
 
@@ -51,7 +52,7 @@ namespace Gladiator.EditorTools
             var gatesRoot = new GameObject("Gates").transform;
             gatesRoot.SetParent(env, false);
             string gateModel = string.IsNullOrEmpty(layout.gateModel) ? "Environment/SM_PitGate" : layout.gateModel;
-            foreach (var g in layout.gates) gateRoots.Add(PlaceGate(g, gatesRoot, gateModel));
+            foreach (var g in layout.gates) gateRoots.Add(PlaceGate(g, gatesRoot, string.IsNullOrEmpty(g.model) ? gateModel : g.model));
 
             // breakables (Phase 5.4): placed before the bake so their obstacles are baked too (switched off when broken)
             var barricades = new List<Transform>();
@@ -113,6 +114,23 @@ namespace Gladiator.EditorTools
             enemies.boundsMin = Vector2.Min(c2 - new Vector2(26f, 26f), lo - new Vector2(7f, 7f));
             enemies.boundsMax = Vector2.Max(c2 + new Vector2(26f, 26f), hi + new Vector2(7f, 7f));
             AddBoundary(layout, env);
+            AddSolidWalls(layout, env);
+            var cageRoots = new List<Transform>();
+            var cageBars = new List<Transform>();
+            if (layout.cages != null && layout.cages.Length > 0) // Phase 5.8: placed before the bake (solid stone)
+            {
+                var cageRoot = new GameObject("Cages").transform;
+                cageRoot.SetParent(env, false);
+                foreach (var c in layout.cages)
+                {
+                    var go = ArenaSceneCommon.PlaceSolid(CageModel, cageRoot, new Vector3(c.x, c.y, c.z), c.w);
+                    Transform bars = null;
+                    foreach (var t in go.GetComponentsInChildren<Transform>(true)) if (t.name == "Bars") bars = t;
+                    if (bars != null) UnStatic(bars.gameObject);
+                    cageRoots.Add(go.transform);
+                    cageBars.Add(bars);
+                }
+            }
             ArenaNavBaker.Bake(enemies, System.IO.Path.GetFileNameWithoutExtension(scenePath));
             ArenaSceneCommon.AddRunSystems(player);
 
@@ -138,6 +156,17 @@ namespace Gladiator.EditorTools
                 traps.traps = layout.spikeTraps;
                 traps.spikesMesh = FirstMesh("Assets/Art/Models/" + SpikesModel + ".fbx");
                 traps.material = AssetDatabase.LoadAssetAtPath<Material>(LookSetup.EnvMat);
+            }
+            if (cageRoots.Count > 0)
+            {
+                var cages = new GameObject("BeastCages").AddComponent<BeastCages>();
+                cages.transform.SetParent(arena, false);
+                cages.cages = cageRoots.ToArray();
+                cages.bars = cageBars.ToArray();
+                cages.beast = layout.cageBeast;
+                cages.first = layout.cageFirst;
+                cages.every = layout.cageEvery;
+                cages.pack = layout.cagePack;
             }
             var firePits = new GameObject("FirePits").AddComponent<ArenaFirePits>();
             firePits.transform.SetParent(arena, false);
@@ -171,6 +200,7 @@ namespace Gladiator.EditorTools
             {
                 director.maxAliveOverride = layout.maxAlive;
                 director.maxSpawnDistance = layout.spawnMaxDistance;
+                director.eliteEveryOverride = layout.eliteEvery;
                 if (layout.spawnTable != null) director.table = layout.spawnTable;
             }
             // the arena's tier and difficulty (Phase 5.4)
@@ -254,6 +284,27 @@ namespace Gladiator.EditorTools
                 var box = go.AddComponent<BoxCollider>();
                 box.size = new Vector3(b.w, 30f, 1f);
                 box.center = new Vector3(0f, 12f, -0.5f); // yaw faces inward: the inner face on the line, the box behind it
+            }
+        }
+
+        /// <summary>Invisible stone (Environment layer: the camera, the player and the nav bake all see it) behind a wall
+        /// that is decor only, like the amphitheatre's seating bowl: one big mesh would bake as one huge obstacle.</summary>
+        static void AddSolidWalls(ArenaLayoutDef layout, Transform env)
+        {
+            if (layout.solidWalls == null || layout.solidWalls.Length == 0) return;
+            var root = new GameObject("Stone").transform;
+            root.SetParent(env, false);
+            float h = layout.solidWallHeight > 0f ? layout.solidWallHeight : 8f;
+            foreach (var b in layout.solidWalls)
+            {
+                var go = new GameObject("Wall");
+                go.layer = Layers.Environment;
+                go.transform.SetParent(root, false);
+                go.transform.SetPositionAndRotation(new Vector3(b.x, 0f, b.y), Quaternion.Euler(0f, b.z, 0f));
+                var box = go.AddComponent<BoxCollider>();
+                box.size = new Vector3(b.w, h, 1f);
+                box.center = new Vector3(0f, h * 0.5f, -0.5f); // yaw faces inward: the inner face on the line, the box behind it
+                GameObjectUtility.SetStaticEditorFlags(go, StaticEditorFlags.BatchingStatic);
             }
         }
 

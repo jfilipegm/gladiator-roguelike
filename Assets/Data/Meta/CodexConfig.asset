@@ -56,6 +56,22 @@ MonoBehaviour:
     boss: {fileID: 11400000, guid: fd512218ec0bb2f9fb7394d81bf0d1a8, type: 2}
     tier: 1
     blurb: 'The Provinces'' pride: a fortress shield that wrecks barricades. Make him charge the stone.'
+  - enemy: {fileID: 11400000, guid: f75b026767da750658e1af940ba3a900, type: 2}
+    boss: {fileID: 0}
+    tier: 2
+    blurb: 'A door-sized scutum and a fish-crested helm. Nothing gets through his front: go round him.'
+  - enemy: {fileID: 11400000, guid: 9ba865ce856e5061ca3c512ad66f5591, type: 2}
+    boss: {fileID: 0}
+    tier: 2
+    blurb: 'Whirls a weighted net and throws it where you stand. Keep moving, or jump: it can''t catch you in the air.'
+  - enemy: {fileID: 11400000, guid: 7a69919d6b8043dd4a69cc2e7f6e2e4b, type: 2}
+    boss: {fileID: 0}
+    tier: 2
+    blurb: 'Bred in the pens to charge. It runs over anything in its lane, its own side included: lead it through the horde.'
+  - enemy: {fileID: 11400000, guid: 9469a9b236dda0fe692d1f036aad6f3d, type: 2}
+    boss: {fileID: 11400000, guid: 28be384594f4d0b1f8a414a87ffed25a, type: 2}
+    tier: 2
+    blurb: Master of the pens, more beast than man. He leaps on you from anywhere and his horn opens the cages.
   portraits: {fileID: 2800000, guid: be5ef48f9fb608466be6ca91c1a52ff0, type: 3}
   portraitIds:
   - en:convict
@@ -68,6 +84,10 @@ MonoBehaviour:
   - en:shieldarcher
   - en:assassin
   - en:champion
+  - en:murmillo
+  - en:netthrower
+  - en:warboar
+  - en:beastlord
   - gl:pit_goblin
   - gl:blood_knight
   - sc:pit_goblin

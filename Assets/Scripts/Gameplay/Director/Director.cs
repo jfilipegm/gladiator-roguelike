@@ -36,6 +36,9 @@ namespace Gladiator.Gameplay
         public int maxAliveOverride;
         [Tooltip("The arena's ArenaLayoutDef.spawnMaxDistance: ring spawns within this distance of the player when the edge allows it (0 = anywhere).")]
         public float maxSpawnDistance;
+        [Tooltip("The arena's ArenaLayoutDef.eliteEvery (0 = DirectorConfig.eliteEvery).")]
+        public float eliteEveryOverride;
+        float EliteEvery => eliteEveryOverride > 0f ? eliteEveryOverride : config.eliteEvery;
         int HardCap => maxAliveOverride > 0 ? Mathf.Min(config.hardCap, maxAliveOverride) : config.hardCap;
 
         public int TargetAlive => config == null ? 0 : Mathf.Min(HardCap, Mathf.RoundToInt(config.targetAlive.Evaluate(Clock) * densityMultiplier));
@@ -153,7 +156,7 @@ namespace Gladiator.Gameplay
             float runLength = run != null ? run.config.runDuration : 480f;
             // the clock jumped (admin timer, tests): reschedule instead of firing every missed event at once
             if (t > _nextSwarm + 2f) _nextSwarm = t + config.swarmEvery * 0.5f;
-            if (t > _nextElite + 2f) _nextElite = t + config.eliteEvery * 0.5f;
+            if (t > _nextElite + 2f) _nextElite = t + EliteEvery * 0.5f;
 
             // steady pressure
             int target = TargetAlive;
@@ -194,7 +197,7 @@ namespace Gladiator.Gameplay
             // elite cadence
             if (t >= _nextElite)
             {
-                _nextElite = t + config.eliteEvery;
+                _nextElite = t + EliteEvery;
                 int k = Pick(em, t, runLength, swarmOnly: false, eliteOnly: true);
                 if (k >= 0 && table.affixes.Length > 0)
                 {

@@ -71,6 +71,8 @@ namespace Gladiator.Gameplay
         }
 
         float SlowMul => Time.time < _slowUntil ? _slowMul : 1f;
+        /// <summary>The timed slow on now (1 = none): a net, a whip (tests, HUD).</summary>
+        public float SlowMultiplier => SlowMul;
         float MoveStat => _stats != null ? _stats.MoveSpeed : DevSettings.MoveSpeedMul;
         int BonusAirJumps => _stats != null ? (int)_stats.Get(StatId.ExtraJumps) : 0;
         public MotorTelemetry Telemetry;

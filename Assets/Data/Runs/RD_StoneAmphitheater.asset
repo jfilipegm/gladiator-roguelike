@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2a180a432490fcd38f28c2658e635ef, type: 3}
+  m_Name: RD_StoneAmphitheater
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.RunDef
+  id: stone_amphitheater
+  description: "A city amphitheatre, the biggest floor yet: columns to break the line of sight, a raised stage, thousands watching, and beast cages that open on their own. Tougher enemies, more Renown (\xD72)."
+  unlock: {fileID: 11400000, guid: 1833eac3b557bfb3faf568165317367d, type: 2}
+  arenas:
+  - displayName: THE STONE AMPHITHEATER
+    scenePath: Assets/Scenes/Arenas/StoneAmphitheater.unity

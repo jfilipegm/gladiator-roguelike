@@ -80,3 +80,56 @@ table, so enemies, spawns, pickups, chests, gifts, the bot and the boss all use 
 - A barricade blocks enemies until it's broken; broken, they walk through.
 - The Shield Archer blocks frontal hits and shoots; the Assassin telegraphs, dashes, recovers.
 - The Champion's charge breaks a barricade in its lane and stuns him on a pillar.
+
+## 3. The Stone Amphitheater (Phase 5.8, v0.9.0)
+**Player feels:** "I'm becoming a real gladiator." A real stone amphitheatre with thousands in the seats, beasts in
+the pens, and a stage wall built to impress.
+
+| | |
+|---|---|
+| **Unlock** | Beat the Provincial Champion (`UL_StoneAmphitheater`, `DefeatBoss champion`). Locked: *"The provinces have a champion. The city wants whoever beats him."* |
+| **Size / shape** | A **D**: a half-ellipse bowl of tiered stone seating (south) facing a straight monumental **stage wall** (north). 120 m wide, 88 m deep (wall line); play area 8,513 m², 1.36× the Provincial Pit's 6,274 (`docs/GDD.md` ladder). Pale sandstone (palette A3), sand floor. |
+| **The bowl (cavea)** | A 3 m stone podium wall with eight tiers of seats rising behind it, generated along the curve as one mesh (no seams on the bend). **1,711 spectators**, instanced (drawn in batches of 1,023). Three arched **tunnels** (vomitoria) in the podium: south-west, south, south-east. Invisible stone along the podium keeps air jumps in and gives the nav bake its edge. |
+| **The stage wall (scaenae frons)** | 7.5 m of columns, niches and cornices along the north side. In the middle the **great gate** (the boss's); either side of it **four beast cages** with iron portcullises. |
+| **Gates** | Four for the horde: the great gate and the three tunnels. The cages are not gates: only the beasts use them. |
+| **Vertical variety** | The **stage** (pulpitum): two 17 m halves of 1.2 m raised stone along the stage wall, either side of the great gate (the gap is the boss's way in), with stairs at the front of each half and at both outer ends; four raised platforms on the floor (two with stairs, two with ramps). |
+| **Pillars and statues** | A ring of twelve tall columns (the portico) around the floor and four gladiator statues on plinths: line-of-sight blockers for the archers and net-throwers, cover from the stampede. |
+| **New rule: the beast cages** | From 1:15, every 40 s one cage telegraphs (its lane glows orange-red, its bars rattle, 2 s), then its portcullis rises and a pack of **war boars** charges out. A boar charges in a straight telegraphed lane and **tramples everything in it, the horde included**: lure the stampede through the crowd, or step aside. The pens get busier as the run goes on (pack size 3 → 6). |
+| **Elites** | Every 60 s instead of 90, and the table's elites lean toward the heavy new enemies. |
+| **Enemies** | The Provincial Pit's eight, tougher, plus the **Murmillo**, the **Net-Thrower** and the cages' **War Boar**. +50 % enemy HP, +25 % damage taken. |
+| **Crowd** | Thousands: the bowl. Cheers on streaks, elites and trampled hordes; a roar when a cage opens. |
+| **Boss** | **The Beast Lord** (docs/BOSSES.md). |
+| **Renown** | Arena tier 2: Renown × 2 (`MetaConfig.deeperArenaBonus`). |
+
+### New enemies
+- **Murmillo** (`EN_Murmillo`, `ShieldBearer`): the heavy shield. A broad gladiator with a fish-crested helm and a
+  tall rectangular scutum: blocks 90 % from the front, three times a Shield Thug's HP, slow, shrugs off knockback.
+  Counter: flank, status ticks, blasts from the side. Silhouette: the crest and the door-shaped shield.
+- **Net-Thrower** (`EN_NetThrower`, `Lobber` with a net): keeps its distance, whirls a weighted net and lobs it onto
+  your position (an orange-red ring shows where). Whoever's inside on the ground when it lands is **caught**: speed ×0.1 for 1.2 s, and the net lies spread on the
+  ring (no fire patch). Counter: keep moving; jump (a net can't catch you mid-air). Silhouette: a bundled net on the shoulder,
+  a bare head, a trident.
+- **War Boar** (`EN_WarBoar`, `Dasher` that doesn't flank, tramples): only from the cages (and the Beast Lord). A
+  low, wide tusked boar: it lines up, shows its lane for 0.7 s, then charges 14 m. It hurts **everything** in the
+  lane (enemies take 3× its damage). Counter: sidestep, jump, or let it plough the horde.
+
+### Building blocks
+- **Data:** `ArenaLayoutDef.eliteEvery` (→ Director), `cages` (positions/yaws), `cageFirst`, `cageEvery`, `cagePack`, `cageBeast`, per-gate `model`, the D's
+  outline and invisible walls; `EnemyDef.lobNet` (net instead of fire), `flank` (false: dash from where it is),
+  `trampleMul` (damage to enemies in its lane), `netSlow` / `netTime`; `BossDef` pounce fields, `beastPack`,
+  `phase2CagePack`, `scatterOnDefeat`, `shortName` / `deathLine` / `victoryLine` (the run summary).
+- **Runtime:** `BeastCages` (central tick: telegraph, portcullis lift, release a pack through the cage's spawn
+  point; `Open(i)` / `OpenAll()` for the boss); Dasher trample in `EnemyManager`; net landing in `EnemyProjectiles`.
+- **Models (Blender, `BlenderSrc/environment/amphitheater.py`):** `SM_AmphiFloor`, `SM_AmphiCavea` (podium + tiers
+  along the curve, one mesh), `SM_AmphiRim`, `SM_AmphiStage_4m`, `SM_GreatGate`, `SM_CageGate` (with a `Bars`
+  child), `SM_AmphiTunnel` (gate with `DoorL/DoorR`), `SM_Pulpitum`, `SM_AmphiColumn`, `PR_Statue`; enemies
+  `EN_Murmillo`, `EN_NetThrower`, `EN_WarBoar`, boss `EN_BeastLord` (`BlenderSrc/enemies/`).
+
+### Tests
+- Locked until the Champion falls; then the menu offers it, and a run there is tier 2 with its own difficulty.
+- The D is bigger than the Provincial Pit and keeps the horde in along the stage wall and the curve.
+- A cage telegraphs, opens and releases boars; a boar's charge hurts the player and the enemies in its lane.
+- The Murmillo blocks from the front; a net catches a standing player and misses a jumping one.
+- The Beast Lord: entrance, each attack telegraphs and hits, the pounce lands where it was shown, the horn opens a
+  cage, phase 2 opens every cage and he pounces twice; at his fall the beasts scatter. (`AmphitheaterTests` 6,
+  `BeastLordTests` 7.)

@@ -1,8 +1,8 @@
 # Progress
 
 **Current phase:** Phase 5 — expansion
-**Current milestone:** none in progress. The arena ladder fixes (the Provincial Pit rebuilt as a 100 × 70 m octagon, the spike-trap fix) merged and released as v0.8.0 on 2026-10-20. Next: Arena 3, the Stone Amphitheater + the Beast Lord (bigger again: ≥ 8,000 m², a D-shape per `docs/GDD.md`).
-**Last updated:** 2026-10-20
+**Current milestone:** Phase 5.8 — Arena 3, the Stone Amphitheater + the Beast Lord (branch `phase5-arena3`, spec `docs/ARENAS.md` §3 + `docs/BOSSES.md`, v0.9.0): built, tested, PR open, awaiting the producer's OK to merge and release. v0.8.0 (the Provincial Pit rebuilt as a 100 × 70 m octagon + the spike-trap fix) released 2026-10-20.
+**Last updated:** 2026-10-21
 
 **Repository:** https://github.com/jfilipegm/gladiator-roguelike (public, branch `main`, remote `origin`, `.blend` files via Git LFS). Work on a branch per milestone, push as you go, merge through a PR; release every playable build (`Tools/release`).
 
@@ -248,6 +248,23 @@
   - before the spawn limit: 421 fps avg; ≥ 250 enemies 228 fps (4.38 ms, p95 6.05), gameplay 1.77 / 2.18 ms; max 300; GC 401 B/s (the victory screen; 59 B/s-class otherwise); **Champion defeated**, Survived at 541 s, level 26, 7,217 kills.
   - with `spawnMaxDistance` 55: 373 fps avg; ≥ 250 enemies 197 fps (5.07 ms, p95 6.59), gameplay 1.91 / 2.41 ms; max 301; GC 59 B/s; Champion at 64 %, level 26, 7,245 kills (a weaker build: 281 bombs, 56 s of hit-stop).
   - Kills match the old arena's runs within build-to-build noise, so they can't show horde pressure (the bot's DPS caps them). C18 tracks density for the producer's playtest.
+
+## Phase 5.8 Arena 3, the Stone Amphitheater (branch `phase5-arena3`, v0.9.0): PR open, awaiting the producer's OK
+- **Spec:** `docs/ARENAS.md` §3, `docs/BOSSES.md` "The Beast Lord", DECISIONS "Phase 5.8". The producer said "You can proceed" after v0.8.0.
+- **Done and committed (verified in Play mode):**
+  - **Layout + scene** (`AmphitheaterLayout.cs`, `AmphitheaterSetup.cs`, menu "Gladiator/Arenas/Build Stone Amphitheater"): a 120 × 88 m D, 8,513 m² of play (Provincial 6,274); stage wall with the great gate (gate 0, boss) + 4 cages at x ±26.67/±44.44; the stage (pulpitum) in **two 17 m halves** (x 3..20 each side, 6 m processional way for the boss; stairs at their fronts x ±11.5 and outer ends x ±22); 3 tunnels (gates 1–3) in the bowl; invisible stone along the bowl; 12 columns, 4 statues (±35.5, 33) and (±42, −16), 4 platforms, 1,711 spectators. Sun (54, −25, 0). Per-gate models (`ArenaLayoutDef.Gate.model`). Bowl re-coloured to travertine (iteration 2). CrowdRenderer draws in chunks of 1,023. Run/unlock (DefeatBoss champion)/table/menu/build lists wired; menu rebuilt.
+  - **Enemies:** `EN_Murmillo` (ShieldBearer, 135 HP, block 90 %; blue scutum + red crest, iteration 2), `EN_NetThrower` (Lobber + `lobNet`: grounded player in the ring → `Slow(0.1, 1.2 s)` + 6 dmg; net drawn in flight and on the ground with WP_Net), `EN_WarBoar` (Dasher, `flank` false, `trampleMul` 3: tramples every non-beast enemy in its lane once per charge, bowls the player over). `BeastCages` prewarms its beast. Spawn table has the new two.
+  - **The Beast Lord** (`BossSetup.EnsureBeastLord`, `EN_BeastLord` 736 tris, 3 iterations): Bash = Goad Sweep (5 m, 150°), Whip = Hook Thrust (11 m, Slow 0.5 for 2 s), new `BossAttack.Pounce` (circle trails then locks at 70 %, leap arc, `PounceLands`, 0.8 s recover, twice in phase 2); horn every 20 s opens `NearestIdle` cage (3–5 boars) + 2 curs; cages rattle at entrance; phase 2 `OpenAll(3)`; `scatterOnDefeat` → `DespawnAll`. 15,000 HP.
+  - **Fixes:** the run summary's boss row and lines come from `BossDef.shortName/deathLine/victoryLine` (it said Gorm everywhere; the Champion asset migrated); enemies being pulled back inside the edge may change height (they stuck behind the stage wall); cages don't auto-open once `TimeRemaining` is 0 (TimerDone lags a frame after "boss now").
+  - **Codex:** bestiary appends missing entries (14 now), portraits re-baked.
+  - **Pounce fix:** his body contact is off while he's in the air (the test counted a contact hit a frame before the landing).
+  - **Tests:** `AmphitheaterTests` 6/6, `BeastLordTests` 7/7; full suites EditMode 77/77, PlayMode 141/141 (2026-10-21).
+  - **Bot runs (dev build, `Tools/perfrun bot 600 -timed -arena stone_amphitheater`, 2026-10-21), 0 exceptions:**
+    - The Nobody: 385 fps avg (p99 6.8 ms), 201 fps at ≥ 250 enemies, max 321 alive, 33 B/s GC after warm-up; level 32, 7,429 kills; the Beast Lord at 49 % in phase 2 ~55 s after his entrance when the recording ended.
+    - The Blood Knight (`-gladiator blood_knight`): 478 fps avg, 251 fps at ≥ 250 enemies, max 313; level 28, 9,790 kills; **beat the Beast Lord** ~40 s after his entrance (outcome Survived at 8:41). End-of-run GC is the reward + victory screen + save (known).
+    - Enemies alive per minute and the fight lengths are in CONCERNS C18 / C19.
+  - **Docs:** ARENAS §3 as built, BOSSES (the fall scatters every enemy), DECISIONS "Phase 5.8" numbers, ART_DEBT (Beast Lord ¾ relies on the goad; Murmillo/Net-Thrower/Boar; the kit), CONCERNS C18 measurements + C19, `docs/releases/v0.9.0.md`. `GameInfo.Version` 0.9.0.
+- **Next:** the producer OKs the PR → merge → `Tools/release 0.9.0` on `main` → smoke-run the archives (Linux, Linux dev in the amphitheatre, Windows under Wine) → record sizes and results here.
 
 ## Known issues
 - **Residual GC (target 0 B/frame, met in steady state):** the 70–85 KB one-offs in paused card panels (v0.6.0/0.7.0) are fixed in Phase 5.6: the description buffers are pre-sized to 400 chars. A 200 s check run had none; the first level-up allocates ~7.5–9.9 KB once (paused; a hidden pre-draw of the cards didn't remove it; BACKLOG), the boss entrance 1.8 KB, the victory screen + save write ~238 KB (game over). Small first-occurrence allocations (≤ 1.2 KB) in the first minutes.

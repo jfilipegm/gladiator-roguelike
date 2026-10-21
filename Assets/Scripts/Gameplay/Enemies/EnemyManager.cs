@@ -93,6 +93,10 @@ namespace Gladiator.Gameplay
         readonly Blast[] _blasts = new Blast[64];
         int _blastCount;
         readonly int[] _blastQuery = new int[512];
+        // War Boar charges (Phase 5.8): each charge gets a serial; a victim remembers the last charge that hit it
+        int[] _charge, _trampled;
+        int _chargeSerial;
+        readonly int[] _trampleQuery = new int[256];
         readonly EnemyThreat[] _threats = new EnemyThreat[64];
         int _threatCount;
         float _nextHitStop;   // crit and elite-hit stops share one cooldown (unscaled)
@@ -126,6 +130,10 @@ namespace Gladiator.Gameplay
         public int ThreatCount => _threatCount;
         public EnemyThreat GetThreat(int k) => _threats[k];
         public int PendingBlasts => _blastCount;
+        /// <summary>Enemies hit by a War Boar's charge this run (tests, bot log).</summary>
+        public int Trampled { get; private set; }
+        /// <summary>Damage source of a beast's trample (kill stats: not a weapon).</summary>
+        public static readonly int TrampleSourceId = Gladiator.Core.GameInfo.StableId("trample");
 
         void Awake()
         {
@@ -144,6 +152,8 @@ namespace Gladiator.Gameplay
             _invuln = new bool[capacity];
             _scriptedWindup = new bool[capacity];
             _scriptedShield = new bool[capacity];
+            _charge = new int[capacity];
+            _trampled = new int[capacity];
             AllocStatus();
             for (int i = capacity - 1; i >= 0; i--) _free[_freeCount++] = i;
             _grid = new SpatialHashGrid(boundsMin, boundsMax, gridCellSize, capacity);
@@ -381,6 +391,7 @@ namespace Gladiator.Gameplay
             _attackCd[i] = GameRandom.Range(0.6f, 1.4f) * def.attackCooldown * 0.5f; // don't all fire on the same frame
             _strafe[i] = (GameRandom.NextUInt() & 1) == 0 ? 1f : -1f;
             _attackHit[i] = false;
+            _charge[i] = _trampled[i] = 0;
             _aim[i] = Vector3.forward;
             _flash[i] = 0f; _contactCd[i] = 0.5f; _phase[i] = GameRandom.Range(0f, 6.28f); _recoil[i] = 0f; _dying[i] = 0f;
             _uid[i] = _nextUid++;
@@ -768,8 +779,10 @@ namespace Gladiator.Gameplay
                 _knock[i] *= knockDecay;
 
                 _obstacles?.PushOut(ref np, _radius[i]);
+                if (dasher && def.trampleMul > 0f && _state[i] == AiState.Attack) Trample(i, def, np);
 
                 // keep inside the arena (its outline, or the ellipse)
+                bool clamped = false;
                 float cx = np.x - arenaCenter.x, cz = np.z - arenaCenter.z;
                 if (_edge != null)
                 {
@@ -777,20 +790,21 @@ namespace Gladiator.Gameplay
                     if (d2 > rin * rin) // only near the edge: the table lookup needs an atan2
                     {
                         float d = Mathf.Sqrt(d2), lim = EdgeRadius(cx, cz) - _radius[i];
-                        if (d > lim) { float k2 = lim / d; np.x = arenaCenter.x + cx * k2; np.z = arenaCenter.z + cz * k2; }
+                        if (d > lim) { float k2 = lim / d; np.x = arenaCenter.x + cx * k2; np.z = arenaCenter.z + cz * k2; clamped = true; }
                     }
                 }
                 else
                 {
                     float erx = arenaRadius - _radius[i], erz = arenaRadius * arenaAspect - _radius[i];
                     float ux = cx / erx, uz = cz / erz, e2 = ux * ux + uz * uz;
-                    if (e2 > 1f) { float k2 = 1f / Mathf.Sqrt(e2); np.x = arenaCenter.x + cx * k2; np.z = arenaCenter.z + cz * k2; }
+                    if (e2 > 1f) { float k2 = 1f / Mathf.Sqrt(e2); np.x = arenaCenter.x + cx * k2; np.z = arenaCenter.z + cz * k2; clamped = true; }
                 }
 
-                // terrain: follow walkable height, but never step up a wall
+                // terrain: follow walkable height, but never step up a wall (unless the edge is pulling it back in from
+                // outside: behind the amphitheatre's stage wall the ground is lower than the stage in front of it)
                 float h0 = p.y;
                 float h1 = _height != null ? _height.Sample(np.x, np.z) : 0f;
-                if (h1 - h0 > maxStepUp) { np.x = p.x; np.z = p.z; h1 = _height != null ? _height.Sample(p.x, p.z) : h0; _vel[i] *= 0.5f; }
+                if (!clamped && h1 - h0 > maxStepUp) { np.x = p.x; np.z = p.z; h1 = _height != null ? _height.Sample(p.x, p.z) : h0; _vel[i] *= 0.5f; }
                 np.y = Mathf.MoveTowards(h0, h1, 12f * dt + Mathf.Abs(h1 - h0) * 0.5f);
                 _pos[i] = np;
 
@@ -805,6 +819,7 @@ namespace Gladiator.Gameplay
                         {
                             _attackHit[i] = true;
                             _contactCd[i] = def.contactInterval;
+                            if (def.trampleMul > 0f && _playerMotor != null) _playerMotor.AddImpulse(_aim[i] * 7f + Vector3.up * 3.5f); // bowled over
                         }
                     }
                     else if (_contactCd[i] <= 0f)
@@ -999,6 +1014,7 @@ namespace Gladiator.Gameplay
                             if (_stateT[i] <= 0f)
                             {
                                 _attackHit[i] = false;
+                                _charge[i] = ++_chargeSerial;
                                 SetState(i, AiState.Attack, def.dashLength / Mathf.Max(1f, def.dashSpeed));
                                 _attackCd[i] = def.attackCooldown * atkMul;
                             }
@@ -1011,6 +1027,16 @@ namespace Gladiator.Gameplay
                             return Vector3.zero; // winded: the window to kill it
                         default:
                         {
+                            if (!def.flank) // a beast: straight at you, and charge from wherever it is once in range
+                            {
+                                if (_attackCd[i] <= 0f && dist < def.dashLength - 1f && Mathf.Abs(dy) < 1f)
+                                {
+                                    _aim[i] = dirTo;
+                                    SetState(i, AiState.Windup, def.windup * atkMul);
+                                    return Vector3.zero;
+                                }
+                                return dirTo * speed;
+                            }
                             // flank: make for a spot at your side (left or right of the camera's view, a little behind),
                             // not your face; dash once there, or from wherever it is when the flank takes too long
                             Vector3 side = new Vector3(_viewDir.z, 0f, -_viewDir.x) * _strafe[i];
@@ -1031,6 +1057,35 @@ namespace Gladiator.Gameplay
 
                 default: // Chaser
                     return dirTo * speed;
+            }
+        }
+
+        /// <summary>
+        /// A War Boar's charge (docs/ARENAS.md §3): every other enemy in its path takes trampleMul × its hit, once per
+        /// charge, and is thrown off the lane; the horde included (lure the stampede through it). Other beasts and
+        /// bosses are left alone. Proc damage: it never triggers the player's on-hit effects.
+        /// </summary>
+        void Trample(int i, EnemyDef def, Vector3 p)
+        {
+            int n = _grid.QueryCandidates(p, _radius[i] + _maxRadius + 0.25f, _trampleQuery);
+            Vector3 aim = _aim[i];
+            for (int k = 0; k < n; k++)
+            {
+                int j = _trampleQuery[k];
+                if (j == i || !_active[j] || _trampled[j] == _charge[i]) continue;
+                var dj = _view[j].Def;
+                if (dj == def || dj.behaviour == EnemyBehaviour.Scripted) continue;
+                float dx = _pos[j].x - p.x, dz = _pos[j].z - p.z, r = _radius[i] + _radius[j] + 0.25f;
+                if (dx * dx + dz * dz > r * r) continue;
+                _trampled[j] = _charge[i];
+                Trampled++;
+                Vector3 side = new Vector3(aim.z, 0f, -aim.x);
+                if (side.x * dx + side.z * dz < 0f) side = -side;
+                ApplyDamage(j, new DamageInfo
+                {
+                    Amount = def.attackDamage * def.trampleMul, Flags = DamageFlags.Area | DamageFlags.Proc, Point = _pos[j],
+                    Direction = (side + aim).normalized, Knockback = 9f, SourceId = TrampleSourceId,
+                });
             }
         }
 
@@ -1055,7 +1110,9 @@ namespace Gladiator.Gameplay
             float yaw = _yaw[i] * Mathf.Deg2Rad;
             Vector3 fwd = new Vector3(Mathf.Sin(yaw), 0f, Mathf.Cos(yaw));
             Vector3 hand = p + Vector3.up * (1.25f * _scale[i]) + fwd * (_radius[i] + 0.15f);
-            if (def.behaviour == EnemyBehaviour.Lobber)
+            if (def.behaviour == EnemyBehaviour.Lobber && def.lobNet)
+                proj.LobNet(hand + Vector3.up * 0.3f, player, def.lobTime, def.attackRadius, def.attackDamage, def.netSlow, def.netTime);
+            else if (def.behaviour == EnemyBehaviour.Lobber)
                 proj.Lob(hand + Vector3.up * 0.3f, player, def.lobTime, def.attackRadius, def.zoneDuration, def.zoneDps);
             else if (def.behaviour == EnemyBehaviour.ShieldedRanged)
                 proj.FireStraight(hand, _target[i], def.projectileSpeed, def.attackDamage, def.projectileRadius, def.attackRange * 1.25f, true);

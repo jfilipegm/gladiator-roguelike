@@ -116,6 +116,7 @@ namespace Gladiator.EditorTools
             proj.stoneMesh = AssetDatabase.LoadAssetAtPath<Mesh>(CombatSetup.StoneMesh);
             proj.potMesh = AssetDatabase.LoadAssetAtPath<Mesh>(CombatSetup.PotMesh);
             proj.arrowMesh = AssetDatabase.LoadAssetAtPath<Mesh>(CombatSetup.ArrowMesh);
+            proj.netMesh = AssetDatabase.LoadAssetAtPath<Mesh>("Assets/Art/Models/Weapons/WP_Net.fbx");
             proj.feedback = feedback;
             proj.burst = pop;
 

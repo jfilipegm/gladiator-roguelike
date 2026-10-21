@@ -45,6 +45,8 @@ namespace Gladiator.Gameplay
             [Tooltip("Where the gate model stands (its front faces into the arena).")]
             public Vector3 position;
             public float yaw;
+            [Tooltip("This gate's model under Assets/Art/Models/ (empty = the layout's gateModel).")]
+            public string model;
         }
 
         public enum ZoneKind { Mud, Fire }
@@ -126,6 +128,22 @@ namespace Gladiator.Gameplay
         public Vector3[] braziers = Array.Empty<Vector3>();
         [Tooltip("Spike grate centres (y = the floor): they cycle and hurt everyone on them.")]
         public Vector3[] spikeTraps = Array.Empty<Vector3>();
+
+        [Header("Beast cages and stone (Phase 5.8)")]
+        [Tooltip("Cage gates in the walls (x, y, z, yaw; the model's +Z faces the arena): BeastCages releases packs through them.")]
+        public Vector4[] cages = Array.Empty<Vector4>();
+        [Tooltip("What comes out of the cages.")]
+        public EnemyDef cageBeast;
+        [Tooltip("Seconds into the run before the first cage opens, then between cages.")]
+        public float cageFirst = 75f;
+        public float cageEvery = 40f;
+        [Tooltip("Boars per pack at the start of the run and at the end of the timer.")]
+        public Vector2Int cagePack = new Vector2Int(3, 6);
+        [Tooltip("Invisible stone (x, z, yaw, width; yaw faces the arena): Environment-layer walls behind the line, for a wall that is decor only (one big mesh would bake as one huge obstacle). The camera, the player and the nav bake see them.")]
+        public Vector4[] solidWalls = Array.Empty<Vector4>();
+        public float solidWallHeight = 8.4f;
+        [Tooltip("Seconds between elites here (0 = DirectorConfig.eliteEvery).")]
+        public float eliteEvery;
 
         /// <summary>The play area's floor (m²): the outline's, else the ellipse's. Each arena of the ladder must be bigger
         /// than the one before it (docs/GDD.md).</summary>

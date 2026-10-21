@@ -22,7 +22,7 @@ namespace Gladiator.UI
         static readonly Color Soft = new Color(1f, 1f, 1f, 0.75f);
 
         GameObject _root;
-        TextMeshProUGUI _title, _subtitle, _note, _time, _level, _kills, _gold, _damage, _boss, _renown, _unlock;
+        TextMeshProUGUI _title, _subtitle, _note, _time, _level, _kills, _gold, _damage, _boss, _bossLabel, _renown, _unlock;
         bool _shown;
         float _shownAt;
 
@@ -44,7 +44,8 @@ namespace Gladiator.UI
             _kills = StatRow(card.transform, "Kills", 2);
             _gold = StatRow(card.transform, "Gold", 3);
             _damage = StatRow(card.transform, "Damage dealt", 4);
-            _boss = StatRow(card.transform, "Gorm", 5);
+            _boss = StatRow(card.transform, "Boss", 5);
+            _bossLabel = card.transform.Find("Boss").GetComponent<TextMeshProUGUI>(); // named per arena in Fill
             _renown = StatRow(card.transform, "Renown", 6);
             _renown.color = Gold;
             _unlock = UiFactory.Text("Unlock", canvas, "", 30, Gold, TextAlignmentOptions.Center, mid, mid, new Vector2(0, -296), new Vector2(1500, 84), font, fontMaterial);
@@ -96,11 +97,15 @@ namespace Gladiator.UI
             var run = c.run;
             bool died = c.Outcome == RunOutcome.Died;
             bool bossDown = !died && BossController.Active != null && BossController.Active.Defeated;
+            // this arena's boss (game over only: the lookup's allocation doesn't matter here)
+            var fight = FindAnyObjectByType<BossFight>();
+            var bdef = fight != null ? fight.boss : null;
+            _bossLabel.text = bdef != null ? bdef.shortName : "Boss";
             _title.text = died ? "YOU DIED" : bossDown ? "VICTORY!" : "SURVIVED!";
             _title.color = died ? Hurt : Gold;
             _subtitle.text = died
-                ? (RunState.Current != null && RunState.Current.TimerDone ? "Gorm drags you off by the chain." : "The crowd wanted more.")
-                : bossDown ? "The Pit Master lies in the dirt. The crowd chants a name: yours." : "The pit falls silent.";
+                ? (RunState.Current != null && RunState.Current.TimerDone && bdef != null ? bdef.deathLine : "The crowd wanted more.")
+                : bossDown && bdef != null ? bdef.victoryLine : "The pit falls silent.";
             _note.text = Debug.isDebugBuild ? "Admin menu: F1 (God mode, buffs, spawns, \"Timer to 0:10\" for the boss)" : "";
             float t = run != null ? run.Elapsed : 0f;
             _time.SetText("{0}:{1:00}", Mathf.Floor(t / 60f), Mathf.Floor(t % 60f));

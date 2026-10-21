@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 664674991ec87df7291301f37fcc64ac, type: 3}
+  m_Name: EN_Murmillo
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.EnemyDef
+  id: murmillo
+  displayName: Murmillo
+  model: {fileID: 919132149155446097, guid: a342882d146d79731a6144e958f9eaeb, type: 3}
+  anim: {fileID: 11400000, guid: e5d474139ad75bf5185bf4f27ffd2c8f, type: 2}
+  scale: 1
+  maxHp: 135
+  moveSpeed: 2.6
+  speedJitter: 0.15
+  acceleration: 14
+  radius: 0.5
+  knockbackTaken: 0.15
+  contactDamage: 13
+  contactInterval: 0.9
+  behaviour: 2
+  windup: 0.6
+  attackCooldown: 2.5
+  attackRange: 3
+  attackDamage: 10
+  attackRadius: 2.5
+  recover: 0.4
+  turnRate: 150
+  lungeSpeed: 13
+  lungeTime: 0.28
+  blockArc: 130
+  blockReduction: 0.9
+  keepDistance: {x: 6, y: 10}
+  projectileSpeed: 13
+  lobTime: 0.95
+  projectileRadius: 0.25
+  aimLockTime: 0.3
+  zoneDuration: 3.5
+  zoneDps: 10
+  dashSpeed: 18
+  dashLength: 7
+  flankRadius: 5.5
+  flankTimeout: 4
+  flank: 1
+  trampleMul: 0
+  lobNet: 0
+  netSlow: 0.1
+  netTime: 1.2
+  xp: 7
+  goldChance: 0.12
+  prewarm: 24

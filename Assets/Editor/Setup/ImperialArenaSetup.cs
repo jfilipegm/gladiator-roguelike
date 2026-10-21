@@ -77,7 +77,7 @@ namespace Gladiator.EditorTools
                 d.behaviour = EnemyBehaviour.ShieldBearer; // the tall scutum: 75 % off from a 120° front (they come five at a time)
                 d.maxHp = 70f; d.moveSpeed = 3.0f; d.radius = 0.5f; d.acceleration = 14f; d.contactDamage = 10f; d.xp = 4f;
                 d.blockArc = 120f; d.blockReduction = 0.75f; d.knockbackTaken = 0.25f; d.turnRate = 180f;
-                d.goldChance = 0.06f; d.prewarm = 40; // 3 table Centurions + the boss's 2: 25 shields
+                d.goldChance = 0.06f; d.prewarm = 80; // broken lines fight on, so shields pile up: a bot run grew the pool from 40 twenty times
             });
             CombatSetup.Enemy("EN_Centurion", "Centurion", "centurion", humanoid, d =>
             {

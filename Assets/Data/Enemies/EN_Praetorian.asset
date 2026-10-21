@@ -71,4 +71,4 @@ MonoBehaviour:
   breakShieldsDown: 0
   xp: 4
   goldChance: 0.06
-  prewarm: 40
+  prewarm: 80

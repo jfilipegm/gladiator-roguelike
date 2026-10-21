@@ -69,6 +69,11 @@ namespace Gladiator.Gameplay
         public float orbitHeight = 0.8f;
         [Tooltip("Orbit weapons: spin of each ball around its chain (deg/s), for show.")]
         public float orbitRoll = 540f;
+        [Header("GroundSlam (the Executioner's Cleaver)")]
+        [Tooltip("Enemies this close to the player are hit by a slam wherever it lands: they're under the blade (m).")]
+        public float slamPointBlank = 1.2f;
+        public float slamShake = 0.08f;
+        public Color slamDustA = new Color(0.78f, 0.68f, 0.5f), slamDustB = new Color(0.82f, 0.97f, 1f);
         const int MaxOrbiters = 8;
 
         PlayerStats _stats;
@@ -99,6 +104,8 @@ namespace Gladiator.Gameplay
         public int Echoes { get; private set; }
         /// <summary>Thrust hits that landed on a weapon's tip (the Whip's crack, always crits; tests).</summary>
         public int TipHits { get; private set; }
+        /// <summary>GroundSlam impacts (tests).</summary>
+        public int Slams { get; private set; }
         /// <summary>The crowd's weapon in the sand (Phase 5.1): fights beside the slots for a while (null = none).</summary>
         public WeaponInstance Temporary => TemporaryLeft > 0f ? _loan : null;
         public float TemporaryLeft { get; private set; }
@@ -242,7 +249,7 @@ namespace Gladiator.Gameplay
             if (w.Cooldown > 0f || em == null) return;
             if (!StartSwing(w, em)) return;
             w.Cooldown = CooldownOf(w);
-            bool melee = d.pattern == WeaponPattern.MeleeArc || d.pattern == WeaponPattern.Thrust;
+            bool melee = d.pattern == WeaponPattern.MeleeArc || d.pattern == WeaponPattern.Thrust || d.pattern == WeaponPattern.GroundSlam;
             w.BurstLeft = melee ? AmountOf(w) - 1 : 0;
         }
 
@@ -274,6 +281,7 @@ namespace Gladiator.Gameplay
                 if (pp != null) pp.Thrust(w.AimDir, d.range * area, d.swingDuration, MeshOf(w, pp), d.meshScale * Mathf.Sqrt(area));
                 SfxPlayer.Play(SfxId.Thrust, origin);
             }
+            else if (d.pattern == WeaponPattern.GroundSlam) SfxPlayer.Play(SfxId.Swing, origin); // raised over the head
             return true;
         }
 
@@ -293,6 +301,7 @@ namespace Gladiator.Gameplay
                 case WeaponPattern.Projectile: Volley(w, em, returning: false); break;
                 case WeaponPattern.Returning: Volley(w, em, returning: true); break;
                 case WeaponPattern.Lob: Lob(w, em); break;
+                case WeaponPattern.GroundSlam: SlamHit(w, em); break;
             }
             var d = w.Def;
             bool echoes = d.pattern == WeaponPattern.MeleeArc || d.pattern == WeaponPattern.Thrust || d.pattern == WeaponPattern.Returning;
@@ -376,6 +385,51 @@ namespace Gladiator.Gameplay
                 if (dist > 0.7f && Vector3.Angle(w.AimDir, to) > halfArc) continue; // point-blank always connects
                 Strike(w, em, i, Hit(w, em, i, dist > 1e-3f ? to / dist : w.AimDir, DamageFlags.Melee));
             }
+        }
+
+        /// <summary>Where a GroundSlam lands: `range` ahead along the aim, on the ground.</summary>
+        public Vector3 SlamPoint(WeaponInstance w)
+        {
+            Vector3 at = transform.position + w.AimDir * w.Def.range;
+            var em = EnemyManager.Instance;
+            if (em != null && em.Height != null) at.y = em.Height.Sample(at.x, at.z);
+            return at;
+        }
+
+        /// <summary>
+        /// The cleaver comes down `range` ahead: everything within width × √area of that point is hit and thrown out
+        /// from it; anything within slamPointBlank of the player is hit too (it's under the blade). A pale ring runs out
+        /// across the ground.
+        /// </summary>
+        void SlamHit(WeaponInstance w, EnemyManager em)
+        {
+            var d = w.Def;
+            float radius = d.width * Mathf.Sqrt(AreaOf(w));
+            Vector3 origin = transform.position;
+            Vector3 at = SlamPoint(w);
+            int n = em.QueryAlive(at, radius + slamPointBlank + d.range + em.MaxRadius, _hits);
+            for (int k = 0; k < n; k++)
+            {
+                int i = _hits[k];
+                Vector3 ep = em.GetPosition(i);
+                Vector3 to = ep - at, near = ep - origin;
+                to.y = 0f; near.y = 0f;
+                float rr = radius + em.GetRadius(i);
+                bool inCircle = to.sqrMagnitude <= rr * rr;
+                if (!inCircle && near.sqrMagnitude > slamPointBlank * slamPointBlank) continue;
+                Vector3 dir = inCircle ? to : near;
+                dir = dir.sqrMagnitude > 1e-4f ? dir.normalized : w.AimDir;
+                Strike(w, em, i, Hit(w, em, i, dir, DamageFlags.Melee | DamageFlags.Area));
+            }
+            Slams++;
+            var pp = PlayerProjectiles.Instance;
+            if (pp != null)
+            {
+                pp.Shockwave(at, radius * 1.15f);
+                if (pp.burst != null) pp.burst.Burst(at + Vector3.up * 0.15f, 12, 4.5f, 0.16f, slamDustA, slamDustB);
+            }
+            SfxPlayer.Play(SfxId.Slam, at);
+            ScreenShake.Add(slamShake);
         }
 
         /// <summary>Everything in a line from the player along the aim: length = range × area, width = width × √area.</summary>

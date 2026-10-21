@@ -97,6 +97,13 @@ namespace Gladiator.Gameplay
                 float yaw = Mathf.Lerp(p.swingYawStart, p.swingYawEnd, k);
                 float raise = Mathf.Sin(k * Mathf.PI) * 0.4f + 0.6f;
                 target.ArmR = new Vector3(-p.swingRaise * raise, yaw, 0f);
+                if (p.overheadChop)
+                {
+                    yaw = 0f;
+                    target.ArmR = new Vector3(-Mathf.Lerp(p.chopPitchStart, p.chopPitchEnd, k), 0f, 0f);
+                    target.Body += new Vector3(Mathf.Lerp(-8f, 22f, k), 0f, 0f); // leans back, then bends into the chop
+                }
+                if (p.twoHanded) target.ArmL = new Vector3(target.ArmR.x, -target.ArmR.y, -target.ArmR.z);
                 // Twist the upper body toward the target (the legs keep running where the player steers).
                 Vector3 fwd = transform.forward;
                 float twist = Mathf.Clamp(Vector3.SignedAngle(new Vector3(fwd.x, 0f, fwd.z), AttackDirection, Vector3.up), -80f, 80f);

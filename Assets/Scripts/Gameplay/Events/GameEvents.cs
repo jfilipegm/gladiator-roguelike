@@ -15,7 +15,7 @@ namespace Gladiator.Gameplay
     }
     /// <summary>`Index` is the dead enemy's slot: its statuses can still be read during the event (Pyre spreads Burn).</summary>
     public struct KillEvent { public int TargetId; public int Index; public Vector3 Position; public int EnemyTypeId; public bool Elite; public int SourceId; public float Xp; public float GoldChance; }
-    public struct DamagedEvent { public Vector3 Position; public float Damage; public float HealthAfter; public float HealthMax; }
+    public struct DamagedEvent { public Vector3 Position; public float Damage; public float HealthAfter; public float HealthMax; public bool Status; }
     public struct PickupEvent { public int Kind; public Vector3 Position; public float Amount; }
     public struct LevelUpEvent { public int NewLevel; }
     public struct RunEndEvent { public RunOutcome Outcome; public float Elapsed; }

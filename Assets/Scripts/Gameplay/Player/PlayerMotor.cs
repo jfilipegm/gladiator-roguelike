@@ -118,7 +118,11 @@ namespace Gladiator.Gameplay
         /// Shove the player (velocity change, m/s), applied at the start of the next motor tick. A positive y launches
         /// them into the air (no jump cut, counts as airborne) — e.g. the Brute's slam.
         /// </summary>
-        public void AddImpulse(Vector3 velocity) => _pendingImpulse += velocity;
+        /// <summary>Knockback from hits (every caller is one) × KnockbackTakenMul.</summary>
+        public void AddImpulse(Vector3 velocity) => _pendingImpulse += velocity * KnockbackTakenMul;
+
+        /// <summary>Scales every knockback this player takes (the Murder Machine's plate: 0).</summary>
+        public float KnockbackTakenMul { get; set; } = 1f;
 
         public void Tick(float dt, float unscaledDt)
         {

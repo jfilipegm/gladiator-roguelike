@@ -29,6 +29,9 @@ namespace Gladiator.Gameplay
         public float HealingMul { get; set; } = 1f;
         /// <summary>HP paid on purpose (Spend: the Blood Rite), not counted as damage taken.</summary>
         public float HpSpent { get; private set; }
+        /// <summary>Taken off every hit after the arena's multiplier and Armor, never below 1 (the Murder Machine's
+        /// plate). Status ticks aren't reduced.</summary>
+        public float FlatReduction { get; set; }
 
         float _invulnerableUntil;
 
@@ -103,10 +106,11 @@ namespace Gladiator.Gameplay
             float armor = _stats != null ? Mathf.Clamp(_stats.Get(StatId.Armor), 0f, maxArmor) : 0f;
             float arena = RunState.Current != null ? RunState.Current.playerDamageTakenMul : 1f; // the arena's difficulty
             float amount = info.Amount * arena * (1f - armor);
+            if (!status && FlatReduction > 0f) amount = Mathf.Max(Mathf.Min(amount, 1f), amount - FlatReduction); // the Murder Machine's plate
             Hp = Mathf.Max(floor, Hp - amount);
             DamageTaken += before - Hp;
             if (!status) _invulnerableUntil = Time.time + invulnerableTime;
-            GameEvents.OnDamaged.Raise(new DamagedEvent { Position = transform.position + Vector3.up * 1.4f, Damage = amount, HealthAfter = Hp, HealthMax = MaxHp });
+            GameEvents.OnDamaged.Raise(new DamagedEvent { Position = transform.position + Vector3.up * 1.4f, Damage = amount, HealthAfter = Hp, HealthMax = MaxHp, Status = status });
             if (feedback != null)
             {
                 ScreenShake.Add(status ? feedback.shakeOnPlayerHit * 0.3f : feedback.shakeOnPlayerHit);

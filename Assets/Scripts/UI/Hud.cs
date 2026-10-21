@@ -98,6 +98,9 @@ namespace Gladiator.UI
         Bloodlust _lust;
         static readonly Color BloodColor = new Color(0.9f, 0.16f, 0.36f);
         static readonly Color BloodHot = new Color(1f, 0.78f, 0.84f);
+        // Murder Machine (Phase 5.9): the same bar is his Wrath meter (pale steel, cyan-white when full: "JUMP!").
+        static readonly Color WrathColor = new Color(0.7f, 0.8f, 0.88f);
+        static readonly Color WrathHot = new Color(0.62f, 0.97f, 1f);
 
         static readonly Color XpColor = new Color(0.31f, 0.89f, 0.82f);
         static readonly Color HpColor = new Color(0.88f, 0.2f, 0.17f);
@@ -467,9 +470,12 @@ namespace Gladiator.UI
         void DrawBlood(float unscaledDt)
         {
             var rite = BloodRite.Instance;
-            bool on = rite != null && rite.trait != null;
+            var verdict = Verdict.Instance;
+            bool wrath = rite == null && verdict != null && verdict.trait != null;
+            bool on = (rite != null && rite.trait != null) || wrath;
             if (_bloodRoot.activeSelf != on) { _bloodRoot.SetActive(on); _bloodText.gameObject.SetActive(on); }
             if (!on) return;
+            if (wrath) { DrawWrath(verdict, unscaledDt); return; }
             if (_riteShown != rite) { _riteShown = rite; _lust = rite.GetComponent<Bloodlust>(); _bloodKey = int.MinValue; }
             float target = rite.Frenzied ? rite.FrenzyLeft / Mathf.Max(0.01f, rite.trait.frenzySeconds) : rite.Fill01;
             _bloodFill.fillAmount = Mathf.MoveTowards(_bloodFill.fillAmount, target, unscaledDt * 2f);
@@ -487,6 +493,21 @@ namespace Gladiator.UI
                 else _bloodText.SetText("");
             }
             _bloodText.color = key == -1 ? Color.Lerp(BloodColor, BloodHot, 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 8f)) : BloodColor;
+        }
+
+        /// <summary>The Murder Machine's Wrath meter on the Blood bar: "JUMP!" when full (the next landing is the Verdict).</summary>
+        void DrawWrath(Verdict v, float unscaledDt)
+        {
+            _bloodFill.fillAmount = Mathf.MoveTowards(_bloodFill.fillAmount, v.Fill01, unscaledDt * 3f);
+            float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 8f);
+            _bloodFill.color = v.Full ? Color.Lerp(WrathColor, WrathHot, pulse) : WrathColor;
+            int key = v.Full ? -3 : 0;
+            if (key != _bloodKey)
+            {
+                _bloodKey = key;
+                _bloodText.SetText(key == -3 ? "JUMP!" : "");
+            }
+            _bloodText.color = v.Full ? Color.Lerp(WrathColor, WrathHot, pulse) : WrathColor;
         }
 
         /// <summary>The Favor bar (pulses gold-white when a gift is close) and the loaned weapon's tile + seconds left.</summary>

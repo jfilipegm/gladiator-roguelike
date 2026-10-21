@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3f244af30c794398bf8108a48772002, type: 3}
+  m_Name: GL_MurderMachine
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.GladiatorDef
+  id: murder_machine
+  displayName: The Murder Machine
+  description: The arena's executioner, sent down to the sand. Small hits barely scratch him, nothing knocks him back, and every hit he takes brings the Verdict closer.
+  baseStats:
+  - stat: 0
+    value: 150
+  - stat: 3
+    value: 0.85
+  model: {fileID: 919132149155446097, guid: d246d2fc058891d15bb93286b420ec27, type: 3}
+  movement: {fileID: 11400000, guid: 0a2c26f9c0b997921a9789f59923307f, type: 2}
+  animProfile: {fileID: 11400000, guid: e13cc56348bcb73f98686b3f8777a834, type: 2}
+  cameraTargetHeight: 1.6
+  startingWeapon: {fileID: 11400000, guid: dc228bc556af10afaa67a99754abf05c, type: 2}
+  traits:
+  - {fileID: 11400000, guid: b07531836896f63d984cf2241afcc5aa, type: 2}
+  - {fileID: 11400000, guid: 75482da91ec7f635292e335299d90960, type: 2}
+  unlock: {fileID: 11400000, guid: 0af8b54ff9edd1ae39fbc74eab93c5a5, type: 2}
+  selectLine: 
+  tradeoff: 'Unstoppable but slow: 85 % speed, and the cleaver only hits in front of him.'

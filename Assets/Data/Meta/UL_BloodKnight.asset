@@ -14,11 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.UnlockDef
   id: blood_knight
   displayName: The Blood Knight
-  description: You won bleeding, and something in black plate took notice. The Blood Knight can be chosen, and his Crimson Greatsword joins the level-up pool.
-  hint: Gorm must fall to someone already bleeding out (below 30 % HP).
+  description: You made it to the amphitheatre, and something in black plate took notice. The Blood Knight can be chosen, and his Crimson Greatsword joins the level-up pool.
+  hint: Fight your way up to the Stone Amphitheater.
   conditions:
-  - kind: 9
-    id: gorm
-    amount: 0.3
+  - kind: 1
+    id: 
+    amount: 2
+  category: 0
+  renownCost: 0
+  renownBounty: 0
   addsToPool:
   - {fileID: 11400000, guid: bc7cd2120404cfde7a76e36a7eeb476f, type: 2}

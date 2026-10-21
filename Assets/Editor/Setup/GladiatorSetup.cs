@@ -9,8 +9,11 @@ namespace Gladiator.EditorTools
     /// Gladiator data (docs/GLADIATORS.md). Phase 5.2: the Pit Goblin (GL_PitGoblin) with its capsule, animation, the
     /// Bomb Satchel and its card, the Scavenger and Trap Slide traits, the Root status, and UL_PitGoblin (the rattling
     /// crate flag). Phase 5.3: the Blood Knight (GL_BloodKnight), the Crimson Greatsword and its card, the Bloodthirst,
-    /// Bloodlust and Blood Rite traits, and UL_BloodKnight (beat Gorm below 30 % HP). Every asset is created once and
-    /// is designer-owned afterwards; only missing links are filled in.
+    /// Bloodlust and Blood Rite traits, and UL_BloodKnight (Phase 5.9: reach Arena 3; it was "beat Gorm below 30 % HP").
+    /// Phase 5.9: the Murder Machine (GL_MurderMachine), the Executioner's Cleaver (GroundSlam) and its card, the
+    /// Executioner's Plate and Verdict traits, the Stagger status, and UL_MurderMachine (beat Gorm). Every asset is
+    /// created once and is designer-owned afterwards; only missing links are filled in (and the knight's interim unlock
+    /// is migrated once).
     /// </summary>
     public static class GladiatorSetup
     {
@@ -41,6 +44,17 @@ namespace Gladiator.EditorTools
         public const string GreatswordCardPath = UpgradeSetup.Dir + "UP_W_CrimsonGreatsword.asset";
         public const string KnightUnlockPath = MetaSetup.Dir + "UL_BloodKnight.asset";
         public const string KnightModel = "Assets/Art/Models/Characters/CH_BloodKnight.fbx";
+
+        public const string MachinePath = Dir + "GL_MurderMachine.asset";
+        public const string MachineMovePath = "Assets/Data/Config/MovementConfig_Machine.asset";
+        public const string MachineAnimPath = "Assets/Data/Config/PartAnim_Machine.asset";
+        public const string PlatePath = Dir + "TR_ExecutionersPlate.asset";
+        public const string VerdictPath = Dir + "TR_Verdict.asset";
+        public const string CleaverPath = UpgradeSetup.WeaponDir + "WP_ExecutionersCleaver.asset";
+        public const string CleaverCardPath = UpgradeSetup.Dir + "UP_W_ExecutionersCleaver.asset";
+        public const string MachineUnlockPath = MetaSetup.Dir + "UL_MurderMachine.asset";
+        public const string StaggerPath = "Assets/Data/Status/SE_Stagger.asset";
+        public const string MachineModel = "Assets/Art/Models/Characters/CH_MurderMachine.fbx";
 
         static WeaponDef.Level L(params StatMod[] mods) => new WeaponDef.Level { mods = mods };
         static StatMod Pct(StatId s, float v) => new StatMod(s, ModOp.Percent, v);
@@ -109,6 +123,7 @@ namespace Gladiator.EditorTools
             if (g.unlock == null) g.unlock = unlock;
             EditorUtility.SetDirty(g);
             BloodKnight();
+            MurderMachine();
             UpgradeSetup.Refresh();
             MetaSetup.CreateOrUpdate();
             IconSetup.Apply(); // the goblin's and the knight's weapon cards get their icons too
@@ -122,10 +137,12 @@ namespace Gladiator.EditorTools
             var nobody = AssetDatabase.LoadAssetAtPath<GladiatorDef>(UpgradeSetup.NobodyPath);
             var goblin = AssetDatabase.LoadAssetAtPath<GladiatorDef>(GoblinPath);
             var knight = AssetDatabase.LoadAssetAtPath<GladiatorDef>(KnightPath);
+            var machine = AssetDatabase.LoadAssetAtPath<GladiatorDef>(MachinePath);
             var list = new System.Collections.Generic.List<GladiatorDef>();
             if (nobody != null) list.Add(nobody);
             if (goblin != null) list.Add(goblin);
             if (knight != null) list.Add(knight);
+            if (machine != null) list.Add(machine);
             return list.ToArray();
         }
 
@@ -141,11 +158,17 @@ namespace Gladiator.EditorTools
                 unlock = PlayerSetup.EnsureAsset<UnlockDef>(KnightUnlockPath);
                 unlock.id = "blood_knight";
                 unlock.displayName = "The Blood Knight";
-                unlock.description = "You won bleeding, and something in black plate took notice. The Blood Knight can be chosen, and his Crimson Greatsword joins the level-up pool.";
-                unlock.hint = "Gorm must fall to someone already bleeding out (below 30 % HP).";
-                // interim: §6.7 says "Reach Arena 3"; switch to ReachArena 2 once that arena exists (DECISIONS 5.3)
-                unlock.conditions = new[] { new UnlockCondition { kind = UnlockConditionKind.DefeatBossBelowHp, id = "gorm", amount = 0.3f } };
+                unlock.conditions = new[] { ReachTheAmphitheater() };
                 unlock.addsToPool = new[] { card };
+                KnightUnlockText(unlock);
+                EditorUtility.SetDirty(unlock);
+            }
+            // Phase 5.9: Arena 3 exists, so the interim "beat Gorm below 30 % HP" becomes §6.7's "Reach Arena 3" (once;
+            // a save that already unlocked him keeps him: unlocks are saved by id)
+            if (unlock.conditions != null && unlock.conditions.Length == 1 && unlock.conditions[0].kind == UnlockConditionKind.DefeatBossBelowHp)
+            {
+                unlock.conditions = new[] { ReachTheAmphitheater() };
+                KnightUnlockText(unlock);
                 EditorUtility.SetDirty(unlock);
             }
             var move = Copy<MovementConfig>(PlayerSetup.MovementPath, KnightMovePath, m =>
@@ -194,6 +217,105 @@ namespace Gladiator.EditorTools
             if (g.unlock == null) g.unlock = unlock;
             EditorUtility.SetDirty(g);
             return g;
+        }
+
+        /// <summary>Start a run in the Stone Amphitheater (arena tier 2, RunRecord.ArenaIndex).</summary>
+        static UnlockCondition ReachTheAmphitheater() => new UnlockCondition { kind = UnlockConditionKind.ReachArena, amount = 2f };
+
+        static void KnightUnlockText(UnlockDef u)
+        {
+            u.description = "You made it to the amphitheatre, and something in black plate took notice. The Blood Knight can be chosen, and his Crimson Greatsword joins the level-up pool.";
+            u.hint = "Fight your way up to the Stone Amphitheater.";
+        }
+
+        /// <summary>Phase 5.9: the Murder Machine and everything only he brings.</summary>
+        static GladiatorDef MurderMachine()
+        {
+            var stagger = Status(StaggerPath, "stagger", "Stagger", "Staggered", StatusKind.Root, 1f, 0f, new Color(0.78f, 0.86f, 0.92f));
+            var cleaver = Cleaver();
+            var card = WeaponCard(CleaverCardPath, cleaver, "EC");
+            var unlock = AssetDatabase.LoadAssetAtPath<UnlockDef>(MachineUnlockPath);
+            if (unlock == null)
+            {
+                unlock = PlayerSetup.EnsureAsset<UnlockDef>(MachineUnlockPath);
+                unlock.id = "murder_machine";
+                unlock.displayName = "The Murder Machine";
+                unlock.description = "Gorm is dead, and his executioner is out of work. The Murder Machine can be chosen, and his Executioner's Cleaver joins the level-up pool.";
+                unlock.hint = "Gorm keeps an executioner below the pit. Kill Gorm, and he'll want new work.";
+                unlock.conditions = new[] { new UnlockCondition { kind = UnlockConditionKind.DefeatBoss, id = "gorm", amount = 1f } };
+                unlock.addsToPool = new[] { card };
+                EditorUtility.SetDirty(unlock);
+            }
+            var move = Copy<MovementConfig>(PlayerSetup.MovementPath, MachineMovePath, m =>
+            {
+                m.capsuleHeight = 2.0f;
+                m.slideCapsuleHeight = 1.15f;
+                m.capsuleRadius = 0.46f;
+            });
+            var anim = Copy<PartAnimProfile>(PlayerSetup.AnimPath, MachineAnimPath, a =>
+            {
+                a.strideLength = 1.25f;  // short legs, heavy steps
+                a.bobHeight = 0.07f;
+                a.runLean = 4f;
+                a.armSwing *= 0.5f;
+                a.weaponArmSwingScale = 0.15f; // the cleaver stays held out in front
+                a.overheadChop = true;
+                a.twoHanded = true;
+                a.chopPitchStart = 165f;
+                a.chopPitchEnd = 5f;
+                // up over the head and held, then down hard: the blade meets the ground at the impact (windup 0.38 of 0.55 s)
+                a.swingCurve = new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(0.5f, 0.08f), new Keyframe(0.69f, 1f), new Keyframe(1f, 1f));
+            });
+            var plate = Trait<ExecutionersPlateTrait>(PlatePath, "executioners_plate", "Executioner's Plate",
+                "Every hit you take is 4 lower (never below 1), and nothing knocks you back.");
+            var verdict = Trait<VerdictTrait>(VerdictPath, "verdict", "Verdict",
+                "Hits you take fill the Wrath meter. Land from a jump with it full: a 7 m shockwave that hits everything round you and staggers the survivors.");
+            if (verdict.stagger == null) { verdict.stagger = stagger; EditorUtility.SetDirty(verdict); }
+
+            var g = AssetDatabase.LoadAssetAtPath<GladiatorDef>(MachinePath);
+            if (g == null)
+            {
+                g = PlayerSetup.EnsureAsset<GladiatorDef>(MachinePath);
+                g.id = "murder_machine";
+                g.displayName = "The Murder Machine";
+                g.description = "The arena's executioner, sent down to the sand. Small hits barely scratch him, nothing knocks him back, and every hit he takes brings the Verdict closer.";
+                g.baseStats = new[]
+                {
+                    new GladiatorDef.BaseStat { stat = StatId.MaxHp, value = 150f },
+                    new GladiatorDef.BaseStat { stat = StatId.MoveSpeed, value = 0.85f },
+                };
+                g.cameraTargetHeight = 1.6f;
+                g.tradeoff = "Unstoppable but slow: 85 % speed, and the cleaver only hits in front of him.";
+            }
+            if (g.model == null) g.model = AssetDatabase.LoadAssetAtPath<GameObject>(MachineModel);
+            if (g.movement == null) g.movement = move;
+            if (g.animProfile == null) g.animProfile = anim;
+            if (g.startingWeapon == null) g.startingWeapon = cleaver;
+            if (g.traits == null || g.traits.Length == 0) g.traits = new GladiatorTrait[] { plate, verdict };
+            if (g.unlock == null) g.unlock = unlock;
+            EditorUtility.SetDirty(g);
+            return g;
+        }
+
+        static WeaponDef Cleaver()
+        {
+            var w = AssetDatabase.LoadAssetAtPath<WeaponDef>(CleaverPath);
+            if (w != null) return w;
+            w = PlayerSetup.EnsureAsset<WeaponDef>(CleaverPath);
+            w.id = "executioners_cleaver"; w.displayName = "Executioner's Cleaver";
+            w.description = "Raised over the head and brought down in front of you: everything where it lands is crushed and thrown back.";
+            w.pattern = WeaponPattern.GroundSlam;
+            // range = how far ahead it lands, width = the radius there (× √Area)
+            w.damage = 34f; w.critChance = 0.06f; w.critMultiplier = 2f; w.knockback = 10f;
+            w.cooldown = 2.1f; w.swingDuration = 0.55f; w.windup = 0.38f;
+            w.range = 2.0f; w.width = 2.4f; w.acquireRange = 4.6f; w.amount = 1;
+            w.levels = new[]
+            {
+                L(Pct(StatId.Damage, 0.2f)), L(Pct(StatId.Area, 0.15f)), L(Add(StatId.Amount, 1f)), L(Pct(StatId.AttackSpeed, 0.15f)),
+                L(Add(StatId.CritChance, 0.08f)), L(Pct(StatId.Damage, 0.25f), Pct(StatId.Area, 0.1f)), L(Pct(StatId.AttackSpeed, 0.2f), Pct(StatId.Knockback, 0.2f)),
+            };
+            EditorUtility.SetDirty(w);
+            return w;
         }
 
         static WeaponDef Greatsword(StatusDef bleed)

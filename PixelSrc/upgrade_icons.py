@@ -1083,6 +1083,143 @@ ICONS["synergy_prodigy"] = grid([  # Prodigy: an open book, a star rising from i
     "................",
 ])
 
+# P1 Vows (trade-off Boons): each shows what you gain; the split red/gold card frame marks the price.
+ICONS["vow_berserker"] = grid([  # Berserker's Vow (review iteration 2: read as a mace): a bearded axe, blood on the edge
+    "................",
+    "......bb...ll...",
+    "......bbsssssl..",
+    "......bbssssssl.",
+    "......bbsssssse.",
+    "......bbssssse..",
+    "......bbss.ll...",
+    "......bb........",
+    "......bb...e....",
+    "......bb..eee...",
+    "......bb..eEe...",
+    "......BB...e....",
+    "......bb........",
+    "......BB........",
+    "......bb........",
+    "................",
+])
+
+ICONS["vow_heavy_plate"] = grid([  # Heavy Plate: a riveted tower shield, gold boss
+    "................",
+    "..dddddddddddd..",
+    "..dlsssssssssd..",
+    "..dlsysssssysd..",
+    "..dlsssssssssd..",
+    "..dlssssyysssd..",
+    "..dlsssyhyyssd..",
+    "..dlssssyysssd..",
+    "..dlsssssssssd..",
+    "...dlsssssssd...",
+    "...dlsysssysd...",
+    "....dlsssssd....",
+    ".....dlsssd.....",
+    "......dssd......",
+    ".......dd.......",
+    "................",
+])
+
+ICONS["vow_glass_edge"] = grid([  # Glass Edge: a glass blade with a crack, brass guard
+    "................",
+    ".............cw.",
+    "............cwc.",
+    "...........cwc..",
+    "..........cwc...",
+    ".........cwc....",
+    "........cwc.....",
+    ".......cwC......",
+    "......cCc.......",
+    "...Y.cwc........",
+    "....YYc.........",
+    "....bYY.........",
+    "...bb.Y.........",
+    "..bb............",
+    "................",
+    "................",
+])
+
+ICONS["vow_featherweight"] = grid([  # Featherweight (review iteration 2: read as a blade): a white feather, grey quill, split vane
+    "................",
+    "............sw..",
+    "..........wsww..",
+    "........wwswwl..",
+    ".......wwswwl...",
+    "......lwswwl....",
+    ".....w.swl......",
+    "....wwswwl......",
+    "...lwswl........",
+    "...wsw..........",
+    "..ls............",
+    "..s.............",
+    ".s..............",
+    "................",
+    "................",
+    "................",
+])
+
+ICONS["vow_greed"] = grid([  # Greed's Vow: a little pyramid of gold coins, glinting
+    "................",
+    "................",
+    ".h..........h...",
+    "......yyyy......",
+    ".....yhyyyy.....",
+    ".....yyyyyy.....",
+    ".....YyyyyY.....",
+    "......YYYY......",
+    "..yyyy....yyyy..",
+    ".yhyyyy..yhyyyy.",
+    ".yyyyyy..yyyyyy.",
+    ".YyyyyY..YyyyyY.",
+    "..YYYY....YYYY..",
+    "................",
+    "................",
+    "................",
+])
+
+ICONS["vow_titans_grip"] = swap(ICONS["brute_force"], {"f": "s", "F": "d", "r": "Y", "R": "B", "w": "o"})  # Titan's Grip: an iron gauntlet
+
+ICONS["vow_scholar"] = grid([  # Scholar's Vow: a written scroll
+    "................",
+    "................",
+    "..BbnnnnnnnnbB..",
+    "..bnnnnnnnnnnb..",
+    "...nkkkkkkkkn...",
+    "...nnnnnnnnnn...",
+    "...nkkkkkknnn...",
+    "...nnnnnnnnnn...",
+    "...nkkkkkkkkn...",
+    "...nnnnnnnnnn...",
+    "...nkkkkknnnn...",
+    "..bnnnnnnnnnnb..",
+    "..BbnnnnnnnnbB..",
+    "................",
+    "................",
+    "................",
+])
+
+ICONS["vow_gambler"] = grid([  # Gambler's Vow: a white die and a red one
+    "................",
+    "................",
+    ".wwwwww.........",
+    ".wkwwkw.........",
+    ".wwwwww.........",
+    ".wkwwkw.........",
+    ".llllll.........",
+    "........eeeeee..",
+    "........eweeee..",
+    "........eeeeee..",
+    "........eeeeee..",
+    "........eeeewe..",
+    "........EEEEEE..",
+    "................",
+    "................",
+    "................",
+])
+
+
 # ---------- frames ----------
 def to_rgba(g):
     """Fill + 4-neighbour outline, as an RGBA pixel grid (None = transparent)."""

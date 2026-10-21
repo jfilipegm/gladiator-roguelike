@@ -15,6 +15,8 @@ namespace Gladiator.UI
     /// GC: built once; shown/hidden with a CanvasGroup (alpha + raycasts). Not SetActive, and not Canvas.enabled: a
     /// disabled canvas drops its GraphicRegistry set and re-creates it on enable (~8 KB per open, measured). No
     /// Selectable colour tweens; texts are pre-sized and written from char buffers or non-allocating SetText.
+    /// P1: the stats column (StatsPanel, created here) sits on the right and previews the selected card, so the cards,
+    /// title and buttons move left (and shrink if the screen is narrow) to make room. Vows get a split red/gold frame.
     /// </summary>
     public sealed class LevelUpPanel : MonoBehaviour, ITickable, IUiHitTarget
     {
@@ -29,7 +31,7 @@ namespace Gladiator.UI
         sealed class CardView
         {
             public RectTransform Root;
-            public Image Glow, Border, Inner, Band;
+            public Image Glow, Border, VowHalf, Inner, Band;
             public TextMeshProUGUI Rarity, Kind, Title, Desc, Key;
             public Image[] Pips;
             public UpgradeIconView Icon;
@@ -45,9 +47,14 @@ namespace Gladiator.UI
         static readonly Color NewGold = new Color(1f, 0.86f, 0.3f);
         static readonly Color ActionColor = new Color(0.16f, 0.2f, 0.25f, 0.98f);
         static readonly Color ActionHover = new Color(0.27f, 0.33f, 0.4f, 1f);
+        // P1 Vows: the frame's left half is the oath's blood red, the right half its gold
+        static readonly Color VowRed = new Color(0.86f, 0.16f, 0.14f);
+        static readonly Color VowGold = new Color(1f, 0.76f, 0.22f);
 
         Canvas _canvas;
         CanvasGroup _group;
+        RectTransform _content;
+        StatsPanel _statsPanel;
         TextMeshProUGUI _title, _sub;
         readonly CardView[] _cards = new CardView[MaxCards];
         Image _reroll, _banish, _skip;
@@ -66,6 +73,11 @@ namespace Gladiator.UI
         public string CardRarity(int i) => _cards[i].Rarity.text;
         public string CardDescription(int i) => _cards[i].Text.ToString();
         public UpgradeIconView CardIcon(int i) => _cards[i].Icon;
+        /// <summary>Tests: card `i` wears the Vow frame.</summary>
+        public bool CardIsVowFramed(int i) => _cards[i].VowHalf.color.a > 0f;
+        /// <summary>The cards, title and buttons (moved left for the stats column).</summary>
+        public RectTransform Content => _content;
+        public StatsPanel Stats => _statsPanel;
 
         void Awake()
         {
@@ -75,6 +87,8 @@ namespace Gladiator.UI
             UiFactory.Stretch(dim.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             dim.raycastTarget = true; // eat clicks meant for the world
             var mid = new Vector2(0.5f, 0.5f);
+            _content = UiFactory.Rect("Content", root, mid, mid, Vector2.zero, Vector2.zero);
+            root = _content;
             _title = UiFactory.Text("Title", root, "LEVEL UP!", 92, NewGold, TextAlignmentOptions.Center, mid, mid, new Vector2(0, 385), new Vector2(1200, 120), font, fontMaterial);
             _sub = UiFactory.Text("Sub", root, "choose one", 34, new Color(1f, 1f, 1f, 0.8f), TextAlignmentOptions.Center, mid, mid, new Vector2(0, 318), new Vector2(1400, 50), font, fontMaterial);
             _sub.fontStyle = FontStyles.Normal;
@@ -89,6 +103,37 @@ namespace Gladiator.UI
             Presize();
             _group = _canvas.gameObject.AddComponent<CanvasGroup>();
             SetVisible(false);
+            EnsureStatsPanel();
+        }
+
+        /// <summary>The stats page lives beside the cards: use the scene's, or make one (no scene rebuild needed).</summary>
+        void EnsureStatsPanel()
+        {
+            _statsPanel = StatsPanel.Instance != null ? StatsPanel.Instance : FindAnyObjectByType<StatsPanel>();
+            if (_statsPanel == null)
+            {
+                var go = new GameObject("StatsPanel");
+                go.SetActive(false); // its Awake builds with the font: set it first
+                go.transform.SetParent(transform.parent != null ? transform.parent : transform, false);
+                _statsPanel = go.AddComponent<StatsPanel>();
+                _statsPanel.font = font;
+                _statsPanel.fontMaterial = fontMaterial;
+                go.SetActive(true);
+            }
+            _statsPanel.cards = this;
+        }
+
+        /// <summary>Centre the cards in the room the stats column leaves, shrinking them if a narrow screen needs it.</summary>
+        void LayoutContent()
+        {
+            float reserve = _statsPanel != null ? _statsPanel.PickReserve : 0f;
+            float width = ((RectTransform)_canvas.transform).rect.width;
+            if (width < 1f) width = 1920f;
+            float row = Mathf.Max(1000f, (_shownCount - 1) * Spacing + CardW * 1.06f); // the buttons span ~980
+            float room = width - reserve - 2f * StatsPanel.Margin;
+            float s = Mathf.Clamp(room / row, 0.6f, 1f);
+            _content.localScale = new Vector3(s, s, 1f);
+            _content.anchoredPosition = new Vector2(-reserve * 0.5f, 0f);
         }
 
         void SetVisible(bool on)
@@ -108,6 +153,7 @@ namespace Gladiator.UI
             v.Border.raycastTarget = true;
             var hit = v.Border.gameObject.AddComponent<UiHit>();
             hit.Target = this; hit.Id = index;
+            v.VowHalf = UiFactory.Image("VowHalf", v.Root, Color.clear, mid, mid, new Vector2(-CardW * 0.25f, 0f), new Vector2(CardW * 0.5f, CardH), PixelIcons.White);
             v.Inner = UiFactory.Image("Inner", v.Root, InnerColor, mid, mid, Vector2.zero, new Vector2(CardW - 12, CardH - 12), PixelIcons.White);
             v.Band = UiFactory.Image("Band", v.Root, Color.white, mid, mid, new Vector2(0, CardH * 0.5f - 30), new Vector2(CardW - 12, 48), PixelIcons.White);
             v.Rarity = UiFactory.Text("Rarity", v.Root, "COMMON", 26, new Color(0.06f, 0.07f, 0.09f), TextAlignmentOptions.Center, mid, mid, new Vector2(0, CardH * 0.5f - 30), new Vector2(CardW - 20, 44), font, null);
@@ -283,6 +329,7 @@ namespace Gladiator.UI
             _drawnVersion = c.OffersVersion;
             _shownCount = c.ChoiceCount;
             var cfg = c.Config;
+            LayoutContent();
             float x0 = -(_shownCount - 1) * Spacing * 0.5f;
             for (int i = 0; i < MaxCards; i++)
             {
@@ -298,6 +345,7 @@ namespace Gladiator.UI
                 v.Title.text = o.Def.displayName;
                 v.Icon.Set(o.Def, col, i * 0.31f);
                 if (o.Def.kind == UpgradeKind.Consumable) { v.Kind.color = PipOwned; v.Kind.text = "SUPPLIES"; }
+                else if (o.Def.IsVow) { v.Kind.color = VowGold; if (o.IsNew) v.Kind.text = "A VOW!"; else v.Kind.SetText("VOW LV {0}", o.Level); }
                 else if (o.Def.evolvesFrom != null) { v.Kind.color = NewGold; v.Kind.text = "EVOLUTION!"; }
                 else if (o.IsNew) { v.Kind.color = NewGold; v.Kind.text = o.Def.kind == UpgradeKind.Weapon ? "NEW WEAPON!" : "NEW!"; }
                 else { v.Kind.color = PipOwned; v.Kind.SetText("LV {0}", o.Level); }
@@ -324,8 +372,11 @@ namespace Gladiator.UI
             {
                 var v = _cards[i];
                 bool sel = i == _selected;
-                var col = _banishMode ? BanishRed : cfg.RarityColor(c.Offers[i].Rarity);
+                bool vow = c.Offers[i].Def != null && c.Offers[i].Def.IsVow;
+                var col = _banishMode ? BanishRed : vow ? VowGold : cfg.RarityColor(c.Offers[i].Rarity);
                 v.Border.color = sel ? Color.Lerp(col, Color.white, 0.35f) : col * 0.85f;
+                var half = _banishMode ? BanishRed : VowRed;
+                v.VowHalf.color = !vow ? Color.clear : sel ? Color.Lerp(half, Color.white, 0.25f) : half * 0.85f;
                 var glow = col; glow.a = sel ? 0.45f : 0f;
                 v.Glow.color = glow;
                 float s = sel ? 1.06f : 1f;

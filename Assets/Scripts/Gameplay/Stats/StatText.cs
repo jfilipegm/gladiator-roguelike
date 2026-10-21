@@ -130,15 +130,16 @@ namespace Gladiator.Gameplay
         /// <summary>
         /// One stat's line for the page: name, total (and "→ new" from `preview`), then, if `sources`, a smaller line of
         /// where it comes from ("Base 100 · Thick Skin ×2 +40 · Blood Altar −21"). Stats with nothing but their base
-        /// get no source line. `shares` is scratch (≥ 16).
+        /// get no source line. `shares` is scratch (≥ 16). `valuePos`: the value column ("62%"), or null for one line.
         /// </summary>
         public static void StatLine(CharBuffer t, PlayerStats stats, StatId s, StatPreview preview, bool sources, StatShare[] shares,
-            string valuePos = "62%", int sourceSize = 17)
+            string valuePos = "62%", int sourcePercent = 80)
         {
             bool previewing = preview != null && preview.Active;
             bool changed = previewing && preview.Changed(s);
-            t.Append("<color=").Append(changed ? ValueCol : previewing ? Dim : CardCol).Append('>').Append(StatInfo.Name(s))
-                .Append("</color><pos=").Append(valuePos).Append('>');
+            t.Append("<color=").Append(changed ? ValueCol : previewing ? Dim : CardCol).Append('>').Append(StatInfo.Name(s)).Append("</color>");
+            if (valuePos != null) t.Append("<pos=").Append(valuePos).Append('>');
+            else t.Append("  ");
             if (changed) Change(t, s, preview.Before[(int)s], preview.After[(int)s]);
             else
             {
@@ -150,7 +151,7 @@ namespace Gladiator.Gameplay
             bool any = false;
             for (int i = 1; i < n; i++) if (Differs(s, shares[i].Amount, 0f)) { any = true; break; }
             if (!any) return;
-            t.Append("\n<size=").Append(sourceSize, 0).Append("><indent=3%>");
+            t.Append("\n<size=").Append(sourcePercent, 0).Append("%><indent=3%>");
             bool first = true;
             for (int i = 0; i < n; i++)
             {

@@ -69,10 +69,8 @@ namespace Gladiator.EditorTools
             menu.codex = CodexSetup.Load() != null ? CodexSetup.Load() : CodexSetup.CreateOrUpdate(); // Phase 5.6
             GladiatorSetup.CreateOrUpdate();
             menu.gladiators = GladiatorSetup.All(); // locked ones show their unlock's hint
-            menu.locked = new[] // not built as data yet
-            {
-                new Gladiator.UI.MainMenu.Locked { name = "The Murder Machine", hint = "Gorm keeps something chained below the pit." },
-            };
+            // gladiators not built as data yet (the Murder Machine's placeholder went in Phase 5.14: he's been data since 5.9)
+            menu.locked = System.Array.Empty<Gladiator.UI.MainMenu.Locked>();
             var options = new GameObject("OptionsPanel").AddComponent<Gladiator.UI.OptionsPanel>();
             options.font = font; options.fontMaterial = fontMat;
             new GameObject("SfxPlayer").AddComponent<SfxPlayer>().bank = AssetDatabase.LoadAssetAtPath<SfxBank>(AudioSetup.BankPath);

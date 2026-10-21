@@ -1,7 +1,7 @@
 # Progress
 
 **Current phase:** Phase 5 — expansion
-**Current milestone:** Phase 5.14 the Net-Weaver (next). v0.14.0 (Arena 4, the Grand Arena + the Gilded Patron) released 2026-10-21. **Merge window:** the producer said "please continue with all Merges up until i get home at 19h00" (09:27 WEST, 2026-10-21): merge and release green milestone PRs without asking until 19:00 WEST that day, then ask again.
+**Current milestone:** Phase 5.14 the Net-Weaver, IN PROGRESS on branch `phase5-net-weaver` (built, tested, 2 bot runs; see "In progress — Phase 5.14"). v0.14.0 (Arena 4, the Grand Arena + the Gilded Patron) released 2026-10-21. **Merge window:** the producer said "please continue with all Merges up until i get home at 19h00" (09:27 WEST, 2026-10-21): merge and release green milestone PRs without asking until 19:00 WEST that day, then ask again.
 **Last updated:** 2026-10-21
 
 **Repository:** https://github.com/jfilipegm/gladiator-roguelike (public, branch `main`, remote `origin`, `.blend` files via Git LFS). Work on a branch per milestone, push as you go, merge through a PR; release every playable build (`Tools/release`).
@@ -364,6 +364,20 @@
     - **Full suites after the retune:** EditMode 77/77, PlayMode 176/176.
 - **v0.14.0 released 2026-10-21:** https://github.com/jfilipegm/gladiator-roguelike/releases/tag/v0.14.0.
   - Smoke runs of the downloaded archives (`-bot -timed -botSeconds 40`), all v0.14.0, 0 exceptions: Linux as the Nobody in the Grand Arena (38 kills, 7 jet bursts, clock to 37 s), Linux as the Golden Idol in the Slave Pit (61 kills, 37 s), Windows under Wine as the Nobody in the Grand Arena (58 kills, 6 jet bursts, 35 s). Their Profiling files were deleted. macOS not run.
+
+## In progress — Phase 5.14 the Net-Weaver (branch `phase5-net-weaver`)
+- **Why this milestone:** the producer's "please continue with all Merges up until i get home at 19h00"; the smallest candidate, and the Trident is the last unbuilt weapon pattern. Spec: `docs/GLADIATORS.md` "The Net-Weaver"; DECISIONS "Phase 5.14".
+- **Done (verified):**
+  - **`MultiHit`** (`WeaponSystem.StartFlurry/Prong`, `WeaponDef.prongs/prongInterval`): `prongs` thrust lines fanned across `arcDegrees`, `prongInterval` s apart, from where the player is; Amount = more flurries. `WP_Trident` (8 damage × 3, 4.2 m, 36°, 1.2 s) + card `UP_W_Trident` + icon (iteration 2).
+  - **Traits:** `TR_Caught` (`EffectsTrait`: `DamageVsStatus` Root 0.5, Slow 0.25) and `TR_CastNet` (`CastNet`: on a slide, every 4 s, a 0.3 s throw 5 m ahead; everything within 3.2 m is hauled 70 % of the way in by a knockback toward the landing point, takes 6 × Damage and is Rooted; scripted bodies only Slowed; the net is drawn on the sand while it holds).
+  - **Unlock:** new `UnlockConditionKind.WinWithWeapon` (`SaveData.weaponWins`, `"a|b"` ids); `UL_NetWeaver` = `WinWithWeapon spear|impaler 1`, adds the Trident to the pool.
+  - **Models:** `CH_NetWeaver` (872 tris, iteration 2), `WP_Trident` (156 tris, iteration 2); the Cast Net draws `WP_Net` scaled. Menu + Codex rebuilt. Version 0.15.0.
+  - **Tests:** `NetWeaverTests` 7/7, `UnlockVarietyTests` +1 (6/6).
+  - **Play-mode screenshots:** `nw_net_flight`, `nw_net_held` (10 convicts hauled into a knot on the net), `nw_flurry`.
+  - **Bot runs (dev build, `-gladiator net_weaver`, 10 min), 0 exceptions:**
+    - Slave Pit: 387 fps avg, 199 fps at ≥ 250 enemies (p95 6.7 ms), gameplay 1.93 / 2.40 ms; GC 419 B/s, of which 220 KB is the victory screen + save; level 29, 8,336 kills; nets 77 (hauled 220), prongs 1,668; **Gorm beaten, Survived at 531**.
+    - Stone Amphitheater: 366 fps avg, 182 fps at ≥ 250 (p95 7.1 ms), gameplay 2.09 / 2.71 ms; GC 53 B/s; level 25, 7,834 kills; nets 68 (hauled 482), prongs 1,293; the Beast Lord at 44 % (phase 2) when the recording ended.
+- **Next:** full suites, PR, merge (inside the window), `Tools/release 0.15.0`, smoke-run the archives.
 
 ## Next (after the producer's playtest of v0.9.0–v0.14.0)
 - **The overnight run (2026-10-21, 01:25–05:40 WEST)** merged and released five milestones under the producer's "proceed with any merge in the next 5h40": v0.9.0 Arena 3 (PR #11, the producer's OK), v0.10.0 the Murder Machine (#12), v0.11.0 the Thunder Champion (#13), v0.12.0 the Golden Idol (#14), v0.13.0 the Ashen Oracle (#15). After 07:05 WEST, ask before every merge again.

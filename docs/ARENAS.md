@@ -301,3 +301,121 @@ run); the bot logs `formations` / `linesBroken` to tune it.
   gates nearest you and the charge stuns him on the obelisk, a meta or the wall; at 30 % "FOR THE EMPEROR!", the
   races run back to back, he's faster and charges twice; at his fall the races halt and the Guard stands down. Gorm,
   the Champion, the Beast Lord and the Patron stay two-phase.
+
+## 6. The Colosseum (R2, planned)
+**Player feels:** "I have become a legend." The oldest arena and the biggest: a towering bowl of weathered travertine,
+arches stacked to the sky, forty thousand voices, and a floor of sand-strewn timber laid over the hypogeum, where the
+beasts are kept and the dead are buried. The floor drops open under the horde, the lifts bring up beasts and the dead,
+and the arena's first champion waits underneath. Contract: `docs/tracks/R2-colosseum.md`; reasons for every number:
+`docs/tracks/R2-design.md`.
+
+| | |
+|---|---|
+| **Unlock** | Beat the Emperor's Champion (`UL_Colosseum`, `DefeatBoss emperors_champion`). Locked: *"The Emperor's champion is dead. One arena is left, and it has been waiting for you."* |
+| **Size / shape** | **The great oval**, along X (metres, y up). Wall line: an ellipse with semi-axes **98 × 67** (196 × 134 m), sampled every 3.75°, with each great gate's 22 m span cut by its chord (x = ±96.67; the curve bulges 1.33 m past it). Wall line 20,576 m²; play area (inset 1.1 m) **20,005 m², 1.31× the Imperial Arena's 15,315** (the same step as the last one) and above the GDD's 17,500. Convex: the radial edge table works from (0, 0). Weathered travertine (`travertine_d`, `travertine`, `stone_grey`), charcoal arch voids, a red-and-white velarium, bronze; floor `sand_d` over dark timber. |
+| **Why an oval** | The shapes so far: rough oval, octagon, D, cross, hippodrome. The rule is "not *only* circles and ovals", and the ladder ends on the one shape every player already knows, mirroring the first arena (an oval pit) at five times its size. The new geometry is in the floor instead: trapdoors that change the floor's shape through the run and the boss fight (the third phase leaves a broken ring of chasms), a raised stage, scenery hills. |
+| **Layout** | Three bands. The **inner arena**, inside the trapdoor ring (an ellipse about 60 × 40 m to the doors' inner edges): the stage, its four statues, the axis trapdoors, four lifts. The **ring** of trapdoors (centre line an ellipse 62 × 42). The **outer band** between the ring and the podium (24 m deep at the sides, 33 m at the ends): four scenery hills, four lifts, the six gates. |
+| **The stage** | The **Stage of Victors**: round, r 10 m, at the centre, **1.2 m high**, walkable, with `SM_ColStairs` on each axis (origins at (0, ±12) and (±12, 0), rising inward). The Victor's lift (5 × 5 m) is set in its middle: he rises there. Four bronze **statues of the Victor** (`PR_VictorStatue`, Solid, circle r 1.1) at r = 14 on the diagonals, (±9.9, ±9.9): line-of-sight blockers, and cover from his thrown falx. |
+| **Vertical variety** | The stage (1.2 m, four stairs); four **montes**, the scenery hills the hypogeum raises for a beast hunt (14 × 10 m, **2.2 m** high, slopes ≤ 20° on three sides for sliding, a rock face toward the wall): `SM_ColMons_A` at (28, ±50.5), `SM_ColMons_B` at (−28, ±50.5); the **pit edges** of every open trapdoor (and the chasms of the boss's phase 3). |
+| **New rule: the trapdoors (the floor opens)** | **30 trapdoors**, 8 × 4 m (8 along the corridor below, 4 across), iron-banded dark timber set flush in the sand: always visible as "the floor that opens". A broken **ring** of 24 round the inner arena (5.7 m of deck between doors) and the **axis**: 3 doors either side of the stage along z = 0 (centres at x = ±20, ±32, ±44; 4 m of deck between them). **Six groups:** the ring's four quarters (6 doors each) and the axis's two halves (3 each). From **0:40**, every **14 s**, the group with the door **nearest you** (never the same group twice running) **telegraphs for 2 s** (its doors fill orange-red, rattle, dust puffs from the seams), then **drops open for 4 s** (the leaves swing down into a black shaft 3 m deep), then closes (0.6 s). ~31 drops a run. **Whatever walks onto an open door falls:** an ordinary enemy dies (a dust plume; its gems land on the door, collect them when it closes), an **elite takes 300** (it claws its way out), the boss takes 500. **The horde doesn't avoid open doors:** lead it across a dropping group and it pours in for 4 s. **You:** grounded on a door as it opens, or landing on an open one, you're **hit (22) and thrown back over the nearer long edge**, once per opening. **Counters:** step off during the 2 s; **jump it** (a running jump carries 4.7 m, the door is 4 m across; a slide-jump carries 7 m); feet in the air as it opens are safe. While a door is open only its rim stays orange-red (alpha 0.35): the black hole is the warning. |
+| **New rule: the lifts (the hypogeum opens)** | **8 lifts**, 4 × 4 m iron-framed platforms: L0–L3 in the inner arena at (±34, ±20), L4–L7 in the outer band at (±80, ±24). From **1:30**, every **45 s** (9 waves): trumpets, the announcer calls who's coming ("THE BEASTS RISE!", "THE DEAD RISE!"), and the **3 lifts nearest you that are at least 12 m away** telegraph for 1.5 s (orange-red squares), sink (0.5 s) and rise (0.9 s) with **a pack each**. The horde comes up **in the middle of the floor**, not only from the edges: no corner of a 196 m oval is safe for long. Packs by run time (table below): Pit Curs early, War Boars from 2:30 (they charge from wherever they rise: lead them through the horde), one Chimera from 4:00, Skeletal Legionnaires from 4:30. Packs respect their caps and the arena's cap. In the boss fight the lifts carry his dead instead (docs/BOSSES.md). |
+| **Gates** | Six, all horde gates (swarms, elites), counter-clockwise from the east: **G0, the Gate of Death** (96.67, 0), yaw −90, and **G3, the Gate of Life** (−96.67, 0), yaw 90 (`SM_ColGreatGate`, 22 m arches); side gates **G1** (49, 58.02) yaw −158.5, **G2** (−49, 58.02) yaw 158.5, **G4** (−49, −58.02) yaw 21.5, **G5** (49, −58.02) yaw −21.5 (`SM_ColGate`, 12 m, carrying the seats over the tunnel). The boss rises from the stage instead of using a gate; `bossGate` 0 stays as a fallback. |
+| **The stands** | The tallest yet (~22 m), the multi-tier bowl of the real thing: a **4 m podium** with a marble balustrade and the senators' terrace, **three maeniana of five tiers** each (rise 0.5, run 0.8) separated by 1.2 m walls with walkways, and on top a **colonnade of arches** under the velarium's masts and sails (numbers: the contract). Generated along the curve as six meshes, one per run between gates. The **imperial box** (`SM_ColPulvinar`) at the north apex (0, 67), the Emperor among his senators, and its twin, the editor's box, at (0, −67): decor (no rule). |
+| **Enemies** | Three factions, each with its own way in. **The living** (the ladder's gladiators: Convicts, Thugs, Archers, Murmillos, Assassins, Net-Throwers, Centurions with their lines, Brutes, Sorcerers) through the gates. **The beasts** (Pit Curs, War Boars and the new **Chimera**) up the lifts. **The dead** (the new **Skeletal Legionnaire**) from the ring, the lifts and the boss; their share of the table grows all run until the dead outnumber the living. Fewer types than the Imperial Arena (no Slinger, Fire-Pot Thrower, Gilded Mercenary or Beast Handler): readability at 450. **+155 % enemy HP, +55 % damage taken** (`enemyHpMul 2.55`, `playerDamageTakenMul 1.55`). Elites every 60 s. |
+| **Pressure ("huge waves")** | Up to **450** alive (§8: ~500 at peak), the Director ×**1.3** (`densityMul`), ring spawns within **55 m** of you, and **swarms ×1.5** (`swarmMul`, new: up to 120 at the end of the run, through a gate or from the ring); plus the lift waves. The open trapdoors thin the horde as fast as the gates fill it. |
+| **Crowd** | The loudest: **~3,700** (the senators on the podium, three maeniana), plus the Emperor's box. Roars at every lift wave, at a drop that swallows 10 or more, and at the Victor's rise. |
+| **Light** | Late afternoon: a low, warm sun (`sunEuler` (32, −40, 0)) and long shadows, unlike any other arena. Dusk in the boss's phase 2, last light in phase 3 (never below 0.72 of the day's intensity: telegraphs and accents must read). |
+| **Chests and altars** | **18 chest anchors**, all clear of trapdoors, lifts, stairs and gate mouths: (0, 30), (0, −36), (22, 10), (−22, −10), (48, 12), (−48, −12), (48, −14), (−48, 14), (66, 30), (−66, 30), (66, −30), (−66, −30), (84, 8), (−84, −8), (8, 56), (−8, −57), and the tops of two hills (28, 2.2, 50.5), (−28, 2.2, −50.5). **3 altars:** the stage top (0, 1.2, 6.5), the hill tops (−28, 2.2, 50.5) and (28, 2.2, −50.5). |
+| **Player spawn** | (0, 0.1, −26), facing north: the stage, its statues and the imperial box ahead. |
+| **Boss** | **The Eternal Victor** (docs/BOSSES.md), rising from the hypogeum on the stage's lift. His defeat unlocks Asterion (R3: `DefeatBoss eternal_victor`). |
+| **Renown** | Arena tier 5: Renown × 3.5 (`MetaConfig.deeperArenaBonus` 0.5 per tier, no code). |
+
+### New enemies
+- **Skeletal Legionnaire** (`EN_SkeletalLegionnaire`, `Chaser` + **reassembles**): the dead of four hundred years of
+  games, in the rusted segmented armour of the first legions. A skeleton (thin bone limbs, a big skull under a dented
+  helmet with a broken crest stump), a notched gladius, a rotted crimson rag, a magenta sash (the accent). 300 tris.
+  **34 HP, 3.7 m/s**, radius 0.36, contact 9, xp 2.5. **When it dies it collapses into a pile of bones** (no kill, no
+  XP yet) and **2.5 s later it stands up again with half its HP**; the second death is final. A bone-coloured ring
+  round the pile fills as it reassembles (not orange-red: the pile doesn't hurt you). **Counters:** **stomp the pile**
+  (walk or slide over it: it scatters, and that's the kill, with its XP); or kill it while it's **burning** (Burn): no
+  pile, the dead stay down; or let it fall into an open trapdoor. A swarm type late in the run. Its piles are capped
+  (48 at once: past that they stay down).
+- **Chimera** (`EN_Chimera`, new behaviour `Breather`): a lion with a goat's head rising from its back and a snake for
+  a tail; dark-maned, its jaws glowing (800 tris, ~1.6 m at the shoulder, 2.6 m long). **420 HP, 3.0 m/s**, radius
+  0.95, contact 14, knockback ×0.3, turns slowly (160°/s: flank it). Within 7 m it plants and a **cone of fire**
+  (8 m, 60°) fills orange-red in front of it over **1.0 s**; then it **breathes for 1.0 s**: **24** to you if you're in
+  the cone (once), **72 (×3) to every other enemy in it** (beasts don't care whom they burn), and **three burning
+  patches** along the cone (r 1.4, 4 s, 10 dps). Then it stands smoking for 1.4 s: the window. Cooldown 4.5 s.
+  **Counters:** get beside or behind it (it turns slowly), or out of the cone; lure it to breathe across the horde. Two
+  at most alive, never an elite. From the lifts (4:00+) and the table.
+- **Reused from earlier arenas:** the **War Boar** (cage beast of the Amphitheater) and the **Pit Cur** come up the
+  lifts; the **Centurion** brings his Praetorian line through the gates (2 at most).
+
+### Spawn table (`ST_Colosseum`)
+Weights ramp linearly from `from` to the end of the run. Affixes: the Slave Pit's (as every table). Changes from the
+Imperial Arena: the dead's weight climbs to the largest share; no Slinger, Fire-Pot Thrower, Gilded Mercenary (the
+Chimera owns fire, the Archer owns range, gold theft is the Grand Arena's); the Centurion rarer.
+
+| Enemy | From | Weight start → end | Cap | Swarm | Elite |
+|---|---|---|---|---|---|
+| Starving Convict | 0:00 | 6 → 1.5 | — | ✓ | ✓ |
+| Pit Cur | 0:05 | 3 → 3 | 100 | ✓ | ✓ |
+| Shield Thug | 0:20 | 1.2 → 1.0 | 24 | | ✓ |
+| Shield Archer | 0:30 | 1.0 → 1.2 | 12 | | ✓ |
+| **Skeletal Legionnaire** | 0:45 | 0.8 → 6.0 | 160 | ✓ | ✓ |
+| Assassin | 0:50 | 1.0 → 1.3 | 14 | | ✓ |
+| Murmillo | 0:50 | 0.6 → 0.8 | 10 | | ✓ |
+| Net-Thrower | 1:00 | 0.7 → 1.0 | 10 | | ✓ |
+| Centurion (+5 Praetorians) | 1:15 | 0.12 → 0.2 | 2 | | ✗ |
+| Brute | 1:15 | 0.6 → 1.0 | 10 | | ✓ |
+| Sorcerer | 1:30 | 0.6 → 1.0 | 10 | | ✓ |
+| **Chimera** | 4:00 | 0.08 → 0.15 | 2 | | ✗ |
+
+At 8:00 the Legionnaire is 6 of ~18 weight (a third of the steady horde) and over half of the swarms.
+
+### Lift packs (`AL_Colosseum.liftPacks`)
+Each lift in a wave picks its own pack (weighted among the active ones under their caps); the wave's call is the first
+lift's.
+
+| Pack | From → to | Weight | Count | Cap | Call |
+|---|---|---|---|---|---|
+| Pit Cur | 1:30 → 4:00 | 3 | 4–6 | 100 | "THE BEASTS RISE!" |
+| War Boar | 2:30 → end | 2 | 2–3 | 12 | "THE BEASTS RISE!" |
+| Chimera | 4:00 → end | 1 | 1 | 2 | "A CHIMERA!" |
+| Skeletal Legionnaire | 4:30 → end | 3 | 5–7 | 160 | "THE DEAD RISE!" |
+
+### Building blocks
+- **Data:** `ArenaLayoutDef` hypogeum fields (trapdoors (x, z, yaw, group) and their size and model, lifts and their
+  size and model, the centre lift, the drop and lift-wave clocks, `liftPacks`) and `swarmMul`; `EnemyBehaviour.Breather`
+  (appended); `EnemyDef` revive fields (`reviveCount`, `reviveDelay`, `reviveHpMul`, `stompRadius`, `burnStopsRevive`,
+  `pileMesh`) and breath fields (`breathAngle`, `breathTime`, `breathPatches`, `breathPatchRadius`,
+  `breathKnockback`); `BossAttack.Disc` (appended) and the boss's new fields (docs/BOSSES.md).
+- **Runtime:** `Hypogeum` (central tick: the drop schedule, doors, lifts and packs, falling enemies, throwing the player
+  out, the boss's phases, the light); walk-only boxes in `StaticObstacles` (block walking, not shots) for doors left
+  open; bone piles and the breath in `EnemyManager`; the Director's swarm multiplier; the boss's rise, falx throw and
+  false death in `BossController` / `BossFight`.
+- **Models (Blender):** `BlenderSrc/environment/colosseum.py`: `SM_ColFloor` (with the holes), `SM_ColCavea_0`–`_5`,
+  `SM_ColGate`, `SM_ColGreatGate`, `SM_ColPulvinar`, `SM_ColStage`, `SM_ColStairs`, `SM_ColTrapdoor`, `SM_ColLift`,
+  `SM_ColMons_A`, `SM_ColMons_B`, `PR_VictorStatue`; enemies `EN_SkeletalLegionnaire`, `EN_Chimera`, prop
+  `PR_BonePile`; boss `EN_EternalVictor`.
+- **Field-by-field list for each code part:** `docs/tracks/R2-design.md`.
+
+### Tests
+- Locked until the Emperor's Champion falls; then the menu offers it, and a run there is tier 5 (Renown ×3.5) with
+  ×2.55 HP, ×1.55 damage, cap 450, density ×1.3 and swarms ×1.5.
+- The oval is bigger than the Imperial Arena (`PlayArea()` ≈ 20,005 > 15,315, and ≥ 17,500) and keeps the horde in on
+  every bearing and at all six gates.
+- Nothing stands on a trapdoor or a lift: no chest, altar, spawn point, stair, statue, hill footprint or gate mouth
+  within 1 m of one.
+- The stage is walkable at 1.2 m and the hills at 2.2 m, and the horde climbs both.
+- A drop telegraphs for 2 s with the doors shut, then opens for 4 s and closes: an ordinary enemy on it (or walking
+  in) dies, an elite takes 300 and lives, an enemy just beside it is untouched; a grounded player on it is hit once
+  (22 × 1.55) and thrown off, a jumping one isn't; the next drop is the nearest *other* group, 14 s after the last.
+- A lift wave raises the 3 lifts nearest the player but none within 12 m, each with a pack from the active table,
+  caps respected.
+- A Skeletal Legionnaire collapses (no kill, no XP), stands up 2.5 s later with half HP, and its second death is a
+  kill; a burning one stays down; a stomped pile is a kill and never rises; one that falls into a trapdoor stays down.
+- A Chimera's cone telegraphs, then the breath hits a player in it once (not one beside it), hurts other enemies in it
+  ×3 and leaves three fire patches.
+- The Eternal Victor (docs/BOSSES.md): the rise, each attack, the guards at the lifts, the floor in each phase, the false
+  death, the fall. The other bosses unchanged.

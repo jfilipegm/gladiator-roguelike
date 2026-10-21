@@ -189,7 +189,7 @@ fighters like you, from boxes hung with gold.
 - The Gilded Patron: entrance, coin bombs (hit + gold), the volley, the shove; hired mercenaries appear at the boxes
   and guard him (less damage) until they die; phase 2 fires every jet and spins every blade; his gold at his fall.
 
-## 5. The Imperial Arena (Phase 5.16, planned: R1 in docs/ROADMAP.md)
+## 5. The Imperial Arena (R1, Phase 5.16, v0.17.0)
 **Player feels:** "One of the greatest alive." The Emperor's own hippodrome: travertine and imperial purple under gold,
 a spina of obelisk and metae down the middle, chariots thundering round it, the Praetorian Guard marching in
 formation, and the Emperor watching from his box. Contract: `docs/tracks/R1-imperial-arena.md`; reasons for every

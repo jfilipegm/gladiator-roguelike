@@ -4,7 +4,7 @@ using UnityEngine;
 namespace Gladiator.Gameplay
 {
     /// <summary>The status slots an enemy can carry at once (one of each). None = "not a status" in damage/hit events.</summary>
-    public enum StatusKind : byte { None = 0, Burn = 1, Bleed = 2, Shock = 3, Slow = 4, Root = 5 }
+    public enum StatusKind : byte { None = 0, Burn = 1, Bleed = 2, Shock = 3, Slow = 4, Root = 5, Curse = 6 }
 
     /// <summary>Refresh: one instance, re-applying resets the timer and keeps the stronger power. Stack: each
     /// application adds stacks (up to maxStacks) and resets the timer; all stacks fall off together.</summary>

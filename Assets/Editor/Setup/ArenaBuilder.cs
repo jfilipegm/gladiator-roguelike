@@ -245,6 +245,17 @@ namespace Gladiator.EditorTools
                 bookie.material = AssetDatabase.LoadAssetAtPath<Material>(LookSetup.CharMat);
             }
 
+            if (spots && (layout.secrets & ArenaSecrets.AshenStranger) != 0) // Phase 5.12: the Ashen Oracle's secret
+            {
+                var stranger = new GameObject("AshenStranger").AddComponent<AshenStranger>();
+                stranger.transform.SetParent(arena, false);
+                stranger.spots = layout.secretSpots;
+                stranger.arenaCenter = layout.center;
+                stranger.flag = GladiatorSetup.OracleFlag;
+                stranger.model = AssetDatabase.LoadAssetAtPath<GameObject>(GladiatorSetup.OracleModel);
+                stranger.material = AssetDatabase.LoadAssetAtPath<Material>(LookSetup.CharMat);
+            }
+
             var bot = new GameObject("[PlaytestBot]").AddComponent<PlaytestBot>();
             bot.arenaCenter = layout.center;
             bot.arenaRadius = enemies.ArenaMinRadius - 3f; // only without an EnemyManager: it uses the arena's own edge

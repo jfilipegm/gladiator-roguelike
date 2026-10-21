@@ -355,3 +355,11 @@ One line each: what, and why. Newest at the bottom of each section.
 - **"Kill-streak gold multiplier" listens to the announcer's streaks** (×1.5 / ×2 / ×2.5 / ×3 for 8 s, a GoldGain `StatMod`), so the player sees the streak name and the reward together. The announcer is quiet during boss fights, so the streak gold is too.
 - **The Coin Toss is data only** (`Projectile` + the `PR_Coin` mesh): three coins at the three nearest, through one enemy each. A new gladiator doesn't always need a new pattern.
 - **His numbers:** 100 HP, normal speed. Coin Toss: 9 damage, 1.1 s, 3 coins, 12 m.
+
+## Phase 5.12 — the Ashen Oracle (branch `phase5-ashen-oracle`, spec `docs/GLADIATORS.md`)
+- **Curse is a sixth enemy status slot** (`StatusKind.Curse`, `StatusSlots` 6), not a reskinned Burn: Boons can tell them apart (Wildfire spreads Burn, Contagion bursts Curse), and the CURSE tag from §6.5 now has a status. Every status array was already sized by `StatusSlots`, so it cost one constant.
+- **A gladiator passive can be Boon effects** (`EffectsTrait` → `TraitEffects`, read by `BoonEffects` with the Boons'). Contagion is a `BurstOnDeath` on Curse: "curses that spread on death" is data, and it stacks with the Boons that use the same machinery.
+- **The Ashen Censer is `Lob` data with weapon `hitEffects`** (Curse on hit, a cursed ground patch), so the Oracle needed no new weapon code: "cursed zones" and "smoke explosions" come from the bomb and the Phase 5.5 ground marks.
+- **Smoke Veil triggers on being hit** (not on a movement verb like the other four): he's the fragile one, and the veil is his space-maker. Once per 5 s, status ticks don't count.
+- **The secret encounter is in the Stone Amphitheater**: the Slave Pit already has three secrets, and the amphitheatre had none. The stranger asks the player to stand still in a ring for 3 s in the middle of a run, a small risk with a clear reward, and the flag is saved at once (like the crate) so a lost run still counts.
+- **His numbers:** 85 HP, normal speed. Censer: 8 damage, 1.8 s, 2.4 m burst, 2 Curse stacks (dps 0.4 × the hit), patch 1.8 m for 3 s. Curse: up to 5 stacks, 4 s. Contagion burst 6 × Damage in 3.5 m. Veil 4.5 m, 3 stacks, Slow, knockback 9.

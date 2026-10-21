@@ -19,7 +19,7 @@ MonoBehaviour:
   tag: 128
   count: 3
   icon: {fileID: 2800000, guid: 13ceaa4af4e914da3ab8c2724bbfa51d, type: 3}
-  iconRow: 51
+  iconRow: 52
   mods:
   - stat: 15
     op: 1

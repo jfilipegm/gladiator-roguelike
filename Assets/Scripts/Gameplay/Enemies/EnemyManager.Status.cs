@@ -10,7 +10,7 @@ namespace Gladiator.Gameplay
     /// </summary>
     public sealed partial class EnemyManager
     {
-        public const int StatusSlots = 5;
+        public const int StatusSlots = 6; // Burn, Bleed, Shock, Slow, Root, Curse (Phase 5.12)
 
         [Header("Status effects")]
         [Tooltip("Seconds between damage-over-time ticks (and status puffs) on one enemy.")]

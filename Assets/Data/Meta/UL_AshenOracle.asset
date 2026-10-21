@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0ea0c2151f44fc41b534863b8707d7a, type: 3}
+  m_Name: UL_AshenOracle
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.UnlockDef
+  id: ashen_oracle
+  displayName: The Ashen Oracle
+  description: The masked stranger read your future in the smoke, and liked it. The Ashen Oracle can be chosen, and his Ashen Censer joins the level-up pool.
+  hint: A masked stranger watches the amphitheatre's fights. He wants a closer look at you.
+  conditions:
+  - kind: 8
+    id: ashen_stranger
+    amount: 1
+  category: 1
+  renownCost: 0
+  renownBounty: 0
+  addsToPool:
+  - {fileID: 11400000, guid: 0353b61bee590b5db8099fc255c434d8, type: 2}

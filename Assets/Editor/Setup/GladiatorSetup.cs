@@ -16,7 +16,9 @@ namespace Gladiator.EditorTools
     /// is migrated once). Phase 5.10: the Thunder Champion (GL_ThunderChampion), the Storm Spear (Chain) and its card,
     /// the Stormcaller and Lightning Dash traits, and UL_ThunderChampion (beat the Beast Lord). Phase 5.11: the Golden
     /// Idol (GL_GoldenIdol), the Coin Toss (Projectile data) and its card, the Midas Body, Golden Streak and Make It Rain
-    /// traits, and UL_GoldenIdol (10,000 lifetime gold).
+    /// traits, and UL_GoldenIdol (10,000 lifetime gold). Phase 5.12: the Ashen Oracle (GL_AshenOracle), the Curse
+    /// status, the Ashen Censer (Lob data + hit effects) and its card, the Contagion (Boon effects) and Smoke Veil traits,
+    /// and UL_AshenOracle (the masked stranger's flag).
     /// </summary>
     public static class GladiatorSetup
     {
@@ -81,6 +83,19 @@ namespace Gladiator.EditorTools
         public const string IdolUnlockPath = MetaSetup.Dir + "UL_GoldenIdol.asset";
         public const string IdolModel = "Assets/Art/Models/Characters/CH_GoldenIdol.fbx";
         public const string CoinModel = "Assets/Art/Models/Props/PR_Coin.fbx";
+
+        public const string OraclePath = Dir + "GL_AshenOracle.asset";
+        public const string OracleMovePath = "Assets/Data/Config/MovementConfig_Oracle.asset";
+        public const string OracleAnimPath = "Assets/Data/Config/PartAnim_Oracle.asset";
+        public const string ContagionPath = Dir + "TR_Contagion.asset";
+        public const string SmokeVeilPath = Dir + "TR_SmokeVeil.asset";
+        public const string CenserPath = UpgradeSetup.WeaponDir + "WP_AshenCenser.asset";
+        public const string CenserCardPath = UpgradeSetup.Dir + "UP_W_AshenCenser.asset";
+        public const string OracleUnlockPath = MetaSetup.Dir + "UL_AshenOracle.asset";
+        public const string CursePath = "Assets/Data/Status/SE_Curse.asset";
+        public const string SlowPath = "Assets/Data/Status/SE_Slow.asset";
+        public const string OracleModel = "Assets/Art/Models/Characters/CH_AshenOracle.fbx";
+        public const string OracleFlag = "ashen_stranger";
 
         static WeaponDef.Level L(params StatMod[] mods) => new WeaponDef.Level { mods = mods };
         static StatMod Pct(StatId s, float v) => new StatMod(s, ModOp.Percent, v);
@@ -152,6 +167,7 @@ namespace Gladiator.EditorTools
             MurderMachine();
             ThunderChampion();
             GoldenIdol();
+            AshenOracle();
             UpgradeSetup.Refresh();
             MetaSetup.CreateOrUpdate();
             IconSetup.Apply(); // the goblin's and the knight's weapon cards get their icons too
@@ -168,6 +184,7 @@ namespace Gladiator.EditorTools
             var machine = AssetDatabase.LoadAssetAtPath<GladiatorDef>(MachinePath);
             var thunder = AssetDatabase.LoadAssetAtPath<GladiatorDef>(ThunderPath);
             var idol = AssetDatabase.LoadAssetAtPath<GladiatorDef>(IdolPath);
+            var oracle = AssetDatabase.LoadAssetAtPath<GladiatorDef>(OraclePath);
             var list = new System.Collections.Generic.List<GladiatorDef>();
             if (nobody != null) list.Add(nobody);
             if (goblin != null) list.Add(goblin);
@@ -175,6 +192,7 @@ namespace Gladiator.EditorTools
             if (machine != null) list.Add(machine);
             if (thunder != null) list.Add(thunder);
             if (idol != null) list.Add(idol);
+            if (oracle != null) list.Add(oracle);
             return list.ToArray();
         }
 
@@ -399,6 +417,123 @@ namespace Gladiator.EditorTools
             if (g.unlock == null) g.unlock = unlock;
             EditorUtility.SetDirty(g);
             return g;
+        }
+
+        /// <summary>Phase 5.12: Curse, a stacking damage over time (purple).</summary>
+        public static StatusDef Curse()
+        {
+            var c = AssetDatabase.LoadAssetAtPath<StatusDef>(CursePath);
+            if (c != null) return c;
+            c = PlayerSetup.EnsureAsset<StatusDef>(CursePath);
+            c.id = "curse"; c.displayName = "Curse"; c.adjective = "Cursed"; c.kind = StatusKind.Curse;
+            c.stacking = StatusStacking.Stack; c.duration = 4f; c.maxStacks = 5; c.speedMultiplier = 1f;
+            c.color = new Color(0.66f, 0.38f, 0.95f);
+            EditorUtility.SetDirty(c);
+            return c;
+        }
+
+        /// <summary>Phase 5.12: the Ashen Oracle and everything only he brings.</summary>
+        static GladiatorDef AshenOracle()
+        {
+            var curse = Curse();
+            var censer = Censer(curse);
+            var card = WeaponCard(CenserCardPath, censer, "AC");
+            var unlock = AssetDatabase.LoadAssetAtPath<UnlockDef>(OracleUnlockPath);
+            if (unlock == null)
+            {
+                unlock = PlayerSetup.EnsureAsset<UnlockDef>(OracleUnlockPath);
+                unlock.id = "ashen_oracle";
+                unlock.displayName = "The Ashen Oracle";
+                unlock.description = "The masked stranger read your future in the smoke, and liked it. The Ashen Oracle can be chosen, and his Ashen Censer joins the level-up pool.";
+                unlock.hint = "A masked stranger watches the amphitheatre's fights. He wants a closer look at you.";
+                unlock.category = UnlockCategory.Secret;
+                unlock.conditions = new[] { new UnlockCondition { kind = UnlockConditionKind.Flag, id = OracleFlag, amount = 1f } };
+                unlock.addsToPool = new[] { card };
+                EditorUtility.SetDirty(unlock);
+            }
+            var move = Copy<MovementConfig>(PlayerSetup.MovementPath, OracleMovePath, m =>
+            {
+                m.capsuleHeight = 1.65f;
+                m.slideCapsuleHeight = 0.95f;
+                m.capsuleRadius = 0.36f;
+            });
+            var anim = Copy<PartAnimProfile>(PlayerSetup.AnimPath, OracleAnimPath, a =>
+            {
+                a.strideLength = 1.2f; // he drifts: short, smooth steps, almost no bob
+                a.bobHeight = 0.02f;
+                a.legSwing *= 0.6f;
+                a.runLean = 6f;
+                a.weaponArmSwingScale = 0.2f;
+                a.swingYawStart = 30f;  // a swing of the censer
+                a.swingYawEnd = -30f;
+                a.swingRaise = 100f;
+            });
+            var contagion = Trait<EffectsTrait>(ContagionPath, "contagion", "Contagion",
+                "A cursed enemy that dies bursts (6 × your damage within 3.5 m) and passes the curse on.");
+            if (contagion.effects == null || contagion.effects.Length == 0)
+            {
+                contagion.effects = new[] { new BoonEffect { kind = EffectKind.BurstOnDeath, status = curse, power = 6f, radius = 3.5f } };
+                EditorUtility.SetDirty(contagion);
+            }
+            var veil = Trait<SmokeVeilTrait>(SmokeVeilPath, "smoke_veil", "Smoke Veil",
+                "The first hit you take every 5 s bursts into smoke: everything within 4.5 m is Cursed, Slowed and pushed back.");
+            if (veil.curse == null || veil.slow == null)
+            {
+                veil.curse = curse;
+                veil.slow = AssetDatabase.LoadAssetAtPath<StatusDef>(SlowPath);
+                EditorUtility.SetDirty(veil);
+            }
+
+            var g = AssetDatabase.LoadAssetAtPath<GladiatorDef>(OraclePath);
+            if (g == null)
+            {
+                g = PlayerSetup.EnsureAsset<GladiatorDef>(OraclePath);
+                g.id = "ashen_oracle";
+                g.displayName = "The Ashen Oracle";
+                g.description = "A masked seer who breathes smoke. His censer curses the crowd, the cursed burst when they die and curse the rest, and a hit on him explodes into smoke.";
+                g.baseStats = new[] { new GladiatorDef.BaseStat { stat = StatId.MaxHp, value = 85f } };
+                g.cameraTargetHeight = 1.25f;
+                g.tradeoff = "Slow to start and fragile: curses take time, and a lone boss doesn't spread them.";
+            }
+            if (g.model == null) g.model = AssetDatabase.LoadAssetAtPath<GameObject>(OracleModel);
+            if (g.movement == null) g.movement = move;
+            if (g.animProfile == null) g.animProfile = anim;
+            if (g.startingWeapon == null) g.startingWeapon = censer;
+            if (g.traits == null || g.traits.Length == 0) g.traits = new GladiatorTrait[] { contagion, veil };
+            if (g.unlock == null) g.unlock = unlock;
+            EditorUtility.SetDirty(g);
+            return g;
+        }
+
+        static WeaponDef Censer(StatusDef curse)
+        {
+            var w = AssetDatabase.LoadAssetAtPath<WeaponDef>(CenserPath);
+            if (w == null)
+            {
+                w = PlayerSetup.EnsureAsset<WeaponDef>(CenserPath);
+                w.id = "ashen_censer"; w.displayName = "Ashen Censer";
+                w.description = "Lobs a smoking orb into the crowd: it bursts, Curses everything it hits and leaves a cursed patch behind.";
+                w.pattern = WeaponPattern.Lob;
+                // width = burst radius, acquireRange = throw range; hit effects: Curse on hit + a cursed ground patch
+                w.damage = 8f; w.critChance = 0.05f; w.critMultiplier = 2f; w.knockback = 3f;
+                w.cooldown = 1.8f; w.swingDuration = 0.3f; w.windup = 0.12f;
+                w.range = 10f; w.width = 2.4f; w.acquireRange = 10f; w.amount = 1;
+                w.flightTime = 0.7f; w.fuse = 0.25f; w.arcHeight = 2.8f; w.meshScale = 1.1f;
+                w.levels = new[]
+                {
+                    L(Add(StatId.Amount, 1f)), L(Pct(StatId.Damage, 0.2f)), L(Pct(StatId.Area, 0.15f)), L(Pct(StatId.AttackSpeed, 0.15f)),
+                    L(Add(StatId.Amount, 1f)), L(Pct(StatId.Damage, 0.25f)), L(Pct(StatId.Area, 0.15f)),
+                };
+            }
+            if (w.hitEffects == null || w.hitEffects.Length == 0)
+                w.hitEffects = new[]
+                {
+                    new BoonEffect { kind = EffectKind.StatusOnHit, status = curse, chance = 1f, power = 0.4f, stacks = 2 },
+                    new BoonEffect { kind = EffectKind.GroundOnHit, status = curse, radius = 1.8f, duration = 3f, power = 2f, stacks = 1 },
+                };
+            if (w.mesh == null) w.mesh = AssetDatabase.LoadAssetAtPath<Mesh>(BombMesh);
+            EditorUtility.SetDirty(w);
+            return w;
         }
 
         static Mesh CoinMesh()

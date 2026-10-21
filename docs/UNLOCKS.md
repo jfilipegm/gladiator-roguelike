@@ -48,7 +48,7 @@ Every reward is **content** (a weapon or Boon entering the pool) or **Renown** (
 
 **The existing unlocks are recategorised:**
 - Challenges: Gorm's Flail (beat Gorm), the Provincial Pit (beat Gorm), the Blood Knight (beat Gorm below 30 % HP; **Phase 5.9: reach the Stone Amphitheater**, §6.7's "Reach Arena 3"), the Murder Machine (Phase 5.9: beat Gorm; also adds the Executioner's Cleaver to the pool), the Thunder Champion (Phase 5.10: beat the Beast Lord, §6.7's "Complete Arena 3"; also adds the Storm Spear), the Golden Idol (Phase 5.11: 10,000 lifetime gold; also adds the Coin Toss).
-- Secret: the Pit Goblin (the rattling crate).
+- Secret: the Pit Goblin (the rattling crate); the Ashen Oracle (Phase 5.12: the masked stranger in the Stone Amphitheater, flag `ashen_stranger`; also adds the Ashen Censer).
 
 **Three new synergies.** The new Boons give MOVEMENT, GOLD and XP their third carrier:
 

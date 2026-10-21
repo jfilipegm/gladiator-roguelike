@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Gilded Palm
   glyph: GP
   icon: {fileID: 2800000, guid: 13ceaa4af4e914da3ab8c2724bbfa51d, type: 3}
-  iconRow: 47
+  iconRow: 48
   kind: 0
   tags: 128
   weight: 10

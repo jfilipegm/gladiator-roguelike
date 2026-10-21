@@ -27,6 +27,12 @@ namespace Gladiator.EditorTools
             var layout = AmphitheaterLayout.Ensure();
             EnsureEnemies();
             if (layout.boss == null) { layout.boss = BossSetup.EnsureBeastLord(); layout.bossGate = 0; EditorUtility.SetDirty(layout); } // the great gate
+            if ((layout.secrets & ArenaSecrets.AshenStranger) == 0) // Phase 5.12: the masked stranger (the Oracle's unlock)
+            {
+                layout.secrets |= ArenaSecrets.AshenStranger;
+                layout.secretSpots = AmphitheaterLayout.StrangerSpots;
+                EditorUtility.SetDirty(layout);
+            }
             var table = EnsureTable();
             if (layout.spawnTable == null) { layout.spawnTable = table; EditorUtility.SetDirty(layout); }
             var boar = AssetDatabase.LoadAssetAtPath<EnemyDef>(BoarPath);

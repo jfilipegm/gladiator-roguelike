@@ -5,7 +5,7 @@ namespace Gladiator.Gameplay
 {
     /// <summary>The secrets an arena hides (Phase 5.6, docs/UNLOCKS.md).</summary>
     [Flags]
-    public enum ArenaSecrets { None = 0, RattlingCrate = 1, GoldenRat = 2, Bookmaker = 4 }
+    public enum ArenaSecrets { None = 0, RattlingCrate = 1, GoldenRat = 2, Bookmaker = 4, AshenStranger = 8 }
 
     /// <summary>How a placed piece takes part in the arena (CLAUDE.md §7.3).</summary>
     public enum PieceRole

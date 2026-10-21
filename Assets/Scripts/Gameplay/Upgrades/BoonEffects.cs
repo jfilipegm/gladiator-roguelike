@@ -113,7 +113,13 @@ namespace Gladiator.Gameplay
                     var d = _weapons.Weapons[i].Def;
                     Add(em, d.hitEffects, 1f, d.RuntimeId, d.RuntimeId); // kills by the weapon's chain/ground count as the weapon's
                 }
+            if (_traitFx == null) _traitFx = GetComponents<TraitEffects>(); // the gladiator's (installed at spawn, once)
+            for (int i = 0; i < _traitFx.Length; i++)
+                if (_traitFx[i] != null && _traitFx[i].trait != null)
+                    Add(em, _traitFx[i].trait.effects, 1f, GameInfo.StableId(_traitFx[i].trait.id), 0);
         }
+
+        TraitEffects[] _traitFx;
 
         void Add(EnemyManager em, BoonEffect[] list, float potency, int source, int filter)
         {

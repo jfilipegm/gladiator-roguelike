@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4a99933fab0bb602f8909a7175a927e1, type: 3}
+  m_Name: TR_Contagion
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.EffectsTrait
+  id: contagion
+  displayName: Contagion
+  description: "A cursed enemy that dies bursts (6 \xD7 your damage within 3.5 m) and passes the curse on."
+  effects:
+  - kind: 2
+    status: {fileID: 11400000, guid: f293bdbc4917d934f8bb1b6d2292d615, type: 2}
+    chance: 0
+    power: 6
+    bonus: 0
+    radius: 3.5
+    duration: 0
+    count: 0
+    stacks: 0
+    everyNth: 0

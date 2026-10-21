@@ -294,6 +294,11 @@ MonoBehaviour:
   volleySpread: 12
   orbitHeight: 0.8
   orbitRoll: 540
+  slamPointBlank: 1.2
+  slamShake: 0.08
+  chainTipHeight: 1.7
+  slamDustA: {r: 0.78, g: 0.68, b: 0.5, a: 1}
+  slamDustB: {r: 0.82, g: 0.97, b: 1, a: 1}
   lobCandidates: 8
 --- !u!1001 &601906944168044144
 PrefabInstance:

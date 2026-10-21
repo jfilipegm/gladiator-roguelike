@@ -894,6 +894,24 @@ def coin_toss():
 
 ICONS["weapon_coin_toss"] = coin_toss()
 
+
+def ashen_censer():
+    """Ashen Censer (Phase 5.12): a crooked staff with a censer hanging from its hook, purple smoke curling up."""
+    g = blank()
+    for k in range(11):  # the staff, bottom-left up to the hook
+        put(g, [(3 + k // 3, 15 - k)], "B")
+    put(g, [(6, 4), (7, 3), (8, 3), (9, 3), (10, 4)], "B")      # the hook
+    put(g, [(10, 5), (10, 6)], "d")                              # the chain
+    disc(g, 10.5, 8.5, 1.9, "n")                                  # the censer
+    put(g, [(9, 8), (10, 8), (11, 8), (12, 8)], "Y")
+    put(g, [(10, 9), (11, 9)], "p")                               # the ember
+    put(g, [(12, 6), (13, 5), (13, 4), (14, 3), (13, 2), (14, 1)], "p")  # curling smoke
+    put(g, [(14, 5), (15, 2)], "w")
+    return g
+
+
+ICONS["weapon_ashen_censer"] = ashen_censer()
+
 ICONS["loaded_dice"] = grid([  # Loaded Dice (iteration 2: read as toast): a die's top, front and side, five dark pips
     "................",
     "................",

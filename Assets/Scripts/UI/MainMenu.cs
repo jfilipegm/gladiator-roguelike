@@ -234,8 +234,8 @@ namespace Gladiator.UI
         Button Chrome(Transform root, string header, string keys, UnityEngine.Events.UnityAction fight, UnityEngine.Events.UnityAction back)
         {
             var top = new Vector2(0.5f, 1f);
-            UiFactory.Text("Header", root, header, 56, Gold, TextAlignmentOptions.Center, top, top, new Vector2(0, -54), new Vector2(1400, 76), font, fontMaterial);
-            UiFactory.Text("Keys", root, keys, 22, Dim, TextAlignmentOptions.Center, top, top, new Vector2(0, -106), new Vector2(1400, 30), font, fontMaterial).fontStyle = FontStyles.Normal;
+            UiFactory.Text("Header", root, header, 56, Gold, TextAlignmentOptions.Center, top, top, new Vector2(0, -24), new Vector2(1400, 72), font, fontMaterial);
+            UiFactory.Text("Keys", root, keys, 22, Dim, TextAlignmentOptions.Center, top, top, new Vector2(0, -100), new Vector2(1400, 26), font, fontMaterial).fontStyle = FontStyles.Normal;
             UiFactory.Button("Back", root, "BACK", Vector2.zero, Vector2.zero, new Vector2(MenuLayout.Margin, 40), new Vector2(220, 76), font, fontMaterial, back, 34f);
             var corner = new Vector2(1f, 0f);
             return UiFactory.Button("Fight", root, "FIGHT!", corner, corner, new Vector2(-MenuLayout.Margin, 40), new Vector2(300, 80), font, fontMaterial, fight, 44f);

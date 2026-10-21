@@ -48,6 +48,7 @@ namespace Gladiator.UI
         RectTransform[] _tiles = Array.Empty<RectTransform>(), _frames = Array.Empty<RectTransform>();
         Image[] _frameImages = Array.Empty<Image>(), _wreaths = Array.Empty<Image>(), _dots = Array.Empty<Image>();
         Button[] _buttons = Array.Empty<Button>();
+        TextMeshProUGUI[] _names = Array.Empty<TextMeshProUGUI>();
         Vector2[] _home = Array.Empty<Vector2>();
         int _pick = -1, _hover = -1;
         Action<int> _onClick;
@@ -90,6 +91,8 @@ namespace Gladiator.UI
         public Button Button(int i) => _buttons[i];
         public bool HasWreath(int i) => i >= 0 && i < _wreaths.Length && _wreaths[i].enabled;
         public bool HasNew(int i) => i >= 0 && i < _dots.Length && _dots[i].enabled;
+        /// <summary>The name carved on tile `i` ("???" while locked).</summary>
+        public string NameOf(int i) => i >= 0 && i < _names.Length ? _names[i].text : null;
 
         /// <summary>Builds every tile once. The grid's top-left corner sits at `pos` from `anchor`.</summary>
         public void Build(Transform parent, Vector2 anchor, Vector2 pos, Slot[] slots, int columns, CodexConfig codex, Action<int> onClick)
@@ -107,6 +110,7 @@ namespace Gladiator.UI
             _wreaths = new Image[n];
             _dots = new Image[n];
             _buttons = new Button[n];
+            _names = new TextMeshProUGUI[n];
             _home = new Vector2[n];
             for (int i = 0; i < n; i++) BuildTile(i, codex);
             Refresh();
@@ -159,6 +163,7 @@ namespace Gladiator.UI
             name.enableAutoSizing = true;
             name.fontSizeMin = 11f;
             name.fontSizeMax = 18f;
+            _names[i] = name;
 
             var wreath = UiFactory.Image("Wreath", t, Color.white, mid, mid, new Vector2(0f, top - 6f), new Vector2(48f, 36f), PixelIcons.Wreath);
             wreath.enabled = false;

@@ -213,15 +213,19 @@ namespace Gladiator.UI
         {
             var mid = new Vector2(0.5f, 0.5f);
             _slots = RosterGrid.Slots(_gladiators, _locked);
+            // between the tab row (bottom edge 314) and the bottom row (top edge -407), the picked tile's wreath clear of the tabs
+            const float height = 700f;
+            float tabletScale = GridMath.Fit(MenuLayout.Tablet, new Vector2(MenuLayout.Tablet.x, height));
             float gridW = GridMath.Size(MenuLayout.Columns, MenuLayout.Columns, MenuLayout.Tile, MenuLayout.Gap).x;
-            var area = new Vector2(gridW + 60f + MenuLayout.Tablet.x, MenuLayout.Tablet.y);
-            _rosterRoot = UiFactory.Rect("Gladiators", root, mid, mid, new Vector2(0f, -46f), area);
+            var area = new Vector2(gridW + 60f + MenuLayout.Tablet.x * tabletScale, height);
+            _rosterRoot = UiFactory.Rect("Gladiators", root, mid, mid, new Vector2(0f, -56f), area);
             _roster = new RosterGrid(_font);
             _roster.Build(_rosterRoot, new Vector2(0f, 1f), Vector2.zero, _slots, MenuLayout.Columns, _codex, FocusRoster);
             _roster.Fit(GridMath.Fit(GridMath.Size(_slots.Length, MenuLayout.Columns, MenuLayout.Tile, MenuLayout.Gap), new Vector2(gridW, area.y)));
             _rosterTablet = new GladiatorTablet(_font);
             var corner = new Vector2(1f, 1f);
             _rosterTablet.Build(_rosterRoot, corner, corner, Vector2.zero, _codex);
+            _rosterTablet.Fit(tabletScale);
             _rosterRoot.gameObject.SetActive(false);
             if (_slots.Length > 0) FocusRoster(0);
         }

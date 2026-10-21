@@ -102,8 +102,8 @@ namespace Gladiator.Core
         public const float Match = 0.5f;
 
         public const float Margin = 56f;
-        /// <summary>Above the blocks: the header.</summary>
-        public const float Top = 132f;
+        /// <summary>Above the blocks: the header and the key line.</summary>
+        public const float Top = 140f;
         /// <summary>Below the blocks: BACK and FIGHT!.</summary>
         public const float Bottom = 136f;
 

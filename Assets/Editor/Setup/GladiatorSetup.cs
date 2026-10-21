@@ -263,8 +263,7 @@ namespace Gladiator.EditorTools
                 a.twoHanded = true;
                 a.chopPitchStart = 165f;
                 a.chopPitchEnd = 5f;
-                // up over the head and held, then down hard: the blade meets the ground at the impact (windup 0.38 of 0.55 s)
-                a.swingCurve = new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(0.5f, 0.08f), new Keyframe(0.69f, 1f), new Keyframe(1f, 1f));
+                ChopTiming(a);
             });
             var plate = Trait<ExecutionersPlateTrait>(PlatePath, "executioners_plate", "Executioner's Plate",
                 "Every hit you take is 4 lower (never below 1), and nothing knocks you back.");
@@ -295,6 +294,14 @@ namespace Gladiator.EditorTools
             if (g.unlock == null) g.unlock = unlock;
             EditorUtility.SetDirty(g);
             return g;
+        }
+
+        /// <summary>Up over the head and held, then down hard so the blade is on the ground at the impact (windup 0.38
+        /// of 0.55 s = 0.69); a snappier pose blend so the downswing isn't smoothed away.</summary>
+        public static void ChopTiming(PartAnimProfile a)
+        {
+            a.swingCurve = new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(0.45f, 0.06f), new Keyframe(0.62f, 1f), new Keyframe(1f, 1f));
+            a.poseSharpness = 30f;
         }
 
         static WeaponDef Cleaver()

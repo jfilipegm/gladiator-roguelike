@@ -48,8 +48,8 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
-      time: 0.5
-      value: 0.08
+      time: 0.45
+      value: 0.06
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -57,7 +57,7 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
-      time: 0.69
+      time: 0.62
       value: 1
       inSlope: 0
       outSlope: 0
@@ -81,4 +81,4 @@ MonoBehaviour:
   chopPitchStart: 165
   chopPitchEnd: 5
   twoHanded: 1
-  poseSharpness: 16
+  poseSharpness: 30

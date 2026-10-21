@@ -1,7 +1,7 @@
 # Progress
 
 **Current phase:** Phase 5 — expansion
-**Current milestone:** Phase 5.14 the Net-Weaver, IN PROGRESS on branch `phase5-net-weaver` (built, tested, 2 bot runs; see "In progress — Phase 5.14"). v0.14.0 (Arena 4, the Grand Arena + the Gilded Patron) released 2026-10-21. **Merge window:** the producer said "please continue with all Merges up until i get home at 19h00" (09:27 WEST, 2026-10-21): merge and release green milestone PRs without asking until 19:00 WEST that day, then ask again.
+**Current milestone:** Phase 5.15 the Beastmaster (next, branch `phase5-beastmaster`). v0.15.0 (the Net-Weaver) released 2026-10-21. **Merge window:** the producer said "please continue with all Merges up until i get home at 19h00" (09:27 WEST, 2026-10-21): merge and release green milestone PRs without asking until 19:00 WEST that day, then ask again.
 **Last updated:** 2026-10-21
 
 **Repository:** https://github.com/jfilipegm/gladiator-roguelike (public, branch `main`, remote `origin`, `.blend` files via Git LFS). Work on a branch per milestone, push as you go, merge through a PR; release every playable build (`Tools/release`).
@@ -365,7 +365,7 @@
 - **v0.14.0 released 2026-10-21:** https://github.com/jfilipegm/gladiator-roguelike/releases/tag/v0.14.0.
   - Smoke runs of the downloaded archives (`-bot -timed -botSeconds 40`), all v0.14.0, 0 exceptions: Linux as the Nobody in the Grand Arena (38 kills, 7 jet bursts, clock to 37 s), Linux as the Golden Idol in the Slave Pit (61 kills, 37 s), Windows under Wine as the Nobody in the Grand Arena (58 kills, 6 jet bursts, 35 s). Their Profiling files were deleted. macOS not run.
 
-## In progress — Phase 5.14 the Net-Weaver (branch `phase5-net-weaver`)
+## Done — Phase 5.14 the Net-Weaver (branch `phase5-net-weaver`, PR #19 merged 2026-10-21 inside the producer's window, release v0.15.0)
 - **Why this milestone:** the producer's "please continue with all Merges up until i get home at 19h00"; the smallest candidate, and the Trident is the last unbuilt weapon pattern. Spec: `docs/GLADIATORS.md` "The Net-Weaver"; DECISIONS "Phase 5.14".
 - **Done (verified):**
   - **`MultiHit`** (`WeaponSystem.StartFlurry/Prong`, `WeaponDef.prongs/prongInterval`): `prongs` thrust lines fanned across `arcDegrees`, `prongInterval` s apart, from where the player is; Amount = more flurries. `WP_Trident` (8 damage × 3, 4.2 m, 36°, 1.2 s) + card `UP_W_Trident` + icon (iteration 2).
@@ -379,15 +379,16 @@
     - Stone Amphitheater: 366 fps avg, 182 fps at ≥ 250 (p95 7.1 ms), gameplay 2.09 / 2.71 ms; GC 53 B/s; level 25, 7,834 kills; nets 68 (hauled 482), prongs 1,293; the Beast Lord at 44 % (phase 2) when the recording ended.
   - **Found by the full suite and fixed:** the select screen laid every card in one 1920 px row, and eight gladiators (plus a stale Murder Machine placeholder) overflowed it, so the goblin's card was off-screen (`GoblinPlayTests` failed; its unwiped flag failed a second test). The row now slides to keep the pick in view (the last earned card shows the right end), the placeholder is gone, and descriptions auto-size (the Thunder Champion's spilled over his title). Screenshots `menu_select`, `menu_select_right`.
   - **Full suites:** EditMode 78/78, PlayMode 183/183.
-- **Next:** PR, merge (inside the window), `Tools/release 0.15.0`, smoke-run the archives.
+- **v0.15.0 released 2026-10-21:** https://github.com/jfilipegm/gladiator-roguelike/releases/tag/v0.15.0.
+  - Smoke runs of the downloaded archives (`-bot -timed -botSeconds 40`), all v0.15.0, 0 exceptions: Linux as the Net-Weaver in the Slave Pit (44 kills, 5 nets, clock to 37 s), Linux as the Nobody in the Stone Amphitheater (42 kills, 37 s), Windows under Wine as the Net-Weaver (37 kills, 6 nets, 37 s). Their Profiling files were deleted. macOS not run.
 
-## Next (after the producer's playtest of v0.9.0–v0.14.0)
+## Next (after the producer's playtest of v0.9.0–v0.15.0)
 - **The overnight run (2026-10-21, 01:25–05:40 WEST)** merged and released five milestones under the producer's "proceed with any merge in the next 5h40": v0.9.0 Arena 3 (PR #11, the producer's OK), v0.10.0 the Murder Machine (#12), v0.11.0 the Thunder Champion (#13), v0.12.0 the Golden Idol (#14), v0.13.0 the Ashen Oracle (#15). After 07:05 WEST, ask before every merge again.
-- **The day run (2026-10-21, from 09:27 WEST):** the producer: "please continue with all Merges up until i get home at 19h00". v0.14.0 the Grand Arena (#17) merged and released under it.
-- **Waiting on the playtest:** C18 (big floors fill late; answered for the Grand Arena by `densityMul`), C19 (the Beast Lord), C20 (the Verdict), C21 (the Golden Idol's snowball), C22 (Contagion chains), C23 (the Grand Arena's hazards), C24 (the Patron's guard), plus the older C13–C17.
+- **The day run (2026-10-21, from 09:27 WEST):** the producer: "please continue with all Merges up until i get home at 19h00". v0.14.0 the Grand Arena (#17) and v0.15.0 the Net-Weaver (#19) merged and released under it.
+- **Waiting on the playtest:** C18 (big floors fill late; answered for the Grand Arena by `densityMul`), C19 (the Beast Lord), C20 (the Verdict), C21 (the Golden Idol's snowball), C22 (Contagion chains), C23 (the Grand Arena's hazards), C24 (the Patron's guard), C25 (the Net-Weaver's net), plus the older C13–C17.
 - **Candidates for the next milestone (in this order):**
-  - **The Net-Weaver** (next, Phase 5.14) (retiarius: trident = the last unbuilt pattern, `MultiHit`, + the existing Net; root/pull; unlock "win with the spear/trident" needs a `WinWithWeapon` condition).
-  - **The Beastmaster** (companions: needs an allied-unit system, and the Beast Handler enemy his unlock counts).
+  - ~~The Net-Weaver~~ (done, v0.15.0) (retiarius: trident = the last unbuilt pattern, `MultiHit`, + the existing Net; root/pull; unlock "win with the spear/trident" needs a `WinWithWeapon` condition).
+  - **The Beastmaster** (next, Phase 5.15: the `Summon` pattern (a wolf pack), the Beast Handler enemy his unlock counts).
   - **Arena 5, the Imperial Arena** (> 11,674 m², not round; formations; the Emperor's Champion, multi-phase).
 
 ## Known issues

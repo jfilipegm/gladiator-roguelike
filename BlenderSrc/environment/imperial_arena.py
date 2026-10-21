@@ -157,8 +157,9 @@ def stadium_loop(r, step=2.0, arc_step=1.9):
     return pts
 
 
-def outer_loop(margin=FLOOR_MARGIN, step=2.0):
-    """The wall line grown by `margin` (where the floor ends, under the stands), clockwise from above."""
+def outer_loop(margin=FLOOR_MARGIN, step=2.0, west_z=()):
+    """The wall line grown by `margin` (where the floor ends, under the stands), clockwise from above. `west_z`: extra
+    vertices on the west edge (where the run-in strips' edges meet it)."""
     zt, xw, r = WALL_Z + margin, WEST_X - margin, EAST_R + margin
     n = int(math.ceil((EAST_C - xw) / step))
     m = int(math.ceil(math.pi * r / step))
@@ -166,45 +167,67 @@ def outer_loop(margin=FLOOR_MARGIN, step=2.0):
     pts = [(xw + (EAST_C - xw) * i / n, zt) for i in range(n)]
     pts += arc(EAST_C, 0.0, r, math.pi / 2, -math.pi / 2, m)[:-1]
     pts += [(EAST_C - (EAST_C - xw) * i / n, -zt) for i in range(n)]
-    pts += [(xw, -zt + 2 * zt * i / k) for i in range(k)]
+    zs = [-zt + 2 * zt * i / k for i in range(k)]
+    zs = sorted([z for z in zs if all(abs(z - w) > 0.5 for w in west_z) or z == -zt] + list(west_z))
+    pts += [(xw, z) for z in zs]
     return pts
 
 
-def lane_swatch(d):
-    """The floor's swatch at distance d from the spina's axis (None = the open sand)."""
+def track_dists(x, z):
+    """The distances that place (x, z) across the track: from the spina's axis (the loop), and west of the metae also
+    from z = 0 (the run-in and run-out strips: the straights continued to the carceres)."""
+    d = spina_d(x, z)
+    return (d, abs(z)) if x < SPINA_X0 else (d,)
+
+
+def track_swatch(x, z):
+    """The floor's swatch at (x, z) on the track (None = the open sand)."""
     # iteration 3: packed grey-brown earth with mud ruts. v1's sandstone leaned orange (orange-red is the hazard
     # colour, and the race's telegraph has to stand out on the lane); v2's darker sand faded at grazing angles
+    ds = track_dists(x, z)
     for a, b in RUTS:
-        if a < d < b:
+        if any(a < d < b for d in ds):
             return "mud"
-    if LANE_IN < d < LANE_OUT:
+    if any(LANE_IN < d < LANE_OUT for d in ds):
         return "dirt_floor"
     return None
 
 
 def imp_floor(name, seed=67):
-    """Pale sand over the hippodrome, reaching 1.5 m under the walls, and the chariots' track lane in a darker sand
-    with two wheel ruts. A constrained Delaunay triangulation of a 2 m lattice plus the lane's edge loops (exact
-    stadium curves: straights at |z| = 12 and 16, half circles round the metae) and the outer edge, so the lane's
-    edges are crisp and welded. Sand patches keep away from the lane so it reads as "the track"."""
+    """Pale sand over the hippodrome, reaching 1.5 m under the walls, and the chariots' track in packed earth with
+    two wheel ruts: the lane loop round the spina plus the run-in and run-out (the loop's straights continued west to
+    the carceres, under their facade). A constrained Delaunay triangulation of a 2 m lattice plus the track's edge
+    lines (exact stadium curves: straights at |z| = 12 and 16, half circles round the metae; the strips' straight
+    edges) and the outer edge, so the track's edges are crisp and welded. Sand patches keep away from the track so it
+    reads as "the track"."""
     from mathutils.geometry import delaunay_2d_cdt
     rng = random.Random(seed)
-    loops = [outer_loop()] + [stadium_loop(r) for r in (LANE_IN, RUTS[0][0], RUTS[0][1], RUTS[1][0], RUTS[1][1], LANE_OUT)]
-    radii = (LANE_IN, LANE_OUT) + tuple(r for ab in RUTS for r in ab)
-    pts, edges = [], []
-    for loop in loops:
-        base = len(pts)
-        pts += loop
-        edges += [(base + i, base + (i + 1) % len(loop)) for i in range(len(loop))]
+    radii = (LANE_IN, RUTS[0][0], RUTS[0][1], RUTS[1][0], RUTS[1][1], LANE_OUT)
+    west_z = sorted(sz * r for r in radii for sz in (-1, 1))
+    run_xs = [WEST_X - FLOOR_MARGIN, WEST_X] + [float(x) for x in range(-94, int(SPINA_X0), 2)] + [SPINA_X0]
+    pts, edges, index = [], [], {}
+
+    def vid(p):  # one vertex per position: the strips' ends are the outer edge's and the loops' own vertices
+        key = (round(p[0], 4), round(p[1], 4))
+        if key not in index:
+            index[key] = len(pts)
+            pts.append(p)
+        return index[key]
+    for loop in [outer_loop(west_z=west_z)] + [stadium_loop(r) for r in radii]:
+        ids = [vid(p) for p in loop]
+        edges += [(ids[i], ids[(i + 1) % len(ids)]) for i in range(len(ids))]
+    for z in west_z:  # the run-in / run-out strips' edges and ruts
+        ids = [vid((x, z)) for x in run_xs]
+        edges += [(ids[i], ids[i + 1]) for i in range(len(ids) - 1)]
     for xi in range(-48, 49):
         for zi in range(-23, 24):
             x, z = xi * 2.0, zi * 2.0
             if wall_d(x, z) + FLOOR_MARGIN < 0.9:
                 continue
-            d = spina_d(x, z)
-            if any(abs(d - r) < 0.7 for r in radii):
+            ds = (spina_d(x, z),) + ((abs(z),) if x < SPINA_X0 + 0.7 else ())
+            if any(abs(d - r) < 0.7 for r in radii for d in ds):
                 continue
-            pts.append((x, z))
+            vid((x, z))
     res = delaunay_2d_cdt([Vector(p) for p in pts], edges, [], 0, 1e-4)
     out_v, out_f = res[0], res[2]
     bm = bmesh.new()
@@ -214,7 +237,7 @@ def imp_floor(name, seed=67):
         n = (b.co - a.co).cross(c.co - a.co)
         if abs(n.z) < 1e-6:
             continue  # collinear hull points
-        face = bm.faces.new((a, b, c) if n.z > 0 else (a, c, b))
+        bm.faces.new((a, b, c) if n.z > 0 else (a, c, b))
     obj = K.object_from_bmesh(name, bm, swatch="sand_l")
 
     def u(c):  # a face centre (Blender) back to Unity (x, z)
@@ -226,28 +249,36 @@ def imp_floor(name, seed=67):
 
     def swatch(p):
         x, z = u(p.center)
-        d = spina_d(x, z)
-        sw = lane_swatch(d)
+        sw = track_swatch(x, z)
         if sw:
             return sw
-        if (d < LANE_IN - 1.5 or d > LANE_OUT + 1.5) and cell_patch(x, z):
+        near = any(LANE_IN - 1.5 < d < LANE_OUT + 1.5 for d in track_dists(x, z))
+        if not near and cell_patch(x, z):
             return "sand"
         return None
     paint(obj, swatch)
-    # the measured lane, for the notes: its area and the extent of its faces' distances
-    area, dmin, dmax = 0.0, 1e9, 0.0
+    # the measured track, for the notes: its area against the analytic one, and every track vertex inside a band
+    area, strays = 0.0, 0
     for p in obj.data.polygons:
         x, z = u(p.center)
-        d = spina_d(x, z)
-        if LANE_IN < d < LANE_OUT:
-            area += p.area
-            for vi in p.vertices:
-                co = obj.data.vertices[vi].co
-                dv = spina_d(-co.x, -co.y)
-                dmin, dmax = min(dmin, dv), max(dmax, dv)
-    OUT["lane_area_m2"] = round(area, 1)
-    OUT["lane_area_expected_m2"] = round(2 * (SPINA_X1 - SPINA_X0) * LANE_W + math.pi * (LANE_OUT ** 2 - LANE_IN ** 2), 1)
-    OUT["lane_vertex_d_range"] = (round(dmin, 3), round(dmax, 3))
+        if not any(LANE_IN < d < LANE_OUT for d in track_dists(x, z)):
+            continue
+        area += p.area
+        for vi in p.vertices:
+            co = obj.data.vertices[vi].co
+            vx, vz = -co.x, -co.y
+            if not any(LANE_IN - 1e-3 <= d <= LANE_OUT + 1e-3 for d in track_dists(vx, vz) + (abs(vz),) * (vx <= SPINA_X0 + 1e-3)):
+                strays += 1
+    loop_area = 2 * (SPINA_X1 - SPINA_X0) * LANE_W + math.pi * (LANE_OUT ** 2 - LANE_IN ** 2)
+    strips_area = 2 * (SPINA_X0 - (WEST_X - FLOOR_MARGIN)) * LANE_W
+    # where a strip and the west half ring overlap: the integral of rho * acos(12 / rho) over rho 12..16, each side
+    nst = 400
+    h = LANE_W / nst
+    f = [(LANE_IN + i * h) * math.acos(LANE_IN / (LANE_IN + i * h)) for i in range(nst + 1)]
+    overlap = h / 3 * (f[0] + f[-1] + 4 * sum(f[1:-1:2]) + 2 * sum(f[2:-1:2]))
+    OUT["track_area_m2"] = round(area, 1)
+    OUT["track_area_expected_m2"] = round(loop_area + strips_area - 2 * overlap, 1)
+    OUT["track_vertices_outside_bands"] = strays
     OUT["floor_area_m2"] = round(sum(p.area for p in obj.data.polygons), 1)
     return obj
 
@@ -351,29 +382,46 @@ def tower(name, size=8.0, height=11.0):
     return K.join(parts, name)
 
 
-def carceres_bay(name, width=4.0, depth=1.0, opening=2.8, spring=3.0):
+def carceres_bay(name, width=4.0, depth=1.0, opening=2.8, spring=3.0, open_bay=False, tunnel=6.0):
     """One starting stall of the carceres (the west end's straight wall, 4 m a bay): an arched opening with a
     purple archivolt and a gold keystone, bronze stall gates closed in front of a dark stall, a purple frieze under
     the entablature, an attic with a gold plaque, a cornice at the stands' height (8.4 m) and a purple banner above.
     A travertine pilaster centred on the bay's west edge (it overhangs by 0.3 m: the next bay's pier). Front at
-    y = 0, origin at the front face's bottom centre."""
+    y = 0, origin at the front face's bottom centre.
+    open_bay (SM_CarceresOpen, the chariots' bays at z = +-14): no stall gates; the arch runs on as a dark vaulted
+    tunnel `tunnel` m deep (the same 2.8 m x 3.0 m clear section, 4.4 m at the vault's crown) floored with the track's
+    packed earth and ruts, a dark wall at its end, so a chariot can appear inside, out of sight, and drive out."""
     half, edge = opening / 2, width / 2
     top = 5.2
     wall = K.extrude_poly(name, arch_outline(half, spring, top, edge), depth, plane="XZ", location=(0, depth / 2, 0),
                           swatch="travertine")
     soffits(wall, "travertine_d")
+    back = tunnel if open_bay else depth
     parts = [wall,
              K.extrude_poly("Archivolt", half_annulus(half, half + 0.28, spring), 0.1, plane="XZ", location=(0, -0.04, 0),
                             swatch="purple"),
              K.box("Keystone", size=(0.4, 0.16, 0.5), location=(0, -0.06, spring + half - 0.05), pivot=(0, 0, -1),
                    taper=(1.3, 1.0), swatch="gold_d"),
-             K.box("Stall", size=(opening, 0.1, spring + half), location=(0, depth, 0), pivot=(0, -1, -1), swatch="shadow")]
-    for i in range(4):  # the stall gates: four bronze bars on two gilded rails
-        x = -half + 0.45 + i * (opening - 0.9) / 3
-        parts.append(K.box("Bar%d" % i, size=(0.12, 0.12, 2.5), location=(x, 0.5, 0), pivot=(0, 0, -1), swatch="bronze_d"))
-    for z in (0.6, 2.2):
-        parts.append(K.box("Rail%d" % int(z * 10), size=(opening, 0.14, 0.14), location=(0, 0.5, z), pivot=(0, 0, -1),
-                           swatch="gold_d"))
+             K.box("Stall", size=(opening, 0.1, spring + half), location=(0, back, 0), pivot=(0, -1, -1), swatch="shadow")]
+    if open_bay:
+        vault = K.extrude_poly("Tunnel", arch_outline(half, spring, top, edge), tunnel - depth, plane="XZ",
+                               location=(0, depth + (tunnel - depth) / 2, 0), swatch="travertine_d")
+        soffits(vault, "charcoal")
+        run = tunnel - 0.9  # the floor starts inside the facade, 3 cm over the arena floor's last 0.6 m
+        parts += [vault,
+                  K.box("TrackFloor", size=(opening, run, 0.03), location=(0, 0.9 + run / 2, 0), pivot=(0, 0, -1),
+                        swatch="dirt_floor")]
+        for sx in (-1, 1):  # the ruts, 1 m either side of the bay's centre (the floor's, at |z| 13 and 15)
+            parts.append(K.box("Rut%d" % sx, size=(0.3, run, 0.006), location=(sx * 1.0, 0.9 + run / 2, 0.03),
+                               pivot=(0, 0, -1), swatch="mud"))
+    else:
+        for i in range(4):  # the stall gates: four bronze bars on two gilded rails
+            x = -half + 0.45 + i * (opening - 0.9) / 3
+            parts.append(K.box("Bar%d" % i, size=(0.12, 0.12, 2.5), location=(x, 0.5, 0), pivot=(0, 0, -1),
+                               swatch="bronze_d"))
+        for z in (0.6, 2.2):
+            parts.append(K.box("Rail%d" % int(z * 10), size=(opening, 0.14, 0.14), location=(0, 0.5, z), pivot=(0, 0, -1),
+                               swatch="gold_d"))
     parts += [K.box("Frieze", size=(width, 0.06, 0.4), location=(0, -0.03, top - 0.45), pivot=(0, 0, -1), swatch="purple"),
               K.box("Entablature", size=(width, depth + 0.2, 0.5), location=(0, -0.1, top), pivot=(0, -1, -1),
                     swatch="travertine_d"),
@@ -613,6 +661,31 @@ def spina_segment(name, length=10.0, width=SPINA_W, height=SPINA_H):
     return K.join(parts, name)
 
 
+def imp_terrace(name, length=12.0, depth=5.0, height=SPINA_H):
+    """A raised terrace for the outer fields (12 x 5 m, walkable top at 1.2 m) in the spina's look: a purple band and
+    a gold trim under a travertine lip all round, a paved top with a purple carpet along its length, gold panels on
+    its front and ends. Stairs are SM_SpinaStairs against any side. Origin at the base centre; its front (the track
+    side, for the stairs) faces -Y."""
+    parts = [K.box(name, size=(length, depth, height - 0.12), pivot=(0, 0, -1), swatch="travertine"),
+             K.box("Band", size=(length + 0.06, depth + 0.06, 0.26), location=(0, 0, height * 0.32), pivot=(0, 0, -1),
+                   swatch="purple"),
+             K.box("Trim", size=(length + 0.1, depth + 0.1, 0.08), location=(0, 0, height - 0.22), pivot=(0, 0, -1),
+                   swatch="gold_d"),
+             K.box("Lip", size=(length + 0.16, depth + 0.16, 0.12), location=(0, 0, height - 0.12), pivot=(0, 0, -1),
+                   swatch="travertine_d"),
+             K.box("Carpet", size=(length - 1.0, 1.6, 0.015), location=(0, 0, height), pivot=(0, 0, -1), swatch="purple")]
+    for i in range(3):  # paving joints across the top
+        parts.append(K.box("Joint%d" % i, size=(0.06, depth - 0.2, 0.012), location=(-length / 4 + i * length / 4, 0, height),
+                           pivot=(0, 0, -1), swatch="travertine_d"))
+    for sx in (-1, 1):  # gold panels: two on the front, one on each end
+        parts.append(K.box("Panel%d" % sx, size=(2.6, 0.04, 0.22), location=(sx * 3.0, -(depth / 2 + 0.05), height * 0.62),
+                           pivot=(0, 0, -1), swatch="gold_d"))
+        parts.append(K.box("EndPanel%d" % sx, size=(0.04, 2.0, 0.22), location=(sx * (length / 2 + 0.05), 0, height * 0.62),
+                           pivot=(0, 0, -1), swatch="gold_d"))
+    finish(parts)
+    return K.join(parts, name)
+
+
 def spina_end(name, radius=SPINA_W / 2, height=SPINA_H):
     """The metae, ending the spina: a half-round base continuing the walkway (1.2 m, the same bands and lip), the
     flat side on y = 0 against the last segment's end; a raised plinth on it and three tall gold cones (each on a
@@ -753,7 +826,7 @@ def preview_layout(lib):
             t = w * (i + 0.5)
             P(model, a[0] + ux * t, a[1] + uz * t, yaw_of(*inward), sx=w / unit)
 
-    side_gates = (-55.0, 15.0)
+    side_gates = (-50.0, 30.0)  # docs/tracks/R1-design.md
     pulv_x, pulv_w = -10.0, 14.0
     # north side (z = +44), clockwise from above = west to east; south side east to west
     north = [WEST_X, side_gates[0] - GATE_HALF, side_gates[0] + GATE_HALF, pulv_x - pulv_w / 2, pulv_x + pulv_w / 2,
@@ -781,13 +854,15 @@ def preview_layout(lib):
             chord = math.hypot(p1[0] - p0[0], p1[1] - p0[1])
             P("SM_ImpStand_Curve", mid[0], mid[1], yaw_of(EAST_C - mid[0], -mid[1]), sx=chord / STAND_W)
     P("SM_TriumphalGate", EAST_C + EAST_R, 0.0, -90.0)
-    # the carceres: bays from the south-west corner north, a gate in the middle
-    for z0, z1 in ((-WALL_Z, -GATE_HALF), (GATE_HALF, WALL_Z)):
-        m = round((z1 - z0) / 4.0)
-        w = (z1 - z0) / m
-        for i in range(m):
-            P("SM_Carceres", WEST_X, z0 + w * (i + 0.5), 90.0, sx=w / 4.0)
-    P("SM_ImpGate", WEST_X, 0.0, 90.0)
+    # the carceres: 22 bays, the chariots' open ones on the track's straights (z = +-14)
+    for i in range(22):
+        z = -WALL_Z + 4.0 * (i + 0.5)
+        P("SM_CarceresOpen" if abs(abs(z) - LANE_C) < 0.01 else "SM_Carceres", WEST_X, z, 90.0)
+    # the terraces in the outer fields (the design's spots), stairs on their track side
+    for tx, tz in ((-75.0, 41.5), (10.0, 41.5), (-80.0, -41.5), (0.0, -41.5)):
+        yaw = 180.0 if tz > 0 else 0.0
+        P("SM_ImpTerrace", tx, tz, yaw)
+        P("SM_SpinaStairs", tx, tz - math.copysign(2.5 + STAIRS_RUN * STAIRS_STEPS, tz), yaw)
     for sz in (-1, 1):
         P("SM_ImpTower", WEST_X - 4.0, sz * (WALL_Z + 4.0), 90.0)
     # the spina
@@ -848,6 +923,7 @@ def build(part):
             "SM_ImpStand_4m": stand_section("SM_ImpStand_4m"),
             "SM_ImpStand_Curve": stand_section("SM_ImpStand_Curve", pos=curved_at(EAST_R, STAND_W)),
             "SM_Carceres": carceres_bay("SM_Carceres"),
+            "SM_CarceresOpen": carceres_bay("SM_CarceresOpen", open_bay=True),
             "SM_ImpTower": tower("SM_ImpTower"),
             "SM_Pulvinar": pulvinar("SM_Pulvinar"),
         }
@@ -858,6 +934,7 @@ def build(part):
             "SM_Spina_10m": spina_segment("SM_Spina_10m"),
             "SM_SpinaEnd": spina_end("SM_SpinaEnd"),
             "SM_SpinaStairs": spina_stairs("SM_SpinaStairs"),
+            "SM_ImpTerrace": imp_terrace("SM_ImpTerrace"),
             "SM_Obelisk": obelisk("SM_Obelisk"),
             "PR_LapCounter": lap_counter("PR_LapCounter"),
         }
@@ -894,6 +971,8 @@ elif PART == "overview":
     os.makedirs(shots, exist_ok=True)
     OUT["close"] = render_view(os.path.join(shots, "imperial_overview_close.png"), (-36.0, 7.0, -26.0), (-8.0, 4.0, 22.0), lens=24.0)
     OUT["aerial"] = render_view(os.path.join(shots, "imperial_overview_aerial.png"), (-150.0, 95.0, -120.0), (2.0, 0.0, 0.0), lens=30.0)
+    OUT["west"] = render_view(os.path.join(shots, "imperial_overview_west.png"), (-70.0, 6.0, 0.0), (-95.0, 2.5, 0.0), lens=22.0)
+    OUT["field"] = render_view(os.path.join(shots, "imperial_overview_field.png"), (-62.0, 5.0, 22.0), (-75.0, 1.5, 40.0), lens=24.0)
     OUT["east"] = render_view(os.path.join(shots, "imperial_overview_east.png"), (30.0, 9.0, -8.0), (95.0, 8.0, 0.0), lens=24.0)
     OUT["top"] = render_view(os.path.join(shots, "imperial_overview_top.png"), (0.0, 300.0, 0.0), (0.0, 0.0, 0.0),
                              res=(1800, 900), ortho=210.0, top=True)

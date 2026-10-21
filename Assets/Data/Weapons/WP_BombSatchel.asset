@@ -46,6 +46,7 @@ MonoBehaviour:
   spreadStrikes: 0
   prongs: 3
   prongInterval: 0.07
+  summon: {fileID: 0}
   hitEffects: []
   levels:
   - mods:

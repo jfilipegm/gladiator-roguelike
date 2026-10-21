@@ -26,6 +26,9 @@ Machine: CachyOS (Linux), KDE Plasma on Wayland. Unity Hub + Unity **6000.6.6f1*
 - Keep each call short (seconds). Screenshots: render via the scripts in `BlenderSrc/` to `Screenshots/blender/…png`, then read the PNG.
 - **Blender not open? Run headless:** `Tools/bheadless BlenderSrc/<script>.py [key=value …]` runs the script in `blender -b --factory-startup` with the same `ARGS`/`REPO`/`sys.path` as the bridge and prints its `result` (FBX export and Workbench review renders work headless). No GUI, no add-on, nothing on the desktop. Used for the Phase 5.5 evolved weapons (`BlenderSrc/weapons/wp_evolved.py`).
 
+## Compile check without Unity (worker worktrees)
+- `Tools/ccheck [-w]` compiles this checkout's six assemblies (Core → Gameplay → UI → Editor → EditMode / PlayMode tests) with the .NET 8 Roslyn compiler that ships in the Unity install (`Editor/Data/DotNetSdk/sdk/*/Roslyn/bincore/csc.dll`, run by `Editor/Data/NetCoreRuntime/dotnet`). Flags, defines, analyzers and package references come from the main checkout's `Library/Bee/artifacts/*E.dag/<asm>.rsp`; sources come from the checkout the script lives in. ~6 s, prints `errors=N`, exit 1 on errors. Compile errors only: no serialization, assets or tests. For workers in git worktrees (no Editor, no `Library/`); see `docs/tracks/README.md`.
+
 ## Verification loop for code changes
 1. Edit C# → `Tools/ucompile` (must print `errors=0`).
 2. `Tools/u editor_play` → let it run → state dump via `Tools/ueval` / `Tools/u console` / `Tools/u capture_game_view --save_path …` → `Tools/u editor_stop`.

@@ -64,3 +64,6 @@ interaction, ≥ 2 phases, a memorable entrance, personality.
 10. **Defeat:** slow-mo, "THE PATRON IS BANKRUPT!", the litter crashes down and his fortune bursts out (a fountain of gold coins), the boxes go wild, a pick of 3 Rare-or-better upgrades, victory screen.
 
 **Tunables (`BossDef BD_GildedPatron`):** HP, speeds, bomb count / radius / flight / damage / gold, volley count / arc / speed / damage, shove cone, guard interval / count, `guardedDamageMul`, phase threshold, phase-2 speed-up, defeat gold.
+
+## The Emperor's Champion (Arena 5 — Imperial Arena)
+_Spec in progress (docs/tracks/R1-imperial-arena.md)._

@@ -182,6 +182,7 @@ namespace Gladiator.EditorTools
             GoldenIdol();
             AshenOracle();
             NetWeaver();
+            BeastmasterSetup.CreateOrUpdate(); // Phase 5.15 (its own file: it also adds the Beast Handler to two arenas)
             UpgradeSetup.Refresh();
             MetaSetup.CreateOrUpdate();
             IconSetup.Apply(); // the goblin's and the knight's weapon cards get their icons too
@@ -200,6 +201,7 @@ namespace Gladiator.EditorTools
             var idol = AssetDatabase.LoadAssetAtPath<GladiatorDef>(IdolPath);
             var oracle = AssetDatabase.LoadAssetAtPath<GladiatorDef>(OraclePath);
             var weaver = AssetDatabase.LoadAssetAtPath<GladiatorDef>(NetWeaverPath);
+            var beastmaster = AssetDatabase.LoadAssetAtPath<GladiatorDef>(BeastmasterSetup.BeastmasterPath);
             var list = new System.Collections.Generic.List<GladiatorDef>();
             if (nobody != null) list.Add(nobody);
             if (goblin != null) list.Add(goblin);
@@ -209,6 +211,7 @@ namespace Gladiator.EditorTools
             if (idol != null) list.Add(idol);
             if (oracle != null) list.Add(oracle);
             if (weaver != null) list.Add(weaver);
+            if (beastmaster != null) list.Add(beastmaster);
             return list.ToArray();
         }
 

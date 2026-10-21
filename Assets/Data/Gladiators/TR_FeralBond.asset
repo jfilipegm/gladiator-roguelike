@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30f25414663e4dea88222b01413077a1, type: 3}
+  m_Name: TR_FeralBond
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.FeralBondTrait
+  id: feral_bond
+  displayName: Feral Bond
+  description: 'When you''re hit, your wolves frenzy for 4 s: they bite 60 % faster and run 25 % faster.'
+  seconds: 4
+  biteSpeed: 1.6
+  runSpeed: 1.25

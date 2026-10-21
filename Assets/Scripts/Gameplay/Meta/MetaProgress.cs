@@ -232,6 +232,7 @@ namespace Gladiator.Gameplay
                 case UnlockConditionKind.Evolve: return Evolutions(c.id, d) >= times;
                 case UnlockConditionKind.SynergiesFound: return d.synergies.Count >= c.amount;
                 case UnlockConditionKind.WinWithWeapon: return CountAny(d.weaponWins, c.id) >= times;
+                case UnlockConditionKind.KillEnemies: return CountAny(d.enemyKills, c.id) >= c.amount;
                 default: return false;
             }
         }
@@ -265,6 +266,7 @@ namespace Gladiator.Gameplay
                 case UnlockConditionKind.Evolve: current = Evolutions(c.id, d); target = times; break;
                 case UnlockConditionKind.SynergiesFound: current = d.synergies.Count; target = c.amount; break;
                 case UnlockConditionKind.WinWithWeapon: current = CountAny(d.weaponWins, c.id); target = times; break;
+                case UnlockConditionKind.KillEnemies: current = CountAny(d.enemyKills, c.id); target = c.amount; break;
                 default: current = Met(c, d) ? 1f : 0f; target = 1f; break; // yes/no conditions
             }
             target = Mathf.Max(1f, target);

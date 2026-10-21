@@ -163,5 +163,23 @@ namespace Gladiator.Tests
             Assert.AreEqual(1f, cur);
             Assert.AreEqual(2f, target);
         }
+
+        /// <summary>Phase 5.15: KillEnemies counts lifetime kills of an enemy type from the Bestiary.</summary>
+        [Test]
+        public void KillEnemies_CountsLifetimeKillsOfThatType()
+        {
+            var d = new SaveData();
+            bool M(string id, float n) => MetaProgress.Met(new UnlockCondition { kind = UnlockConditionKind.KillEnemies, id = id, amount = n }, d);
+            var run = new RunSummary { Outcome = RunOutcome.Died, Elapsed = 300f, EnemyKills = new[] { new IdCount { id = "beasthandler", count = 10 }, new IdCount { id = "convict", count = 500 } } };
+            MetaProgress.Apply(run, _meta, d);
+            Assert.IsFalse(M("beasthandler", 25));
+            MetaProgress.Apply(run, _meta, d);
+            MetaProgress.Apply(run, _meta, d);
+            Assert.IsTrue(M("beasthandler", 25), "30 over three runs");
+            Assert.IsFalse(M("warboar", 1));
+            MetaProgress.Progress(new UnlockCondition { kind = UnlockConditionKind.KillEnemies, id = "beasthandler", amount = 25f }, d, out float cur, out float target);
+            Assert.AreEqual(25f, cur, "capped at the target");
+            Assert.AreEqual(25f, target);
+        }
     }
 }

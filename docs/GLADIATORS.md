@@ -182,3 +182,27 @@ Arena 3 exists, so `UL_BloodKnight` switches from the interim "beat Gorm below 3
 - **Model:** `BlenderSrc/characters/ch_netweaver.py` (≤ 1,200 tris), `WP_Trident`, `PR_NetCast`.
 
 **Tests:** a flurry close up hits one enemy three times; at range the prongs hit three enemies spread across the fan and miss one outside it; Caught adds 50 % against a rooted enemy; a slide with the net ready hauls a group toward the landing point and roots it, a second slide inside the cooldown doesn't; a boss is slowed, not rooted; a won run holding the Spear unlocks him and a won run without it doesn't.
+
+## The Beastmaster (Phase 5.15)
+| | |
+|---|---|
+| **Fantasy** | A hunter from the frontier forests who walked into the arena with his wolves and refused to fight without them. He hates the handlers who whip beasts into the sand, and the crowd loves his animals more than him. |
+| **Silhouette** | 1.65 m, a **wolf-head hood** (the snout over his brow, two ears up), a shaggy fur mantle over the shoulders, a leather jerkin, a curved **hunting horn** on a strap across his chest, and a short hunting spear held low. 64 px test against the Nobody, the Net-Weaver and the Pit Cur: the ears on the hood and the mantle's bulk. From the camera behind him: the mantle, its fur tipped player cyan. |
+| **Weapon** | **Wolf Pack**, the new **`Summon`** pattern (CLAUDE.md §6.8 "Summon"). Two wolves fight beside him for the whole run. Each runs at the nearest enemy within 10 m of him, bites for 9 every 0.8 s, and never strays more than 12 m from him (it comes back). Enemies don't target them: they're his weapon, not units to babysit. Levels 2–8: +1 wolf, damage, bite speed, +1 wolf, run speed + reach, damage, +1 wolf (5 at most). |
+| **Passive: Feral Bond** | When he's hit, his wolves **frenzy**: +60 % bite speed and +25 % run speed for 4 s (their eyes and collars flash). Hurting him is how the crowd gets the show. |
+| **Ability: Hunting Horn** | Starting a slide with the horn ready (every 5 s) blows it: every wolf **pounces** on the enemy nearest the slide's end (8 m at most), a leap that deals 3 bites and **Staggers**. |
+| **Strength** | Damage that keeps working while he runs and dodges; the wolves fight on their own, and the horn turns them into a burst on demand. |
+| **Weakness** | The pack is his damage: early he has two wolves and nothing else. They can't reach what's more than 12 m from him, and a boss shrugs off the bites. 100 HP. |
+| **Personality** | A loping, wide stride; the wolves circle him while there's nothing to hunt. |
+| **Unlock: free the beasts** | §6.7 lists "kill a Beast Handler elite 25 times"; elites of one type are too rare for 25 (about one handler elite every few runs), so: **kill 25 Beast Handlers** (any). New enemy **the Beast Handler** (Tier 2, the Stone Amphitheater and the Grand Arena): a whip-cracking handler who walks two Pit Curs on leashes; kill him and his curs are **freed**: they bolt from the arena instead of fighting on. New condition `KillEnemies` (id = EnemyDef id, amount = lifetime kills; the Bestiary already counts them). Codex hint: *"Somewhere a man is waiting for someone to free the beasts. Kill their handlers."* The unlock also adds the Wolf Pack to everyone's pool. |
+
+**Colours:** the wolves are grey with player-cyan collars and eyes (the Pit Curs have magenta collars and yellow eyes); the pounce's landing burst is white-cyan. The Beast Handler's leashes are plain rope on the sand (not a hazard colour).
+
+**How it's built:**
+- **`Summon`** in `WeaponSystem`: `TickSummon` drives a `CompanionPack` on the player from the weapon's numbers (Amount = wolves, Damage = a bite, cooldown = seconds between one wolf's bites, speed = run speed, acquireRange = hunting radius around the player, range = the leash). Bites go through `WeaponSystem.CompanionHit` (the weapon's damage, crits, on-hit status, Boon procs and kill credit). The companions are a handful of pooled GameObjects with rigid parts (`CH_Wolf`), driven centrally; enemies ignore them.
+- **Traits:** `TR_FeralBond` (`FeralBond`: on a `DamagedEvent`, `CompanionPack.Frenzy`) and `TR_HuntingHorn` (`HuntingHorn`: on a `SlideEvent` with the horn ready, `CompanionPack.PounceAll` at the point 4 m along the slide; the horn waits if there's nothing to hunt).
+- **The Beast Handler:** `EN_BeastHandler` (a Lunger) with the new `EnemyDef.escort` / `escortCount` / `leashLength`: `EnemyManager.Leash.cs` spawns the escorts with him, keeps them within the leash while he lives (a rope drawn with `TelegraphRenderer.Lane`), and frees them (a quiet despawn, no kill) when he dies.
+- **Unlock:** new condition `KillEnemies` (the Bestiary's `enemyKills`); `UL_Beastmaster` = `KillEnemies beasthandler 25`.
+- **Models:** `BlenderSrc/characters/ch_beastmaster.py`, `ch_wolf.py`, `BlenderSrc/enemies/en_beasthandler.py`.
+
+**Tests:** he spawns with two wolves that hunt the nearest enemy and bite it (the weapon's kills count); levels add wolves; a wolf past the leash runs back; the horn makes every wolf pounce on a different enemy ahead, which takes three bites and is Staggered, and it waits when there's nothing to hunt; a hit on him frenzies the pack; a handler spawns with two leashed curs that stay within the leash, and killing him frees them (no kills counted); 25 handler kills unlock him.

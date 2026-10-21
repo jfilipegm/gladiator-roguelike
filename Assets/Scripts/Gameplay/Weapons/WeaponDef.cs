@@ -15,7 +15,7 @@ namespace Gladiator.Gameplay
     /// Flail: range = orbit radius, width = ball radius, speed = m/s along the circle, cooldown = re-hit interval per enemy),
     /// Lob (Bomb Satchel: acquireRange = throw range, width = blast radius, flightTime/fuse shortened by Projectile Speed),
     /// GroundSlam (the Cleaver), Chain (the Storm Spear), MultiHit (the Trident: `prongs` thrust lines fanned across
-    /// arcDegrees, `prongInterval` s apart).
+    /// arcDegrees, `prongInterval` s apart), Summon (the Wolf Pack: companions driven by CompanionPack).
     /// </summary>
     [CreateAssetMenu(menuName = "Gladiator/Weapon", fileName = "WP_")]
     public sealed class WeaponDef : ScriptableObject
@@ -104,6 +104,10 @@ namespace Gladiator.Gameplay
         [Min(1)] public int prongs = 3;
         [Tooltip("MultiHit: seconds between two jabs of one flurry.")]
         public float prongInterval = 0.07f;
+
+        [Header("Summon (the Wolf Pack, Phase 5.15)")]
+        [Tooltip("Summon: the companion model (rigid parts: Body, Head, ArmL/R = front legs, LegL/R). amount = how many, cooldown = seconds between one companion's bites, speed = run speed, acquireRange = how far from the player they hunt, range = the leash.")]
+        public GameObject summon;
 
         [Header("Hit effects (every pattern, Phase 5.5)")]
         [Tooltip("Run by BoonEffects on this weapon's direct hits only, at potency 1: StatusOnHit (chance 1 = always), ChainSpark, GroundOnHit.")]

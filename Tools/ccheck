@@ -1,0 +1,114 @@
+#!/usr/bin/env python3
+"""Compile-check this checkout's C# without a Unity Editor (for worker worktrees, docs/ROADMAP.md §3).
+
+Compiles our six assemblies (Core, Gameplay, UI, Editor, the EditMode and PlayMode tests) in dependency order with the
+.NET 8 Roslyn compiler that ships inside the Unity install. The flags, defines, analyzers and package references come
+from the response files the main checkout's Editor wrote in Library/Bee (so the main checkout's Editor must have
+compiled once); the sources come from THIS checkout. It catches compile errors only: no serialization, no asset or
+scene checks, no tests. Those still need the Editor (the orchestrator session).
+
+Usage: Tools/ccheck [-w]      -w also prints warnings
+Exit code 0 = every assembly compiled.
+"""
+import glob
+import os
+import re
+import subprocess
+import sys
+import tempfile
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ORDER = ["Gladiator.Core", "Gladiator.Gameplay", "Gladiator.UI", "Gladiator.Editor",
+         "Gladiator.Tests.EditMode", "Gladiator.Tests.PlayMode"]
+
+
+def main_checkout():
+    if os.environ.get("GL_MAIN"):
+        return os.environ["GL_MAIN"]
+    out = subprocess.run(["git", "-C", ROOT, "worktree", "list", "--porcelain"], capture_output=True, text=True).stdout
+    for line in out.splitlines():
+        if line.startswith("worktree "):
+            return line[len("worktree "):]  # the first entry is the main working tree
+    return ROOT
+
+
+def unity_data():
+    ver = re.search(r"m_EditorVersion:\s*(\S+)", open(os.path.join(ROOT, "ProjectSettings", "ProjectVersion.txt")).read()).group(1)
+    return os.path.expanduser(f"~/Unity/Hub/Editor/{ver}/Editor/Data")
+
+
+def editor_dag(main):
+    dags = [d for d in glob.glob(os.path.join(main, "Library", "Bee", "artifacts", "*E.dag"))
+            if os.path.exists(os.path.join(d, "Gladiator.Core.rsp"))]
+    if not dags:
+        sys.exit(f"ccheck: no Editor compile data in {main}/Library/Bee (open the project in Unity once there)")
+    return max(dags, key=os.path.getmtime)
+
+
+def sources(asm):
+    hits = glob.glob(os.path.join(ROOT, "Assets", "**", asm + ".asmdef"), recursive=True)
+    if not hits:
+        return None
+    folder = os.path.dirname(hits[0])
+    out = []
+    for d, subdirs, files in os.walk(folder):
+        if d != folder and glob.glob(os.path.join(d, "*.asmdef")):
+            subdirs[:] = []  # another assembly lives here
+            continue
+        out += [os.path.join(d, f) for f in files if f.endswith(".cs")]
+    return sorted(out)
+
+
+def main():
+    show_warnings = "-w" in sys.argv[1:]
+    main = main_checkout()
+    data = unity_data()
+    dotnet = os.path.join(data, "NetCoreRuntime", "dotnet")
+    csc = sorted(glob.glob(os.path.join(data, "DotNetSdk", "sdk", "*", "Roslyn", "bincore", "csc.dll")))
+    if not os.path.exists(dotnet) or not csc:
+        sys.exit(f"ccheck: no .NET runtime / Roslyn compiler under {data}")
+    dag = editor_dag(main)
+    tmp = tempfile.mkdtemp(prefix="ccheck_")
+    ours = re.compile(r'^-r:"Library/Bee/artifacts/[^/]+/(Gladiator\.[\w.]+)\.ref\.dll"$')
+    total_errors = 0
+    for asm in ORDER:
+        srcs = sources(asm)
+        if srcs is None:
+            print(f"ccheck: {asm}: no asmdef in this checkout, skipped")
+            continue
+        lines = []
+        for raw in open(os.path.join(dag, asm + ".rsp")).read().splitlines():
+            line = raw.strip()
+            if not line or line.endswith('.cs"') or line.endswith(".cs") \
+                    or line.startswith(("-out:", "-refout:", "/additionalfile:", "-additionalfile:")):
+                continue
+            m = ours.match(line)
+            if m:
+                line = f'-r:"{os.path.join(tmp, m.group(1) + ".dll")}"'
+            elif line.startswith('-r:"Library/'):
+                line = f'-r:"{os.path.join(main, line[4:-1])}"'
+            lines.append(line)
+        lines.append(f'-out:"{os.path.join(tmp, asm + ".dll")}"')
+        lines += [f'"{s}"' for s in srcs]
+        rsp = os.path.join(tmp, asm + ".rsp")
+        open(rsp, "w").write("\n".join(lines) + "\n")
+        res = subprocess.run([dotnet, csc[-1], "-nologo", "@" + rsp], cwd=ROOT, capture_output=True, text=True)
+        diag = [l for l in (res.stdout + res.stderr).splitlines() if l.strip()]
+        errors = [l for l in diag if ": error " in l]
+        warnings = [l for l in diag if ": warning " in l]
+        for l in errors + (warnings if show_warnings else []):
+            print(l.replace(ROOT + "/", ""))
+        if res.returncode != 0 and not errors:
+            print("\n".join(diag[-20:]))
+        state = "ok" if res.returncode == 0 else f"FAILED ({len(errors)} errors)"
+        print(f"ccheck: {asm}: {len(srcs)} files, {state}, {len(warnings)} warnings")
+        if res.returncode != 0:
+            total_errors += max(1, len(errors))
+            print("ccheck: stopped (the assemblies after this one depend on it)")
+            break
+    print("ccheck: errors=%d" % total_errors)
+    sys.exit(1 if total_errors else 0)
+
+
+if __name__ == "__main__":
+    main()

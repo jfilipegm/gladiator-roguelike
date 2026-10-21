@@ -146,6 +146,7 @@ namespace Gladiator.EditorTools
                     cageBars.Add(bars);
                 }
             }
+            var hypogeum = PlaceHypogeum(layout, env); // R2: before the bake, so it samples the floor over every hole
             ArenaNavBaker.Bake(enemies, System.IO.Path.GetFileNameWithoutExtension(scenePath));
             ArenaSceneCommon.AddRunSystems(player);
 
@@ -201,6 +202,7 @@ namespace Gladiator.EditorTools
                 blades.material = AssetDatabase.LoadAssetAtPath<Material>(LookSetup.EnvMat);
             }
             if (layout.trackRadius > 0f) AddChariotRace(layout, arena, env); // Phase 5.16: the Imperial Arena
+            if (hypogeum != null) AddHypogeum(layout, arena, hypogeum); // R2: the Colosseum
             var firePits = new GameObject("FirePits").AddComponent<ArenaFirePits>();
             firePits.transform.SetParent(arena, false);
             firePits.pits = fires.ToArray();
@@ -236,6 +238,7 @@ namespace Gladiator.EditorTools
                 director.maxSpawnDistance = layout.spawnMaxDistance;
                 director.eliteEveryOverride = layout.eliteEvery;
                 director.arenaDensity = layout.densityMul > 0f ? layout.densityMul : 1f;
+                director.swarmMultiplier = layout.swarmMul > 0f ? layout.swarmMul : 1f;
                 if (layout.spawnTable != null) director.table = layout.spawnTable;
             }
             // the arena's tier and difficulty (Phase 5.4)
@@ -394,6 +397,104 @@ namespace Gladiator.EditorTools
             if (race.lapCounter != null)
                 foreach (var t in race.lapCounter.GetComponentsInChildren<Transform>(true))
                     if (t.name.StartsWith("Egg")) UnStatic(t.gameObject);
+        }
+
+        sealed class HypogeumParts
+        {
+            public Transform[] doors, lifts;
+            public Transform center;
+        }
+
+        /// <summary>R2: the trapdoors, the lifts and the stage's lift (decor, not static where they move: the leaves and
+        /// the platforms; no mesh collider), each with an invisible walkable floor box over its hole (`TrapFloor`), so the
+        /// player walks over an open door and the nav bake samples the floor there. Null when the layout has none.</summary>
+        static HypogeumParts PlaceHypogeum(ArenaLayoutDef layout, Transform env)
+        {
+            int doors = layout.trapdoors != null ? layout.trapdoors.Length : 0;
+            int lifts = layout.lifts != null ? layout.lifts.Length : 0;
+            if (doors == 0 && lifts == 0 && !layout.hasCenterLift) return null;
+            var root = new GameObject("Hypogeum").transform;
+            root.SetParent(env, false);
+            string doorModel = string.IsNullOrEmpty(layout.trapdoorModel) ? "Environment/SM_ColTrapdoor" : layout.trapdoorModel;
+            string liftModel = string.IsNullOrEmpty(layout.liftModel) ? "Environment/SM_ColLift" : layout.liftModel;
+            float side = layout.liftSize > 0f ? layout.liftSize : 4f;
+            var parts = new HypogeumParts { doors = new Transform[doors], lifts = new Transform[lifts] };
+            for (int d = 0; d < doors; d++)
+            {
+                var t = layout.trapdoors[d];
+                var go = PlaceMoving(doorModel, root, new Vector3(t.x, 0f, t.y), t.z, 1f, "Trapdoor" + d, "LeafF", "LeafB");
+                AddTrapFloor(go.transform, layout.trapdoorSize.x, layout.trapdoorSize.y, 1f);
+                parts.doors[d] = go.transform;
+            }
+            for (int l = 0; l < lifts; l++)
+            {
+                var go = PlaceMoving(liftModel, root, layout.lifts[l], 0f, 1f, "Lift" + l, "Platform");
+                AddTrapFloor(go.transform, side, side, 1f);
+                parts.lifts[l] = go.transform;
+            }
+            if (layout.hasCenterLift)
+            {
+                float scale = layout.centerLiftScale > 0f ? layout.centerLiftScale : 1f;
+                var go = PlaceMoving(liftModel, root, layout.centerLift, 0f, scale, "CenterLift", "Platform");
+                AddTrapFloor(go.transform, side, side, scale);
+                parts.center = go.transform;
+            }
+            return parts;
+        }
+
+        /// <summary>A decor model whose named parts move (they lose their static flags). Placed even when the model is
+        /// missing (an empty stand-in at the right spot), so the floor box still lands over its hole.</summary>
+        static GameObject PlaceMoving(string model, Transform parent, Vector3 pos, float yaw, float scale, string name, params string[] moving)
+        {
+            var go = ArenaSceneCommon.PlaceDecor(model, parent, pos, yaw, scale != 1f ? Vector3.one * scale : (Vector3?)null);
+            go.name = name;
+            go.transform.SetParent(parent, false);
+            go.transform.SetPositionAndRotation(pos, Quaternion.Euler(0f, yaw, 0f));
+            go.transform.localScale = Vector3.one * scale;
+            foreach (var t in go.GetComponentsInChildren<Transform>(true))
+                if (System.Array.IndexOf(moving, t.name) >= 0) UnStatic(t.gameObject);
+            return go;
+        }
+
+        /// <summary>The invisible floor over a hole: a thin box (`sx` × 0.2 × `sz` m in the world) whose top is the model's
+        /// origin, on the Environment layer and walkable (it feeds the height grid; never an obstacle).</summary>
+        static void AddTrapFloor(Transform parent, float sx, float sz, float parentScale)
+        {
+            var go = new GameObject("TrapFloor");
+            go.layer = Layers.Environment;
+            go.transform.SetParent(parent, false);
+            float h = 0.2f / Mathf.Max(0.01f, parentScale);
+            go.transform.localPosition = new Vector3(0f, -h * 0.5f, 0f);
+            go.transform.localRotation = Quaternion.identity;
+            go.AddComponent<BoxCollider>().size = new Vector3(sx, h, sz);
+            go.AddComponent<WalkableSurface>();
+        }
+
+        /// <summary>R2: the hypogeum's runtime (Hypogeum: drops, lifts and packs, the boss's phases, the light) with the
+        /// layout's doors, lifts and clocks.</summary>
+        static void AddHypogeum(ArenaLayoutDef layout, Transform arena, HypogeumParts parts)
+        {
+            var hyp = new GameObject("Hypogeum").AddComponent<Hypogeum>();
+            hyp.transform.SetParent(arena, false);
+            hyp.trapdoors = layout.trapdoors ?? new Vector4[0];
+            hyp.trapdoorSize = layout.trapdoorSize;
+            hyp.doors = parts.doors;
+            hyp.liftSpots = layout.lifts ?? new Vector3[0];
+            hyp.liftSize = layout.liftSize > 0f ? layout.liftSize : 4f;
+            hyp.lifts = parts.lifts;
+            hyp.hasCenterLift = layout.hasCenterLift;
+            hyp.centerLiftSpot = layout.centerLift;
+            hyp.centerLiftScale = layout.centerLiftScale > 0f ? layout.centerLiftScale : 1f;
+            hyp.centerLift = parts.center;
+            hyp.dropFirst = layout.dropFirst;
+            hyp.dropEvery = layout.dropEvery;
+            hyp.dropTelegraph = layout.dropTelegraph;
+            hyp.dropOpen = layout.dropOpen;
+            hyp.liftFirst = layout.liftFirst;
+            hyp.liftEvery = layout.liftEvery;
+            hyp.liftsPerWave = Mathf.Max(0, layout.liftsPerWave);
+            hyp.liftMinDistance = layout.liftMinDistance;
+            hyp.liftPacks = layout.liftPacks ?? new ArenaLayoutDef.LiftPack[0];
         }
 
         static void AddFireLight(GameObject go)

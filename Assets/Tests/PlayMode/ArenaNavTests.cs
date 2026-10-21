@@ -8,17 +8,24 @@ using UnityEngine.TestTools;
 
 namespace Gladiator.Tests
 {
-    /// <summary>M2.1: the Editor-baked arena nav data is used at runtime and matches a fresh bake of the scene.</summary>
+    /// <summary>M2.1: the Editor-baked arena nav data is used at runtime and matches a fresh bake of the scene (the test
+    /// arena; R2: the Colosseum, whose closed trapdoors and lifts bake as floor through their invisible floors).</summary>
     public class ArenaNavTests
     {
         const string Scene = "Assets/Scenes/Dev/TestArena.unity";
+        const string ColosseumScene = "Assets/Scenes/Arenas/Colosseum.unity";
 
         [UnityTest, Timeout(60000)]
-        public IEnumerator BakedNavData_IsUsed_AndMatchesRuntimeBake()
+        public IEnumerator BakedNavData_IsUsed_AndMatchesRuntimeBake() => Check(Scene);
+
+        [UnityTest, Timeout(180000)]
+        public IEnumerator Colosseum_BakedNavData_IsUsed_AndMatchesRuntimeBake() => Check(ColosseumScene);
+
+        static IEnumerator Check(string scene)
         {
             DevSettings.ResetAll();
             TimeController.ResetForNewRun();
-            var op = SceneManager.LoadSceneAsync(Scene, LoadSceneMode.Single);
+            var op = SceneManager.LoadSceneAsync(scene, LoadSceneMode.Single);
             while (!op.isDone) yield return null;
             yield return null;
             var em = EnemyManager.Instance;

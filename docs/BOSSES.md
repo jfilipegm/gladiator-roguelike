@@ -106,3 +106,81 @@ Effective wind-ups are the listed wind-up ÷ the phase's speed (1.0 / 1.2 / 1.4)
 - **Not his code:** the races going back to back and halting are `ChariotRace`'s; it reads the existing `BossController.Active.Phase` and `.Defeated`, so the two parts don't depend on each other. Formations are `EnemyManager.Leash`'s (the guards are just `EN_Centurion`). Full field list: `docs/tracks/R1-design.md`.
 
 **Tunables (`BossDef BD_EmperorsChampion`):** HP and block, speeds per phase and the close-in stride, every attack's wind-up / damage / size, the volley's count / arc / speed per phase, charge stun and damage bonus, phase-3 charge repeats, guard interval / count / first phase, phase thresholds (0.6 / 0.3), phase speeds (1.2 / 1.4).
+
+## The Eternal Victor (Arena 6 — Colosseum)
+
+1. **Who:** the first gladiator to win in the Colosseum, on its opening day, four hundred years ago. They offered him the rudis, the wooden sword that frees a gladiator; he broke it over his knee and swore he'd never leave the sand. He never has. The men he killed lie in the hypogeum, he sleeps among them between games, and the crowd's roar keeps him on his feet. Courteous and theatrical: he salutes every opponent, and after each kill he carves the name into the podium wall. He thinks you're the first name in a century worth carving.
+2. **Silhouette:** tall and gaunt (~3.5 m to the crest: the tallest boss and the thinnest), bone limbs in archaic bronze (a muscled cuirass, greaves, one great shoulder guard), a thraex's helm whose **griffin crest curls forward like a hook**, a **gold laurel wreath** round the helm, darkness behind the visor, a long tattered crimson cloak of victory ribbons, a magenta sash (the enemy accent), and the **falx**: a two-handed crescent blade ~2.6 m long, held low across his body. The hook of the crest and the crescent of the blade are his read; nothing else in the game is that thin or carries a crescent. *(Model: `EN_EternalVictor`, ≤ 2,500 tris; parts in docs/tracks/R2-colosseum.md.)*
+3. **Entrance (timer hits 0:00):** the horde is dragged off and every trapdoor in the arena rattles at once. "THE ETERNAL VICTOR!" The camera turns to the stage; the lift in its middle sinks and **rises (2.6 s) with him kneeling on it**, the falx across his knees. He stands, raises the falx to the imperial box, then turns it to the crowd: the salute, and the whole bowl roars (shake, crowd spike). ~4.5 s; the player keeps control; a player standing on the lift is pushed off before it moves. He doesn't come through a gate: he was underneath all along. Then he **strides** toward you (7 m/s while you're more than 30 m away).
+4. **Reaper's Circle (near):** a ring (5.5 m) round him fills, then he spins with the falx out at knee height: jump it (feet above 0.7 m) or be outside the ring. Damage + knockback. *(kind `Sweep`)*
+5. **Victor's Lunges (near-mid):** two quick thrusts down a narrow lane (7 m), three from phase 2, each with its own lane, re-aimed between. Step aside each time. *(kind `Flurry`)*
+6. **Falx Throw (mid-far, new):** a lane (20 m × 1.6 m) fills from him, then he **hurls the falx**: it spins out along the lane and **comes back** to his hand (26 m/s, ~1.5 s there and back), hitting whoever it passes, once each way. It can't be jumped. Step out of the lane and stay out until it's back. **It stops on stone** (a statue or the wall) and flies back early: the statues are cover. While it's away his hands are empty: he doesn't attack, the window to hit him. Twice in a row in phase 3. *(new kind `Disc`)*
+7. **Leap of the Victor (any range):** a circle (3.5 m) on you, trailing, locks at 70 % of the wind-up; he leaps (up to 26 m, onto the stage or a hill after you) and lands in it: damage + a knockback ring, then he's slow to rise (0.7 s). Twice in a row in phase 3. *(kind `Pounce`)*
+8. **Phase 2 — "RISE, BROTHERS!" (at 65 % HP):** roars (invulnerable 1.5 s). As the roar ends, **every trapdoor in the arena drops at once** (whatever stands on them falls), the sun sinks to dusk, and **his dead come up the lifts**: 6–8 Skeletal Legionnaires at the two lifts nearest you, then again every 24 s ("THE DEAD RISE!"). The doors near you now drop every 8 s instead of 12. He attacks 20 % faster, the lunges come three at a time, and he adds **Grasp of the Dead**: he drives the falx into the deck and a wide lane of cracks (16 m × 2.2 m) runs from him toward you over 0.8 s; then bony hands burst up all along it: damage, and you're **held** (speed ×0.1) for 1.0 s. Step out of the lane. *(kind `Whip` with `whipSlow 0.1`)*
+9. **Phase 3 — "THE ARENA IS MINE!" (at 30 % HP):** roars (invulnerable 1.5 s): **the hypogeum opens for good**. Every trapdoor drops and stays open: the broken ring becomes **a ring of chasms round the inner arena**, crossed by 24 bridges of deck, and six more split the axis. The light turns to last light. He's faster (4.6 m/s, attacks ×1.4), **leaps twice and throws twice** in a row, and his dead keep rising. He and his dead walk round the chasms by the bridges, or he leaps them; you jump them (4 m) or take a bridge; stepping into one throws you back out (12, at most once a second).
+10. **Eternal, and the defeat:** the first time he reaches 0 HP (phase 3) **he doesn't die**: he collapses into a heap of bronze and bone, "HE WILL NOT STAY DOWN!", and **his remains have 1,500 HP for 8 s** (a bone-coloured ring round him fills; in the last second an orange-red circle of 4 m under him warns that he's rising). Destroy the remains in time and he's gone for good. If the ring fills, he **rises with 20 % HP** ("NOT YET."), the burst throws back anyone within 4 m (20), and the fight goes on; the next 0 HP is final. **Defeat:** slow-mo, "THE ETERNAL VICTOR FALLS!", his dead crumble (every enemy left is dragged off), the trapdoors close one after another, the sun comes back out, the crowd at its loudest, a pick of 3 Rare-or-better upgrades, victory screen. His first defeat unlocks Asterion (R3).
+
+**Arena interaction:** the stage's lift (his entrance), the trapdoors (they drop near you all fight; **lure him onto a dropping door: 500**; his phase-2 roar drops them all; phase 3 leaves them open), the lifts (his dead), the statues (cover from the falx), the hills (he leaps onto them after you), the chasms (he leaps them). He has **no shield**: the first boss since Gorm with no damage reduction. The fight is about his movement, the floor and his refusal to die.
+
+**Bar:** "THE ETERNAL VICTOR, FIRST CHAMPION OF THE COLOSSEUM". **Body** `EN_EternalVictor`: 22,000 HP, radius 1.0 (the falx isn't body), knockback 0, no block. **Words:** guards "THE DEAD RISE!", phase 2 "\"RISE, BROTHERS!\"", phase 3 "\"THE ARENA IS MINE!\"", remains "HE WILL NOT STAY DOWN!", rising "\"NOT YET.\"", summary "The Eternal Victor" / *"The Eternal Victor salutes the crowd, then carves your name into the podium wall."* / *"The first champion of the Colosseum lies still at last. Forty thousand voices chant a new name: yours."* (Gorm's line, at the end of the ladder.)
+
+### Attacks per phase (starting numbers; damage is before the arena's ×1.55)
+Effective wind-ups are the listed wind-up ÷ the phase's speed (1.0 / 1.2 / 1.4). He recovers 0.55 s after every attack
+(÷ the same speed); no per-attack cooldowns: `BossController.Weight` picks by range, the last attack 0.3× as likely.
+
+| Attack (kind) | Telegraph | Wind-up P1 / P2 / P3 (s) | Damage | Size | Knockback | Phases |
+|---|---|---|---|---|---|---|
+| Reaper's Circle (`Sweep`) | ring round him, fills | 1.0 / 0.83 / 0.71 | 26 | r 5.5 m; jump clears above 0.7 m | 9 | 1, 2, 3 |
+| Victor's Lunges (`Flurry`) | one narrow lane per thrust, re-aimed | 0.4 / 0.33 / 0.29 each | 14 each | 7 m × 1.2 m; 2 thrusts in P1, 3 in P2–P3 | 2.5 | 1, 2, 3 |
+| Falx Throw (`Disc`, new) | lane, fills from him; the falx out and back along it | 0.8 / 0.67 / 0.57 | 20 out, 20 back | 20 m × 1.6 m, 26 m/s; stops on stone | 6 | 1, 2 (once), 3 (twice) |
+| Leap of the Victor (`Pounce`) | circle on you, trailing, locks at 70 % | 1.0 / 0.83 / 0.71 | 26 | r 3.5 m, leap ≤ 26 m, 0.7 s to rise | 9 | 1, 2 (once), 3 (twice) |
+| Grasp of the Dead (`Whip`, `whipGrasp`) | wide lane of cracks, fills from him | 0.8 / 0.67 / 0.57 | 18, held 1.0 s (×0.1) | 16 m × 2.2 m | — | 2, 3 |
+| Rising burst (false death) | orange-red circle under him, the last 1.0 s | 1.0 | 20 | r 4 m | 10 | once |
+| Contact | — | — | 12 / 0.8 s | his radius | 4 | all |
+
+| | P1 (100–65 %) | P2 (65–30 %) | P3 (30–0 %) |
+|---|---|---|---|
+| Move speed | 3.6 m/s (7.0 when > 30 m away) | 4.0 | 4.6 |
+| Attack speed | ×1 | ×1.2 (`enrageSpeed`) | ×1.4 (`phase3Speed`) |
+| Guards | none | 6–8 Skeletal Legionnaires at the 2 lifts nearest you, on the roar, then every 24 s | same |
+| The trapdoors (`Hypogeum`) | the group nearest you drops every 12 s | every door drops as the roar ends; then nearest you every 8 s | every door open for good: chasms |
+| Light (`Hypogeum`) | late afternoon | dusk (sun ×0.85, warmer) | last light (sun ×0.72, red) |
+| Eternal | — | — | at 0 HP, once: remains 1,500 HP for 8 s, else he rises with 20 % |
+
+Fight length: 22,000 HP plus the remains. The Beast Lord's 15,000 fell to the bot in ~48 s (the run survived at 528 s);
+with three phases, roars and the remains, aim at **100–140 s** for the last boss. Measure, then tune HP.
+
+### The Colosseum through the fight (who does what)
+The arena's changes are the `Hypogeum`'s, which **reads** `BossController.Active` (as `ChariotRace` did in R1); the boss
+never calls it, so the two parts compile without each other.
+- **His entrance** (`CurrentState == Entering`): every door rattles; while his `Position.y` is below the stage top, the
+  stage lift's `Platform` follows him up.
+- **Phase 1:** drops every 12 s, nearest group to the player (he takes 500 from one he's standing on). No lift waves.
+- **`Phase` becomes 2** (the roar ends): `OpenAll()`, then drops every 8 s; the sun lerps to dusk over 3 s.
+- **`GuardWaves` goes up:** the 2 lifts nearest the player sink and rise (visual: the boss spawned the guards there,
+  because the layout's `guardSpots` are the 8 lifts). A lift the player stands on doesn't move.
+- **`Phase` becomes 3:** `OpenForGood()`: every door drops and stays open, its walk-only box switches on (enemies and the
+  boss walk round it; shots and the falx fly over); the sun lerps to last light.
+- **`Defeated`:** every door closes (the boxes off), one after another over ~2 s; the sun back to the day; halt.
+- **During the remains** nothing changes (`Defeated` stays false until the remains die).
+
+### For the code worker: reused vs new
+- **Reused as is:** attack kinds `Sweep`, `Flurry`, `Pounce`, `Whip` (`whipSlow 0.1` holds you), the guard spots (the
+  lifts) with `guardSpotsUsed 2`, `guardsFromPhase 2`, the phase-3 fields (`phase3At`, `phase3Speed`,
+  `phase3MoveSpeed`, `phase3Attacks`), `closeInRange` / `closeInSpeed`, `scatterOnDefeat`, the reward.
+- **New in `BossDef`:** the falx (`discLength`, `discWidth`, `discWindup`, `discSpeed`, `discDamage`, `discKnockback`,
+  `discSpin`, `discRepeats`, `phase3DiscRepeats`, `discPart`); `phase3PounceRepeats`; `whipGrasp`; the rise
+  (`entranceRise`, `riseDepth`, `riseTime`); the false death (`falseDeath`, `remainsHp`, `remainsTime`, `riseHp01`,
+  `remainsText`, `riseText`, `riseBurstRadius`, `riseBurstDamage`, `riseBurstKnockback`, `riseBurstWarn`,
+  `remainsColor`). Every default keeps the older bosses as they are.
+- **New in `BossController`:** `BossAttack.Disc` (appended: the enum is serialized), the throw (the `Falx` part flies in
+  world space and comes back), `BeginRise`, `State.Remains` (appended), the phase-3 pounce repeats, the grasp's bone
+  bursts, two-handed falx poses. **In `BossFight`:** the rise at the arena's centre instead of a gate.
+- **From the enemies part:** `EnemyManager.SetHpFloor(int, float)` and `SetHp(int, float)` (the false death).
+- Full field list: `docs/tracks/R2-design.md`.
+
+**Tunables (`BossDef BD_EternalVictor`):** HP, speeds per phase and the stride, every attack's wind-up / damage / size,
+the falx's speed / length / repeats per phase, the lunges per phase, the leap's repeats, guard interval / count / first
+phase, phase thresholds (0.65 / 0.3), phase speeds (1.2 / 1.4), the remains' HP and time, the HP he rises with, the burst.
+(**`Hypogeum`:** the boss-fight drop intervals (12 / 8 s), the phase that opens every door (2) and leaves them open (3),
+the dusk and last-light colours and intensities.)

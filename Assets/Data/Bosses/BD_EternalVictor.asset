@@ -1,0 +1,153 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d4c6ea183ef480c5acde212f0835f1d, type: 3}
+  m_Name: BD_EternalVictor
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.BossDef
+  id: eternal_victor
+  displayName: THE ETERNAL VICTOR
+  title: FIRST CHAMPION OF THE COLOSSEUM
+  enemy: {fileID: 11400000, guid: 1a6a33d4d4180a713a855fe3ca07e065, type: 2}
+  enterText: THE ETERNAL VICTOR!
+  fallText: THE ETERNAL VICTOR FALLS!
+  guardsText: THE DEAD RISE!
+  phase2Text: '"RISE, BROTHERS!"'
+  shortName: Eternal Victor
+  deathLine: The Eternal Victor salutes the crowd and carves your name into the podium.
+  victoryLine: 'The first champion lies still at last. Forty thousand chant a new name: yours.'
+  phase1Attacks: 01060a07y
+  phase2Attacks: 0106020a07y
+  moveSpeed: 3.6
+  enragedMoveSpeed: 4
+  turnRate: 200
+  contactDamage: 12
+  contactInterval: 0.8
+  recover: 0.55
+  closeInRange: 30
+  closeInSpeed: 7
+  sweepRadius: 5.5
+  sweepWindup: 1
+  sweepDamage: 26
+  sweepKnockback: 9
+  sweepJumpClear: 0.7
+  whipLength: 16
+  whipWidth: 2.2
+  whipWindup: 0.8
+  whipDamage: 18
+  whipSlow: 0.1
+  whipSlowSeconds: 1
+  whipGrasp: 1
+  slamRadius: 2.6
+  slamWindup: 1
+  slamDamage: 30
+  slamTrack: 0.6
+  slamFire: {x: 2.2, y: 4, z: 10}
+  bashRange: 4
+  bashAngle: 100
+  bashWindup: 0.7
+  bashDamage: 22
+  bashKnockback: 11
+  flurryLength: 7
+  flurryWidth: 1.2
+  flurryWindup: 0.4
+  flurryDamage: 14
+  flurryThrusts: {x: 2, y: 3}
+  chargeWindup: 0.9
+  chargeSpeed: 16
+  chargeLength: 14
+  chargeWidth: 0
+  chargeDamage: 24
+  chargeKnockback: 12
+  chargeStun: 1
+  stunDamageTakenMul: 1
+  chargeRepeats: {x: 1, y: 1}
+  pounceRadius: 3.5
+  pounceWindup: 1
+  pounceTrack: 0.7
+  pounceFlight: 0.55
+  pounceHeight: 3.5
+  pounceRange: 26
+  pounceDamage: 26
+  pounceKnockback: 9
+  pounceRecover: 0.7
+  pounceRepeats: {x: 1, y: 1}
+  bombCount: {x: 3, y: 5}
+  bombWindup: 0.6
+  bombInterval: 0.35
+  bombFlight: 1
+  bombRadius: 2.4
+  bombDamage: 22
+  bombCoins: 3
+  bombSpread: 3.5
+  volleyCount: {x: 7, y: 11}
+  volleyArc: {x: 50, y: 70}
+  volleyWindup: 0.8
+  volleySpeed: 15
+  volleyDamage: 12
+  volleyRange: 24
+  volleyJavelins: 0
+  discLength: 20
+  discWidth: 1.6
+  discWindup: 0.8
+  discSpeed: 26
+  discDamage: 20
+  discKnockback: 6
+  discSpin: 1080
+  discRepeats: {x: 1, y: 1}
+  discPart: Falx
+  guardedBy: {fileID: 0}
+  guardedDamageMul: 0.4
+  guardThreadColor: {r: 0.89, g: 0.84, b: 0.74, a: 0.9}
+  guardSpotsUsed: 2
+  defeatGold: 0
+  beastPack: {x: 0, y: 0}
+  phase2CagePack: 0
+  scatterOnDefeat: 1
+  guardsEvery: 24
+  guards:
+  - {fileID: 11400000, guid: 3f076493751deaa9694d9c511f653d52, type: 2}
+  guardCount: {x: 6, y: 8}
+  guardsFromPhase: 2
+  guardsNearestGates: 0
+  phase2At: 0.65
+  phase2FireRing: 0
+  phase2SpikeVolley: 0
+  phase2FireJets: 0
+  phase2Blades: 0
+  enrageSpeed: 1.2
+  enrageRoar: 1.5
+  fireRingInset: 1.1
+  fireRingSpacing: 2.4
+  fireRingPatch: 1.5
+  fireRingDps: 12
+  phase3At: 0.3
+  phase3Attacks: 0106020a07y
+  phase3Text: '"THE ARENA IS MINE!"'
+  phase3Speed: 1.4
+  phase3MoveSpeed: 4.6
+  phase3ChargeRepeats: 0
+  phase3DiscRepeats: 2
+  phase3PounceRepeats: 2
+  entranceRise: 1
+  riseDepth: 3
+  riseTime: 2.6
+  falseDeath: 1
+  remainsHp: 1500
+  remainsTime: 8
+  riseHp01: 0.2
+  remainsText: HE WILL NOT STAY DOWN!
+  riseText: '"NOT YET."'
+  riseBurstRadius: 4
+  riseBurstDamage: 20
+  riseBurstKnockback: 10
+  riseBurstWarn: 1
+  remainsColor: {r: 0.89, g: 0.84, b: 0.74, a: 0.85}
+  rewardFloor: 2

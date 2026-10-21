@@ -18,3 +18,9 @@ MonoBehaviour:
   arenas:
   - displayName: THE STONE AMPHITHEATER
     scenePath: Assets/Scenes/Arenas/StoneAmphitheater.unity
+  thumbnail: {fileID: 21300000, guid: bdc635a938ca68feba33179603b00da3, type: 3}
+  tagline: I'm becoming a real gladiator.
+  hazards: Beast cages that loose charging war boars; columns that block the archers.
+  layout: {fileID: 11400000, guid: 08566db3710dffeea9e89ff4c5ecc8b7, type: 2}
+  bossPortrait: {fileID: 21300000, guid: 21dfc584e6db11157bb44a39ce5a0e19, type: 3}
+  bossName: The Beast Lord, Master Of The Pens

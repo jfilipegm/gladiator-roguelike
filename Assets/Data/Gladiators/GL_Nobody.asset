@@ -25,3 +25,5 @@ MonoBehaviour:
   unlock: {fileID: 0}
   selectLine: 
   tradeoff: 'Steady: no strengths, no weaknesses.'
+  portrait: {fileID: 21300000, guid: b464a699a769400d4b72aeeec760969b, type: 3}
+  portraitSilhouette: {fileID: 21300000, guid: 42db0f239d5b466e0b64a8027183b5a4, type: 3}

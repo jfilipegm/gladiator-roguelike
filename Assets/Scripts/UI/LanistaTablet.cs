@@ -67,7 +67,7 @@ namespace Gladiator.UI
             At(t.rectTransform, x, y, w, h);
             t.fontStyle = style;
             t.textWrappingMode = TextWrappingModes.Normal;
-            t.overflowMode = TextOverflowModes.Ellipsis;
+            t.overflowMode = TextOverflowModes.Truncate; // the font has no U+2026, so Ellipsis warns and truncates anyway
             if (minSize > 0f)
             {
                 t.enableAutoSizing = true;

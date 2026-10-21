@@ -51,7 +51,9 @@ namespace Gladiator.EditorTools
             int g = BakeGladiators(), b = BakeBosses();
             var runs = AllRuns();
             foreach (var r in runs) RunTaglines.Apply(r);
+            AssetDatabase.SaveAssets(); // the arena pass opens scenes (Single), which unloads assets nothing references
             int a = BakeArenas(runs);
+            runs = AllRuns(); // the scene switches unloaded the old RunDef objects: load them again
             foreach (var r in runs) Link(r);
             AssetDatabase.SaveAssets();
             string msg = $"[PortraitBaker] {g} gladiator portraits, {b} boss portraits, {a} of {runs.Length} arena thumbnails";
@@ -224,8 +226,10 @@ namespace Gladiator.EditorTools
                 using (var rig = new Rig(Size, Size))
                     foreach (var g in All<GladiatorDef>())
                     {
-                        if (g.model == null) continue;
-                        rig.Render(g.model, mat, true);
+                        // no model of its own (the Nobody) = the player prefab's, CH_Nobody
+                        var model = g.model != null ? g.model : AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Art/Models/Characters/CH_Nobody.fbx");
+                        if (model == null) continue;
+                        rig.Render(model, mat, true);
                         rig.CopyTo(tex, 0, 0);
                         tex.Apply();
                         string path = PortraitDir + "PT_" + g.id + ".png", sil = PortraitDir + "PT_" + g.id + "_sil.png";
@@ -310,12 +314,17 @@ namespace Gladiator.EditorTools
                 }
             var setup = EditorSceneManager.GetSceneManagerSetup();
             int w = ThumbW * ThumbSuper, h = ThumbH * ThumbSuper, n = 0;
-            var big = new Texture2D(w, h, TextureFormat.RGBA32, false);
+            // DontSave: opening each arena scene (Single) unloads unused assets, which would destroy a plain texture
+            var big = new Texture2D(w, h, TextureFormat.RGBA32, false) { hideFlags = HideFlags.HideAndDontSave };
             var rt = RenderTexture.GetTemporary(w, h, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB);
             try
             {
-                foreach (var r in runs)
+                var assetPaths = new string[runs.Length];
+                for (int k = 0; k < runs.Length; k++) assetPaths[k] = AssetDatabase.GetAssetPath(runs[k]);
+                for (int k = 0; k < runs.Length; k++)
                 {
+                    var r = AssetDatabase.LoadAssetAtPath<RunDef>(assetPaths[k]); // the previous scene switch unloaded it
+                    if (r == null) continue;
                     string scenePath = r.arenas != null && r.arenas.Length > 0 ? r.arenas[0].scenePath : null;
                     if (string.IsNullOrEmpty(scenePath) || !File.Exists(scenePath))
                     {
@@ -323,6 +332,7 @@ namespace Gladiator.EditorTools
                         continue;
                     }
                     EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
+                    r = AssetDatabase.LoadAssetAtPath<RunDef>(assetPaths[k]); // and this one may have unloaded it again
                     var camGo = new GameObject("ThumbnailCam") { hideFlags = HideFlags.HideAndDontSave };
                     bool fog = RenderSettings.fog;
                     try
@@ -352,6 +362,7 @@ namespace Gladiator.EditorTools
                         Object.DestroyImmediate(small);
                         r.thumbnail = ImportSprite(path);
                         EditorUtility.SetDirty(r);
+                        AssetDatabase.SaveAssetIfDirty(r); // before the next scene switch unloads it
                         n++;
                     }
                     finally

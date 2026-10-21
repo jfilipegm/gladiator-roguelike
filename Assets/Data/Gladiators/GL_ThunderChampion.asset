@@ -31,3 +31,5 @@ MonoBehaviour:
   unlock: {fileID: 11400000, guid: d2ee2af01641103c8935920256db4fc4, type: 2}
   selectLine: 
   tradeoff: 'Fast and flashy but fragile: 90 HP, and a lone target leaves the lightning nothing to jump to.'
+  portrait: {fileID: 21300000, guid: bd1fab951712825e6a93a2e0d544d4ff, type: 3}
+  portraitSilhouette: {fileID: 21300000, guid: b3f0fe54e0d0ba221a7a65fa48d7b11a, type: 3}

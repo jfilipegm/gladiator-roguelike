@@ -169,8 +169,9 @@ namespace Gladiator.Tests
             Assert.AreEqual(grid.Def(locked).unlock.hint, _menu.Tablet.BodyText, "the tablet shows the unlock's hint");
             Assert.IsFalse(_menu.Tablet.ShowsWeapon, "nothing more is given away");
             Assert.AreSame(earned, _menu.Selected, "the diorama keeps the last earned gladiator");
-            var shown = _menu.hero.parent.Find("Hero_" + earned.id);
-            Assert.IsNotNull(shown);
+            // a gladiator without a model of its own (the Nobody) is the scene's own hero
+            var shown = earned.model != null ? _menu.hero.parent.Find("Hero_" + earned.id) : _menu.hero;
+            Assert.IsNotNull(shown, "the diorama shows " + earned.id);
             Assert.IsTrue(shown.gameObject.activeSelf);
 
             Invoke(_menu, "StartRun"); // FIGHT! (Enter, or a second click) is refused

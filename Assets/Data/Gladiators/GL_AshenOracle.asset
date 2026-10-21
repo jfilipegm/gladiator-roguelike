@@ -29,3 +29,5 @@ MonoBehaviour:
   unlock: {fileID: 11400000, guid: ea1ac0e5481fa80adb04576c010b5fcd, type: 2}
   selectLine: 
   tradeoff: 'Slow to start and fragile: curses take time, and a lone boss doesn''t spread them.'
+  portrait: {fileID: 21300000, guid: f271f9a207b7bafdb99d2bfc5104eec5, type: 3}
+  portraitSilhouette: {fileID: 21300000, guid: 04f6be9236ea98b38826766018f3a426, type: 3}

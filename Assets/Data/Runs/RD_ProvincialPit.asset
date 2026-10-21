@@ -18,3 +18,9 @@ MonoBehaviour:
   arenas:
   - displayName: THE PROVINCIAL PIT
     scenePath: Assets/Scenes/Arenas/ProvincialPit.unity
+  thumbnail: {fileID: 21300000, guid: f2d1232c7cbce70bd87d73990dd6ca14, type: 3}
+  tagline: People notice me.
+  hazards: Spike grates that hurt everyone, barricades, braziers that topple into fire.
+  layout: {fileID: 11400000, guid: 6fbbfb779f274a3c58e9d45f8edc7a48, type: 2}
+  bossPortrait: {fileID: 21300000, guid: 82268ec5a25d113228ef15e2714f9178, type: 3}
+  bossName: The Provincial Champion, Undefeated

@@ -217,8 +217,9 @@ namespace Gladiator.Tests
             Assert.GreaterOrEqual(blades.PlayerHits, 1, "a grounded player in its circle is hit");
             Assert.GreaterOrEqual(blades.EnemiesHit, 2, "it mows both convicts");
 
-            // jump over it: stand in the circle, hop each time the blade comes round
-            _motor.Teleport(hub + new Vector3(0f, 0.1f, -3.5f));
+            // jump over it: in the circle, feet held above the blade the whole time (starting in the air: a frame or two
+            // on the floor before the first hop let a passing blade hit, about one run in three)
+            _motor.Teleport(hub + new Vector3(0f, blades.jumpClear + 0.6f, -3.5f));
             yield return null;
             int hits = blades.PlayerHits;
             end = Time.time + 1.6f;

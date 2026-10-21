@@ -161,7 +161,7 @@ namespace Gladiator.Tests
             Assert.IsTrue(Boss.Guarded, "paid for: guarded");
             float hp = _em.GetHp(Boss.Slot);
             _em.ApplyDamage(Boss.Slot, new DamageInfo { Amount = 1000f, Flags = DamageFlags.Melee, Point = Boss.Position });
-            Assert.AreEqual(hp - 400f, _em.GetHp(Boss.Slot), 1f, "he takes 40 % while his guard lives");
+            Assert.AreEqual(hp - 1000f * Boss.def.guardedDamageMul, _em.GetHp(Boss.Slot), 1f, "he takes guardedDamageMul (60 %) while his guard lives");
 
             for (int k = 0; k < n; k++) _em.ApplyDamage(slots[k], new DamageInfo { Amount = 1e6f, Flags = DamageFlags.Melee });
             yield return null;

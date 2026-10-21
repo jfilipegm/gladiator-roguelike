@@ -229,7 +229,7 @@ namespace Gladiator.EditorTools
                 body.id = "patron";
                 body.displayName = "The Gilded Patron";
                 body.behaviour = EnemyBehaviour.Scripted;
-                body.maxHp = 18000f;
+                body.maxHp = 15000f;
                 body.radius = 1.6f;
                 body.knockbackTaken = 0f;
                 body.blockArc = 0f;
@@ -272,7 +272,7 @@ namespace Gladiator.EditorTools
                 boss.guardsEvery = 22f;
                 boss.guardCount = new Vector2Int(4, 6);
                 boss.guardSpotsUsed = 2;
-                boss.guardedDamageMul = 0.4f;
+                boss.guardedDamageMul = 0.6f;
                 boss.defeatGold = 300;
                 boss.phase2At = 0.5f; boss.enrageSpeed = 1.25f; boss.enrageRoar = 1.5f;
                 boss.phase2FireRing = false;

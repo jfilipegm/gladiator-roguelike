@@ -78,6 +78,8 @@ namespace Gladiator.Gameplay
         public Vector3 PounceTarget => _target;
         /// <summary>His hired guard lives: he takes guardedDamageMul of the damage (the Gilded Patron's payroll).</summary>
         public bool Guarded => _guarded;
+        /// <summary>Seconds of the fight (after his entrance) he spent guarded (bot runs log it; C24).</summary>
+        public float GuardedSeconds { get; private set; }
         public int BombsThrown { get; private set; }
         public int CoinsFired { get; private set; }
 
@@ -260,7 +262,7 @@ namespace Gladiator.Gameplay
             // the guard clock runs through the whole fight (not just between attacks: a boss that attacks back to back
             // would never call them), but not during his entrance or phase-2 roar
             if (_state != State.Entering && _state != State.Roaring && _state != State.Enraging) GuardsClock(dt);
-            if (def.guardedBy != null) Payroll(tele);
+            if (def.guardedBy != null) Payroll(tele, dt);
             ShieldUp = def.enemy.blockArc > 0f && _state != State.Stunned && _state != State.Entering;
             _em.SetScriptedShield(_slot, ShieldUp);
             bool leaping = _state == State.Strike && _attack == BossAttack.Pounce; // in the air: the landing is the hit
@@ -807,7 +809,7 @@ namespace Gladiator.Gameplay
         /// The Gilded Patron's payroll: while any of his hired guard lives he takes guardedDamageMul of the damage, and a
         /// gold thread runs along the ground from each of them to him (up to 12). The bar says GUARDED (Hud).
         /// </summary>
-        void Payroll(TelegraphRenderer tele)
+        void Payroll(TelegraphRenderer tele, float dt)
         {
             bool guarded = _em.AliveOf(def.guardedBy) > 0;
             if (guarded != _guarded)
@@ -816,6 +818,7 @@ namespace Gladiator.Gameplay
                 if (_state != State.Stunned) _em.SetDamageTakenMul(_slot, guarded ? def.guardedDamageMul : 1f);
                 if (!guarded && _em.deathPop != null) _em.deathPop.Burst(_pos + Vector3.up * 2f, 20, 6f, 0.2f, def.guardThreadColor, Color.white); // the guard is down
             }
+            if (guarded && _state != State.Entering) GuardedSeconds += dt;
             if (!guarded || tele == null) return;
             int n = _em.FindAlive(def.guardedBy, _guardSlots);
             for (int k = 0; k < n; k++)

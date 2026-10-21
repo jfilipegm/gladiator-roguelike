@@ -64,6 +64,7 @@ namespace Gladiator.Gameplay
         float _chestSince = -1f, _chestIgnoreUntil, _nextTrace;
         Vector3 _wanderTarget, _chestTarget, _goalPos;
         char _goal = '-';
+        float _bossSeconds, _bossNear, _bossChasing; // the boss fight: how long, how long within 10 m of him, how long chasing pickups (C24)
         bool _stressRequested, _finished;
 
         public float Elapsed => _elapsed;
@@ -123,12 +124,23 @@ namespace Gladiator.Gameplay
                 }
             }
 
+            var boss = BossController.Active;
+            float dt = UnityEngine.Time.deltaTime;
+            if (boss != null && boss.Alive && _body != null && dt > 0f && boss.CurrentState != BossController.State.Entering)
+            {
+                _bossSeconds += dt;
+                Vector3 d = boss.Position - _body.position;
+                d.y = 0f;
+                if (d.sqrMagnitude < 100f) _bossNear += dt;
+                if (_goal == 'P') _bossChasing += dt;
+            }
+
             if (traceEvery > 0f && _elapsed >= _nextTrace && _body != null) Trace();
             if (runSeconds > 0f && _elapsed >= runSeconds) Finish();
         }
 
         /// <summary>What the bot ended up with (perf runs record which upgrades were exercised).</summary>
-        static void LogBuild()
+        void LogBuild()
         {
             var player = Player.Main;
             var build = player != null ? player.GetComponent<PlayerBuild>() : null;
@@ -150,7 +162,9 @@ namespace Gladiator.Gameplay
             var boss = BossController.Active;
             if (boss != null)
                 sb.Append(" | boss ").Append(boss.Defeated ? "DEFEATED" : "alive").Append(" hp ").Append((boss.Hp01 * 100f).ToString("0")).Append("% phase ")
-                  .Append(boss.Phase).Append(" attacks ").Append(boss.AttacksDone).Append(" guardWaves ").Append(boss.GuardWaves).Append(" stuns ").Append(boss.Stuns);
+                  .Append(boss.Phase).Append(" attacks ").Append(boss.AttacksDone).Append(" guardWaves ").Append(boss.GuardWaves).Append(" stuns ").Append(boss.Stuns)
+                  .Append(" | fight ").Append(_bossSeconds.ToString("0")).Append("s near ").Append(_bossNear.ToString("0")).Append("s chasingPickups ")
+                  .Append(_bossChasing.ToString("0")).Append("s guarded ").Append(boss.GuardedSeconds.ToString("0")).Append('s');
             var ep = EnemyProjectiles.Instance;
             if (boss != null && boss.BombsThrown + boss.CoinsFired > 0)
                 sb.Append(" purses ").Append(boss.BombsThrown).Append(" (hit you ").Append(ep != null ? ep.BombHits : 0).Append(") coins ").Append(boss.CoinsFired);

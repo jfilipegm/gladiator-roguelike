@@ -48,6 +48,12 @@ namespace Gladiator.Gameplay
         [Tooltip("Strength / weakness line on the select card.")]
         public string tradeoff;
 
+        [Header("Portraits (R9: baked by Gladiator/Setup/UI/Bake Portraits)")]
+        [Tooltip("Head and shoulders, 128 px, point filtered: the select screens' and the Codex's tessera tiles.")]
+        public Sprite portrait;
+        [Tooltip("The same picture in black: the tile while locked.")]
+        public Sprite portraitSilhouette;
+
         public string SelectLine => !string.IsNullOrEmpty(selectLine) ? selectLine
             : startingWeapon != null ? "Starts with " + startingWeapon.displayName : "";
 

@@ -11,7 +11,8 @@ namespace Gladiator.UI
     /// <summary>
     /// The Codex (Phase 5.6, docs/UNLOCKS.md; M3.6 was a three-column stub). Seven tabs built from data:
     /// - RECORDS: the save's numbers;
-    /// - GLADIATORS: the roster (locked ones as black silhouettes with their hint);
+    /// - GLADIATORS: the select screen's roster grid and wax tablet, read-only (R9; locked ones as black silhouettes
+    ///   with their hint; up/down walks the roster there, since left/right switch tabs);
     /// - ARSENAL: weapons, evolutions, Boons, synergies (evolutions and synergies stay "???" until found; locked ones
     ///   say how they're earned);
     /// - BESTIARY: every enemy and boss (unseen = a silhouette);
@@ -68,6 +69,12 @@ namespace Gladiator.UI
         readonly List<Entry>[] _tabs = new List<Entry>[TabCount];
         Tab _tab;
         int _pageIndex, _focus;
+        // R9: the GLADIATORS tab
+        RosterGrid.Slot[] _slots = Array.Empty<RosterGrid.Slot>();
+        RosterGrid _roster;
+        GladiatorTablet _rosterTablet;
+        RectTransform _rosterRoot;
+        int _rosterFocus;
 
         public CodexPanel(TMP_FontAsset font, Material fontMat)
         {
@@ -91,6 +98,10 @@ namespace Gladiator.UI
             return true;
         }
         public bool TabHasNew(Tab t) { foreach (var e in Entries(t)) if (e.New) return true; return false; }
+        /// <summary>Tests: the GLADIATORS tab's grid, its tablet and the picked tile.</summary>
+        public RosterGrid Roster => _roster;
+        public GladiatorTablet RosterTablet => _rosterTablet;
+        public int RosterFocus => _rosterFocus;
         /// <summary>NEW entries not shown yet this visit.</summary>
         public int RemainingNew
         {
@@ -135,11 +146,12 @@ namespace Gladiator.UI
             }
 
             _content = UiFactory.Rect("Content", root, mid, mid, new Vector2(0, -40), new Vector2(1600, 660));
+            BuildRoster(root);
             UiFactory.Button("Back", root, "BACK", mid, mid, new Vector2(-640, -440), new Vector2(220, 66), _font, _fontMat, () => Close(), 30f);
             UiFactory.Button("Prev", root, "<", mid, mid, new Vector2(-150, -440), new Vector2(70, 66), _font, _fontMat, () => Turn(-1), 34f);
             UiFactory.Button("Next", root, ">", mid, mid, new Vector2(150, -440), new Vector2(70, 66), _font, _fontMat, () => Turn(1), 34f);
             _page = Text(root, "", 26, Soft, new Vector2(0, -440), new Vector2(220, 50), TextAlignmentOptions.Center);
-            var keys = Text(root, "Left / Right: tab    Up / Down: page    Esc / B: back", 22, Dim, new Vector2(560, -440), new Vector2(560, 40), TextAlignmentOptions.Right);
+            var keys = Text(root, "Left / Right: tab    Up / Down: page or gladiator    Esc / B: back", 22, Dim, new Vector2(520, -440), new Vector2(640, 40), TextAlignmentOptions.Right);
             keys.fontStyle = FontStyles.Normal;
 
             Collect();
@@ -170,13 +182,19 @@ namespace Gladiator.UI
             _renown.text = "RENOWN " + _save.renown;
         }
 
+        /// <summary>One entry per roster tile, in the grid's order (NEW marks and TryEntry follow the tiles).</summary>
         void CollectGladiators()
         {
             var list = Entries(Tab.Gladiators);
-            foreach (var g in _gladiators)
+            foreach (var slot in _slots)
             {
-                if (g == null) continue;
-                bool open = MainMenu.IsAvailable(g);
+                var g = slot.Def;
+                if (g == null)
+                {
+                    list.Add(new Entry { Id = "", Title = "???", Kind = "GLADIATOR", Body = slot.Hint, Footer = "", Open = false, Progress = -1f, Portrait = "" });
+                    continue;
+                }
+                bool open = slot.Open;
                 list.Add(new Entry
                 {
                     Id = g.unlock != null ? "gl:" + g.id : "",
@@ -187,8 +205,38 @@ namespace Gladiator.UI
                     Open = open, Progress = -1f, Portrait = "gl:" + g.id,
                 });
             }
-            foreach (var l in _locked)
-                list.Add(new Entry { Id = "", Title = "???", Kind = "GLADIATOR", Body = l.hint, Footer = "", Open = false, Progress = -1f, Portrait = "" });
+        }
+
+        /// <summary>The GLADIATORS tab: the roster grid on the left, the wax tablet on the right, centred in the space
+        /// between the tabs and the bottom row. Shown only on that tab.</summary>
+        void BuildRoster(Transform root)
+        {
+            var mid = new Vector2(0.5f, 0.5f);
+            _slots = RosterGrid.Slots(_gladiators, _locked);
+            // between the tab row (bottom edge 314) and the bottom row (top edge -407), the picked tile's wreath clear of the tabs
+            const float height = 700f;
+            float tabletScale = GridMath.Fit(MenuLayout.Tablet, new Vector2(MenuLayout.Tablet.x, height));
+            float gridW = GridMath.Size(MenuLayout.Columns, MenuLayout.Columns, MenuLayout.Tile, MenuLayout.Gap).x;
+            var area = new Vector2(gridW + 60f + MenuLayout.Tablet.x * tabletScale, height);
+            _rosterRoot = UiFactory.Rect("Gladiators", root, mid, mid, new Vector2(0f, -56f), area);
+            _roster = new RosterGrid(_font);
+            _roster.Build(_rosterRoot, new Vector2(0f, 1f), Vector2.zero, _slots, MenuLayout.Columns, _codex, FocusRoster);
+            _roster.Fit(GridMath.Fit(GridMath.Size(_slots.Length, MenuLayout.Columns, MenuLayout.Tile, MenuLayout.Gap), new Vector2(gridW, area.y)));
+            _rosterTablet = new GladiatorTablet(_font);
+            var corner = new Vector2(1f, 1f);
+            _rosterTablet.Build(_rosterRoot, corner, corner, Vector2.zero, _codex);
+            _rosterTablet.Fit(tabletScale);
+            _rosterRoot.gameObject.SetActive(false);
+            if (_slots.Length > 0) FocusRoster(0);
+        }
+
+        /// <summary>Picks roster tile `i` (a click, or up/down) and shows it on the tablet. Read-only: no FIGHT!.</summary>
+        void FocusRoster(int i)
+        {
+            if (_roster == null || _roster.Count == 0) return;
+            _rosterFocus = Mathf.Clamp(i, 0, _roster.Count - 1);
+            _roster.SetPick(_rosterFocus);
+            _rosterTablet.Show(_roster.Def(_rosterFocus), _roster.IsOpen(_rosterFocus), _save, _roster.Hint(_rosterFocus));
         }
 
         void CollectArsenal()
@@ -391,6 +439,7 @@ namespace Gladiator.UI
         {
             Tab.Records => 100,
             Tab.Challenges or Tab.Secrets or Tab.Market => 6,
+            Tab.Gladiators => 1024, // one grid, no pages
             _ => 9,
         };
 
@@ -417,8 +466,11 @@ namespace Gladiator.UI
                 _tabFrames[i].color = i == (int)_tab ? Gold : Color.clear;
                 _tabDots[i].enabled = TabHasNew((Tab)i);
             }
-            _page.text = _tab == Tab.Records ? "" : "PAGE " + (_pageIndex + 1) + " / " + PageCount;
+            bool roster = _tab == Tab.Gladiators;
+            _rosterRoot.gameObject.SetActive(roster);
+            _page.text = _tab == Tab.Records || roster ? "" : "PAGE " + (_pageIndex + 1) + " / " + PageCount;
             if (_tab == Tab.Records) { DrawRecords(); return; }
+            if (roster) { DrawRoster(); return; }
 
             var list = Entries(_tab);
             int per = PerPage(_tab), start = _pageIndex * per;
@@ -434,6 +486,19 @@ namespace Gladiator.UI
                 if (e.New) { e.New = false; list[i] = e; MetaProgress.MarkSeen(e.Id, _save); } // seen now: not NEW next time
             }
             if (list.Count == 0) Text(_content, "Nothing here yet.", 28, Dim, Vector2.zero, new Vector2(800, 60), TextAlignmentOptions.Center);
+        }
+
+        /// <summary>The roster's NEW marks for this visit (then they're seen), and the picked tile on the tablet.</summary>
+        void DrawRoster()
+        {
+            var list = Entries(Tab.Gladiators);
+            for (int i = 0; i < list.Count && i < _roster.Count; i++)
+            {
+                var e = list[i];
+                _roster.SetNew(i, e.New);
+                if (e.New) { e.New = false; list[i] = e; MetaProgress.MarkSeen(e.Id, _save); }
+            }
+            FocusRoster(_rosterFocus);
         }
 
         /// <summary>A card: the picture on the left (portrait or icon, black while locked), the text on the right.</summary>
@@ -506,11 +571,6 @@ namespace Gladiator.UI
                 img.raycastTarget = false;
                 return true;
             }
-            if (!e.Open && _tab == Tab.Gladiators)
-            {
-                UiFactory.Image("Silhouette", card, Silhouette, mid, mid, pos, new Vector2(edge * 0.4f, edge * 0.8f), PixelIcons.White).raycastTarget = false;
-                return true;
-            }
             return false;
         }
 
@@ -579,6 +639,15 @@ namespace Gladiator.UI
             {
                 SfxPlayer.Play2D(SfxId.Card);
                 Select((Tab)(((int)_tab + (right ? 1 : TabCount - 1)) % TabCount));
+                return false;
+            }
+            if (_tab == Tab.Gladiators)
+            {
+                if ((up || down) && _roster.Count > 0)
+                {
+                    SfxPlayer.Play2D(SfxId.Card);
+                    FocusRoster(GridMath.StepWrap(_rosterFocus, _roster.Count, down ? 1 : -1));
+                }
                 return false;
             }
             if (_tab == Tab.Market)

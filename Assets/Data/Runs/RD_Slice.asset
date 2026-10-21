@@ -18,3 +18,9 @@ MonoBehaviour:
   arenas:
   - displayName: THE SLAVE PIT
     scenePath: Assets/Scenes/Arenas/SlavePit.unity
+  thumbnail: {fileID: 21300000, guid: 766f71c637d6945fca63604f918e758e, type: 3}
+  tagline: I need to survive.
+  hazards: Mud that slows you, fire pits, and a burning fence once Gorm is angry.
+  layout: {fileID: 11400000, guid: b0d2e46a7beeccc50a313a90e81763ac, type: 2}
+  bossPortrait: {fileID: 21300000, guid: 6e340f855f10123c9b4584ca7efa41f1, type: 3}
+  bossName: Gorm, the Pit Master

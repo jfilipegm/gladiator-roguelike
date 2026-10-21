@@ -32,3 +32,5 @@ MonoBehaviour:
   unlock: {fileID: 11400000, guid: 1f6d57591f7d8a68394d42c6320a38bf, type: 2}
   selectLine: 
   tradeoff: 'Lives on kills: slow, and other healing is halved.'
+  portrait: {fileID: 21300000, guid: 0639d37b1ba95b7358daf6665b438aee, type: 3}
+  portraitSilhouette: {fileID: 21300000, guid: 774ebecea51399385b76e67526c98351, type: 3}

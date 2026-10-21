@@ -65,6 +65,8 @@ namespace Gladiator.EditorTools
             menu.heroMaterial = charMat;
             foreach (var t in hero.GetComponentsInChildren<Transform>(true)) GameObjectUtility.SetStaticEditorFlags(t.gameObject, 0);
             menu.runs = ProvincialPitSetup.AllRuns(); // arena select (Phase 5.4)
+            foreach (var r in menu.runs) { RunTaglines.Apply(r); PortraitBaker.Link(r); } // R9: the ladder's words and baked pictures
+            AssetDatabase.SaveAssets();
             menu.meta = MetaSetup.Load();
             menu.codex = CodexSetup.Load() != null ? CodexSetup.Load() : CodexSetup.CreateOrUpdate(); // Phase 5.6
             GladiatorSetup.CreateOrUpdate();

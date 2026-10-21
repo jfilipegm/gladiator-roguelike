@@ -380,13 +380,14 @@ def jet_nozzle(name, size=1.8):
 def jet_flame(name, height=3.5, radius=0.7):
     """A jet's flame column (FireJets draws one per nozzle, scaled in height while it roars): an orange outer sheath,
     a yellow-white core, ragged tips. Origin at the base centre."""
-    # iteration 2: brighter (fire_mid sheath, a yellow-white core bursting out of the top); v1 read as a rust spire
+    # iteration 3: an orange-red sheath under a yellow tip (v2's fire_mid bloomed to yellow in Unity: hazards read
+    # orange-red, CLAUDE.md §5); iteration 2 had brightened v1's rust spire
     parts = [K.cylinder(name, radius=radius, depth=height * 0.62, verts=6, taper=0.6, pivot=(0, 0, -1),
-                        swatch="fire_mid"),
+                        swatch="hazard_orange"),
              K.cone("Tip", radius=radius * 0.62, depth=height * 0.5, verts=6, location=(0, 0, height * 0.55),
-                    pivot=(0, 0, -1), swatch="fire_core"),
+                    pivot=(0, 0, -1), swatch="fire_mid"),
              K.cylinder("Root", radius=radius * 1.15, depth=0.5, verts=6, taper=0.85, pivot=(0, 0, -1),
-                        swatch="hazard_orange")]
+                        swatch="glow_hazard_red")]
     parts[1].rotation_euler.z = math.radians(30)
     for k in range(3):  # licks round the column
         a = k * 2.1

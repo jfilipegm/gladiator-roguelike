@@ -38,6 +38,7 @@ Good ideas that are **not** in the current phase. Pull from here only when a pha
 - **The Thunder Champion's crest flickering at high Charge** (spec "Personality"): an emission pulse on one part needs a per-part material, so it waits for a VFX pass.
 - **Knight feedback to judge in the playtest:** a faint crimson pulse on kill heals (nothing yet: 300 kills a minute would be noise), a heartbeat under 20 % HP, the blade resting on the shoulder between swings.
 - **The Champion's second gladius** (BOSSES.md point 9): the crowd throws it to him on his phase-2 roar; a prop thrown from the stands and a dual-wield pose. The gameplay change (faster attacks, five-thrust flurry) is in.
+- **The Grand Arena's extras:** a secret (it's the only arena without one), the patrons' special events ("a patron pays for a gold shower", "the gates open on the hour"), a city skyline beyond the stands, the gold threads of the payroll drawn in the air rather than on the ground, its own SFX for the jets, the blades and the blink (they reuse the fire-pot, crit and spark sounds).
 - **Weapon on-hit status for projectiles** (`WeaponDef.onHitStatus` only works for MeleeArc/Thrust): a net that roots needs it on thrown weapons.
 
 ## Art / audio

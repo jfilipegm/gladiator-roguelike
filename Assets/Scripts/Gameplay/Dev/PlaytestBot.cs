@@ -151,6 +151,18 @@ namespace Gladiator.Gameplay
             if (boss != null)
                 sb.Append(" | boss ").Append(boss.Defeated ? "DEFEATED" : "alive").Append(" hp ").Append((boss.Hp01 * 100f).ToString("0")).Append("% phase ")
                   .Append(boss.Phase).Append(" attacks ").Append(boss.AttacksDone).Append(" guardWaves ").Append(boss.GuardWaves).Append(" stuns ").Append(boss.Stuns);
+            var ep = EnemyProjectiles.Instance;
+            if (boss != null && boss.BombsThrown + boss.CoinsFired > 0)
+                sb.Append(" purses ").Append(boss.BombsThrown).Append(" (hit you ").Append(ep != null ? ep.BombHits : 0).Append(") coins ").Append(boss.CoinsFired);
+            // the Grand Arena (Phase 5.13): its hazards, the mercenaries' thefts, the sorcerers
+            var jets = FireJets.Instance;
+            if (jets != null) sb.Append(" | jets ").Append(jets.Fired).Append(" (burnt ").Append(jets.EnemiesHit).Append(", hit you ").Append(jets.PlayerHits).Append(')');
+            var blades = BladeSweepers.Instance;
+            if (blades != null) sb.Append(" blades ").Append(blades.Spins).Append(" (mowed ").Append(blades.EnemiesHit).Append(", hit you ").Append(blades.PlayerHits).Append(')');
+            var enemies = EnemyManager.Instance;
+            if (enemies != null && enemies.GoldStolen + enemies.Blinks > 0)
+                sb.Append(" goldStolen ").Append(enemies.GoldStolen).Append(" (back ").Append(enemies.GoldReturned).Append(") blinks ").Append(enemies.Blinks);
+            if (ep != null && ep.RunesErupted > 0) sb.Append(" runes ").Append(ep.RunesErupted).Append(" (hit you ").Append(ep.RuneHits).Append(')');
             var pb = player.GetComponent<PlayerBuild>();
             if (pb != null)
             {

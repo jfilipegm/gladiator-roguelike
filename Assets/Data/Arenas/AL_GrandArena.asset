@@ -685,7 +685,7 @@ MonoBehaviour:
     position: {x: -23, y: 0, z: 37}
     yaw: 90
     scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_Ramp
+  - model: Environment/SM_GrandRamp
     role: 0
     position: {x: -16, y: 0, z: 37}
     yaw: 90
@@ -715,7 +715,7 @@ MonoBehaviour:
     position: {x: 37, y: 0, z: -23}
     yaw: 0
     scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_Ramp
+  - model: Environment/SM_GrandRamp
     role: 0
     position: {x: 37, y: 0, z: -16}
     yaw: 0
@@ -725,7 +725,7 @@ MonoBehaviour:
     position: {x: 23, y: 0, z: -37}
     yaw: -90
     scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_Ramp
+  - model: Environment/SM_GrandRamp
     role: 0
     position: {x: 16, y: 0, z: -37}
     yaw: -90
@@ -755,7 +755,7 @@ MonoBehaviour:
     position: {x: -37, y: 0, z: 23}
     yaw: -180
     scale: {x: 1, y: 1, z: 1}
-  - model: Environment/SM_Ramp
+  - model: Environment/SM_GrandRamp
     role: 0
     position: {x: -37, y: 0, z: 16}
     yaw: -180

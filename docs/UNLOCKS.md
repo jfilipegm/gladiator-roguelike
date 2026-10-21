@@ -47,7 +47,7 @@ Every reward is **content** (a weapon or Boon entering the pool) or **Renown** (
 **Renown challenges** (bounty only): First Evolution (evolve any weapon, +100); Synergist (3 different synergies, +150); Butcher (5,000 kills in one run, +100); Every Gladiator Wins (win with the Nobody, the Goblin and the Knight, +200).
 
 **The existing unlocks are recategorised:**
-- Challenges: Gorm's Flail (beat Gorm), the Provincial Pit (beat Gorm), the Blood Knight (beat Gorm below 30 % HP; **Phase 5.9: reach the Stone Amphitheater**, §6.7's "Reach Arena 3"), the Murder Machine (Phase 5.9: beat Gorm; also adds the Executioner's Cleaver to the pool), the Thunder Champion (Phase 5.10: beat the Beast Lord, §6.7's "Complete Arena 3"; also adds the Storm Spear), the Golden Idol (Phase 5.11: 10,000 lifetime gold; also adds the Coin Toss).
+- Challenges: Gorm's Flail (beat Gorm), the Provincial Pit (beat Gorm), the Blood Knight (beat Gorm below 30 % HP; **Phase 5.9: reach the Stone Amphitheater**, §6.7's "Reach Arena 3"), the Murder Machine (Phase 5.9: beat Gorm; also adds the Executioner's Cleaver to the pool), the Thunder Champion (Phase 5.10: beat the Beast Lord, §6.7's "Complete Arena 3"; also adds the Storm Spear), the Golden Idol (Phase 5.11: 10,000 lifetime gold; also adds the Coin Toss). The Grand Arena (Phase 5.13: beat the Beast Lord, `UL_GrandArena`).
 - Secret: the Pit Goblin (the rattling crate); the Ashen Oracle (Phase 5.12: the masked stranger in the Stone Amphitheater, flag `ashen_stranger`; also adds the Ashen Censer).
 
 **Three new synergies.** The new Boons give MOVEMENT, GOLD and XP their third carrier:

@@ -209,7 +209,7 @@ namespace Gladiator.EditorTools
                     float yaw = YawOf(f);
                     Add("SM_GrandTerrace", PieceRole.Walkable, V3(pos), yaw);
                     bool ramp = (k + (side > 0f ? 1 : 0)) % 2 == 0;
-                    Add(ramp ? "SM_Ramp" : "SM_GrandStairs", PieceRole.Walkable, V3(pos + f * (3f + (ramp ? 4f : 2f))), yaw);
+                    Add(ramp ? "SM_GrandRamp" : "SM_GrandStairs", PieceRole.Walkable, V3(pos + f * (3f + (ramp ? 4f : 2f))), yaw);
                 }
             }
 

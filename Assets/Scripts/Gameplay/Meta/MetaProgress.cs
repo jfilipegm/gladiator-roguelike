@@ -186,7 +186,11 @@ namespace Gladiator.Gameplay
             }
             if (won) SaveData.Add(data.gladiatorWins, run.GladiatorId, 1);
             if (run.Weapons != null)
-                foreach (var w in run.Weapons) SaveData.Add(data.weaponKills, w.Id, w.Kills);
+                foreach (var w in run.Weapons)
+                {
+                    SaveData.Add(data.weaponKills, w.Id, w.Kills);
+                    if (won) SaveData.Add(data.weaponWins, w.Id, 1);
+                }
             if (run.Kills > data.bestRunKills) data.bestRunKills = run.Kills;
             if (run.EnemyKills != null) foreach (var k in run.EnemyKills) SaveData.Add(data.enemyKills, k.id, k.count);
             if (run.Upgrades != null) foreach (var id in run.Upgrades) SaveData.Add(data.upgradesTaken, id, 1);
@@ -227,8 +231,19 @@ namespace Gladiator.Gameplay
                 case UnlockConditionKind.RunKills: return d.bestRunKills >= c.amount;
                 case UnlockConditionKind.Evolve: return Evolutions(c.id, d) >= times;
                 case UnlockConditionKind.SynergiesFound: return d.synergies.Count >= c.amount;
+                case UnlockConditionKind.WinWithWeapon: return CountAny(d.weaponWins, c.id) >= times;
                 default: return false;
             }
+        }
+
+        /// <summary>The summed count of every id in "a|b" (a weapon and its evolution).</summary>
+        static long CountAny(List<IdCount> list, string ids)
+        {
+            if (string.IsNullOrEmpty(ids)) return 0;
+            if (ids.IndexOf('|') < 0) return SaveData.Count(list, ids);
+            long sum = 0;
+            foreach (var id in ids.Split('|')) sum += SaveData.Count(list, id.Trim());
+            return sum;
         }
 
         static long Evolutions(string id, SaveData d) => string.IsNullOrEmpty(id) ? SaveData.Total(d.evolutions) : SaveData.Count(d.evolutions, id);
@@ -249,6 +264,7 @@ namespace Gladiator.Gameplay
                 case UnlockConditionKind.RunKills: current = d.bestRunKills; target = c.amount; break;
                 case UnlockConditionKind.Evolve: current = Evolutions(c.id, d); target = times; break;
                 case UnlockConditionKind.SynergiesFound: current = d.synergies.Count; target = c.amount; break;
+                case UnlockConditionKind.WinWithWeapon: current = CountAny(d.weaponWins, c.id); target = times; break;
                 default: current = Met(c, d) ? 1f : 0f; target = 1f; break; // yes/no conditions
             }
             target = Mathf.Max(1f, target);

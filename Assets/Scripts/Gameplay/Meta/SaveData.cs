@@ -34,6 +34,8 @@ namespace Gladiator.Gameplay
         public List<IdCount> bossKills = new List<IdCount>();
         public List<IdCount> gladiatorWins = new List<IdCount>();
         public List<IdCount> weaponKills = new List<IdCount>();
+        /// <summary>WeaponDef id → won runs that ended with it in hand. Added in 0.15.0 (filled by Migrate).</summary>
+        public List<IdCount> weaponWins = new List<IdCount>();
         /// <summary>Per boss: the lowest HP the player had when it fell, in ‰ (0–1000). Added in 0.4.0 (a missing
         /// list in an older file is filled by Migrate; no version bump needed).</summary>
         public List<IdCount> bossKillLowestHp = new List<IdCount>();
@@ -107,6 +109,7 @@ namespace Gladiator.Gameplay
             bossKills ??= new List<IdCount>();
             gladiatorWins ??= new List<IdCount>();
             weaponKills ??= new List<IdCount>();
+            weaponWins ??= new List<IdCount>();
             bossKillLowestHp ??= new List<IdCount>();
             unlocked ??= new List<string>();
             flags ??= new List<string>();

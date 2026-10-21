@@ -23,6 +23,9 @@ namespace Gladiator.Gameplay
         public float[] NextHit;
         /// <summary>Echo (evolutions): seconds until the second strike (-1 = none pending), its direction, and the size boost while it runs.</summary>
         public float EchoT = -1f;
+        /// <summary>MultiHit: jabs of the current flurry still to come, and the time to the next one.</summary>
+        public int ProngNext, ProngLeft;
+        public float ProngT;
         public Vector3 EchoDir;
         public float AreaBoost = 1f;
         public bool InEcho;
@@ -108,6 +111,8 @@ namespace Gladiator.Gameplay
         public int Echoes { get; private set; }
         /// <summary>Thrust hits that landed on a weapon's tip (the Whip's crack, always crits; tests).</summary>
         public int TipHits { get; private set; }
+        /// <summary>MultiHit jabs (the Trident's prongs; tests, bot log).</summary>
+        public int Prongs { get; private set; }
         /// <summary>GroundSlam impacts (tests).</summary>
         public int Slams { get; private set; }
         /// <summary>Enemies struck by Chain lightning, the first strikes and the jumps (tests, bot log).</summary>
@@ -239,6 +244,11 @@ namespace Gladiator.Gameplay
                 w.EchoT -= dt;
                 if (w.EchoT < 0f && em != null) Echo(w, em);
             }
+            if (w.ProngLeft > 0)
+            {
+                w.ProngT -= dt;
+                while (w.ProngLeft > 0 && w.ProngT <= 0f && em != null) { Prong(w, em, w.ProngNext++); w.ProngLeft--; w.ProngT += Mathf.Max(0.01f, d.prongInterval); }
+            }
             w.Cooldown -= dt;
             if (w.SwingT >= 0f)
             {
@@ -256,7 +266,7 @@ namespace Gladiator.Gameplay
             if (!StartSwing(w, em)) return;
             w.Cooldown = CooldownOf(w);
             bool melee = d.pattern == WeaponPattern.MeleeArc || d.pattern == WeaponPattern.Thrust || d.pattern == WeaponPattern.GroundSlam
-                         || d.pattern == WeaponPattern.Chain;
+                         || d.pattern == WeaponPattern.Chain || d.pattern == WeaponPattern.MultiHit;
             w.BurstLeft = melee ? AmountOf(w) - 1 : 0;
         }
 
@@ -312,6 +322,7 @@ namespace Gladiator.Gameplay
                 case WeaponPattern.Lob: Lob(w, em); break;
                 case WeaponPattern.GroundSlam: SlamHit(w, em); break;
                 case WeaponPattern.Chain: ChainHit(w, em); break;
+                case WeaponPattern.MultiHit: StartFlurry(w, em); break;
             }
             var d = w.Def;
             bool echoes = d.pattern == WeaponPattern.MeleeArc || d.pattern == WeaponPattern.Thrust || d.pattern == WeaponPattern.Returning;
@@ -511,6 +522,34 @@ namespace Gladiator.Gameplay
                 if (tip) TipHits++;
                 Strike(w, em, i, Hit(w, em, i, aim, DamageFlags.Melee, tip));
             }
+        }
+
+        /// <summary>MultiHit (the Trident): the first jab now, the rest of the flurry every prongInterval s (TickWeapon).</summary>
+        void StartFlurry(WeaponInstance w, EnemyManager em)
+        {
+            w.ProngNext = 0;
+            w.ProngLeft = Mathf.Max(1, w.Def.prongs);
+            w.ProngT = 0f;
+            Prong(w, em, w.ProngNext++);
+            w.ProngLeft--;
+            w.ProngT = Mathf.Max(0.01f, w.Def.prongInterval);
+        }
+
+        /// <summary>Jab k of a flurry: a thrust line turned across the fan (left to right), from where the player is now.</summary>
+        void Prong(WeaponInstance w, EnemyManager em, int k)
+        {
+            var d = w.Def;
+            int n = Mathf.Max(1, d.prongs);
+            float angle = n > 1 ? -d.arcDegrees * 0.5f + d.arcDegrees * k / (n - 1) : 0f;
+            Vector3 aim = w.AimDir;
+            w.AimDir = Quaternion.Euler(0f, angle, 0f) * aim;
+            float area = AreaOf(w);
+            var pp = PlayerProjectiles.Instance;
+            if (pp != null) pp.Thrust(w.AimDir, d.range * area, Mathf.Max(0.08f, d.prongInterval * 2f), MeshOf(w, pp), d.meshScale * Mathf.Sqrt(area));
+            SfxPlayer.Play(SfxId.Thrust, transform.position);
+            ThrustHit(w, em);
+            Prongs++;
+            w.AimDir = aim;
         }
 
         /// <summary>Throws AmountOf(w) projectiles at the nearest distinct enemies; extra shots fan out around them.</summary>

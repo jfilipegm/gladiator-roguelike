@@ -44,6 +44,8 @@ MonoBehaviour:
   targetFarthest: 0
   tipLength: 0
   spreadStrikes: 0
+  prongs: 3
+  prongInterval: 0.07
   hitEffects: []
   levels:
   - mods:

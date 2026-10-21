@@ -58,6 +58,11 @@ namespace Gladiator.UI
         int _focus;
         GladiatorDef[] _available = Array.Empty<GladiatorDef>();
         Image[] _cardBorders = Array.Empty<Image>();
+        // Phase 5.14: eight gladiators no longer fit one 1920 px row; the row slides to keep the picked card in view
+        RectTransform _cardRow;
+        float[] _cardX = Array.Empty<float>();
+        float _rowHalf;
+        const float VisibleHalf = 930f;
         int _pick;
         readonly System.Collections.Generic.Dictionary<GameObject, GameObject> _heroModels = new System.Collections.Generic.Dictionary<GameObject, GameObject>();
 
@@ -166,31 +171,43 @@ namespace Gladiator.UI
             foreach (var g in gladiators) if (g != null) { n++; if (IsAvailable(g)) open++; }
             _available = new GladiatorDef[open];
             _cardBorders = new Image[open];
+            _cardX = new float[open];
             float w = 330f, gap = 30f, x0 = -(n - 1) * (w + gap) * 0.5f;
+            _rowHalf = (n * w + (n - 1) * gap) * 0.5f;
+            _cardRow = new GameObject("Cards", typeof(RectTransform)).GetComponent<RectTransform>();
+            _cardRow.SetParent(root, false);
+            _cardRow.anchorMin = _cardRow.anchorMax = mid;
+            _cardRow.sizeDelta = Vector2.zero;
+            var row = _cardRow.transform;
             int k = 0, a = 0;
             foreach (var g in gladiators)
             {
                 if (g == null) continue;
                 float x = x0 + k++ * (w + gap);
-                if (!IsAvailable(g)) { LockedCard(root, x, w, g.unlock != null ? g.unlock.hint : "???"); continue; }
+                if (!IsAvailable(g)) { LockedCard(row, x, w, g.unlock != null ? g.unlock.hint : "???"); continue; }
                 int index = a;
-                var card = Card(root, x, w, true, out var border);
+                var card = Card(row, x, w, true, out var border);
                 var hit = border.gameObject.AddComponent<Button>();
                 hit.transition = Selectable.Transition.None;
                 hit.onClick.AddListener(() => Choose(index));
                 _available[a] = g;
+                _cardX[a] = x;
                 _cardBorders[a++] = border;
                 var title = Line(card, g.displayName.ToUpperInvariant(), 36, Gold, 205);
                 title.textWrappingMode = TextWrappingModes.NoWrap; // long names shrink instead of spilling onto the text
                 title.enableAutoSizing = true;
                 title.fontSizeMin = 20f;
                 title.fontSizeMax = 36f;
-                Line(card, g.description, 25, Soft, 105, 150f).fontStyle = FontStyles.Normal;
+                var desc = Line(card, g.description, 25, Soft, 105, 150f);
+                desc.fontStyle = FontStyles.Normal;
+                desc.enableAutoSizing = true; // long descriptions (the Thunder Champion's) spilled over the title
+                desc.fontSizeMin = 16f;
+                desc.fontSizeMax = 25f;
                 Line(card, StatsLine(g), 24, new Color(0.6f, 0.95f, 1f), -15, 60f);
                 if (!string.IsNullOrEmpty(g.tradeoff)) Line(card, g.tradeoff, 21, Soft, -85, 70f).fontStyle = FontStyles.Italic;
                 Line(card, g.SelectLine, 22, Soft, -170, 60f).fontStyle = FontStyles.Normal;
             }
-            foreach (var l in locked) LockedCard(root, x0 + k++ * (w + gap), w, l.hint);
+            foreach (var l in locked) LockedCard(row, x0 + k++ * (w + gap), w, l.hint);
             // the last gladiator played this session stays picked
             _pick = 0;
             for (int i = 0; i < _available.Length; i++) if (_available[i] == GameSession.Gladiator) _pick = i;
@@ -289,6 +306,14 @@ namespace Gladiator.UI
         {
             for (int i = 0; i < _cardBorders.Length; i++)
                 _cardBorders[i].color = i == _pick ? Gold : new Color(0.55f, 0.48f, 0.3f, 0.9f);
+            if (_cardRow != null && _pick >= 0 && _pick < _cardX.Length)
+            {
+                // centre the pick, but never slide past either end of the row (no empty space at the screen's edges)
+                float o = _rowHalf > VisibleHalf ? Mathf.Clamp(-_cardX[_pick], VisibleHalf - _rowHalf, _rowHalf - VisibleHalf) : 0f;
+                // the last earned card shows the row's right end, so the locked cards past it can be read too
+                if (_rowHalf > VisibleHalf && _pick > 0 && _pick == _cardX.Length - 1) o = VisibleHalf - _rowHalf;
+                _cardRow.anchoredPosition = new Vector2(o, 0f);
+            }
             ShowHero(Selected);
         }
 

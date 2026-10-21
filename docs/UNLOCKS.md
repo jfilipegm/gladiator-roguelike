@@ -22,7 +22,8 @@ Every reward is **content** (a weapon or Boon entering the pool) or **Renown** (
 - **New condition kinds**, appended to `UnlockConditionKind`:
   - `RunKills` (best kills in one run);
   - `Evolve` (id = evolution card id, empty = any; amount = times);
-  - `SynergiesFound` (amount = distinct synergies ever switched on).
+  - `SynergiesFound` (amount = distinct synergies ever switched on);
+  - Phase 5.14: `WinWithWeapon` (id = a weapon held at the end of a won run, `"a|b"` = any of them, e.g. a weapon and its evolution; amount = wins). The save's `weaponWins` counts them (filled by Migrate in older files).
 - **`MetaProgress.Progress(condition, save)`** returns current / target for the bar. For several conditions the bar shows how many are met (e.g. "2 / 3").
 - **Save (added fields, no version bump; Migrate fills them):**
   - `bestRunKills`;
@@ -47,7 +48,7 @@ Every reward is **content** (a weapon or Boon entering the pool) or **Renown** (
 **Renown challenges** (bounty only): First Evolution (evolve any weapon, +100); Synergist (3 different synergies, +150); Butcher (5,000 kills in one run, +100); Every Gladiator Wins (win with the Nobody, the Goblin and the Knight, +200).
 
 **The existing unlocks are recategorised:**
-- Challenges: Gorm's Flail (beat Gorm), the Provincial Pit (beat Gorm), the Blood Knight (beat Gorm below 30 % HP; **Phase 5.9: reach the Stone Amphitheater**, §6.7's "Reach Arena 3"), the Murder Machine (Phase 5.9: beat Gorm; also adds the Executioner's Cleaver to the pool), the Thunder Champion (Phase 5.10: beat the Beast Lord, §6.7's "Complete Arena 3"; also adds the Storm Spear), the Golden Idol (Phase 5.11: 10,000 lifetime gold; also adds the Coin Toss). The Grand Arena (Phase 5.13: beat the Beast Lord, `UL_GrandArena`).
+- Challenges: Gorm's Flail (beat Gorm), the Provincial Pit (beat Gorm), the Blood Knight (beat Gorm below 30 % HP; **Phase 5.9: reach the Stone Amphitheater**, §6.7's "Reach Arena 3"), the Murder Machine (Phase 5.9: beat Gorm; also adds the Executioner's Cleaver to the pool), the Thunder Champion (Phase 5.10: beat the Beast Lord, §6.7's "Complete Arena 3"; also adds the Storm Spear), the Golden Idol (Phase 5.11: 10,000 lifetime gold; also adds the Coin Toss), the Net-Weaver (Phase 5.14: win a run holding the Spear or the Impaler, `WinWithWeapon spear|impaler`; also adds the Trident). The Grand Arena (Phase 5.13: beat the Beast Lord, `UL_GrandArena`).
 - Secret: the Pit Goblin (the rattling crate); the Ashen Oracle (Phase 5.12: the masked stranger in the Stone Amphitheater, flag `ashen_stranger`; also adds the Ashen Censer).
 
 **Three new synergies.** The new Boons give MOVEMENT, GOLD and XP their third carrier:

@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0ea0c2151f44fc41b534863b8707d7a, type: 3}
+  m_Name: UL_NetWeaver
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.UnlockDef
+  id: net_weaver
+  displayName: The Net-Weaver
+  description: You won with a spear in your hands, and a fisherman in the stands took note. The Net-Weaver can be chosen, and his Trident joins the level-up pool.
+  hint: A fisherman watches the spearmen from the stands. Win a run with a spear in your hands.
+  conditions:
+  - kind: 13
+    id: spear|impaler
+    amount: 1
+  category: 0
+  renownCost: 0
+  renownBounty: 0
+  addsToPool:
+  - {fileID: 11400000, guid: 3d3ea6082e1bc405d8c51fef19c001ff, type: 2}

@@ -912,6 +912,24 @@ def ashen_censer():
 
 ICONS["weapon_ashen_censer"] = ashen_censer()
 
+
+def trident():
+    """Trident (Phase 5.14): a diagonal shaft, a steel crossbar square to it and three parallel prongs, a cyan binding.
+    (Iteration 2: the first had fanned prongs and read as a fork.)"""
+    g = blank()
+    for k in range(7):  # the shaft, bottom-left up to the crossbar
+        put(g, [(1 + k, 14 - k)], "B")
+    put(g, [(7, 8), (8, 7)], "c")                                 # the cyan binding
+    put(g, [(7, 4), (8, 5), (9, 6), (10, 7), (11, 8)], "s")       # the crossbar, square to the shaft
+    put(g, [(8, 3), (9, 2), (10, 1)], "l")                        # the left prong
+    put(g, [(10, 5), (11, 4), (12, 3), (13, 2)], "l")             # the middle prong, the longest
+    put(g, [(12, 7), (13, 6), (14, 5)], "l")                      # the right prong
+    put(g, [(11, 0), (14, 1), (15, 4)], "w")                      # the points
+    return g
+
+
+ICONS["weapon_trident"] = trident()
+
 ICONS["loaded_dice"] = grid([  # Loaded Dice (iteration 2: read as toast): a die's top, front and side, five dark pips
     "................",
     "................",

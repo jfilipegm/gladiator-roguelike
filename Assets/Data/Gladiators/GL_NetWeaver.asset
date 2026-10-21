@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3f244af30c794398bf8108a48772002, type: 3}
+  m_Name: GL_NetWeaver
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.GladiatorDef
+  id: net_weaver
+  displayName: The Net-Weaver
+  description: A retiarius, a fisherman with a net and a trident. His slide flings a net that hauls the crowd together and holds it; the trident's flurry does the rest, harder on whatever is caught.
+  baseStats:
+  - stat: 0
+    value: 95
+  - stat: 3
+    value: 1.05
+  model: {fileID: 919132149155446097, guid: f55b545210b2a5289aaa5c7eb9473816, type: 3}
+  movement: {fileID: 11400000, guid: fb593c37a6d5cff0e8833c16959a1400, type: 2}
+  animProfile: {fileID: 11400000, guid: c2c535717293a5c7481635372c3049b7, type: 2}
+  cameraTargetHeight: 1.2
+  startingWeapon: {fileID: 11400000, guid: cc7f824a7201db79aae5ecf782a8d9ba, type: 2}
+  traits:
+  - {fileID: 11400000, guid: ffa78331783d60ed7a5a00f6bc2885a7, type: 2}
+  - {fileID: 11400000, guid: 4f3ba24a656bd81f88e93d0880ef2f0e, type: 2}
+  unlock: {fileID: 11400000, guid: f8095f326b29e8fc59c6a12f3561f766, type: 2}
+  selectLine: 
+  tradeoff: 'Control without armour: 95 HP, and a short reach when the net isn''t ready.'

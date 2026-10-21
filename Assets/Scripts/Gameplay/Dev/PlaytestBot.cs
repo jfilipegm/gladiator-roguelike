@@ -212,7 +212,10 @@ namespace Gladiator.Gameplay
             if (streak != null) sb.Append(" goldStreaks ").Append(streak.Streaks);
             var veil = player.GetComponent<SmokeVeil>();
             if (veil != null) sb.Append(" veils ").Append(veil.Veils).Append(" (hit ").Append(veil.VeilHits).Append(')');
-            if (fx != null && player.GetComponent<TraitEffects>() != null) sb.Append(" cursedBursts ").Append(fx.BurstsFired);
+            if (fx != null && player.GetComponent<TraitEffects>() != null && fx.BurstsFired > 0) sb.Append(" cursedBursts ").Append(fx.BurstsFired);
+            var net = player.GetComponent<CastNet>();
+            if (net != null) sb.Append(" nets ").Append(net.Casts).Append(" (hauled ").Append(net.Hauled).Append(')');
+            if (weapons != null && weapons.Prongs > 0) sb.Append(" prongs ").Append(weapons.Prongs);
             var thirst = player.GetComponent<Bloodthirst>();
             if (thirst != null) sb.Append(" kill-healed ").Append(thirst.Healed.ToString("0")).Append(" HP");
             sb.Append(" | hitstops ").Append(TimeController.HitStopCount).Append(" (").Append(TimeController.HitStopSeconds.ToString("0.0")).Append(" s)");

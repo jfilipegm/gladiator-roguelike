@@ -18,7 +18,8 @@ namespace Gladiator.EditorTools
     /// Idol (GL_GoldenIdol), the Coin Toss (Projectile data) and its card, the Midas Body, Golden Streak and Make It Rain
     /// traits, and UL_GoldenIdol (10,000 lifetime gold). Phase 5.12: the Ashen Oracle (GL_AshenOracle), the Curse
     /// status, the Ashen Censer (Lob data + hit effects) and its card, the Contagion (Boon effects) and Smoke Veil traits,
-    /// and UL_AshenOracle (the masked stranger's flag).
+    /// and UL_AshenOracle (the masked stranger's flag). Phase 5.14: the Net-Weaver (GL_NetWeaver), the Trident (MultiHit) and its
+    /// card, the Caught (Boon effects) and Cast Net traits, and UL_NetWeaver (WinWithWeapon spear).
     /// </summary>
     public static class GladiatorSetup
     {
@@ -97,6 +98,18 @@ namespace Gladiator.EditorTools
         public const string OracleModel = "Assets/Art/Models/Characters/CH_AshenOracle.fbx";
         public const string OracleFlag = "ashen_stranger";
 
+        public const string NetWeaverPath = Dir + "GL_NetWeaver.asset";
+        public const string NetWeaverMovePath = "Assets/Data/Config/MovementConfig_NetWeaver.asset";
+        public const string NetWeaverAnimPath = "Assets/Data/Config/PartAnim_NetWeaver.asset";
+        public const string CaughtPath = Dir + "TR_Caught.asset";
+        public const string CastNetPath = Dir + "TR_CastNet.asset";
+        public const string TridentPath = UpgradeSetup.WeaponDir + "WP_Trident.asset";
+        public const string TridentCardPath = UpgradeSetup.Dir + "UP_W_Trident.asset";
+        public const string NetWeaverUnlockPath = MetaSetup.Dir + "UL_NetWeaver.asset";
+        public const string NetWeaverModel = "Assets/Art/Models/Characters/CH_NetWeaver.fbx";
+        public const string TridentModel = "Assets/Art/Models/Weapons/WP_Trident.fbx";
+        public const string NetModel = "Assets/Art/Models/Weapons/WP_Net.fbx";
+
         static WeaponDef.Level L(params StatMod[] mods) => new WeaponDef.Level { mods = mods };
         static StatMod Pct(StatId s, float v) => new StatMod(s, ModOp.Percent, v);
         static StatMod Add(StatId s, float v) => new StatMod(s, ModOp.Flat, v);
@@ -168,6 +181,7 @@ namespace Gladiator.EditorTools
             ThunderChampion();
             GoldenIdol();
             AshenOracle();
+            NetWeaver();
             UpgradeSetup.Refresh();
             MetaSetup.CreateOrUpdate();
             IconSetup.Apply(); // the goblin's and the knight's weapon cards get their icons too
@@ -185,6 +199,7 @@ namespace Gladiator.EditorTools
             var thunder = AssetDatabase.LoadAssetAtPath<GladiatorDef>(ThunderPath);
             var idol = AssetDatabase.LoadAssetAtPath<GladiatorDef>(IdolPath);
             var oracle = AssetDatabase.LoadAssetAtPath<GladiatorDef>(OraclePath);
+            var weaver = AssetDatabase.LoadAssetAtPath<GladiatorDef>(NetWeaverPath);
             var list = new System.Collections.Generic.List<GladiatorDef>();
             if (nobody != null) list.Add(nobody);
             if (goblin != null) list.Add(goblin);
@@ -193,6 +208,7 @@ namespace Gladiator.EditorTools
             if (thunder != null) list.Add(thunder);
             if (idol != null) list.Add(idol);
             if (oracle != null) list.Add(oracle);
+            if (weaver != null) list.Add(weaver);
             return list.ToArray();
         }
 
@@ -503,6 +519,121 @@ namespace Gladiator.EditorTools
             if (g.unlock == null) g.unlock = unlock;
             EditorUtility.SetDirty(g);
             return g;
+        }
+
+        static Mesh FirstMesh(string path)
+        {
+            foreach (var o in AssetDatabase.LoadAllAssetsAtPath(path)) if (o is Mesh m) return m;
+            return null;
+        }
+
+        /// <summary>Phase 5.14: the Net-Weaver and everything only he brings.</summary>
+        static GladiatorDef NetWeaver()
+        {
+            var root = AssetDatabase.LoadAssetAtPath<StatusDef>(RootPath);
+            var slow = AssetDatabase.LoadAssetAtPath<StatusDef>(SlowPath);
+            var trident = Trident();
+            var card = WeaponCard(TridentCardPath, trident, "TR");
+            var unlock = AssetDatabase.LoadAssetAtPath<UnlockDef>(NetWeaverUnlockPath);
+            if (unlock == null)
+            {
+                unlock = PlayerSetup.EnsureAsset<UnlockDef>(NetWeaverUnlockPath);
+                unlock.id = "net_weaver";
+                unlock.displayName = "The Net-Weaver";
+                unlock.description = "You won with a spear in your hands, and a fisherman in the stands took note. The Net-Weaver can be chosen, and his Trident joins the level-up pool.";
+                unlock.hint = "A fisherman watches the spearmen from the stands. Win a run with a spear in your hands.";
+                // the Pit Spear or its evolution, the Impaler
+                unlock.conditions = new[] { new UnlockCondition { kind = UnlockConditionKind.WinWithWeapon, id = "spear|impaler", amount = 1f } };
+                unlock.addsToPool = new[] { card };
+                EditorUtility.SetDirty(unlock);
+            }
+            var move = Copy<MovementConfig>(PlayerSetup.MovementPath, NetWeaverMovePath, m =>
+            {
+                m.capsuleHeight = 1.6f;
+                m.slideCapsuleHeight = 0.95f;
+                m.capsuleRadius = 0.36f;
+            });
+            var anim = Copy<PartAnimProfile>(PlayerSetup.AnimPath, NetWeaverAnimPath, a =>
+            {
+                a.strideLength = 1.5f; // light on his feet, a low wide stance
+                a.bobHeight = 0.05f;
+                a.runLean = 10f;
+                a.weaponArmSwingScale = 0.3f; // the trident stays levelled
+                a.swingYawStart = 25f;  // the flurry: short jabs left to right
+                a.swingYawEnd = -25f;
+                a.swingRaise = 70f;
+            });
+            var caught = Trait<EffectsTrait>(CaughtPath, "caught", "Caught",
+                "Your hits do +50 % damage to Rooted enemies and +25 % to Slowed ones.");
+            if (caught.effects == null || caught.effects.Length == 0)
+            {
+                caught.effects = new[]
+                {
+                    new BoonEffect { kind = EffectKind.DamageVsStatus, status = root, bonus = 0.5f },
+                    new BoonEffect { kind = EffectKind.DamageVsStatus, status = slow, bonus = 0.25f },
+                };
+                EditorUtility.SetDirty(caught);
+            }
+            var cast = Trait<CastNetTrait>(CastNetPath, "cast_net", "Cast Net",
+                "Start a slide with the net ready (every 4 s): it lands 5 m ahead, hauls everything within 3.2 m together and Roots it for 2 s. Bosses are only Slowed.");
+            if (cast.root == null || cast.slow == null || cast.mesh == null || cast.material == null)
+            {
+                cast.root = root;
+                cast.slow = slow;
+                cast.mesh = FirstMesh(NetModel);
+                cast.material = AssetDatabase.LoadAssetAtPath<Material>(LookSetup.CharMat);
+                cast.meshScale = 1f / 0.62f; // WP_Net's rim radius is 0.62 m
+                EditorUtility.SetDirty(cast);
+            }
+
+            var g = AssetDatabase.LoadAssetAtPath<GladiatorDef>(NetWeaverPath);
+            if (g == null)
+            {
+                g = PlayerSetup.EnsureAsset<GladiatorDef>(NetWeaverPath);
+                g.id = "net_weaver";
+                g.displayName = "The Net-Weaver";
+                g.description = "A retiarius, a fisherman with a net and a trident. His slide flings a net that hauls the crowd together and holds it; the trident's flurry does the rest, harder on whatever is caught.";
+                g.baseStats = new[]
+                {
+                    new GladiatorDef.BaseStat { stat = StatId.MaxHp, value = 95f },
+                    new GladiatorDef.BaseStat { stat = StatId.MoveSpeed, value = 1.05f },
+                };
+                g.cameraTargetHeight = 1.2f;
+                g.tradeoff = "Control without armour: 95 HP, and a short reach when the net isn't ready.";
+            }
+            if (g.model == null) g.model = AssetDatabase.LoadAssetAtPath<GameObject>(NetWeaverModel);
+            if (g.movement == null) g.movement = move;
+            if (g.animProfile == null) g.animProfile = anim;
+            if (g.startingWeapon == null) g.startingWeapon = trident;
+            if (g.traits == null || g.traits.Length == 0) g.traits = new GladiatorTrait[] { caught, cast };
+            if (g.unlock == null) g.unlock = unlock;
+            EditorUtility.SetDirty(g);
+            return g;
+        }
+
+        static WeaponDef Trident()
+        {
+            var w = AssetDatabase.LoadAssetAtPath<WeaponDef>(TridentPath);
+            if (w == null)
+            {
+                w = PlayerSetup.EnsureAsset<WeaponDef>(TridentPath);
+                w.id = "trident"; w.displayName = "Trident";
+                w.description = "Three quick jabs fanned at the nearest enemy: all three land up close, and they spread across the crowd further out.";
+                w.pattern = WeaponPattern.MultiHit;
+                // range = each jab's length, width = its width, arcDegrees = the fan, prongs / prongInterval = the flurry
+                w.damage = 8f; w.critChance = 0.08f; w.critMultiplier = 2f; w.knockback = 2.5f;
+                w.cooldown = 1.2f; w.swingDuration = 0.34f; w.windup = 0.1f;
+                w.range = 4.2f; w.width = 0.6f; w.arcDegrees = 36f; w.acquireRange = 4.6f; w.amount = 1; w.pierce = -1;
+                w.prongs = 3; w.prongInterval = 0.07f; w.meshScale = 1f;
+                w.levels = new[]
+                {
+                    L(Pct(StatId.Damage, 0.2f)), L(Pct(StatId.Area, 0.15f)), L(Pct(StatId.AttackSpeed, 0.15f)), L(Add(StatId.Amount, 1f)),
+                    L(Pct(StatId.Damage, 0.25f)), L(Add(StatId.CritChance, 0.1f)), L(Pct(StatId.Area, 0.15f), Pct(StatId.Damage, 0.2f)),
+                };
+            }
+            if (w.mesh == null) w.mesh = FirstMesh(TridentModel);
+            EditorUtility.SetDirty(w);
+            return w;
         }
 
         static WeaponDef Censer(StatusDef curse)

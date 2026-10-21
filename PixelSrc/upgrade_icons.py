@@ -880,6 +880,20 @@ def storm_spear():
 
 ICONS["weapon_storm_spear"] = storm_spear()
 
+
+def coin_toss():
+    """Coin Toss (Phase 5.11): three gold coins in flight, the front one big with a stamped crown, speed lines."""
+    g = blank()
+    disc(g, 9.5, 8.5, 4.6, "y", lambda x, y: "h" if x + y < 15 else ("Y" if x + y > 21 else "y"))
+    put(g, [(8, 7), (9, 6), (10, 7), (11, 6), (8, 8), (9, 8), (10, 8), (11, 8)], "Y")  # the stamped crown
+    disc(g, 3.5, 4.5, 1.8, "y")
+    disc(g, 3.5, 12.5, 1.6, "Y")
+    put(g, [(0, 8), (1, 8), (2, 8), (0, 10), (1, 10)], "w")  # speed lines
+    return g
+
+
+ICONS["weapon_coin_toss"] = coin_toss()
+
 ICONS["loaded_dice"] = grid([  # Loaded Dice (iteration 2: read as toast): a die's top, front and side, five dark pips
     "................",
     "................",

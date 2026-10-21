@@ -1,0 +1,76 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 39f0cecc993934a19800cd9b6e8df985, type: 3}
+  m_Name: WP_CoinToss
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.WeaponDef
+  id: coin_toss
+  displayName: Coin Toss
+  description: Flicks gold coins at the nearest enemies. Each one goes through the first it hits.
+  pattern: 4
+  damage: 9
+  critChance: 0.1
+  critMultiplier: 2
+  knockback: 2
+  onHitStatus: {fileID: 0}
+  onHitStatusPower: 0.1
+  onHitStacks: 1
+  cooldown: 1.1
+  swingDuration: 0.18
+  windup: 0.06
+  range: 12
+  arcDegrees: 150
+  width: 0.4
+  acquireRange: 12
+  amount: 3
+  speed: 18
+  pierce: 1
+  mesh: {fileID: -5373289104186450392, guid: be3f81b35bbad9eceb0c1ddf53a4d299, type: 3}
+  meshScale: 1.6
+  flightTime: 0.6
+  fuse: 0.4
+  arcHeight: 2.2
+  echoDelay: 0
+  echoAngle: 180
+  echoScale: 1
+  targetFarthest: 0
+  tipLength: 0
+  spreadStrikes: 0
+  hitEffects: []
+  levels:
+  - mods:
+    - stat: 9
+      op: 0
+      value: 1
+  - mods:
+    - stat: 4
+      op: 1
+      value: 0.2
+  - mods:
+    - stat: 20
+      op: 0
+      value: 1
+  - mods:
+    - stat: 5
+      op: 1
+      value: 0.15
+  - mods:
+    - stat: 9
+      op: 0
+      value: 1
+  - mods:
+    - stat: 4
+      op: 1
+      value: 0.25
+  - mods:
+    - stat: 5
+      op: 1
+      value: 0.2

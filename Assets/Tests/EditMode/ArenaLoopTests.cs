@@ -7,7 +7,8 @@ namespace Gladiator.Tests
 {
     /// <summary>
     /// P1 (arena integrity), on the six layout assets (regenerate them first: "Gladiator/Arenas/Regenerate ... Layout"):
-    /// each arena's player boundary is ONE closed, simple loop that holds the enemies' whole play area and everything
+    /// each arena's player boundary is ONE closed, simple loop that holds the enemies' whole play area (but where it runs
+    /// into a solid piece, like the amphitheatre's stage wall) and everything
     /// the player has to reach (spawn, chests, altars, secrets), the old separate walls are gone, and the gates that
     /// used to open onto the outside (the Slave Pit's road, the Provincial Pit's town) have a pen or a tunnel behind.
     /// </summary>
@@ -44,6 +45,47 @@ namespace Gladiator.Tests
                 best = Mathf.Min(best, (p - (a + ab * s)).magnitude);
             }
             return best;
+        }
+
+        static readonly System.Collections.Generic.Dictionary<string, Bounds> ModelBounds = new System.Collections.Generic.Dictionary<string, Bounds>();
+
+        /// <summary>A model's mesh bounds in its prefab root's space (cached).</summary>
+        static Bounds BoundsOf(string model)
+        {
+            if (ModelBounds.TryGetValue(model, out var b)) return b;
+            var go = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Art/Models/" + model + ".fbx");
+            bool any = false;
+            if (go != null)
+                foreach (var mf in go.GetComponentsInChildren<MeshFilter>(true))
+                {
+                    if (mf.sharedMesh == null) continue;
+                    var mb = mf.sharedMesh.bounds;
+                    var m = go.transform.worldToLocalMatrix * mf.transform.localToWorldMatrix;
+                    for (int i = 0; i < 8; i++)
+                    {
+                        var c = m.MultiplyPoint3x4(mb.center + Vector3.Scale(mb.extents, new Vector3((i & 1) == 0 ? -1 : 1, (i & 2) == 0 ? -1 : 1, (i & 4) == 0 ? -1 : 1)));
+                        if (!any) { b = new Bounds(c, Vector3.zero); any = true; } else b.Encapsulate(c);
+                    }
+                }
+            ModelBounds[model] = b;
+            return b;
+        }
+
+        /// <summary>True if (x, z) lies in a Solid piece's footprint: enemies can't stand there (it's an obstacle), so the
+        /// enemies' outline may run behind it (the amphitheatre's stage wall stands 1.3-2.3 m proud of its line).</summary>
+        static bool InSolid(ArenaLayoutDef l, Vector2 p)
+        {
+            foreach (var piece in l.pieces)
+            {
+                if (piece.role != PieceRole.Solid) continue;
+                var b = BoundsOf(piece.model);
+                if (b.size == Vector3.zero) continue;
+                var scale = piece.scale == Vector3.zero ? Vector3.one : piece.scale;
+                var local = Quaternion.Inverse(Quaternion.Euler(0f, piece.yaw, 0f)) * new Vector3(p.x - piece.position.x, 0f, p.y - piece.position.z);
+                local = new Vector3(local.x / scale.x, 0f, local.z / scale.z);
+                if (local.x >= b.min.x && local.x <= b.max.x && local.z >= b.min.z && local.z <= b.max.z) return true;
+            }
+            return false;
         }
 
         static float Cross(Vector2 o, Vector2 a, Vector2 b) => (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
@@ -90,7 +132,7 @@ namespace Gladiator.Tests
                 }
                 Assert.AreEqual(0, crossings, name + ": the loop crosses itself");
                 foreach (var p in PlayEdge(l))
-                    Assert.IsTrue(Inside(loop, p), $"{name}: the enemies' play area reaches out of the player's loop at {p}");
+                    Assert.IsTrue(Inside(loop, p) || InSolid(l, p), $"{name}: the enemies' play area reaches out of the player's loop at {p} (and not into a solid piece)");
                 void Reach(string what, Vector3 p)
                 {
                     var xz = new Vector2(p.x, p.z);

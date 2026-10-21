@@ -87,6 +87,10 @@ namespace Gladiator.Gameplay
         Vector3[] _aim, _target;
         Vector3 _viewDir = Vector3.forward;
         bool[] _attackHit, _invuln, _scriptedWindup, _scriptedShield;
+        bool[] _heldAtEdge; // P1: at (or within a hand of) the play area's edge: its reach runs on to a wall-hugging player
+        float _hugGap;      // P1: how far the player stands past the play area's edge (m; negative: inside it)
+        Vector3 _hugOut;    // P1: the edge's outward normal there (XZ)
+        float _outlineWinding; // +1 counter-clockwise, -1 clockwise, 0 not yet known
         AffixDef[] _affix;
         float[] _hpFloor;   // a boss's HP can't drop below this (the Eternal Victor's false death, R2); 0 = off
 
@@ -155,6 +159,7 @@ namespace Gladiator.Gameplay
             _attackCd = new float[capacity]; _strafe = new float[capacity]; _dmgTakenMul = new float[capacity];
             _knockMul = new float[capacity]; _atkTimeMul = new float[capacity]; _scale = new float[capacity];
             _aim = new Vector3[capacity]; _target = new Vector3[capacity]; _attackHit = new bool[capacity]; _affix = new AffixDef[capacity];
+            _heldAtEdge = new bool[capacity];
             _view = new EnemyView[capacity];
             _free = new int[capacity];
             _invuln = new bool[capacity];
@@ -403,6 +408,7 @@ namespace Gladiator.Gameplay
             _attackCd[i] = GameRandom.Range(0.6f, 1.4f) * def.attackCooldown * 0.5f; // don't all fire on the same frame
             _strafe[i] = (GameRandom.NextUInt() & 1) == 0 ? 1f : -1f;
             _attackHit[i] = false;
+            _heldAtEdge[i] = false;
             _charge[i] = _trampled[i] = 0;
             _hpFloor[i] = 0f;
             _revived[i] = 0;
@@ -741,6 +747,7 @@ namespace Gladiator.Gameplay
                 _playerMotor = Player.Main.GetComponent<PlayerMotor>();
             }
             Vector3 player = _player != null ? _player.position : arenaCenter;
+            UpdateWallHug(player);
             if (_blastCount > 0) TickBlasts(dt, player);
             var cam = Camera.main;
             Vector3 camPos = cam != null ? cam.transform.position : player;
@@ -779,10 +786,12 @@ namespace Gladiator.Gameplay
                 to.y = 0f;
                 float dist = to.magnitude;
                 Vector3 dirTo = dist > 0.01f ? to / dist : Vector3.forward;
+                // P1: held at the edge, it reaches a player standing past it against the wall (its attacks decide on this)
+                float reach = _heldAtEdge[i] ? HeldReach(i, to, dist) : dist;
 
                 // behaviour: desired velocity + where to face
                 bool facePlayer;
-                Vector3 desired = Think(i, def, p, player, dirTo, dist, dt, tele, out facePlayer);
+                Vector3 desired = Think(i, def, p, player, dirTo, reach, dt, tele, out facePlayer);
                 // formations (Phase 5.16): an escort in a line holds its slot; a leader with a line holds short of you
                 bool inLine = _slotIndex[i] >= 0 && InFormation(i);
                 float lineYaw = 0f;
@@ -828,7 +837,7 @@ namespace Gladiator.Gameplay
                 if (dasher && def.trampleMul > 0f && _state[i] == AiState.Attack) Trample(i, def, np);
 
                 // keep inside the arena (its outline, or the ellipse)
-                bool clamped = false;
+                bool clamped = false, nearEdge = false;
                 float cx = np.x - arenaCenter.x, cz = np.z - arenaCenter.z;
                 if (_edge != null)
                 {
@@ -837,6 +846,7 @@ namespace Gladiator.Gameplay
                     {
                         float d = Mathf.Sqrt(d2), lim = EdgeRadius(cx, cz) - _radius[i];
                         if (d > lim) { float k2 = lim / d; np.x = arenaCenter.x + cx * k2; np.z = arenaCenter.z + cz * k2; clamped = true; }
+                        else nearEdge = d > lim - HeldBand;
                     }
                 }
                 else
@@ -844,7 +854,9 @@ namespace Gladiator.Gameplay
                     float erx = arenaRadius - _radius[i], erz = arenaRadius * arenaAspect - _radius[i];
                     float ux = cx / erx, uz = cz / erz, e2 = ux * ux + uz * uz;
                     if (e2 > 1f) { float k2 = 1f / Mathf.Sqrt(e2); np.x = arenaCenter.x + cx * k2; np.z = arenaCenter.z + cz * k2; clamped = true; }
+                    else nearEdge = Mathf.Sqrt(e2) > 1f - HeldBand / Mathf.Max(0.1f, Mathf.Min(erx, erz));
                 }
+                _heldAtEdge[i] = clamped || nearEdge;
 
                 // terrain: follow walkable height, but never step up a wall (unless the edge is pulling it back in from
                 // outside: behind the amphitheatre's stage wall the ground is lower than the stage in front of it)
@@ -856,7 +868,8 @@ namespace Gladiator.Gameplay
 
                 // contact damage (a lunging cur deals its leap damage instead)
                 _contactCd[i] -= dt;
-                bool touching = dist < _radius[i] + playerRadius + 0.15f && Mathf.Abs(player.y - np.y) < 1.1f;
+                if (_heldAtEdge[i]) reach = HeldReach(i, to, dist);
+                bool touching = reach < _radius[i] + playerRadius + 0.15f && Mathf.Abs(player.y - np.y) < 1.1f;
                 bool pushed = inLine && _playerHealth != null && PushHit(i, def, dist, player); // the line's shove (its own reach)
                 if (_playerHealth != null && touching && !pushed)
                 {
@@ -971,6 +984,79 @@ namespace Gladiator.Gameplay
         {
             if (_threatCount < _threats.Length) _threats[_threatCount++] = new EnemyThreat { Position = p, Color = telegraphColor, Windup = true };
         }
+
+        // ------------------------------------------------------------------ the wall-hug reach (P1)
+        // The horde's play area stops short of the walls (PlayInset 1.1 m in the stone arenas, 1 m in the Slave Pit), so
+        // a player standing against a wall was out of a convict's touch: "he can hit the mobs but they cant hit him". An
+        // enemy held at the edge measures the player as if they stood on the edge: the outward part of the distance
+        // between them loses the player's gap past the edge plus the enemy's own radius (the edge keeps its centre that
+        // far in). Along the wall the distance is untouched.
+
+        /// <summary>How far inside its limit (m) an enemy still counts as held at the edge.</summary>
+        const float HeldBand = 0.25f;
+
+        /// <summary>The player's gap past the play area's edge and the edge's outward normal there, once per tick.</summary>
+        void UpdateWallHug(Vector3 player)
+        {
+            float x = player.x - arenaCenter.x, z = player.z - arenaCenter.z;
+            _hugGap = float.NegativeInfinity;
+            _hugOut = Vector3.zero;
+            if (HasOutline)
+            {
+                int n = arenaOutline.Length;
+                if (_outlineWinding == 0f)
+                {
+                    float twice = 0f;
+                    for (int i = 0, j = n - 1; i < n; j = i++) twice += arenaOutline[j].x * arenaOutline[i].y - arenaOutline[i].x * arenaOutline[j].y;
+                    _outlineWinding = twice >= 0f ? 1f : -1f;
+                }
+                float best = float.MaxValue;
+                var pp = new Vector2(player.x, player.z);
+                for (int k = 0; k < n; k++)
+                {
+                    Vector2 a = arenaOutline[k], ab = arenaOutline[(k + 1) % n] - a;
+                    float len2 = ab.sqrMagnitude;
+                    if (len2 < 1e-8f) continue;
+                    float s = Mathf.Clamp01(Vector2.Dot(pp - a, ab) / len2);
+                    float d2 = (pp - (a + ab * s)).sqrMagnitude;
+                    if (d2 >= best) continue;
+                    best = d2;
+                    _hugOut = new Vector3(ab.y, 0f, -ab.x) * (_outlineWinding / Mathf.Sqrt(len2)); // right of a counter-clockwise edge
+                }
+                if (best == float.MaxValue) return;
+                float gap = Mathf.Sqrt(best);
+                _hugGap = EdgeDistance01(player) > 1f ? gap : -gap;
+            }
+            else
+            {
+                float a = Mathf.Max(0.1f, arenaRadius), b = Mathf.Max(0.1f, arenaRadius * arenaAspect);
+                float d = Mathf.Sqrt(x * x / (a * a) + z * z / (b * b));
+                if (d < 1e-4f) return;
+                float qx = x / d, qz = z / d; // the edge point on the player's ray from the centre
+                var nrm = new Vector3(qx / (a * a), 0f, qz / (b * b));
+                if (nrm.sqrMagnitude < 1e-12f) return;
+                _hugOut = nrm.normalized;
+                _hugGap = (x - qx) * _hugOut.x + (z - qz) * _hugOut.z;
+            }
+        }
+
+        /// <summary>Enemy i, held at the edge, `to` (XZ, `dist` long) from the player: the distance its attacks and its touch
+        /// use.</summary>
+        float HeldReach(int i, Vector3 to, float dist)
+        {
+            float extend = _hugGap + _radius[i];
+            if (extend <= 0f) return dist;
+            float outward = to.x * _hugOut.x + to.z * _hugOut.z;
+            if (outward <= 0f) return dist;
+            float across = Mathf.Max(0f, dist * dist - outward * outward);
+            float left = Mathf.Max(0f, outward - extend);
+            return Mathf.Sqrt(across + left * left);
+        }
+
+        /// <summary>How far the player stands past the play area's edge this tick (m; negative inside): tests, the bot.</summary>
+        public float PlayerPastEdge => _hugGap;
+        /// <summary>True if enemy i was at (or within HeldBand of) the edge on its last move.</summary>
+        public bool IsHeldAtEdge(int i) => _heldAtEdge != null && i >= 0 && i < _heldAtEdge.Length && _heldAtEdge[i];
 
         /// <summary>
         /// Per-behaviour state machine: Move → Windup (telegraphed) → Attack → Recover → Move. Returns the desired

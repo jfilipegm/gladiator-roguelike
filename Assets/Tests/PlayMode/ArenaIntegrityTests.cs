@@ -16,6 +16,7 @@ namespace Gladiator.Tests
     /// - EdgeWalk: the real motor, with both air jumps, walks, jumps and slides straight at the boundary loop every
     ///   2.5 m round the arena, and again from every raised spot near the edge (berm slopes, terraces, platforms); the
     ///   walls must hold on their own: ArenaBounds' last-resort clamp may never fire.
+    /// - WallHug (Slave Pit, Grand Arena): a convict held at the horde's edge still hits a player against the wall.
     /// - PerchAudit: every surface a player could stand on inside the loop (a 0.5 m grid of downward rays, headroom for
     ///   the capsule, NoPerch tops excluded) must have ground enemies can stand on within 2 m with |dy| &lt; 1 (their
     ///   melee's reach), using the enemies' own play area, obstacles and height grid. Clusters of 2+ samples fail;
@@ -98,8 +99,18 @@ namespace Gladiator.Tests
             return false;
         }
 
-        static bool Headroom(Vector3 foot) =>
-            !Physics.CheckCapsule(foot + Vector3.up * 0.36f, foot + Vector3.up * 1.2f, 0.28f, Layers.SolidMask, QueryTriggerInteraction.Ignore);
+        /// <summary>Room for the smallest capsule (the goblin's 0.28 m) standing at `foot`, and `foot` not inside a closed
+        /// mesh (the floor under a hill or a stage: an upward ray meets the back of a surface facing up).</summary>
+        static bool Headroom(Vector3 foot)
+        {
+            if (Physics.CheckCapsule(foot + Vector3.up * 0.31f, foot + Vector3.up * 1.2f, 0.28f, Layers.SolidMask, QueryTriggerInteraction.Ignore))
+                return false;
+            bool backfaces = Physics.queriesHitBackfaces;
+            Physics.queriesHitBackfaces = true;
+            bool inside = Physics.Raycast(foot + Vector3.up * 0.05f, Vector3.up, out var hit, 40f, Layers.SolidMask, QueryTriggerInteraction.Ignore) && hit.normal.y > 0.1f;
+            Physics.queriesHitBackfaces = backfaces;
+            return !inside;
+        }
 
         /// <summary>Drives the motor (and the player's input read) tick by tick in this frame: run straight along
         /// `dir`, with `jumps` presses (ground + air) and/or a slide.</summary>
@@ -189,6 +200,57 @@ namespace Gladiator.Tests
                 Vector2 c = a + ab * s;
                 if ((p - c).sqrMagnitude < best) { best = (p - c).sqrMagnitude; nearest = c; }
             }
+        }
+
+        // ------------------------------------------------------------------ the wall-hug reach
+
+        /// <summary>The producer's "he can hit the mobs but they cant hit the player", against a wall: a convict chasing a
+        /// player who stands against it is held at the horde's edge, more than its touch (0.86 m) away, and still hits
+        /// them (EnemyManager.HeldReach). The Slave Pit's oval (a fence, bearing 90) and the Grand Arena's outline.</summary>
+        [UnityTest, Timeout(120000)]
+        public IEnumerator WallHug_AConvictHeldAtTheEdge_HitsThePlayer_SlavePit() =>
+            WallHug("SlavePit", new Vector3(36.5f, 0f, 0f), Vector2.right);
+
+        [UnityTest, Timeout(120000)]
+        public IEnumerator WallHug_AConvictHeldAtTheEdge_HitsThePlayer_GrandArena() =>
+            WallHug("GrandArena", new Vector3(21.5f, 0f, 60f), Vector2.right);
+
+        IEnumerator WallHug(string scene, Vector3 from, Vector2 outward)
+        {
+            yield return Boot(scene);
+            DevSettings.GodMode = false;
+            from.y = _em.Height.Sample(from.x, from.z) + 0.05f;
+            _motor.Teleport(from);
+            _input.Next = default;
+            _input.Next.Move = outward; // walk into the wall and stay there
+            float t = 0f;
+            while (t < 1.5f) { t += Time.deltaTime; yield return null; }
+            _input.Next = default;
+            yield return null;
+            var p = _player.transform.position;
+            Assert.Less(_bounds.DistanceToEdge(p.x, p.z), 0.5f, $"the player stands against the wall ({p})");
+            Assert.Greater(_em.PlayerPastEdge, 0f, "past the horde's edge");
+
+            var convict = UnityEditor.AssetDatabase.LoadAssetAtPath<EnemyDef>("Assets/Data/Enemies/EN_Convict.asset");
+            int slot = _em.Spawn(convict, from);
+            Assert.GreaterOrEqual(slot, 0);
+            var health = _player.GetComponent<PlayerHealth>();
+            float before = health.DamageTaken, gap = 0f, end = Time.time + 8f;
+            bool held = false;
+            while (Time.time < end && health.DamageTaken <= before)
+            {
+                if (_em.IsAlive(slot))
+                {
+                    held |= _em.IsHeldAtEdge(slot);
+                    var e = _em.GetPosition(slot);
+                    gap = new Vector2(e.x - p.x, e.z - p.z).magnitude;
+                }
+                yield return null;
+            }
+            Debug.Log($"[Integrity] {scene} wall hug: the player {_em.PlayerPastEdge:0.00} m past the edge, the convict {gap:0.00} m away when it hit (held: {held})");
+            Assert.IsTrue(held, "the convict ended up held at the edge");
+            Assert.Greater(gap, 0.86f, "out of its old touch (radius + 0.35 + 0.15)");
+            Assert.Greater(health.DamageTaken, before, "and it still hits the wall-hugging player");
         }
 
         // ------------------------------------------------------------------ the perch audit

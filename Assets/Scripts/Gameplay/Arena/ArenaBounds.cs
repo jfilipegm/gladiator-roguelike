@@ -75,7 +75,7 @@ namespace Gladiator.Gameplay
         }
 
         /// <summary>Distance (XZ) from (x, z) to the nearest point of the loop's line, inside or out.</summary>
-        public float DistanceToEdge(float x, float z) => Mathf.Sqrt(Nearest(new Vector2(x, z), out _, out _));
+        public float DistanceToEdge(float x, float z) => Mathf.Sqrt(Nearest(new Vector2(x, z), out _, out _, out _));
 
         /// <summary>
         /// If `pos` (XZ) is outside the loop, moves it onto the nearest point of the loop and `inset` metres in, and returns
@@ -85,12 +85,32 @@ namespace Gladiator.Gameplay
         {
             inward = Vector2.zero;
             if (!Valid || Contains(pos.x, pos.z)) return false;
-            Nearest(new Vector2(pos.x, pos.z), out var q, out int edge);
-            Vector2 a = polygon[edge], b = polygon[(edge + 1) % polygon.Length];
-            Vector2 d = b - a;
-            inward = new Vector2(-d.y, d.x) * _winding;
-            inward = inward.sqrMagnitude > 1e-8f ? inward.normalized : Vector2.zero;
-            Vector2 t = q + inward * inset;
+            Nearest(new Vector2(pos.x, pos.z), out var q, out int edge, out float s);
+            int n = polygon.Length;
+            inward = InwardOf(edge);
+            float push = inset;
+            if (s <= 1e-4f || s >= 1f - 1e-4f)
+            {
+                // nearest to a corner: in along the corner's bisector, far enough to be `inset` from both its edges
+                var m = inward + InwardOf(s <= 1e-4f ? (edge + n - 1) % n : (edge + 1) % n);
+                if (m.sqrMagnitude > 1e-6f)
+                {
+                    m.Normalize();
+                    push = inset / Mathf.Max(0.3f, Vector2.Dot(m, inward));
+                    inward = m;
+                }
+            }
+            Vector2 t = q + inward * push;
+            for (int it = 0; it < 4 && inward != Vector2.zero && Contains(t.x, t.y); it++)
+            {
+                // next to a corner the push can end up short of the other edge: away from whichever edge is nearest
+                float d2 = Nearest(t, out var q2, out _, out _);
+                if (d2 >= inset * inset * 0.98f) break;
+                Vector2 away = t - q2;
+                float l = away.magnitude;
+                if (l < 1e-5f) break;
+                t = q2 + away / l * inset;
+            }
             if (inward == Vector2.zero || !Contains(t.x, t.y))
             {
                 // a corner: its edge's normal can point out again; head for the centre instead
@@ -106,13 +126,22 @@ namespace Gladiator.Gameplay
             return true;
         }
 
-        /// <summary>Squared distance from p to the loop's line, the nearest point and the edge it's on (edge k joins
-        /// point k to k + 1).</summary>
-        float Nearest(Vector2 p, out Vector2 nearest, out int edge)
+        /// <summary>Edge k's inward unit normal (edge k joins point k to k + 1).</summary>
+        Vector2 InwardOf(int k)
+        {
+            Vector2 d = polygon[(k + 1) % polygon.Length] - polygon[k];
+            var v = new Vector2(-d.y, d.x) * _winding;
+            return v.sqrMagnitude > 1e-12f ? v.normalized : Vector2.zero;
+        }
+
+        /// <summary>Squared distance from p to the loop's line, the nearest point, the edge it's on (edge k joins point k
+        /// to k + 1) and how far along it (0..1).</summary>
+        float Nearest(Vector2 p, out Vector2 nearest, out int edge, out float along)
         {
             float best = float.MaxValue;
             nearest = p;
             edge = 0;
+            along = 0f;
             int n = polygon.Length;
             for (int k = 0; k < n; k++)
             {
@@ -121,7 +150,7 @@ namespace Gladiator.Gameplay
                 float s = len2 > 1e-8f ? Mathf.Clamp01(Vector2.Dot(p - a, ab) / len2) : 0f;
                 Vector2 c = a + ab * s;
                 float d2 = (p - c).sqrMagnitude;
-                if (d2 < best) { best = d2; nearest = c; edge = k; }
+                if (d2 < best) { best = d2; nearest = c; edge = k; along = s; }
             }
             return best;
         }

@@ -460,14 +460,18 @@ namespace Gladiator.EditorTools
                 sleeve.layer = Layers.Props;
                 sleeve.transform.SetParent(t, false);
                 var box = sleeve.AddComponent<BoxCollider>();
-                box.center = b.center;
-                box.size = b.size;
+                // a little over the piece on every side and 10 cm over its top: its own highest face (a pillar's cap)
+                // must never be level with the sleeve, or the player's ground probe can find it first
+                box.center = b.center + Vector3.up * (SleeveOverTop * 0.5f);
+                box.size = b.size + new Vector3(SleeveOverSide * 2f, SleeveOverTop, SleeveOverSide * 2f);
                 sleeve.AddComponent<NoPerch>();
                 sleeves++;
                 if (names.Length < 400) names.Append(' ').Append(go.name);
             }
             Debug.Log($"[ArenaBuilder] {layout.id}: perch guards on {props} props, sleeves on {sleeves} solid pieces:{names}");
         }
+
+        const float SleeveOverTop = 0.1f, SleeveOverSide = 0.02f;
 
         /// <summary>A placed model's mesh bounds in its root's local space (all its parts).</summary>
         static Bounds PieceBounds(GameObject go)

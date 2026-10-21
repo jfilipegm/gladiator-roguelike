@@ -1,0 +1,116 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d4c6ea183ef480c5acde212f0835f1d, type: 3}
+  m_Name: BD_GildedPatron
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.BossDef
+  id: patron
+  displayName: THE GILDED PATRON
+  title: OWNER OF THE GRAND ARENA
+  enemy: {fileID: 11400000, guid: d9f7f0dfa1715d143b797fa0ded7ce7b, type: 2}
+  enterText: THE GILDED PATRON!
+  fallText: THE PATRON IS BANKRUPT!
+  guardsText: GOLD TALKS!
+  phase2Text: '"EVERYTHING IS FOR SALE!"'
+  shortName: The Gilded Patron
+  deathLine: The Gilded Patron writes you off as a bad investment.
+  victoryLine: The Patron is bankrupt and his gold is in the sand. The boxes chant your name.
+  phase1Attacks: 080905y
+  phase2Attacks: 080905y
+  moveSpeed: 2.6
+  enragedMoveSpeed: 3.2
+  turnRate: 120
+  contactDamage: 10
+  contactInterval: 0.8
+  recover: 0.7
+  sweepRadius: 5.5
+  sweepWindup: 1.1
+  sweepDamage: 28
+  sweepKnockback: 9
+  sweepJumpClear: 0.7
+  whipLength: 12
+  whipWidth: 1.2
+  whipWindup: 0.7
+  whipDamage: 18
+  whipSlow: 0.55
+  whipSlowSeconds: 2
+  slamRadius: 2.6
+  slamWindup: 1
+  slamDamage: 30
+  slamTrack: 0.6
+  slamFire: {x: 2.2, y: 4, z: 10}
+  bashRange: 4.5
+  bashAngle: 120
+  bashWindup: 0.7
+  bashDamage: 20
+  bashKnockback: 12
+  flurryLength: 6
+  flurryWidth: 1.1
+  flurryWindup: 0.35
+  flurryDamage: 12
+  flurryThrusts: {x: 3, y: 5}
+  chargeWindup: 0.9
+  chargeSpeed: 16
+  chargeLength: 14
+  chargeWidth: 0
+  chargeDamage: 24
+  chargeKnockback: 12
+  chargeStun: 1
+  stunDamageTakenMul: 1
+  chargeRepeats: {x: 1, y: 1}
+  pounceRadius: 3.5
+  pounceWindup: 1
+  pounceTrack: 0.7
+  pounceFlight: 0.55
+  pounceHeight: 3
+  pounceRange: 24
+  pounceDamage: 28
+  pounceKnockback: 9
+  pounceRecover: 0.8
+  pounceRepeats: {x: 1, y: 2}
+  bombCount: {x: 3, y: 5}
+  bombWindup: 0.6
+  bombInterval: 0.35
+  bombFlight: 1
+  bombRadius: 2.4
+  bombDamage: 22
+  bombCoins: 3
+  bombSpread: 3.5
+  volleyCount: {x: 7, y: 11}
+  volleyArc: {x: 50, y: 70}
+  volleyWindup: 0.8
+  volleySpeed: 15
+  volleyDamage: 12
+  volleyRange: 24
+  guardedBy: {fileID: 11400000, guid: 4165bb2b0d299f6b098d374ad7be05aa, type: 2}
+  guardedDamageMul: 0.4
+  guardThreadColor: {r: 1, g: 0.82, b: 0.25, a: 0.9}
+  guardSpotsUsed: 2
+  defeatGold: 300
+  beastPack: {x: 0, y: 0}
+  phase2CagePack: 0
+  scatterOnDefeat: 0
+  guardsEvery: 22
+  guards:
+  - {fileID: 11400000, guid: 4165bb2b0d299f6b098d374ad7be05aa, type: 2}
+  guardCount: {x: 4, y: 6}
+  phase2At: 0.5
+  phase2FireRing: 0
+  phase2SpikeVolley: 0
+  phase2FireJets: 1
+  phase2Blades: 1
+  enrageSpeed: 1.25
+  enrageRoar: 1.5
+  fireRingInset: 1.1
+  fireRingSpacing: 2.4
+  fireRingPatch: 1.5
+  fireRingDps: 12
+  rewardFloor: 2

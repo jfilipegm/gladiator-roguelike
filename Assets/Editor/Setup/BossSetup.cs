@@ -16,6 +16,8 @@ namespace Gladiator.EditorTools
         public const string ChampionPath = "Assets/Data/Bosses/BD_Champion.asset";
         public const string BeastLordEnemyPath = "Assets/Data/Enemies/EN_BeastLord.asset";
         public const string BeastLordPath = "Assets/Data/Bosses/BD_BeastLord.asset";
+        public const string PatronEnemyPath = "Assets/Data/Enemies/EN_GildedPatron.asset";
+        public const string PatronPath = "Assets/Data/Bosses/BD_GildedPatron.asset";
 
         [MenuItem("Gladiator/Setup/Bosses/Create Boss Data")]
         public static BossDef EnsureGorm()
@@ -205,6 +207,82 @@ namespace Gladiator.EditorTools
                 boss.phase2SpikeVolley = false;
                 boss.rewardFloor = Rarity.Rare;
             }
+            boss.enemy = body;
+            EditorUtility.SetDirty(boss);
+            AssetDatabase.SaveAssets();
+            return boss;
+        }
+            /// <summary>
+        /// The Gilded Patron (docs/BOSSES.md): carried on a litter, no shield. Coin Bombs (purses that burst into gold),
+        /// Golden Volley (a fan of red-hot coins) and Shove (the cone); every 22 s he hires 4-6 Gilded Mercenaries who
+        /// jump down from the patron boxes nearest you, and while any of them lives he takes 40 % of the damage
+        /// (payroll). Phase 2 fires every jet and spins every blade, five bombs, the wide volley. His fortune is paid
+        /// out when he falls.
+        /// </summary>
+        [MenuItem("Gladiator/Setup/Bosses/Create Gilded Patron Data")]
+        public static BossDef EnsureGildedPatron()
+        {
+            var body = AssetDatabase.LoadAssetAtPath<EnemyDef>(PatronEnemyPath);
+            if (body == null)
+            {
+                body = PlayerSetup.EnsureAsset<EnemyDef>(PatronEnemyPath);
+                body.id = "patron";
+                body.displayName = "The Gilded Patron";
+                body.behaviour = EnemyBehaviour.Scripted;
+                body.maxHp = 18000f;
+                body.radius = 1.6f;
+                body.knockbackTaken = 0f;
+                body.blockArc = 0f;
+                body.contactDamage = 0f;
+                body.moveSpeed = 0f;
+                body.xp = 0f;
+                body.goldChance = 0f;
+                body.prewarm = 1;
+            }
+            if (body.model == null)
+                body.model = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Art/Models/Enemies/EN_GildedPatron.fbx");
+            EditorUtility.SetDirty(body);
+
+            if (!AssetDatabase.IsValidFolder("Assets/Data/Bosses")) AssetDatabase.CreateFolder("Assets/Data", "Bosses");
+            var merc = AssetDatabase.LoadAssetAtPath<EnemyDef>(GrandArenaSetup.MercenaryPath);
+            var boss = AssetDatabase.LoadAssetAtPath<BossDef>(PatronPath);
+            if (boss == null)
+            {
+                boss = PlayerSetup.EnsureAsset<BossDef>(PatronPath);
+                boss.id = "patron";
+                boss.displayName = "THE GILDED PATRON"; // the boss bar reads "NAME, TITLE"
+                boss.title = "OWNER OF THE GRAND ARENA";
+                boss.enterText = "THE GILDED PATRON!";
+                boss.fallText = "THE PATRON IS BANKRUPT!";
+                boss.guardsText = "GOLD TALKS!";
+                boss.phase2Text = "\"EVERYTHING IS FOR SALE!\"";
+                boss.shortName = "The Gilded Patron";
+                boss.deathLine = "The Gilded Patron writes you off as a bad investment.";
+                boss.victoryLine = "The Patron is bankrupt and his gold is in the sand. The boxes chant your name.";
+                boss.phase1Attacks = new[] { BossAttack.CoinBombs, BossAttack.Volley, BossAttack.Bash };
+                boss.phase2Attacks = new[] { BossAttack.CoinBombs, BossAttack.Volley, BossAttack.Bash };
+                boss.moveSpeed = 2.6f; boss.enragedMoveSpeed = 3.2f; boss.turnRate = 120f; // a litter turns slowly
+                boss.contactDamage = 10f; boss.recover = 0.7f;
+                // Shove: the bearers barge forward in a cone
+                boss.bashRange = 4.5f; boss.bashAngle = 120f; boss.bashWindup = 0.7f; boss.bashDamage = 20f; boss.bashKnockback = 12f;
+                boss.bombCount = new Vector2Int(3, 5); boss.bombWindup = 0.6f; boss.bombInterval = 0.35f; boss.bombFlight = 1.0f;
+                boss.bombRadius = 2.4f; boss.bombDamage = 22f; boss.bombCoins = 3; boss.bombSpread = 3.5f;
+                boss.volleyCount = new Vector2Int(7, 11); boss.volleyArc = new Vector2(50f, 70f); boss.volleyWindup = 0.8f;
+                boss.volleySpeed = 15f; boss.volleyDamage = 12f; boss.volleyRange = 24f;
+                boss.guardsEvery = 22f;
+                boss.guardCount = new Vector2Int(4, 6);
+                boss.guardSpotsUsed = 2;
+                boss.guardedDamageMul = 0.4f;
+                boss.defeatGold = 300;
+                boss.phase2At = 0.5f; boss.enrageSpeed = 1.25f; boss.enrageRoar = 1.5f;
+                boss.phase2FireRing = false;
+                boss.phase2SpikeVolley = false;
+                boss.phase2FireJets = true;
+                boss.phase2Blades = true;
+                boss.rewardFloor = Rarity.Rare;
+            }
+            if (merc != null && (boss.guards == null || boss.guards.Length == 0)) boss.guards = new[] { merc };
+            if (merc != null && boss.guardedBy == null) boss.guardedBy = merc;
             boss.enemy = body;
             EditorUtility.SetDirty(boss);
             AssetDatabase.SaveAssets();

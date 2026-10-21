@@ -32,6 +32,8 @@ namespace Gladiator.EditorTools
         public const string StoneMesh = Models + "Props/PR_SlingStone.fbx";
         public const string PotMesh = Models + "Props/PR_FirePot.fbx";
         public const string ArrowMesh = Models + "Props/PR_Arrow.fbx";
+        public const string PurseMesh = Models + "Props/PR_PurseBomb.fbx";
+        public const string HotCoinMesh = Models + "Props/PR_HotCoin.fbx";
 
         [MenuItem("Gladiator/Setup/Combat/Create Or Update Combat Assets")]
         public static string CreateOrUpdate()

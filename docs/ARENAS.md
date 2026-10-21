@@ -133,3 +133,54 @@ the pens, and a stage wall built to impress.
 - The Beast Lord: entrance, each attack telegraphs and hits, the pounce lands where it was shown, the horn opens a
   cage, phase 2 opens every cage and he pounces twice; at his fall the beasts scatter. (`AmphitheaterTests` 6,
   `BeastLordTests` 7.)
+
+## 4. The Grand Arena (Phase 5.13, v0.14.0)
+**Player feels:** "I'm a star." The richest men in the city built themselves an arena of white marble to watch
+fighters like you, from boxes hung with gold.
+
+| | |
+|---|---|
+| **Unlock** | Beat the Beast Lord (`UL_GrandArena`, `DefeatBoss beastlord`). Locked: *"The city has seen you kill its beasts. Now the rich want to watch."* |
+| **Size / shape** | A **Greek cross**: four arms 52 m wide reaching 70 m from the centre (140 m tip to tip), the four inner corners cut on the diagonal by the **patron boxes**. Play area ≈ 11,600 m², ~1.36× the Stone Amphitheater's 8,513 (`docs/GDD.md` ladder). White marble with red bands (palette A4), pale sand floor. |
+| **Layout** | A central **plaza** (the cross's middle square) with a round raised **dais** (1.2 m, four stairs) under a gilded statue of the Patron (a line-of-sight blocker); four **arms**, each a hall of sand between two marble walls with stands behind them, ending in a **monumental gate** (north = the boss's). Two raised marble **terraces** (stairs or a ramp) against the walls of each arm. |
+| **Patron boxes** | Raised loges with red-and-gold canopies on the four diagonal walls between the arms, full of nobles. The Patron's hired swords jump down from them. |
+| **New rule: fire jets** | A row of bronze nozzles across each arm, halfway to its gate. Every 10 s a row telegraphs (its strip across the arm glows orange-red, 1.2 s), then roars a 3.5 m wall of fire for 1.6 s. **Too tall to jump; it hurts everyone**: the player (20) and the horde (45, ×2 for ordinary enemies), so the horde coming down an arm burns. The four rows fire in turn (one every 2.5 s, going round). |
+| **New rule: blade sweepers** | Four bronze hubs in the plaza, each with a 5.5 m blade at shin height. Every 12 s two of them (a diagonal pair) spin up: their circle glows orange-red and the blade turns slowly (1.5 s), then it whirls for 5 s. **Jump it** (feet above 0.55 m clear it) or stay out of the circle; it mows the horde (35, ×2 ordinary). |
+| **Gates** | Four, one at each arm's end. Swarms and elites come through them. |
+| **Enemies** | The Amphitheater's (not the cage boars), tougher and sooner, plus the **Gilded Mercenary** and the **Sorcerer**. +80 % enemy HP, +35 % damage taken. Elites every 60 s. |
+| **Pressure (C18)** | Up to 400 alive (the others 300–320), and the Director's target curve and spawn rate ×1.2 here (`ArenaLayoutDef.densityMul`): the biggest floor so far gets more of the horde, within the §8 budget. |
+| **Crowd** | ~2,000: nobles and merchants in the stands and the boxes. |
+| **Boss** | **The Gilded Patron** (docs/BOSSES.md). |
+| **Renown** | Arena tier 3: Renown × 2.5 (`MetaConfig.deeperArenaBonus`). |
+
+### New enemies
+- **Gilded Mercenary** (`EN_GildedMercenary`, `Lunger` + `stealGold`): a sellsword in gold-trimmed armour with a
+  halberd. Closes in, braces (0.7 s), then thrusts 3 m. **A hit pockets your gold** (up to 12 a hit: "−12" in
+  gold); killing him drops everything he took, and he often carries a purse. The Patron's guard: while any of
+  them lives, the Patron takes far less damage. Silhouette: a crested gold helm, a halberd taller than him.
+- **Sorcerer** (`EN_Sorcerer`, new behaviour `Caster`): a robed seer with a tall hood and an orb staff. Keeps 10–14 m
+  away, raises the staff (0.8 s), then a **rune circle** opens under you (2.2 m, orange-red, fills over 1.1 s) and a
+  pillar of fire erupts from it (too tall to jump). Get within 5 m and he **blinks** away in a puff (every 5 s at
+  most). Fragile: corner him, or kill him from range. Silhouette: the tall hood and the orb.
+
+### Building blocks
+- **Data:** `ArenaLayoutDef.densityMul` (→ Director), `fireJets` (rows: centre, yaw, width), `bladeSweepers` (hubs),
+  `guardSpots` (where a boss's guards appear: the patron boxes); `EnemyDef.stealGold`, `blinkRange` /
+  `blinkCooldown` / `blinkDistance`, `runeDelay`; `BossDef` coin bombs, golden volley, `guardedBy` +
+  `guardedDamageMul`, phase-2 hazards.
+- **Runtime:** `FireJets`, `BladeSweepers` (central ticks, instanced flames and blades, hurt both sides); enemy
+  projectiles gain the rune (Sorcerer), the purse bomb and the hot coin (the Patron).
+- **Models (Blender, `BlenderSrc/environment/grand_arena.py`):** `SM_GrandFloor`, `SM_GrandWall_4m` (podium wall +
+  stands), `SM_PatronBox`, `SM_GrandGate`, `SM_GrandDais` + `PR_PatronStatue`, `SM_GrandTerrace`, `PR_FireJetRow`,
+  `PR_JetFlame`, `PR_BladeHub` + `PR_Blade`; enemies `EN_GildedMercenary`, `EN_Sorcerer`; boss `EN_GildedPatron`.
+
+### Tests
+- Locked until the Beast Lord falls; then the menu offers it, a run there is tier 3, and it's bigger than the
+  Amphitheater.
+- The cross keeps the horde in (arm ends, arm sides, the patron boxes' diagonals).
+- A fire-jet row telegraphs, then hurts the player and the enemies in its strip, jump or not.
+- A blade sweeper telegraphs, then hits a grounded player and the enemies it passes; a jump clears it.
+- The Mercenary steals gold on a hit and gives it back when he dies; the Sorcerer's rune hits a player who stays and
+  misses one who moves; he blinks away when you close in.
+- The Gilded Patron: entrance, coin bombs (hit + gold), the volley, the shove; hired mercenaries appear at the boxes
+  and guard him (less damage) until they die; phase 2 fires every jet and spins every blade; his gold at his fall.

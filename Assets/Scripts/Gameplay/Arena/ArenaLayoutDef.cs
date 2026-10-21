@@ -101,6 +101,8 @@ namespace Gladiator.Gameplay
         public int maxAlive;
         [Tooltip("Ring spawns come from the part of the edge within this distance of the player (m; 0 = anywhere). On a big floor the horde walks in from the near side, not from 100 m away.")]
         public float spawnMaxDistance;
+        [Tooltip("Multiplies the Director's target-alive curve and spawn rate here (C18: a bigger floor gets more of the horde). Capped by maxAlive.")]
+        public float densityMul = 1f;
         public Vector3 sunEuler = new Vector3(38f, -32f, 0f);
         [Tooltip("Who comes through the gate when the timer runs out (none = the run just ends).")]
         public BossDef boss;
@@ -144,6 +146,14 @@ namespace Gladiator.Gameplay
         public float solidWallHeight = 8.4f;
         [Tooltip("Seconds between elites here (0 = DirectorConfig.eliteEvery).")]
         public float eliteEvery;
+
+        [Header("Fire jets, blades and the patron boxes (Phase 5.13)")]
+        [Tooltip("Fire-jet rows (x, z, yaw, width): a strip `width` wide across the row's local X, FireJets.depth deep along its local Z. They cycle in turn and hurt everyone; too tall to jump.")]
+        public Vector4[] fireJets = Array.Empty<Vector4>();
+        [Tooltip("Blade-sweeper hubs (y = the floor): a blade at shin height spins round each now and then; jump it.")]
+        public Vector3[] bladeSweepers = Array.Empty<Vector3>();
+        [Tooltip("Where a boss's guards appear instead of the gates (the Grand Arena's patron boxes): the two nearest the player.")]
+        public Vector3[] guardSpots = Array.Empty<Vector3>();
 
         /// <summary>The play area's floor (m²): the outline's, else the ellipse's. Each arena of the ladder must be bigger
         /// than the one before it (docs/GDD.md).</summary>

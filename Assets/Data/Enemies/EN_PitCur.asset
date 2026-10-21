@@ -53,6 +53,11 @@ MonoBehaviour:
   lobNet: 0
   netSlow: 0.1
   netTime: 1.2
+  stealGold: 0
+  runeDelay: 1.1
+  blinkRange: 0
+  blinkCooldown: 5
+  blinkDistance: {x: 9, y: 12}
   xp: 1
   goldChance: 0.04
   prewarm: 48

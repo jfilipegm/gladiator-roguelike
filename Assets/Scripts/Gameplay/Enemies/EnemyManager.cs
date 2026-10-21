@@ -155,6 +155,7 @@ namespace Gladiator.Gameplay
             _charge = new int[capacity];
             _trampled = new int[capacity];
             AllocStatus();
+            AllocGilded();
             for (int i = capacity - 1; i >= 0; i--) _free[_freeCount++] = i;
             _grid = new SpatialHashGrid(boundsMin, boundsMax, gridCellSize, capacity);
             _poolRoot = new GameObject("[EnemyPool]").transform;
@@ -392,6 +393,7 @@ namespace Gladiator.Gameplay
             _strafe[i] = (GameRandom.NextUInt() & 1) == 0 ? 1f : -1f;
             _attackHit[i] = false;
             _charge[i] = _trampled[i] = 0;
+            ResetGilded(i);
             _aim[i] = Vector3.forward;
             _flash[i] = 0f; _contactCd[i] = 0.5f; _phase[i] = GameRandom.Range(0f, 6.28f); _recoil[i] = 0f; _dying[i] = 0f;
             _uid[i] = _nextUid++;
@@ -617,6 +619,7 @@ namespace Gladiator.Gameplay
                 TargetId = _uid[i], Index = i, Position = _pos[i], EnemyTypeId = def.RuntimeId, Elite = elite, SourceId = info.SourceId,
                 Xp = def.xp * (elite ? affix.xpMultiplier : 1f), GoldChance = def.goldChance,
             });
+            if (_carried[i] > 0) DropCarried(i);
             if (deathPop != null && feedback != null)
                 deathPop.Emit(_pos[i] + Vector3.up * 0.7f, info.Direction, feedback);
             if (feedback != null && feedback.shakeOnKill > 0f) ScreenShake.Add(feedback.shakeOnKill);
@@ -734,6 +737,7 @@ namespace Gladiator.Gameplay
 
                 var def = v.Def;
                 if (def.behaviour == EnemyBehaviour.Scripted) { TickScripted(i, v, dt); continue; }
+                if (def.behaviour == EnemyBehaviour.Caster) TryBlink(i, def, player, dt);
                 Vector3 p = _pos[i];
                 Vector3 to = player - p;
                 to.y = 0f;
@@ -819,13 +823,18 @@ namespace Gladiator.Gameplay
                         {
                             _attackHit[i] = true;
                             _contactCd[i] = def.contactInterval;
+                            if (def.stealGold > 0) Steal(i, def, player);
                             if (def.trampleMul > 0f && _playerMotor != null) _playerMotor.AddImpulse(_aim[i] * 7f + Vector3.up * 3.5f); // bowled over
                         }
                     }
                     else if (_contactCd[i] <= 0f)
                     {
                         var hit = new DamageInfo { Amount = def.contactDamage, Flags = DamageFlags.Contact, Point = player, Direction = dist > 0.01f ? to / dist : Vector3.forward };
-                        if (_playerHealth.TakeDamage(hit)) _contactCd[i] = def.contactInterval;
+                        if (_playerHealth.TakeDamage(hit))
+                        {
+                            _contactCd[i] = def.contactInterval;
+                            if (def.stealGold > 0) Steal(i, def, player);
+                        }
                     }
                 }
 
@@ -967,6 +976,7 @@ namespace Gladiator.Gameplay
                 case EnemyBehaviour.Ranged:
                 case EnemyBehaviour.Lobber:
                 case EnemyBehaviour.ShieldedRanged:
+                case EnemyBehaviour.Caster:
                     facePlayer = true;
                     switch (_state[i])
                     {
@@ -1116,6 +1126,8 @@ namespace Gladiator.Gameplay
                 proj.Lob(hand + Vector3.up * 0.3f, player, def.lobTime, def.attackRadius, def.zoneDuration, def.zoneDps);
             else if (def.behaviour == EnemyBehaviour.ShieldedRanged)
                 proj.FireStraight(hand, _target[i], def.projectileSpeed, def.attackDamage, def.projectileRadius, def.attackRange * 1.25f, true);
+            else if (def.behaviour == EnemyBehaviour.Caster)
+                proj.Rune(player, def.runeDelay, def.attackRadius, def.attackDamage);
             else
                 proj.FireStraight(hand, player + Vector3.up * 0.9f, def.projectileSpeed, def.attackDamage, def.projectileRadius, def.attackRange * 1.25f);
         }
@@ -1216,6 +1228,7 @@ namespace Gladiator.Gameplay
                         break;
                     case EnemyBehaviour.Ranged:
                     case EnemyBehaviour.Lobber:
+                    case EnemyBehaviour.Caster:
                         if (st == AiState.Windup)
                         {
                             // throwing arm swings back and up, the sling/pot whirls overhead

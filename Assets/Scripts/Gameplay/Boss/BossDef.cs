@@ -116,6 +116,41 @@ namespace Gladiator.Gameplay
         [Tooltip("Pounces in a row in phase 1 / phase 2 (he re-aims between them).")]
         public Vector2Int pounceRepeats = new Vector2Int(1, 2);
 
+        [Header("Coin Bombs (any range) — keep moving (the Gilded Patron)")]
+        [Tooltip("Purses per volley in phase 1 / phase 2: the first on you, the rest around you.")]
+        public Vector2Int bombCount = new Vector2Int(3, 5);
+        public float bombWindup = 0.6f;
+        [Tooltip("Seconds between two purses leaving his hand.")]
+        public float bombInterval = 0.35f;
+        [Tooltip("Seconds a purse flies: its circle fills meanwhile.")]
+        public float bombFlight = 1.0f;
+        public float bombRadius = 2.4f;
+        public float bombDamage = 22f;
+        [Tooltip("Gold coins each purse scatters when it bursts.")]
+        public int bombCoins = 3;
+        [Tooltip("How far around you the later purses land (m).")]
+        public float bombSpread = 3.5f;
+
+        [Header("Golden Volley (mid) — step into a gap")]
+        [Tooltip("Red-hot coins in the fan, phase 1 / phase 2.")]
+        public Vector2Int volleyCount = new Vector2Int(7, 11);
+        [Tooltip("The fan's width (deg), phase 1 / phase 2.")]
+        public Vector2 volleyArc = new Vector2(50f, 70f);
+        public float volleyWindup = 0.8f;
+        public float volleySpeed = 15f;
+        public float volleyDamage = 12f;
+        public float volleyRange = 24f;
+
+        [Header("Payroll (the Gilded Patron's guard)")]
+        [Tooltip("While any enemy of this type lives he takes guardedDamageMul of the damage (none = never guarded).")]
+        public EnemyDef guardedBy;
+        [Range(0.05f, 1f)] public float guardedDamageMul = 0.4f;
+        public Color guardThreadColor = new Color(1f, 0.82f, 0.25f, 0.9f);
+        [Tooltip("The arena's guard spots (patron boxes): guards appear at this many of the spots nearest the player.")]
+        public int guardSpotsUsed = 2;
+        [Tooltip("His fortune, paid into the run when he falls (0 = none).")]
+        public int defeatGold;
+
         [Header("Beasts (the Stone Amphitheater's cages)")]
         [Tooltip("Calling the guards also opens the idle cage nearest him with this many beasts (0 = no cages). Every cage rattles at his entrance.")]
         public Vector2Int beastPack = Vector2Int.zero;
@@ -135,6 +170,9 @@ namespace Gladiator.Gameplay
         public bool phase2FireRing = true;
         [Tooltip("Phase 2's roar fires every spike trap in the arena at once (the Champion).")]
         public bool phase2SpikeVolley;
+        [Tooltip("Phase 2's roar fires every fire-jet row at once, and the blade sweepers spin for good (the Gilded Patron).")]
+        public bool phase2FireJets;
+        public bool phase2Blades;
         [Tooltip("Attack wind-ups and recovery are this much faster.")]
         public float enrageSpeed = 1.3f;
         public float enrageRoar = 1.5f;

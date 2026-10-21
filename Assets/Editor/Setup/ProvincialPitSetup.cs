@@ -69,7 +69,7 @@ namespace Gladiator.EditorTools
         public static RunDef[] AllRuns()
         {
             EnsureRun();
-            return new[] { AssetDatabase.LoadAssetAtPath<RunDef>(MenuSceneBuilder.RunPath), AssetDatabase.LoadAssetAtPath<RunDef>(RunPath), AmphitheaterSetup.EnsureRun() };
+            return new[] { AssetDatabase.LoadAssetAtPath<RunDef>(MenuSceneBuilder.RunPath), AssetDatabase.LoadAssetAtPath<RunDef>(RunPath), AmphitheaterSetup.EnsureRun(), GrandArenaSetup.EnsureRun() };
         }
 
         /// <summary>The Shield Archer and the Assassin (docs/ARENAS.md "New enemies"); numbers in DECISIONS "Phase 5.4".</summary>

@@ -252,7 +252,10 @@ namespace Gladiator.UI
             _bossFill = UiFactory.Bar("BossBar", bossRoot.transform, new Color(0.08f, 0.05f, 0.06f, 0.85f), BossRed, top, top, new Vector2(0, -150), new Vector2(760, 26));
             _bossGuard = UiFactory.Text("BossGuard", bossRoot.transform, GuardedText, 22, BossGold, TextAlignmentOptions.Center, top, top, new Vector2(0, -180), new Vector2(900, 28), font, fontMaterial);
             _bossGuard.enabled = false;
-            _pause = UiFactory.Text("Pause", canvas, "PAUSED\n<size=36>click to resume  ·  O: options  ·  Q: main menu</size>", 90, Color.white, TextAlignmentOptions.Center, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(900, 260), font, fontMaterial);
+            // P1: the stats page (StatsPanel) opens on the right with the pause menu, so PAUSED and its hint (on two short
+            // lines) are centred in the space left of it. Stretched across the screen, so any aspect ratio works.
+            _pause = UiFactory.Text("Pause", canvas, PauseText, 90, Color.white, TextAlignmentOptions.Center, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(900, 300), font, fontMaterial);
+            UiFactory.Stretch(_pause.rectTransform, new Vector2(0f, 0.5f), new Vector2(1f, 0.5f), new Vector2(PauseInset, -150f), new Vector2(-PauseInset, 150f));
             _pause.textWrappingMode = TextWrappingModes.Normal;
             _pause.alpha = 0f;
             _debug = UiFactory.Text("Debug", canvas, "", 20, new Color(1f, 1f, 1f, 0.75f), TextAlignmentOptions.BottomLeft, Vector2.zero, Vector2.zero, new Vector2(16, 12), new Vector2(900, 30), font, fontMaterial);
@@ -442,6 +445,7 @@ namespace Gladiator.UI
                     if (hp != _lastHp || max != _lastMaxHp) { _lastHp = hp; _lastMaxHp = max; _hpText.SetText("{0} / {1}", (float)hp, (float)max); }
                 }
                 _pause.alpha = player.IsPaused ? 1f : 0f;
+                LayoutPause(player.IsPaused && StatsPanel.Instance != null); // the page shows whenever the pause menu does
                 if (_build == null) _build = player.GetComponent<PlayerBuild>();
                 if (_build != null && _build.State.Version != _lastBuildVersion) RefreshStrip();
             }
@@ -504,6 +508,25 @@ namespace Gladiator.UI
                 _debugT = 0f;
             }
         }
+
+        const string PauseText = "PAUSED\n<size=36>click to resume\nO: options  \u00B7  Q: main menu</size>";
+        const float PauseInset = 40f;
+        int _pauseBeside = -1;
+
+        /// <summary>Centres the pause text in the space left of the stats page while it's up (only when that changes).</summary>
+        void LayoutPause(bool beside)
+        {
+            int b = beside ? 1 : 0;
+            if (b == _pauseBeside) return;
+            _pauseBeside = b;
+            float right = beside ? StatsPanel.PageWidth + StatsPanel.Margin : 0f;
+            _pause.rectTransform.offsetMax = new Vector2(-right - PauseInset, 150f);
+        }
+
+        /// <summary>Tests: the pause text's box and the widest line it needs (canvas units).</summary>
+        public RectTransform PauseRect => _pause.rectTransform;
+        public float PauseTextWidth => _pause.GetPreferredValues(PauseText).x;
+        public int PauseLineCount { get { _pause.ForceMeshUpdate(); return _pause.textInfo.lineCount; } }
 
         /// <summary>"ADMIN: GOD MODE  ·  BUFFS ON  (F1)": every dev switch in effect, spelled out (P1: a bare "BUFFS"
         /// under the timer confused the producer).</summary>

@@ -175,6 +175,11 @@ namespace Gladiator.Gameplay
             if (health != null && health.FlatReduction > 0f) sb.Append(" damageTaken ").Append(health.DamageTaken.ToString("0"));
             var weapons = player.GetComponent<WeaponSystem>();
             if (weapons != null && weapons.Slams > 0) sb.Append(" slams ").Append(weapons.Slams);
+            if (weapons != null && weapons.ChainStrikes > 0) sb.Append(" chainStrikes ").Append(weapons.ChainStrikes);
+            var storm = player.GetComponent<Stormcaller>();
+            if (storm != null) sb.Append(" peakCharge ").Append(storm.PeakCharge);
+            var dash = player.GetComponent<LightningDash>();
+            if (dash != null) sb.Append(" dashes ").Append(dash.Dashes).Append(" (hit ").Append(dash.DashHits).Append(')');
             var thirst = player.GetComponent<Bloodthirst>();
             if (thirst != null) sb.Append(" kill-healed ").Append(thirst.Healed.ToString("0")).Append(" HP");
             sb.Append(" | hitstops ").Append(TimeController.HitStopCount).Append(" (").Append(TimeController.HitStopSeconds.ToString("0.0")).Append(" s)");

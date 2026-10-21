@@ -26,6 +26,8 @@ namespace Gladiator.Gameplay
         public Vector3 EchoDir;
         public float AreaBoost = 1f;
         public bool InEcho;
+        /// <summary>Chain: the enemy the swing was aimed at (slot + uid, so a recycled slot isn't mistaken for it).</summary>
+        public int Target = -1, TargetUid;
 
         /// <summary>Reuses this slot object for `def` at level 1 (slots are allocated once, so equipping is GC-free).</summary>
         internal void Init(WeaponDef def)
@@ -73,6 +75,8 @@ namespace Gladiator.Gameplay
         [Tooltip("Enemies this close to the player are hit by a slam wherever it lands: they're under the blade (m).")]
         public float slamPointBlank = 1.2f;
         public float slamShake = 0.08f;
+        [Tooltip("Chain: height of the spear's tip the lightning leaves from (m).")]
+        public float chainTipHeight = 1.7f;
         public Color slamDustA = new Color(0.78f, 0.68f, 0.5f), slamDustB = new Color(0.82f, 0.97f, 1f);
         const int MaxOrbiters = 8;
 
@@ -106,6 +110,8 @@ namespace Gladiator.Gameplay
         public int TipHits { get; private set; }
         /// <summary>GroundSlam impacts (tests).</summary>
         public int Slams { get; private set; }
+        /// <summary>Enemies struck by Chain lightning, the first strikes and the jumps (tests, bot log).</summary>
+        public int ChainStrikes { get; private set; }
         /// <summary>The crowd's weapon in the sand (Phase 5.1): fights beside the slots for a while (null = none).</summary>
         public WeaponInstance Temporary => TemporaryLeft > 0f ? _loan : null;
         public float TemporaryLeft { get; private set; }
@@ -249,7 +255,8 @@ namespace Gladiator.Gameplay
             if (w.Cooldown > 0f || em == null) return;
             if (!StartSwing(w, em)) return;
             w.Cooldown = CooldownOf(w);
-            bool melee = d.pattern == WeaponPattern.MeleeArc || d.pattern == WeaponPattern.Thrust || d.pattern == WeaponPattern.GroundSlam;
+            bool melee = d.pattern == WeaponPattern.MeleeArc || d.pattern == WeaponPattern.Thrust || d.pattern == WeaponPattern.GroundSlam
+                         || d.pattern == WeaponPattern.Chain;
             w.BurstLeft = melee ? AmountOf(w) - 1 : 0;
         }
 
@@ -266,6 +273,8 @@ namespace Gladiator.Gameplay
             Vector3 aim = em.GetPosition(target) - origin;
             aim.y = 0f;
             w.AimDir = aim.sqrMagnitude > 1e-4f ? aim.normalized : transform.forward;
+            w.Target = target;
+            w.TargetUid = em.GetUid(target);
             w.SwingT = 0f;
             w.Impacted = false;
             Swings++;
@@ -302,6 +311,7 @@ namespace Gladiator.Gameplay
                 case WeaponPattern.Returning: Volley(w, em, returning: true); break;
                 case WeaponPattern.Lob: Lob(w, em); break;
                 case WeaponPattern.GroundSlam: SlamHit(w, em); break;
+                case WeaponPattern.Chain: ChainHit(w, em); break;
             }
             var d = w.Def;
             bool echoes = d.pattern == WeaponPattern.MeleeArc || d.pattern == WeaponPattern.Thrust || d.pattern == WeaponPattern.Returning;
@@ -430,6 +440,52 @@ namespace Gladiator.Gameplay
             }
             SfxPlayer.Play(SfxId.Slam, at);
             ScreenShake.Add(slamShake);
+        }
+
+        /// <summary>
+        /// Lightning from the spear's tip: the enemy the swing aimed at (or the nearest in reach), then Pierce jumps, each
+        /// to the nearest enemy not struck yet within width × √area of the last one. Every strike is a melee-style Strike
+        /// (on-hit status, Boon procs); a Bolt marks every leg.
+        /// </summary>
+        void ChainHit(WeaponInstance w, EnemyManager em)
+        {
+            var d = w.Def;
+            Vector3 origin = transform.position;
+            int cur = w.Target;
+            if (cur < 0 || !em.IsAlive(cur) || em.GetUid(cur) != w.TargetUid)
+                if (!em.TryGetNearest(origin, Acquire(w), out cur)) return;
+            float jump = d.width * Mathf.Sqrt(AreaOf(w));
+            int jumps = Mathf.Clamp(PierceOf(w), 0, _targets.Length - 1);
+            var pp = PlayerProjectiles.Instance;
+            Vector3 from = origin + Vector3.up * chainTipHeight;
+            int struck = 0;
+            for (int j = 0; j <= jumps && cur >= 0; j++)
+            {
+                Vector3 to = em.GetPosition(cur) + Vector3.up * 0.9f;
+                if (pp != null) pp.Bolt(from, to);
+                _targets[struck++] = cur;
+                Vector3 dir = to - from;
+                dir.y = 0f;
+                Strike(w, em, cur, Hit(w, em, cur, dir.sqrMagnitude > 1e-4f ? dir.normalized : w.AimDir, DamageFlags.Projectile));
+                ChainStrikes++;
+                from = to;
+                int n = em.QueryAlive(to, jump + em.MaxRadius, _hits);
+                int best = -1;
+                float bestD = float.MaxValue;
+                for (int k = 0; k < n; k++)
+                {
+                    int c = _hits[k];
+                    bool seen = false;
+                    for (int s = 0; s < struck && !seen; s++) seen = _targets[s] == c;
+                    if (seen) continue;
+                    Vector3 off = em.GetPosition(c) - to;
+                    off.y = 0f;
+                    float reach = jump + em.GetRadius(c), d2 = off.sqrMagnitude;
+                    if (d2 <= reach * reach && d2 < bestD) { bestD = d2; best = c; }
+                }
+                cur = best;
+            }
+            SfxPlayer.Play(SfxId.Spark, origin);
         }
 
         /// <summary>Everything in a line from the player along the aim: length = range × area, width = width × √area.</summary>

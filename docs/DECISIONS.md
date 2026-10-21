@@ -342,3 +342,9 @@ One line each: what, and why. Newest at the bottom of each section.
 - **His numbers:** 150 HP, 85 % move speed, capsule 2.0 × 0.46 m. Cleaver: 34 damage, 2.1 s, knockback 10.
 - **The Blood Knight now unlocks as §6.7 says: reach Arena 3** (`ReachArena 2`). DECISIONS 5.3 planned the switch once the arena existed. Unlocks are saved by id, so a save that already has him keeps him.
 
+## Phase 5.10 — the Thunder Champion (branch `phase5-thunder-champion`, spec `docs/GLADIATORS.md`)
+- **The Thunder Champion before the Beastmaster** (the GDD lists the Beastmaster first). The Beastmaster needs two systems that don't exist: allied companions that fight (a friendly side in `EnemyManager`, or a new pool), and the Beast Handler enemy his unlock counts. The Thunder Champion's unlock (beat the Beast Lord) just became possible, and his lightning builds on code that exists (`Bolt`, `SE_Shock`).
+- **The Storm Spear is the `Chain` pattern**, the last of §6.8's patterns that had an enum entry and no code (with `MultiHit` and `Summon`). Its numbers reuse `WeaponDef` fields: `acquireRange` = the first strike's reach (9 m), `width` = jump range (5 m × √Area), `pierce` = jumps after the first (3), Amount = more bolts at the next-nearest targets. Every strike Shocks, so the chain sets up every other weapon.
+- **"Attack-speed scaling" = Stormcaller's Charge:** +1.5 % attack speed per hit, up to +60 %, drained after 2.5 s without a hit. A stat bonus that rewards staying in the crowd rather than a flat number on the select screen, and the HUD can show it.
+- **"Lightning dash" = the slide becomes a blink** (7 m, every 3 s, hits and Shocks the path). Movement-triggered like the knight's Rite (slide) and the Machine's Verdict (jump). It's `CharacterController.Move`, so walls and stone stop it; it can't blink through the arena's edge.
+- **His numbers:** 90 HP, 105 % move speed, capsule 1.75 m. Storm Spear: 11 damage, 0.9 s, knockback 1.5.

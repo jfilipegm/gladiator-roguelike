@@ -47,7 +47,7 @@ Every reward is **content** (a weapon or Boon entering the pool) or **Renown** (
 **Renown challenges** (bounty only): First Evolution (evolve any weapon, +100); Synergist (3 different synergies, +150); Butcher (5,000 kills in one run, +100); Every Gladiator Wins (win with the Nobody, the Goblin and the Knight, +200).
 
 **The existing unlocks are recategorised:**
-- Challenges: Gorm's Flail (beat Gorm), the Provincial Pit (beat Gorm), the Blood Knight (beat Gorm below 30 % HP; **Phase 5.9: reach the Stone Amphitheater**, §6.7's "Reach Arena 3"), the Murder Machine (Phase 5.9: beat Gorm; also adds the Executioner's Cleaver to the pool).
+- Challenges: Gorm's Flail (beat Gorm), the Provincial Pit (beat Gorm), the Blood Knight (beat Gorm below 30 % HP; **Phase 5.9: reach the Stone Amphitheater**, §6.7's "Reach Arena 3"), the Murder Machine (Phase 5.9: beat Gorm; also adds the Executioner's Cleaver to the pool), the Thunder Champion (Phase 5.10: beat the Beast Lord, §6.7's "Complete Arena 3"; also adds the Storm Spear).
 - Secret: the Pit Goblin (the rattling crate).
 
 **Three new synergies.** The new Boons give MOVEMENT, GOLD and XP their third carrier:

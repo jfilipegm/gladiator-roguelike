@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b2d0068b06c53a31481c3c99d7df1413, type: 3}
+  m_Name: TR_LightningDash
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.LightningDashTrait
+  id: lightning_dash
+  displayName: Lightning Dash
+  description: 'Start a slide with the dash ready (every 3 s): blink up to 7 m, hitting and Shocking everything on the way.'
+  distance: 7
+  cooldown: 3
+  pathRadius: 1.2
+  damage: 25
+  knockback: 3
+  shock: {fileID: 11400000, guid: c4e3ba58329c4cad9b688e5c182978b7, type: 2}

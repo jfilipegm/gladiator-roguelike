@@ -13,7 +13,8 @@ namespace Gladiator.EditorTools
     /// Phase 5.9: the Murder Machine (GL_MurderMachine), the Executioner's Cleaver (GroundSlam) and its card, the
     /// Executioner's Plate and Verdict traits, the Stagger status, and UL_MurderMachine (beat Gorm). Every asset is
     /// created once and is designer-owned afterwards; only missing links are filled in (and the knight's interim unlock
-    /// is migrated once).
+    /// is migrated once). Phase 5.10: the Thunder Champion (GL_ThunderChampion), the Storm Spear (Chain) and its card,
+    /// the Stormcaller and Lightning Dash traits, and UL_ThunderChampion (beat the Beast Lord).
     /// </summary>
     public static class GladiatorSetup
     {
@@ -55,6 +56,17 @@ namespace Gladiator.EditorTools
         public const string MachineUnlockPath = MetaSetup.Dir + "UL_MurderMachine.asset";
         public const string StaggerPath = "Assets/Data/Status/SE_Stagger.asset";
         public const string MachineModel = "Assets/Art/Models/Characters/CH_MurderMachine.fbx";
+
+        public const string ThunderPath = Dir + "GL_ThunderChampion.asset";
+        public const string ThunderMovePath = "Assets/Data/Config/MovementConfig_Thunder.asset";
+        public const string ThunderAnimPath = "Assets/Data/Config/PartAnim_Thunder.asset";
+        public const string StormcallerPath = Dir + "TR_Stormcaller.asset";
+        public const string DashPath = Dir + "TR_LightningDash.asset";
+        public const string StormSpearPath = UpgradeSetup.WeaponDir + "WP_StormSpear.asset";
+        public const string StormSpearCardPath = UpgradeSetup.Dir + "UP_W_StormSpear.asset";
+        public const string ThunderUnlockPath = MetaSetup.Dir + "UL_ThunderChampion.asset";
+        public const string ShockPath = "Assets/Data/Status/SE_Shock.asset";
+        public const string ThunderModel = "Assets/Art/Models/Characters/CH_ThunderChampion.fbx";
 
         static WeaponDef.Level L(params StatMod[] mods) => new WeaponDef.Level { mods = mods };
         static StatMod Pct(StatId s, float v) => new StatMod(s, ModOp.Percent, v);
@@ -124,6 +136,7 @@ namespace Gladiator.EditorTools
             EditorUtility.SetDirty(g);
             BloodKnight();
             MurderMachine();
+            ThunderChampion();
             UpgradeSetup.Refresh();
             MetaSetup.CreateOrUpdate();
             IconSetup.Apply(); // the goblin's and the knight's weapon cards get their icons too
@@ -138,11 +151,13 @@ namespace Gladiator.EditorTools
             var goblin = AssetDatabase.LoadAssetAtPath<GladiatorDef>(GoblinPath);
             var knight = AssetDatabase.LoadAssetAtPath<GladiatorDef>(KnightPath);
             var machine = AssetDatabase.LoadAssetAtPath<GladiatorDef>(MachinePath);
+            var thunder = AssetDatabase.LoadAssetAtPath<GladiatorDef>(ThunderPath);
             var list = new System.Collections.Generic.List<GladiatorDef>();
             if (nobody != null) list.Add(nobody);
             if (goblin != null) list.Add(goblin);
             if (knight != null) list.Add(knight);
             if (machine != null) list.Add(machine);
+            if (thunder != null) list.Add(thunder);
             return list.ToArray();
         }
 
@@ -302,6 +317,96 @@ namespace Gladiator.EditorTools
         {
             a.swingCurve = new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(0.45f, 0.06f), new Keyframe(0.62f, 1f), new Keyframe(1f, 1f));
             a.poseSharpness = 30f;
+        }
+
+        /// <summary>Phase 5.10: the Thunder Champion and everything only he brings.</summary>
+        static GladiatorDef ThunderChampion()
+        {
+            var shock = AssetDatabase.LoadAssetAtPath<StatusDef>(ShockPath);
+            var spear = StormSpear(shock);
+            var card = WeaponCard(StormSpearCardPath, spear, "SS");
+            var unlock = AssetDatabase.LoadAssetAtPath<UnlockDef>(ThunderUnlockPath);
+            if (unlock == null)
+            {
+                unlock = PlayerSetup.EnsureAsset<UnlockDef>(ThunderUnlockPath);
+                unlock.id = "thunder_champion";
+                unlock.displayName = "The Thunder Champion";
+                unlock.description = "The Beast Lord is dead, and the storm god was watching. The Thunder Champion can be chosen, and his Storm Spear joins the level-up pool.";
+                unlock.hint = "The storm god is watching the amphitheatre. Win there.";
+                unlock.conditions = new[] { new UnlockCondition { kind = UnlockConditionKind.DefeatBoss, id = "beastlord", amount = 1f } };
+                unlock.addsToPool = new[] { card };
+                EditorUtility.SetDirty(unlock);
+            }
+            var move = Copy<MovementConfig>(PlayerSetup.MovementPath, ThunderMovePath, m =>
+            {
+                m.capsuleHeight = 1.75f;
+                m.slideCapsuleHeight = 1.0f;
+                m.capsuleRadius = 0.36f;
+            });
+            var anim = Copy<PartAnimProfile>(PlayerSetup.AnimPath, ThunderAnimPath, a =>
+            {
+                a.strideLength = 1.75f; // long, bouncy strides
+                a.bobHeight = 0.07f;
+                a.runLean = 12f;
+                a.weaponArmSwingScale = 0.2f; // the spear stays upright
+                a.swingYawStart = 20f;  // a short jab toward the target: the lightning does the work
+                a.swingYawEnd = -20f;
+                a.swingRaise = 110f;
+            });
+            var storm = Trait<StormcallerTrait>(StormcallerPath, "stormcaller", "Stormcaller",
+                "Every enemy you hit adds a Charge: +1.5 % attack speed each, up to +60 %. It drains after 2.5 s without a hit.");
+            var dash = Trait<LightningDashTrait>(DashPath, "lightning_dash", "Lightning Dash",
+                "Start a slide with the dash ready (every 3 s): blink up to 7 m, hitting and Shocking everything on the way.");
+            if (dash.shock == null) { dash.shock = shock; EditorUtility.SetDirty(dash); }
+
+            var g = AssetDatabase.LoadAssetAtPath<GladiatorDef>(ThunderPath);
+            if (g == null)
+            {
+                g = PlayerSetup.EnsureAsset<GladiatorDef>(ThunderPath);
+                g.id = "thunder_champion";
+                g.displayName = "The Thunder Champion";
+                g.description = "A champion who swears the storm god fights beside him. Lightning leaps from his spear through the crowd, every hit makes him faster, and his slide is a blink.";
+                g.baseStats = new[]
+                {
+                    new GladiatorDef.BaseStat { stat = StatId.MaxHp, value = 90f },
+                    new GladiatorDef.BaseStat { stat = StatId.MoveSpeed, value = 1.05f },
+                };
+                g.cameraTargetHeight = 1.3f;
+                g.tradeoff = "Fast and flashy but fragile: 90 HP, and a lone target leaves the lightning nothing to jump to.";
+            }
+            if (g.model == null) g.model = AssetDatabase.LoadAssetAtPath<GameObject>(ThunderModel);
+            if (g.movement == null) g.movement = move;
+            if (g.animProfile == null) g.animProfile = anim;
+            if (g.startingWeapon == null) g.startingWeapon = spear;
+            if (g.traits == null || g.traits.Length == 0) g.traits = new GladiatorTrait[] { storm, dash };
+            if (g.unlock == null) g.unlock = unlock;
+            EditorUtility.SetDirty(g);
+            return g;
+        }
+
+        static WeaponDef StormSpear(StatusDef shock)
+        {
+            var w = AssetDatabase.LoadAssetAtPath<WeaponDef>(StormSpearPath);
+            if (w == null)
+            {
+                w = PlayerSetup.EnsureAsset<WeaponDef>(StormSpearPath);
+                w.id = "storm_spear"; w.displayName = "Storm Spear";
+                w.description = "Lightning leaps from the spear's tip to the nearest enemy, then on through the crowd. Everything it strikes is Shocked.";
+                w.pattern = WeaponPattern.Chain;
+                // acquireRange = first strike's reach, width = jump range (× √Area), pierce = jumps after the first
+                w.damage = 11f; w.critChance = 0.06f; w.critMultiplier = 2f; w.knockback = 1.5f;
+                w.cooldown = 0.9f; w.swingDuration = 0.22f; w.windup = 0.08f;
+                w.range = 9f; w.width = 5f; w.acquireRange = 9f; w.amount = 1; w.pierce = 3; w.spreadStrikes = true;
+                w.onHitStatusPower = 0f; w.onHitStacks = 1;
+                w.levels = new[]
+                {
+                    L(Add(StatId.Pierce, 1f)), L(Pct(StatId.Damage, 0.2f)), L(Pct(StatId.AttackSpeed, 0.15f)), L(Add(StatId.Amount, 1f)),
+                    L(Add(StatId.Pierce, 1f)), L(Pct(StatId.Damage, 0.25f)), L(Pct(StatId.AttackSpeed, 0.2f), Pct(StatId.Area, 0.15f)),
+                };
+            }
+            if (w.onHitStatus == null) w.onHitStatus = shock;
+            EditorUtility.SetDirty(w);
+            return w;
         }
 
         static WeaponDef Cleaver()

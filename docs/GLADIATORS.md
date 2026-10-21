@@ -91,3 +91,25 @@ A nameless pit fighter with a rusty gladius and a scrap shield. The baseline: 10
 
 ### The Blood Knight's real unlock (Phase 5.9)
 Arena 3 exists, so `UL_BloodKnight` switches from the interim "beat Gorm below 30 % HP" to §6.7's **"Reach Arena 3"** (`ReachArena 2`: start a run in the Stone Amphitheater). A save that already unlocked him keeps him (unlocks are saved by id).
+
+## The Thunder Champion (built, Phase 5.10, v0.11.0)
+| | |
+|---|---|
+| **Fantasy** | A champion who swears the storm god fights beside him, and on the sand it looks like he's right. Fast, flashy, never standing still. |
+| **Silhouette** | 1.75 m to the top of a bronze storm helm with a tall **zigzag lightning crest** (white-cyan), bronze cuirass and greaves over a blue tunic, a short blue cape, and a **storm spear** held upright with a glowing tip. 64 px test against the Nobody (also a spear in the pool), the Knight and the Net-Thrower: the zigzag crest and the upright spear. From the camera behind him: the crest and the cape's white bolt. |
+| **Weapon** | **Storm Spear**, the new **`Chain`** pattern (CLAUDE.md §6.8 "Chain"). Every 0.9 s lightning leaps from the spear's tip to the nearest enemy within 9 m, then jumps to the nearest enemy it hasn't struck within 5 m, 3 more times. Every strike is 11 damage and **Shocks** (the existing `SE_Shock`: they take more damage). Levels 2–8: +1 jump, damage, attack speed, a second bolt (Amount), +1 jump, damage, attack speed + jump range. |
+| **Passive: Stormcaller** | Every enemy his weapons strike adds a **Charge**: +1.5 % attack speed each, up to 40 (+60 %). Two and a half seconds without striking anything and the Charge drains away. The HUD bar shows it. |
+| **Ability: Lightning Dash** | Starting a slide with the dash ready (every 3 s) is a **blink**: he flashes up to 7 m along the slide (stopped by walls), and everything within 1.2 m of the path takes 25 × his Damage and is Shocked. A white-cyan bolt marks the path. Then he slides on as usual. |
+| **Strength** | Attack speed that snowballs in a crowd, chains that clear packs, Shock that makes everything else hit harder, and the best escape in the game. |
+| **Weakness** | Fragile (90 HP). Against one big target there's nothing to chain to, so bosses and lone elites take only the first strike. Charge drains if he hides. |
+| **Personality** | Long bouncy strides and a lean into the run; a short jab of the spear at whatever he strikes. (The crest flickering at high Charge: BACKLOG.) |
+| **Unlock: complete Arena 3** | §6.7. `UL_ThunderChampion` (`DefeatBoss beastlord 1`). Codex hint: *"The storm god is watching the amphitheatre. Win there."* The unlock also adds the Storm Spear to everyone's level-up pool. |
+
+**Colours:** his lightning is the player's white-cyan (the boon sparks' `Bolt`), never orange-red. The Charge bar is electric blue with a white edge when it's near full.
+
+**How it's built:**
+- **`Chain`** in `WeaponSystem`: the first strike on the nearest enemy within `acquireRange`, then `Pierce` jumps to the nearest un-struck enemy within `width × √Area` of the last one; each strike is a `Strike` (on-hit status, Boon procs); `PlayerProjectiles.Bolt` for every leg; Amount = more bolts right after.
+- **Traits:** `TR_Stormcaller` (`Stormcaller`: Charge from `HitEvent`s with a weapon source, an AttackSpeed `StatMod` updated on change, drained after `graceSeconds`) and `TR_LightningDash` (`LightningDash`: on `SlideEvent` with the cooldown ready, `CharacterController.Move` along the slide so walls stop him, then a lane hit along the path).
+- **Model:** `BlenderSrc/characters/ch_thunderchampion.py` (≤ 1,200 tris).
+
+**Tests:** a bolt strikes the nearest and chains to the next ones but not to one beyond jump range, and Shocks them; Charge raises attack speed and drains after the grace time; a slide with the dash ready blinks forward, hits the enemies on the path and not one beside it, and goes on cooldown; a wall stops the blink; beating the Beast Lord unlocks him.

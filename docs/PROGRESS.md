@@ -1,7 +1,7 @@
 # Progress
 
 **Current phase:** Phase 5 — expansion
-**Current milestone:** Phase 5.9 — the Murder Machine, the fourth gladiator (branch `phase5-murder-machine`, spec `docs/GLADIATORS.md`). v0.9.0 (Arena 3, the Stone Amphitheater + the Beast Lord) released 2026-10-21. v0.8.0 (the Provincial Pit rebuilt as a 100 × 70 m octagon + the spike-trap fix) released 2026-10-20.
+**Current milestone:** Phase 5.10 — the Thunder Champion, the fifth gladiator (branch `phase5-thunder-champion`, spec `docs/GLADIATORS.md`). v0.10.0 (the Murder Machine) and v0.9.0 (Arena 3) released 2026-10-21. v0.8.0 (the Provincial Pit rebuilt as a 100 × 70 m octagon + the spike-trap fix) released 2026-10-20.
 **Last updated:** 2026-10-21
 
 **Repository:** https://github.com/jfilipegm/gladiator-roguelike (public, branch `main`, remote `origin`, `.blend` files via Git LFS). Work on a branch per milestone, push as you go, merge through a PR; release every playable build (`Tools/release`).
@@ -269,7 +269,7 @@
   - Archives: Linux 43 MB, Linux dev 73 MB, Windows 45 MB, macOS 52 MB. The build log's `errors=1` on the first build is the bridge timeout, as before.
   - Smoke runs of the downloaded archives (`-bot -timed -botSeconds 40`), all v0.9.0, 0 exceptions: Linux as the Nobody in the Slave Pit (52 kills, clock to 36 s) and in the Stone Amphitheater (`-arena stone_amphitheater`: 61 kills, 36 s), Windows under Wine in the Stone Amphitheater (35 kills, 37 s). Their Profiling files were deleted. macOS not run.
 
-## Phase 5.9 the Murder Machine (branch `phase5-murder-machine`, v0.10.0)
+## Done — Phase 5.9 the Murder Machine (branch `phase5-murder-machine`, PR #12 merged 2026-10-21 inside the producer's pre-approved window, release v0.10.0)
 - **Spec:** `docs/GLADIATORS.md` "The Murder Machine"; DECISIONS "Phase 5.9". Chosen as the next milestone because the GDD's roster order puts him next, his unlock already works, and Arena 4 would be bigger again while C18 waits on the playtest. The producer pre-approved merging any green PR until 07:05 WEST 2026-10-21 (they're asleep).
 - **Done (committed, verified):**
   - **Model** `CH_MurderMachine` (`BlenderSrc/characters/ch_murdermachine.py`, 808 tris, iteration 2): pointed black executioner's hood with cyan eyes, rust plate barrel, bare arms, a slab of a cleaver in the right fist; cyan axe sigil on the back.
@@ -284,7 +284,24 @@
   - **Bot runs (dev build, `-gladiator murder_machine`), 0 exceptions:**
     - Slave Pit: 384 fps avg, 199 fps at ≥ 250 enemies, 24 B/s GC; level 27, 8,361 kills, 46 Verdicts (1,455 hits), 353 slams, 430 HP taken; Gorm at 65 % (the bot never levelled the cleaver).
     - Stone Amphitheater (`-arena stone_amphitheater`): 380 fps avg, 197 fps at ≥ 250 enemies, max 322, 25 B/s GC; level 32, 8,176 kills, 60 Verdicts (2,903 hits), 246 slams, 337 HP taken; the Beast Lord at 35 % in phase 2 when the recording ended.
-- **Next:** PR → merge (inside the producer's window) → `Tools/release 0.10.0` → smoke runs.
+- **PR #12** (https://github.com/jfilipegm/gladiator-roguelike/pull/12) merged (294c428) at 02:37 WEST under the producer's "proceed with any merge in the next 5h40" (01:25).
+- **v0.10.0 released 2026-10-21:** https://github.com/jfilipegm/gladiator-roguelike/releases/tag/v0.10.0.
+  - Archives: Linux 43 MB, Linux dev 73 MB, Windows 45 MB, macOS 52 MB.
+  - Smoke runs of the downloaded archives (`-bot -timed -botSeconds 40`), all v0.10.0, 0 exceptions: Linux as the Murder Machine in the Slave Pit (55 kills, 1 Verdict, clock to 37 s), Linux as the Nobody in the Stone Amphitheater (66 kills, 36 s), Windows under Wine as the Murder Machine (54 kills, 1 Verdict, 37 s). Their Profiling files were deleted. macOS not run.
+
+## Phase 5.10 the Thunder Champion (branch `phase5-thunder-champion`, v0.11.0)
+- **Spec:** `docs/GLADIATORS.md` "The Thunder Champion"; DECISIONS "Phase 5.10" (why before the Beastmaster). Merging inside the producer's window (until 07:05 WEST 2026-10-21).
+- **Done (committed, verified):**
+  - **Model** `CH_ThunderChampion` (`BlenderSrc/characters/ch_thunderchampion.py`, 788 tris, iteration 2): bronze storm helm with a big zigzag crest (glow cyan), lighter bronze armour, a blue cape with a white bolt, an upright storm spear with a glowing core.
+  - **`Chain` pattern** (`WeaponSystem.ChainHit`): the swing's target (`WeaponInstance.Target`/`TargetUid`) or the nearest within `acquireRange`, then `Pierce` jumps to the nearest un-struck enemy within `width × √Area`; every strike is a `Strike` (on-hit Shock, Boon procs); `Bolt` per leg; `ChainStrikes` counter. `WP_StormSpear` + card + icon.
+  - **Traits:** `TR_Stormcaller` (`Stormcaller`: Charge +1 per non-status `HitEvent`, AttackSpeed ×(1 + 0.015 × Charge) up to 40, drains 20/s after 2.5 s; HUD bar "+N% SPD"). `TR_LightningDash` (`LightningDash`: on `SlideEvent` with the 3 s cooldown ready, `CharacterController.Move` 7 m, a 1.2 m lane hit of 25 × Damage + Shock, two bolts).
+  - **Unlock** `UL_ThunderChampion` (beat the Beast Lord; adds the Storm Spear). Codex + menu rebuilt (5 gladiators). The bot log adds `chainStrikes`, `peakCharge`, `dashes N (hit H)`.
+  - **Tests:** `ThunderChampionTests` 6/6. Full suites EditMode 77/77, PlayMode 152/152 (2026-10-21).
+  - **Play mode (Stone Amphitheater, staged):** from behind, the cape's white bolt and the cyan crest; a bolt from the spear jumping convict to convict with its "11"s; the Charge bar. Screenshot `tc_chain`.
+  - **Bot runs (dev build, `-gladiator thunder_champion`), 0 exceptions:**
+    - Provincial Pit: 397 fps avg, 206 fps at ≥ 250 enemies; level 29, 8,287 kills, 3,316 chain strikes (the spear stayed at level 1), peak Charge 40, 98 dashes (285 hits); **beat the Champion** (Survived at 8:59). GC 421 B/s is the victory screen + save at the end.
+    - Stone Amphitheater: 394 fps avg, 217 fps at ≥ 250 enemies; level 31, 9,017 kills, 5,111 chain strikes (spear level 6), peak Charge 40, 84 dashes (269 hits); **beat the Beast Lord** in 14 attacks (Survived at 8:41). GC 437 B/s, the same end-of-run spike.
+- **Next:** PR → merge (inside the window) → `Tools/release 0.11.0` → smoke runs.
 
 ## Known issues
 - **Residual GC (target 0 B/frame, met in steady state):** the 70–85 KB one-offs in paused card panels (v0.6.0/0.7.0) are fixed in Phase 5.6: the description buffers are pre-sized to 400 chars. A 200 s check run had none; the first level-up allocates ~7.5–9.9 KB once (paused; a hidden pre-draw of the cards didn't remove it; BACKLOG), the boss entrance 1.8 KB, the victory screen + save write ~238 KB (game over). Small first-occurrence allocations (≤ 1.2 KB) in the first minutes.

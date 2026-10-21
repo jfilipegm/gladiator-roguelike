@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3f244af30c794398bf8108a48772002, type: 3}
+  m_Name: GL_ThunderChampion
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.GladiatorDef
+  id: thunder_champion
+  displayName: The Thunder Champion
+  description: A champion who swears the storm god fights beside him. Lightning leaps from his spear through the crowd, every hit makes him faster, and his slide is a blink.
+  baseStats:
+  - stat: 0
+    value: 90
+  - stat: 3
+    value: 1.05
+  model: {fileID: 919132149155446097, guid: 610ad1bdaab551c68ab9fea2f80b8eb6, type: 3}
+  movement: {fileID: 11400000, guid: 1bfa601015623cb7e8f34591664a3983, type: 2}
+  animProfile: {fileID: 11400000, guid: f3667fac188bacd43bd374cd00844548, type: 2}
+  cameraTargetHeight: 1.3
+  startingWeapon: {fileID: 11400000, guid: 422618aa2e144b4eda7808957e91c7be, type: 2}
+  traits:
+  - {fileID: 11400000, guid: e0cbaf79373029933b9f1db0caa30068, type: 2}
+  - {fileID: 11400000, guid: 0ff51854b4fa9853ca0abda0889da2bb, type: 2}
+  unlock: {fileID: 11400000, guid: d2ee2af01641103c8935920256db4fc4, type: 2}
+  selectLine: 
+  tradeoff: 'Fast and flashy but fragile: 90 HP, and a lone target leaves the lightning nothing to jump to.'

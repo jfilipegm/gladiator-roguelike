@@ -8,7 +8,8 @@ namespace Gladiator.Gameplay
     /// How a run ends. Player death, the timer reaching 0:00 in an arena without a boss (unless DevSettings.Timeless),
     /// or the boss falling ends the run → the run is recorded in the save (Renown, records, unlocks: MetaProgress) →
     /// a short beat (death: slow motion + collapse; victory: every enemy pops) → the game pauses and the end screen
-    /// (UI reads ScreenShown/Outcome/Rewards) offers Retry / Main Menu.
+    /// (UI reads ScreenShown/Outcome/Rewards) offers Retry / Main Menu. From the moment the player goes down, nothing of
+    /// theirs fights on (RunState.CombatOver); the crowd gives one last reaction and falls silent (SfxPlayer).
     /// </summary>
     public sealed class RunEndController : MonoBehaviour, ITickable
     {
@@ -75,6 +76,11 @@ namespace Gladiator.Gameplay
             if (meta != null && run != null) Rewards = MetaProgress.CommitRun(Summary(e), meta);
             if (Player.Main != null && !_blockedInput) { Player.Main.BlockInput(); _blockedInput = true; }
             Vector3 at = health != null ? health.transform.position + Vector3.up * 0.9f : Vector3.zero;
+            // P1: the player's side stops at once, whatever the outcome (the weapons, traits and projectiles also check
+            // RunState.CombatOver themselves, from the frame the player went down).
+            if (PlayerProjectiles.Instance != null) PlayerProjectiles.Instance.Clear();
+            var boons = Player.Main != null ? Player.Main.GetComponent<BoonEffects>() : null;
+            if (boons != null) boons.Clear(); // no queued bursts or trails (and none from the corpses KillAll makes)
             if (e.Outcome == RunOutcome.Died)
             {
                 _beatLeft = deathBeat;
@@ -90,9 +96,6 @@ namespace Gladiator.Gameplay
                 if (EnemyManager.Instance != null) EnemyManager.Instance.KillAll(); // the arena falls silent
                 if (EnemyProjectiles.Instance != null) EnemyProjectiles.Instance.Clear();
                 if (HazardZones.Instance != null) HazardZones.Instance.Clear();
-                if (PlayerProjectiles.Instance != null) PlayerProjectiles.Instance.Clear();
-                var boons = Player.Main != null ? Player.Main.GetComponent<BoonEffects>() : null;
-                if (boons != null) boons.Clear(); // no bursts from the corpses KillAll just made
                 if (burst != null) burst.Burst(at, 40, 8f, 0.22f, new Color(1f, 0.86f, 0.4f), new Color(0.43f, 0.95f, 1f));
             }
         }

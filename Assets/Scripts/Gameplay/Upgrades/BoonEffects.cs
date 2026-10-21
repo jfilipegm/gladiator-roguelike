@@ -159,7 +159,7 @@ namespace Gladiator.Gameplay
 
         void OnHit(in HitEvent e)
         {
-            if (!_anyOnHit || (e.Flags & DamageFlags.Proc) != 0) return;
+            if (!_anyOnHit || (e.Flags & DamageFlags.Proc) != 0 || RunState.CombatOver) return; // P1: nothing procs once the player is down
             var em = EnemyManager.Instance;
             if (em == null) return;
             bool alive = em.IsAlive(e.Index) && em.GetUid(e.Index) == e.TargetId;
@@ -189,7 +189,7 @@ namespace Gladiator.Gameplay
 
         void OnCrit(in HitEvent e)
         {
-            if (!_anyOnCrit || (e.Flags & DamageFlags.Proc) != 0) return;
+            if (!_anyOnCrit || (e.Flags & DamageFlags.Proc) != 0 || RunState.CombatOver) return;
             var em = EnemyManager.Instance;
             if (em == null || !em.IsAlive(e.Index) || em.GetUid(e.Index) != e.TargetId) return;
             for (int k = 0; k < _fxCount; k++)
@@ -208,7 +208,7 @@ namespace Gladiator.Gameplay
 
         void OnKill(in KillEvent e)
         {
-            if (!_anyBurst) return;
+            if (!_anyBurst || RunState.CombatOver) return;
             var em = EnemyManager.Instance;
             if (em == null) return;
             for (int k = 0; k < _fxCount; k++)
@@ -423,6 +423,7 @@ namespace Gladiator.Gameplay
             if (_build == null) return;
             if (_build.State.Version != _version || WeaponsVersion() != _weaponsVersion) Refresh();
             if (dt <= 0f) return;
+            if (RunState.CombatOver) { if (_burstCount > 0 || _markCount > 0) Clear(); return; } // P1: bursts, trails and spreads stop with the player
             var em = EnemyManager.Instance;
             if (em == null) return;
             for (int b = 0; b < maxBurstsPerFrame && _burstCount > 0; b++)

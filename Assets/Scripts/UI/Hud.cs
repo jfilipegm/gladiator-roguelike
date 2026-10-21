@@ -65,6 +65,9 @@ namespace Gladiator.UI
         readonly TextMeshProUGUI[] _chipText = new TextMeshProUGUI[SynergyChips];
         readonly UpgradeIconView[] _chipIcon = new UpgradeIconView[SynergyChips];
         static readonly Color ChipColor = new Color(0.06f, 0.16f, 0.2f, 0.85f), ChipText = new Color(0.55f, 0.95f, 1f);
+        // P1: each chip is its icon then its name, as wide as the name; they flow in rows under the Boon row (8 px gap)
+        const float ChipLeft = 24f, ChipTop = -240f, ChipH = 30f, ChipGap = 6f, ChipRowWidth = 380f;
+        const float ChipIconLeft = 4f, ChipIconSize = 24f, ChipNameLeft = 33f, ChipNamePad = 9f;
         PlayerBuild _build;
         static readonly Color TileInner = new Color(0.1f, 0.12f, 0.15f, 0.92f);
         // interactables (M2.7): prompt at the bottom + floating price tags over ready chests / the altar
@@ -75,6 +78,10 @@ namespace Gladiator.UI
         readonly int[] _tagKey = new int[Tags];
         TextMeshProUGUI _prompt;
         int _promptKey = int.MinValue;
+        // the Bookmaker (P1): "[E]  WAGER 30 GOLD" over him while he calls you over, "NEED 30 GOLD" in red when you're short
+        TextMeshProUGUI _bookTag;
+        int _bookKey = int.MinValue;
+        const float BookmakerTagHeight = 2.3f;
         static readonly Color CantAfford = new Color(1f, 0.45f, 0.4f);
         static readonly Color AltarColor = new Color(1f, 0.4f, 0.55f);
 
@@ -128,7 +135,9 @@ namespace Gladiator.UI
             _xpFill.fillMethod = Image.FillMethod.Horizontal;
 
             _timer = UiFactory.Text("Timer", canvas, "8:00", 58, Color.white, TextAlignmentOptions.Center, top, top, new Vector2(0, -26), new Vector2(300, 70), font, fontMaterial);
-            _tags = UiFactory.Text("DevTags", canvas, "", 22, new Color(1f, 0.84f, 0.3f), TextAlignmentOptions.Center, top, top, new Vector2(0, -88), new Vector2(700, 30), font, fontMaterial);
+            // P1: the dev switches in effect, spelled out, small, in the bottom-right corner (under the timer, a bare "BUFFS"
+            // read as part of the game)
+            _tags = UiFactory.Text("DevTags", canvas, "", 18, new Color(1f, 0.84f, 0.3f, 0.85f), TextAlignmentOptions.BottomRight, new Vector2(1, 0), new Vector2(1, 0), new Vector2(-16, 12), new Vector2(1100, 26), font, fontMaterial);
             _objective = UiFactory.Text("Objective", canvas, "", 30, new Color(1f, 0.84f, 0.3f), TextAlignmentOptions.Center, top, top, new Vector2(0, -122), new Vector2(700, 40), font, fontMaterial);
             _level = UiFactory.Text("Level", canvas, "LV 1", 46, Color.white, TextAlignmentOptions.Right, new Vector2(1, 1), new Vector2(1, 1), new Vector2(-28, -26), new Vector2(300, 60), font, fontMaterial);
 
@@ -178,11 +187,12 @@ namespace Gladiator.UI
                 PreSize(_tileGlyph[i], "WWWW");
                 PreSize(_tileLevel[i], "EVO!");
             }
+            var ml = new Vector2(0f, 0.5f);
             for (int j = 0; j < SynergyChips; j++)
             {
-                _chip[j] = UiFactory.Image("Synergy" + j, canvas, Color.clear, tl, tl, new Vector2(24 + j * 150, -228), new Vector2(144, 30), PixelIcons.White);
-                _chipIcon[j] = new UpgradeIconView(_chip[j].transform, "Icon", new Vector2(0f, 0.5f), new Vector2(16, 0), 28f, lively: false);
-                _chipText[j] = UiFactory.Text("Name", _chip[j].transform, "", 17, ChipText, TextAlignmentOptions.Left, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(15, 1), new Vector2(110, 26), font, fontMaterial);
+                _chip[j] = UiFactory.Image("Synergy" + j, canvas, Color.clear, tl, tl, new Vector2(ChipLeft, ChipTop), new Vector2(144, ChipH), PixelIcons.White);
+                _chipIcon[j] = new UpgradeIconView(_chip[j].transform, "Icon", ml, new Vector2(ChipIconLeft, 0), ChipIconSize, lively: false);
+                _chipText[j] = UiFactory.Text("Name", _chip[j].transform, "", 17, ChipText, TextAlignmentOptions.Left, ml, ml, new Vector2(ChipNameLeft, 1), new Vector2(110, 26), font, fontMaterial);
                 PreSize(_chipText[j], "EXECUTIONER!");
             }
 
@@ -198,10 +208,15 @@ namespace Gladiator.UI
                 _tagRoot[i].localScale = Vector3.zero;
                 _tagKey[i] = int.MinValue;
             }
+            _bookTag = UiFactory.Text("BookmakerTag", canvas, "", 28, Gold, TextAlignmentOptions.Center, mid, mid, Vector2.zero, new Vector2(460, 40), font, fontMaterial);
+            PreSize(_bookTag, "[E]  WAGER 8888 GOLD");
+            PreSize(_bookTag, "NEED 8888 GOLD");
+            _bookTag.rectTransform.localScale = Vector3.zero;
             var bottom = new Vector2(0.5f, 0f);
             _prompt = UiFactory.Text("Prompt", canvas, "", 32, Color.white, TextAlignmentOptions.Center, bottom, bottom, new Vector2(0, 150), new Vector2(1300, 46), font, fontMaterial);
             PreSize(_prompt, "[E] Blood Altar: lose 88% max HP for a Rare+ upgrade");
             PreSize(_prompt, "[E] Armory Chest  88888 gold  (not enough gold)");
+            PreSize(_prompt, "[E] Wager 8888 gold: beat your own pace, win 8888");
 
             _toast = UiFactory.Text("Toast", canvas, "LEVEL UP!", 84, Gold, TextAlignmentOptions.Center, top, top, new Vector2(0, -170), new Vector2(900, 110), font, fontMaterial);
             _toast.alpha = 0f;
@@ -451,9 +466,7 @@ namespace Gladiator.UI
             {
                 _lastTags = tags;
                 _lastSpeed = TimeController.GameSpeed;
-                _tags.text = tags == 0 ? "" :
-                    ((tags & 1) != 0 ? "GOD   " : "") + ((tags & 2) != 0 ? "TIMELESS   " : "") + ((tags & 4) != 0 ? "BUFFS   " : "") +
-                    ((tags & 8) != 0 ? "SPEED x" + TimeController.GameSpeed.ToString("0.##") : "");
+                _tags.text = tags == 0 ? "" : AdminTags(tags, TimeController.GameSpeed); // only when they change
             }
 
             // LEVEL UP toast: pop in, hold, fade
@@ -491,6 +504,23 @@ namespace Gladiator.UI
                 _debugT = 0f;
             }
         }
+
+        /// <summary>"ADMIN: GOD MODE  ·  BUFFS ON  (F1)": every dev switch in effect, spelled out (P1: a bare "BUFFS"
+        /// under the timer confused the producer).</summary>
+        static string AdminTags(int tags, float speed)
+        {
+            var sb = new System.Text.StringBuilder("ADMIN: ", 80);
+            void Add(System.Text.StringBuilder b, string s) { if (b.Length > 7) b.Append("  \u00B7  "); b.Append(s); }
+            if ((tags & 1) != 0) Add(sb, "GOD MODE");
+            if ((tags & 4) != 0) Add(sb, "BUFFS ON");
+            if ((tags & 2) != 0) Add(sb, "TIMELESS");
+            if ((tags & 8) != 0) Add(sb, "SPEED x" + speed.ToString("0.##"));
+            return sb.Append("  (F1)").ToString();
+        }
+
+        /// <summary>The dev-switch line and where it sits (tests).</summary>
+        public string AdminTagText => _tags != null ? _tags.text : "";
+        public RectTransform AdminTagRect => _tags.rectTransform;
 
         /// <summary>The Blood Knight's meter and its label (only while a BloodRite exists).</summary>
         void DrawBlood(float unscaledDt)
@@ -644,11 +674,22 @@ namespace Gladiator.UI
             for (int k = shown; k < Tags; k++)
                 if (_tagRoot[k].localScale.x != 0f) _tagRoot[k].localScale = Vector3.zero;
 
+            DrawBookmaker(cam, run);
             int reach = live ? props.InReach : -1;
-            int pkey = reach < 0 ? -1 : props.KindOf(reach) == Interactables.Kind.Altar ? -2 : price * 2 + (afford ? 1 : 0);
+            var bm = Bookmaker.Instance;
+            bool bet = reach < 0 && bm != null && bm.InReach && run != null && !run.Ended; // a chest in reach takes E first
+            int pkey = reach >= 0 ? (props.KindOf(reach) == Interactables.Kind.Altar ? -2 : price * 2 + (afford ? 1 : 0))
+                     : bet ? (bm.CanAfford ? -3 : -4) : -1;
             if (pkey == _promptKey) return;
             _promptKey = pkey;
             if (pkey == -1) { _prompt.text = ""; return; }
+            if (pkey == -3 || pkey == -4)
+            {
+                if (pkey == -3) _prompt.SetText("[E] Wager {0} gold: beat your own pace, win {1}", (float)bm.stake, (float)bm.payout);
+                else _prompt.SetText("[E] Wager {0} gold  (not enough gold)", bm.stake);
+                _prompt.color = pkey == -3 ? Gold : CantAfford;
+                return;
+            }
             if (pkey == -2)
             {
                 _prompt.SetText("[E] Blood Altar: lose {0}% max HP for a Rare+ upgrade", Mathf.Round(props.config.altarMaxHpCost * 100f));
@@ -660,21 +701,69 @@ namespace Gladiator.UI
             _prompt.color = afford ? Gold : CantAfford;
         }
 
+        /// <summary>The Bookmaker's world prompt over his head while he calls you (chests show their price the same way).</summary>
+        void DrawBookmaker(Camera cam, RunState run)
+        {
+            var bm = Bookmaker.Instance;
+            var rt = _bookTag.rectTransform;
+            bool show = bm != null && cam != null && run != null && !run.Ended && bm.Calling;
+            Vector3 sp = default;
+            if (show)
+            {
+                sp = cam.WorldToScreenPoint(bm.Position + Vector3.up * BookmakerTagHeight);
+                show = sp.z > 0f;
+            }
+            if (!show)
+            {
+                if (rt.localScale.x != 0f) rt.localScale = Vector3.zero;
+                return;
+            }
+            rt.position = new Vector3(sp.x, sp.y, 0f);
+            if (rt.localScale.x == 0f) rt.localScale = Vector3.one;
+            bool afford = bm.CanAfford;
+            int key = bm.stake * 2 + (afford ? 1 : 0);
+            if (key == _bookKey) return;
+            _bookKey = key;
+            if (afford) _bookTag.SetText("[E]  WAGER {0} GOLD", bm.stake);
+            else _bookTag.SetText("NEED {0} GOLD", bm.stake);
+            _bookTag.color = afford ? Gold : CantAfford;
+        }
+
+        /// <summary>The Bookmaker's world prompt ("" when hidden) and the bottom prompt (tests).</summary>
+        public string BookmakerTagText => _bookTag != null && _bookTag.rectTransform.localScale.x > 0f ? _bookTag.text : "";
+        public string PromptText => _prompt != null ? _prompt.text : "";
+
         void RefreshStrip()
         {
             var state = _build.State;
             _lastBuildVersion = state.Version;
             FillRow(state, UpgradeKind.Weapon, 0, WeaponTiles, WeaponTileInner);
             FillRow(state, UpgradeKind.Boon, WeaponTiles, StripTiles, TileInner);
+            float x = 0f, y = 0f;
             for (int j = 0; j < SynergyChips; j++)
             {
                 bool on = j < state.SynergyCount;
                 _chip[j].color = on ? ChipColor : Color.clear;
                 _chipText[j].text = on ? state.GetSynergy(j).displayName : "";
-                if (on) _chipIcon[j].Set(state.GetSynergy(j).icon, state.GetSynergy(j).iconRow, ChipText, j * 0.4f);
-                else _chipIcon[j].Clear();
+                if (!on) { _chipIcon[j].Clear(); continue; }
+                _chipIcon[j].Set(state.GetSynergy(j).icon, state.GetSynergy(j).iconRow, ChipText, j * 0.4f);
+                // P1: the name starts after the icon and the chip is as wide as its name; a full row wraps below
+                float nameW = Mathf.Ceil(_chipText[j].preferredWidth);
+                float w = ChipNameLeft + nameW + ChipNamePad;
+                if (x > 0f && x + w > ChipRowWidth) { x = 0f; y -= ChipH + ChipGap; }
+                var rt = _chip[j].rectTransform;
+                rt.anchoredPosition = new Vector2(ChipLeft + x, ChipTop + y);
+                rt.sizeDelta = new Vector2(w, ChipH);
+                _chipText[j].rectTransform.sizeDelta = new Vector2(nameW + 2f, 26f);
+                x += w + ChipGap;
             }
         }
+
+        /// <summary>Tests: synergy chip `j`'s background, icon and name rects, and the width its name needs (P1 layout).</summary>
+        public RectTransform ChipRect(int j) => _chip[j].rectTransform;
+        public RectTransform ChipIconRect(int j) => _chipIcon[j].Root;
+        public RectTransform ChipNameRect(int j) => _chipText[j].rectTransform;
+        public float ChipNameWidth(int j) => _chipText[j].preferredWidth;
 
         /// <summary>Phase 5.5: the evolution card of owned weapon card `d` that is ready to be offered (null if none).</summary>
         UpgradeDef ReadyEvolution(BuildState state, UpgradeDef d)

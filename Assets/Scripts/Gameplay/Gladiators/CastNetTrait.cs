@@ -152,7 +152,7 @@ namespace Gladiator.Gameplay
             SfxPlayer.Play(SfxId.Snare, _to);
             var pop = DeathPopFx.Instance;
             if (pop != null) pop.Burst(_to + Vector3.up * 0.3f, 14, 4f, 0.12f, trait.ring, Color.white);
-            if (em == null) return;
+            if (em == null || RunState.CombatOver) return; // P1: thrown just before the player fell, it lands harmless
             float dmg = trait.damage * (_stats != null ? _stats.Damage : 1f);
             float decay = em.feedback != null ? em.feedback.knockbackDecay : 9f; // a knockback k travels k / decay metres
             int n = em.QueryAlive(_to, trait.radius + em.MaxRadius, _hits);

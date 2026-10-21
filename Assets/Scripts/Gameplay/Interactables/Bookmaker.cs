@@ -5,9 +5,10 @@ namespace Gladiator.Gameplay
 {
     /// <summary>
     /// The Provincial Pit's secret (Phase 5.6, docs/UNLOCKS.md): a hunched bookmaker at one of the layout's secret spots.
-    /// Come close and he calls you over; stand in his gold chalk ring and he takes a stake and bets you can't beat your
-    /// own pace: kill `paceFactor` × your kills of the last 30 s (at least `minKills`) in `seconds`. The HUD counts it
-    /// down (RunObjective). Win: he pays `payout` gold and, the first time, the flag `bookmaker_paid` (Loaded Dice's
+    /// Come close and he calls you over; step into his gold chalk ring and press Interact (E / gamepad North, like the
+    /// chests; the HUD shows "E  WAGER 30 GOLD" over him) and he takes a stake and bets you can't beat your own pace:
+    /// kill `paceFactor` × your kills of the last 30 s (at least `minKills`) in `seconds`. The HUD counts it down
+    /// (RunObjective). Win: he pays `payout` gold and, the first time, the flag `bookmaker_paid` (Loaded Dice's
     /// unlock) is saved at once. Lose: the house keeps the stake. One wager per run.
     /// </summary>
     public sealed class Bookmaker : MonoBehaviour, ITickable
@@ -31,9 +32,8 @@ namespace Gladiator.Gameplay
 
         [Header("The booth")]
         public float callRange = 9f;
+        [Tooltip("His spot: Interact takes the bet from inside this ring (it pulses while you're in it).")]
         public float ringRadius = 1.3f;
-        [Tooltip("Seconds standing in the ring to take the bet.")]
-        public float channelTime = 1.2f;
         [Tooltip("His chalk ring (review: a pale gold vanished on the sand; deeper and thicker reads).")]
         public Color ringColor = new Color(1f, 0.7f, 0.1f, 0.95f);
         public float ringThickness = 0.16f;
@@ -51,8 +51,8 @@ namespace Gladiator.Gameplay
         Transform _view;
         Phase _phase = Phase.Absent;
         Vector3 _pos;
-        float _channel, _left;
-        bool _called, _refused;
+        float _left;
+        bool _called;
         int _startKills;
 
         // kills per second over the last 30 s (one bucket per second of run time)
@@ -63,7 +63,12 @@ namespace Gladiator.Gameplay
         public Vector3 Position => _pos;
         public int Target { get; private set; }
         public int Progress { get; private set; }
-        public float Channel01 => _channel / Mathf.Max(0.01f, channelTime);
+        /// <summary>He's waiting and the player is within his call: the HUD shows the wager over his head.</summary>
+        public bool Calling { get; private set; }
+        /// <summary>The player stands in his ring: Interact takes the bet (the HUD's bottom prompt).</summary>
+        public bool InReach { get; private set; }
+        /// <summary>The player has the stake.</summary>
+        public bool CanAfford => RunState.Current != null && RunState.Current.Gold >= stake;
         public static Bookmaker Instance { get; private set; }
 
         void OnEnable()
@@ -100,8 +105,8 @@ namespace Gladiator.Gameplay
             if (toCenter.sqrMagnitude > 0.01f) _view.rotation = Quaternion.LookRotation(toCenter.normalized, Vector3.up);
             _view.gameObject.SetActive(true);
             _phase = Phase.Waiting;
-            _channel = 0f;
-            _called = _refused = false;
+            _called = false;
+            Calling = InReach = false;
         }
 
         Transform Spawn()
@@ -147,6 +152,7 @@ namespace Gladiator.Gameplay
         public void Tick(float dt, float unscaledDt)
         {
             if (dt <= 0f) return;
+            if (_phase != Phase.Waiting) Calling = InReach = false;
             if (_phase == Phase.Waiting) TickWaiting(dt);
             else if (_phase == Phase.Wager) TickWager(dt);
         }
@@ -154,11 +160,15 @@ namespace Gladiator.Gameplay
         void TickWaiting(float dt)
         {
             var player = Player.Main;
+            var run = RunState.Current;
             if (player == null) return;
             Vector3 d = player.transform.position - _pos;
             float dist = new Vector2(d.x, d.z).magnitude;
+            bool open = run != null && !RunState.CombatOver;
+            Calling = open && dist < callRange;
+            InReach = open && dist < ringRadius && Mathf.Abs(d.y) < 1.5f;
             var tele = TelegraphRenderer.Instance;
-            if (tele != null) tele.Circle(_pos, ringRadius, Channel01, ringColor, TelegraphRenderer.Style.Ring, ringThickness, 0.31f);
+            if (tele != null) tele.Circle(_pos, ringRadius, InReach ? 1f : 0f, ringColor, TelegraphRenderer.Style.Ring, ringThickness, 0.31f);
             if (dist < callRange)
             {
                 Vector3 look = new Vector3(d.x, 0f, d.z);
@@ -170,25 +180,23 @@ namespace Gladiator.Gameplay
                     Say(CallText, 2.4f);
                 }
             }
-            bool inside = dist < ringRadius && Mathf.Abs(d.y) < 1.5f;
-            if (!inside) { _channel = 0f; _refused = false; return; }
-            if (_refused) return;
-            _channel += dt;
-            if (_channel >= channelTime) TryBet();
+            // E in his ring, like a chest. If a chest is in reach too, the chest takes the press (Interactables ticks after
+            // us and reads the same press; its InReach is from last frame), so one press never spends gold twice.
+            var props = Interactables.Instance;
+            if (InReach && player.Input.InteractPressed && (props == null || props.InReach < 0)) TryBet();
         }
 
-        /// <summary>Takes the stake and posts the bet (the ring's channel, or tests). False without enough gold.</summary>
+        /// <summary>Takes the stake and posts the bet (Interact in his ring, or tests). False without enough gold.</summary>
         public bool TryBet()
         {
             if (_phase != Phase.Waiting) return false;
             var run = RunState.Current;
-            _channel = 0f;
             if (run == null || !run.SpendGold(stake))
             {
-                _refused = true;
                 Say(BrokeText, 1.8f);
                 return false;
             }
+            Calling = InReach = false;
             Target = Mathf.Clamp(Mathf.CeilToInt(RecentKills() * paceFactor), minKills, maxKills);
             _startKills = run.Kills;
             _left = seconds;

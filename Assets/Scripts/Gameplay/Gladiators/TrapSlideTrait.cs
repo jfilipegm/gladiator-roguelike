@@ -119,12 +119,13 @@ namespace Gladiator.Gameplay
             _cooldown -= dt;
             var em = EnemyManager.Instance;
             var tele = TelegraphRenderer.Instance;
+            bool armed = !RunState.CombatOver; // P1: once the player is down the snares lie there and never snap
             _drawn = 0;
             for (int k = 0; k < _count; k++)
             {
                 _t[k] += dt;
                 if (_t[k] >= trait.lifetime) { RemoveAt(k); k--; continue; }
-                if (_t[k] >= trait.armDelay && em != null && TrySnap(k, em)) { RemoveAt(k); k--; continue; }
+                if (armed && _t[k] >= trait.armDelay && em != null && TrySnap(k, em)) { RemoveAt(k); k--; continue; }
                 float left = trait.lifetime - _t[k];
                 bool blinkOff = left < 2f && Mathf.Repeat(left * 4f, 1f) < 0.35f; // about to go: blink
                 if (!blinkOff)

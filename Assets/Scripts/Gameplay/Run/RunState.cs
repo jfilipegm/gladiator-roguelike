@@ -32,10 +32,39 @@ namespace Gladiator.Gameplay
         public int PendingLevelUps { get; set; }
         public RunOutcome Outcome { get; private set; }
         public bool Ended => Outcome != RunOutcome.None;
+
         [Tooltip("When the timer runs out, wait for the boss fight instead of ending the run (set by BossFight).")]
         public bool holdForBoss;
         /// <summary>The run timer reached zero (boss time).</summary>
         public bool TimerDone { get; private set; }
+
+        PlayerHealth _health;
+
+        /// <summary>The player is dead (resolved from Player.Main on first use). End() follows in this frame's Late
+        /// tick (RunEndController), so systems that tick earlier in the frame use this, through CombatOver.</summary>
+        bool PlayerDead
+        {
+            get
+            {
+                if (_health == null)
+                {
+                    var p = Player.Main;
+                    if (p == null) return false;
+                    _health = p.GetComponent<PlayerHealth>();
+                    if (_health == null) return false;
+                }
+                return _health.IsDead;
+            }
+        }
+
+        /// <summary>Nothing counts any more: kills, gold, XP and damage stop once the player is dead or End() ran.</summary>
+        bool Frozen => Ended || PlayerDead;
+
+        /// <summary>
+        /// P1 (playtest): the player can't fight any more, because they're dead (the death beat) or the run is over. The
+        /// weapons, traits, companions, Boon effects and player projectiles check it and stop at once. False without a run.
+        /// </summary>
+        public static bool CombatOver => Current != null && Current.Frozen;
 
         void Awake() => Current = this;
 
@@ -76,7 +105,7 @@ namespace Gladiator.Gameplay
 
         void OnKill(in KillEvent e)
         {
-            if (Ended) return;
+            if (Frozen) return;
             Kills++;
             CountType(e.EnemyTypeId);
             for (int k = 0; k < _sourceCount; k++)
@@ -97,17 +126,17 @@ namespace Gladiator.Gameplay
             return 0;
         }
 
-        /// <summary>The boss of this arena died (BossFight). Recorded even if the player dies afterwards.</summary>
         /// <summary>The player's HP fraction when the boss fell (1 = none fell; unlock "beat X below N % HP").</summary>
         public float BossDefeatedHp01 { get; private set; } = 1f;
 
+        /// <summary>The boss of this arena died (BossFight). Recorded even if the player dies afterwards.</summary>
         public void MarkBossDefeated(string bossId, float playerHp01 = 1f)
         {
             if (Ended || string.IsNullOrEmpty(bossId)) return;
             BossDefeated = bossId;
             BossDefeatedHp01 = Mathf.Clamp01(playerHp01);
         }
-        void OnHit(in HitEvent e) { if (!Ended) DamageDealt += e.Damage; }
+        void OnHit(in HitEvent e) { if (!Frozen) DamageDealt += e.Damage; }
 
         public void Tick(float dt, float unscaledDt)
         {
@@ -135,7 +164,7 @@ namespace Gladiator.Gameplay
         /// <summary>Adds XP as given (XP Gain is applied by whoever awards it — PickupSystem for gems).</summary>
         public void AddXp(float amount)
         {
-            if (Ended) return;
+            if (Frozen) return;
             Xp += amount;
             while (Xp >= XpToNext)
             {
@@ -148,7 +177,7 @@ namespace Gladiator.Gameplay
 
         public void AddGold(int amount)
         {
-            if (Ended) return;
+            if (Frozen) return;
             Gold += amount;
             if (amount > 0) GoldEarned += amount;
         }
@@ -156,7 +185,7 @@ namespace Gladiator.Gameplay
         /// <summary>Pays `amount` if there's enough (chests). False = not enough gold, nothing spent.</summary>
         public bool SpendGold(int amount)
         {
-            if (Ended || amount < 0 || Gold < amount) return false;
+            if (Frozen || amount < 0 || Gold < amount) return false;
             Gold -= amount;
             return true;
         }

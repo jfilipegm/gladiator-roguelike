@@ -59,7 +59,7 @@ namespace Gladiator.Gameplay
 
         public void Tick(float dt, float unscaledDt)
         {
-            if (trait == null || dt <= 0f || _weapons == null) return;
+            if (trait == null || dt <= 0f || _weapons == null || RunState.CombatOver) return; // P1: no new loans once the player is down
             if (_next < 0f) _next = trait.firstAfter;
             _next -= dt;
             if (_next > 0f) return;

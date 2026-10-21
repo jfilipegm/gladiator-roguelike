@@ -95,6 +95,34 @@ namespace Gladiator.Gameplay
             for (int k = 0; k < _count; k++) Step(ref _pals[k], k, w, ws, em, dt, pp, hunt, leash, speed, interval);
         }
 
+        /// <summary>
+        /// P1: the player went down (WeaponSystem.Halted). The companions stop where they are and turn to the player: a
+        /// pounce in the air lands without biting, no bite starts. Called instead of Drive, so they don't leave either.
+        /// </summary>
+        public void Hold(float dt)
+        {
+            _drivenAt = Time.time;
+            _frenzyT = 0f;
+            var em = EnemyManager.Instance;
+            Vector3 pp = transform.position;
+            for (int k = 0; k < _count; k++)
+            {
+                ref var p = ref _pals[k];
+                if (p.PounceT >= 0f)
+                {
+                    p.PounceT = -1f;
+                    p.Pos = p.PounceTo;
+                    if (em != null) Settle(ref p.Pos, em);
+                }
+                p.Target = -1;
+                p.BiteT = 0f;
+                p.Speed = 0f;
+                Vector3 to = Flat(pp - p.Pos);
+                if (to.sqrMagnitude > 0.01f) p.Yaw = Mathf.MoveTowardsAngle(p.Yaw, Mathf.Atan2(to.x, to.z) * Mathf.Rad2Deg, turnSpeed * 0.25f * dt);
+                Animate(ref p, dt, 0f);
+            }
+        }
+
         void Step(ref Pal p, int k, WeaponInstance w, WeaponSystem ws, EnemyManager em, float dt, Vector3 pp,
                   float hunt, float leash, float speed, float interval)
         {

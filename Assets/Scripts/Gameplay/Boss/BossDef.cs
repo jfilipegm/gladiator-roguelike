@@ -5,8 +5,9 @@ namespace Gladiator.Gameplay
     /// <summary>
     /// A boss's tuning (docs/BOSSES.md). The body (HP, radius, model, shield arc) is its EnemyDef (behaviour Scripted);
     /// this holds his words, which attacks he uses in each phase, movement, each attack's wind-up / damage / size, the
-    /// guards he calls, what phase 2 does to the arena, an optional phase 3 (the Emperor's Champion) and the reward. Every
-    /// number here is a starting guess for a playtest. Defaults are Gorm's, so his asset predates most of these fields.
+    /// guards he calls, what phase 2 does to the arena, an optional phase 3 (the Emperor's Champion), an optional rise
+    /// and false death (the Eternal Victor) and the reward. Every number here is a starting guess for a playtest. Defaults
+    /// are Gorm's, so his asset predates most of these fields; every newer field defaults to "off".
     /// </summary>
     [CreateAssetMenu(menuName = "Gladiator/Boss", fileName = "BD_")]
     public sealed class BossDef : ScriptableObject
@@ -59,6 +60,8 @@ namespace Gladiator.Gameplay
         public float whipDamage = 18f;
         [Range(0.1f, 1f)] public float whipSlow = 0.55f;
         public float whipSlowSeconds = 2f;
+        [Tooltip("Grasp of the Dead (the Eternal Victor): bone hands burst along the lane instead of the crack, and his falx is driven into the deck. whipSlow 0.1 = held.")]
+        public bool whipGrasp;
 
         [Header("Chain Slam (any range) — keep moving")]
         public float slamRadius = 2.6f;
@@ -146,6 +149,23 @@ namespace Gladiator.Gameplay
         [Tooltip("Javelins instead of coins (the Emperor's Champion): drawn as arrows and thrown at the player's height, so a raised platform is no shelter.")]
         public bool volleyJavelins;
 
+        [Header("Falx Throw (the Eternal Victor) — step out of the lane until it's back")]
+        [Tooltip("The lane (m): the falx flies this far, then back to his hand. It turns back early on stone (statues, walls); it flies over pits.")]
+        public float discLength = 18f;
+        public float discWidth = 1.6f;
+        public float discWindup = 0.8f;
+        [Tooltip("m/s, out and back.")]
+        public float discSpeed = 24f;
+        [Tooltip("Once out, once back.")]
+        public float discDamage = 18f;
+        public float discKnockback = 6f;
+        [Tooltip("deg/s about the vertical.")]
+        public float discSpin = 1080f;
+        [Tooltip("Throws in a row in phase 1 / phase 2 (he re-aims between them).")]
+        public Vector2Int discRepeats = new Vector2Int(1, 1);
+        [Tooltip("The model part that flies (pivot at the grip). Without it the throw still hurts, unseen.")]
+        public string discPart = "Falx";
+
         [Header("Payroll (the Gilded Patron's guard)")]
         [Tooltip("While any enemy of this type lives he takes guardedDamageMul of the damage (none = never guarded).")]
         public EnemyDef guardedBy;
@@ -203,6 +223,33 @@ namespace Gladiator.Gameplay
         public float phase3MoveSpeed;
         [Tooltip("Charges in a row in phase 3 (0 = chargeRepeats' phase-2 value).")]
         public int phase3ChargeRepeats;
+        [Tooltip("Falx throws in a row in phase 3 (0 = discRepeats' phase-2 value).")]
+        public int phase3DiscRepeats;
+        [Tooltip("Pounces in a row in phase 3 (0 = pounceRepeats' phase-2 value).")]
+        public int phase3PounceRepeats;
+
+        [Header("Entrance")]
+        [Tooltip("He rises at the arena's centre (the Colosseum's stage lift) instead of walking in through a gate; bossGate is the fallback.")]
+        public bool entranceRise;
+        [Tooltip("He starts this far below the ground there (m) and rises over riseTime (s), kneeling, then stands and salutes.")]
+        public float riseDepth = 3f;
+        public float riseTime = 2.6f;
+
+        [Header("Eternal (false death)")]
+        [Tooltip("The first time he reaches 0 HP (phase 3) he collapses instead: his remains have remainsHp for remainsTime. Destroy them and he's gone; else he rises with riseHp01 of his HP.")]
+        public bool falseDeath;
+        public float remainsHp = 1500f;
+        public float remainsTime = 8f;
+        [Range(0.01f, 1f)] public float riseHp01 = 0.2f;
+        public string remainsText = "";
+        public string riseText = "";
+        [Tooltip("As he rises: a burst round him (m, damage, knockback), warned by an orange-red circle for its last riseBurstWarn seconds.")]
+        public float riseBurstRadius = 4f;
+        public float riseBurstDamage = 20f;
+        public float riseBurstKnockback = 10f;
+        public float riseBurstWarn = 1f;
+        [Tooltip("The ring round his remains (it doesn't hurt: bone, not orange-red).")]
+        public Color remainsColor = new Color(0.89f, 0.84f, 0.74f, 0.85f);
 
         [Header("Defeat")]
         public Rarity rewardFloor = Rarity.Rare;

@@ -5,7 +5,8 @@ namespace Gladiator.Gameplay
 {
     /// <summary>
     /// The arena's boss beat (docs/BOSSES.md): when the run timer hits 0:00 the run waits instead of ending, the horde
-    /// is dragged off, the announcer calls the boss, the camera turns to the gate and the boss walks in. When he dies:
+    /// is dragged off, the announcer calls the boss, the camera turns to the gate and the boss walks in (or, with
+    /// entranceRise, to the arena's centre, where he rises from below: the Eternal Victor). When he dies:
     /// slow motion, his fall line ("GORM FALLS!"), the hoard (a Rare+ pick), then the run ends as a victory. Dying still
     /// ends it as a loss. Words come from the BossDef.
     /// </summary>
@@ -98,22 +99,27 @@ namespace Gladiator.Gameplay
             if (em != null) em.DespawnAll(); // the horde is dragged off (no XP shower: no cards mid-entrance)
             if (PickupSystem.Instance != null) PickupSystem.Instance.ClearAll();
             if (EnemyProjectiles.Instance != null) EnemyProjectiles.Instance.Clear();
-            var gates = ArenaGates.Instance;
-            Vector3 at, inward;
-            if (gates != null && gates.Count > 0)
-            {
-                int g = Mathf.Clamp(gate, 0, gates.Count - 1);
-                at = gates.Position(g);
-                inward = gates.Inward(g);
-                gates.Open(g, 4f);
-            }
-            else
-            {
-                at = em != null ? em.EdgePoint(Mathf.PI * 0.5f, 2f) : Vector3.forward * 15f; // the north edge
-                inward = -at.normalized;
-            }
             controller.def = boss;
-            controller.Begin(at, inward);
+            // the Eternal Victor rises from below at the arena's centre (the Colosseum's stage lift): no gate opens; the
+            // gate is the fallback should he not spawn there
+            if (!(boss.entranceRise && em != null && controller.BeginRise(em.arenaCenter)))
+            {
+                var gates = ArenaGates.Instance;
+                Vector3 at, inward;
+                if (gates != null && gates.Count > 0)
+                {
+                    int g = Mathf.Clamp(gate, 0, gates.Count - 1);
+                    at = gates.Position(g);
+                    inward = gates.Inward(g);
+                    gates.Open(g, 4f);
+                }
+                else
+                {
+                    at = em != null ? em.EdgePoint(Mathf.PI * 0.5f, 2f) : Vector3.forward * 15f; // the north edge
+                    inward = -at.normalized;
+                }
+                controller.Begin(at, inward);
+            }
             GameEvents.OnAnnounce.Raise(new AnnounceEvent { Kind = AnnounceKind.BossEnters, Text = boss.enterText, Color = new Color(1f, 0.3f, 0.2f), Seconds = 3f });
             if (CrowdExcitement.Instance != null) CrowdExcitement.Instance.Spike(0.85f);
         }

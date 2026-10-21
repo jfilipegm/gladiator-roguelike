@@ -7,6 +7,7 @@ namespace Gladiator.Gameplay
     /// Automated player for perf runs and smoke tests: steers to pickups, flees enemies, stays inside the
     /// arena, jumps/slides/orbits the camera, picks random level-up cards. Deterministic (seeded).
     /// Command line (standalone or batch): -bot  -stress [-stressCount 1000]  -botSeconds 600  -profile
+    /// (the arena: -arena &lt;run id&gt;, read by MainMenu, e.g. -arena colosseum once the main menu is rebuilt with it)
     /// </summary>
     [DefaultExecutionOrder(-900)]
     public sealed class PlaytestBot : MonoBehaviour, IPlayerInputSource
@@ -56,6 +57,10 @@ namespace Gladiator.Gameplay
         public float chariotDodge = 1.5f;
         [Tooltip("How far ahead (m) it looks before stepping onto the lane.")]
         public float chariotLookAhead = 2f;
+        [Tooltip("The Colosseum: steps off a trapdoor or lift that opens or moves within this many seconds, won't step onto one then, and walks round doors held open (0 = never dodges).")]
+        public float hypogeumDodge = 2.5f;
+        [Tooltip("How far ahead (m) it looks before stepping onto a door or lift.")]
+        public float hypogeumLookAhead = 2f;
         [Tooltip("-evolved: start from a late run's build (4 evolutions, 3 synergies), applied on the first frame (after PlayerBuild.Start).")]
         public bool evolvedBuild;
         bool _evolvedApplied;
@@ -72,6 +77,8 @@ namespace Gladiator.Gameplay
         bool _stressRequested, _finished;
         bool _dodging;          // stepping off the chariot lane
         int _chariotDodges;
+        bool _hypDodging;       // stepping off a trapdoor or lift
+        int _hypogeumDodges;
 
         public float Elapsed => _elapsed;
         public bool Finished => _finished;
@@ -195,6 +202,19 @@ namespace Gladiator.Gameplay
                   .Append(", jumped ").Append(race.Jumped).Append(", boss ").Append(race.BossHits).Append(") dodged ").Append(_chariotDodges);
             if (enemies != null && enemies.FormationsSpawned > 0)
                 sb.Append(" formations ").Append(enemies.FormationsSpawned).Append(" linesBroken ").Append(enemies.LinesBroken);
+            // the Colosseum (R2): the hypogeum's drops and lift waves, the dead's bone piles, the Chimeras' breath, the falx
+            var hyp = Hypogeum.Instance; // R2-STUB(hypogeum)
+            if (hyp != null)
+                sb.Append(" | hypogeum drops ").Append(hyp.Drops).Append(" (fallen ").Append(hyp.Fallen).Append(", hit you ").Append(hyp.PlayerHits) // R2-STUB(hypogeum)
+                  .Append(", jumped ").Append(hyp.Jumped).Append(", boss ").Append(hyp.BossHits).Append(") lifts ").Append(hyp.LiftWaves) // R2-STUB(hypogeum)
+                  .Append(" (raised ").Append(hyp.LiftsRaised).Append(", released ").Append(hyp.Released).Append(") dodged ").Append(_hypogeumDodges); // R2-STUB(hypogeum)
+            if (enemies != null && enemies.PilesMade > 0) // R2-STUB(enemies)
+                sb.Append(" piles ").Append(enemies.PilesMade).Append(" (risen ").Append(enemies.PilesRisen).Append(", stomped ").Append(enemies.PilesStomped) // R2-STUB(enemies)
+                  .Append(", burned ").Append(enemies.PilesBurned).Append(", denied ").Append(enemies.PilesDenied).Append(')'); // R2-STUB(enemies)
+            if (enemies != null && enemies.Breaths > 0) // R2-STUB(enemies): Breaths / BreathHits aren't named in R2-design.md
+                sb.Append(" breaths ").Append(enemies.Breaths).Append(" (hit you ").Append(enemies.BreathHits).Append(')'); // R2-STUB(enemies)
+            if (boss != null && boss.DiscsThrown + boss.FalseDeaths > 0) // R2-STUB(boss): the Eternal Victor
+                sb.Append(" falx ").Append(boss.DiscsThrown).Append(" (hit you ").Append(boss.DiscHits).Append(") falseDeaths ").Append(boss.FalseDeaths); // R2-STUB(boss)
             if (run != null) // Beast Handlers killed (the Beastmaster's unlock counts them; C26)
                 for (int k = 0; k < run.KilledTypeCount; k++)
                 {
@@ -347,6 +367,22 @@ namespace Gladiator.Gameplay
             }
             else _dodging = false;
 
+            // 2c) The hypogeum (the Colosseum): off a door or lift about to open or move, not onto one then, round held doors.
+            var hyp = Hypogeum.Instance; // R2-STUB(hypogeum)
+            if (hyp != null && hypogeumDodge > 0f)
+            {
+                if (hyp.Danger(pos) < hypogeumDodge) // R2-STUB(hypogeum)
+                {
+                    desired = SafeStep(hyp, pos, desired) * 2f; // the way off beats any goal
+                    if (!_hypDodging) { _hypDodging = true; _hypogeumDodges++; }
+                }
+                else
+                {
+                    _hypDodging = false;
+                    if (desired.sqrMagnitude > 1e-4f) desired = AroundHoles(hyp, pos, desired);
+                }
+            }
+
             // 3) Stay inside the arena: its oval shrunk by edgeMargin (chest anchors sit near the edge of the big pit).
             if (em != null)
             {
@@ -393,6 +429,51 @@ namespace Gladiator.Gameplay
             float d = race.LaneOffset(p);
             var g = new Vector3(race.LaneOffset(p + new Vector3(h, 0f, 0f)) - d, 0f, race.LaneOffset(p + new Vector3(0f, 0f, h)) - d);
             return g.sqrMagnitude > 1e-6f ? g.normalized : Vector3.right;
+        }
+
+        static Vector3 Turn(Vector3 v, float deg)
+        {
+            float c = Mathf.Cos(deg * Mathf.Deg2Rad), s = Mathf.Sin(deg * Mathf.Deg2Rad);
+            return new Vector3(v.x * c + v.z * s, 0f, -v.x * s + v.z * c);
+        }
+
+        /// <summary>The shortest way off the door or lift under `p` (XZ, unit): the nearest of 16 bearings at 1.5, 3 and
+        /// 4.5 m whose point is safe for hypogeumDodge seconds (across a door is 2 m to its edge, along it 4), the one
+        /// closest to where it wanted to go on a tie. Probing Danger needs no door geometry and steps over a neighbour
+        /// of the same group (the axis doors are 4 m apart). No allocation.</summary>
+        Vector3 SafeStep(Hypogeum hyp, Vector3 p, Vector3 desired)
+        {
+            Vector3 want = desired.sqrMagnitude > 1e-4f ? desired.normalized : Vector3.forward;
+            for (int ring = 1; ring <= 3; ring++)
+            {
+                Vector3 best = Vector3.zero;
+                float bestDot = -2f;
+                for (int k = 0; k < 16; k++)
+                {
+                    Vector3 dir = Turn(Vector3.forward, k * 22.5f);
+                    if (hyp.Danger(p + dir * (1.5f * ring)) < hypogeumDodge) continue; // R2-STUB(hypogeum)
+                    float dot = Vector3.Dot(dir, want);
+                    if (dot > bestDot) { bestDot = dot; best = dir; }
+                }
+                if (bestDot > -2f) return best;
+            }
+            return want;
+        }
+
+        /// <summary>`desired` turned (by up to 150° either way, nearest first) so the point hypogeumLookAhead ahead isn't on a
+        /// door or lift about to open, or open, or held open for good: held doors are walls. Zero if every way is (it waits).</summary>
+        Vector3 AroundHoles(Hypogeum hyp, Vector3 p, Vector3 desired)
+        {
+            float m = desired.magnitude;
+            Vector3 dir = desired / m;
+            if (hyp.Danger(p + dir * hypogeumLookAhead) >= hypogeumDodge) return desired; // R2-STUB(hypogeum)
+            for (int k = 1; k <= 6; k++)
+                for (int side = -1; side <= 1; side += 2)
+                {
+                    Vector3 d = Turn(dir, side * 25f * k);
+                    if (hyp.Danger(p + d * hypogeumLookAhead) >= hypogeumDodge) return d * m; // R2-STUB(hypogeum)
+                }
+            return Vector3.zero;
         }
 
         uint Next()

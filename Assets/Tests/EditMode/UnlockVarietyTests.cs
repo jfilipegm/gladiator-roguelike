@@ -136,5 +136,32 @@ namespace Gladiator.Tests
             Assert.IsNotNull(d.codexSeen);
             Assert.AreEqual(5, d.renown);
         }
+
+        /// <summary>Phase 5.14: WinWithWeapon counts won runs that ended with the weapon in hand; "a|b" sums both ids.</summary>
+        [Test]
+        public void WinWithWeapon_CountsWonRunsHoldingIt_AndAcceptsItsEvolution()
+        {
+            var d = new SaveData();
+            bool M(string id, float n) => MetaProgress.Met(new UnlockCondition { kind = UnlockConditionKind.WinWithWeapon, id = id, amount = n }, d);
+            WeaponKills[] W(params string[] ids)
+            {
+                var w = new WeaponKills[ids.Length];
+                for (int k = 0; k < ids.Length; k++) w[k] = new WeaponKills { Id = ids[k], Kills = 10 };
+                return w;
+            }
+            MetaProgress.Apply(new RunSummary { Outcome = RunOutcome.Died, Elapsed = 300f, Weapons = W("spear") }, _meta, d);
+            Assert.IsFalse(M("spear", 1), "a lost run doesn't count");
+            MetaProgress.Apply(new RunSummary { Outcome = RunOutcome.Survived, Elapsed = 480f, Weapons = W("gladius") }, _meta, d);
+            Assert.IsFalse(M("spear|impaler", 1), "a win without it doesn't either");
+            Assert.AreEqual(10, SaveData.Count(d.weaponKills, "spear"), "its kills still count");
+            MetaProgress.Apply(new RunSummary { Outcome = RunOutcome.Survived, Elapsed = 480f, Weapons = W("gladius", "impaler") }, _meta, d);
+            Assert.IsTrue(M("spear|impaler", 1), "a win holding its evolution counts");
+            Assert.IsFalse(M("spear", 1), "but not for the base id alone");
+            Assert.IsFalse(M("spear|impaler", 2));
+            float cur, target;
+            MetaProgress.Progress(new UnlockCondition { kind = UnlockConditionKind.WinWithWeapon, id = "spear|impaler", amount = 2f }, d, out cur, out target);
+            Assert.AreEqual(1f, cur);
+            Assert.AreEqual(2f, target);
+        }
     }
 }

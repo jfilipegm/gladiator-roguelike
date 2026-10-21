@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d9ca202b64ecd58f868800b7f0178b2, type: 3}
+  m_Name: MovementConfig_NetWeaver
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.MovementConfig
+  maxSpeed: 7.5
+  groundAccel: 70
+  groundDecel: 55
+  overspeedDecel: 9
+  highSpeedTurnRate: 540
+  faceTurnSpeed: 900
+  gravity: 30
+  fallGravityMultiplier: 1.35
+  maxFallSpeed: 32
+  groundStick: 4
+  jumpHeight: 1.7
+  jumpCutMultiplier: 0.5
+  coyoteTime: 0.12
+  jumpBuffer: 0.15
+  extraJumps: 0
+  airJumpHeightMultiplier: 0.85
+  airAccel: 30
+  airMaxSpeed: 7.5
+  airOverspeedDrag: 2
+  airIdleDrag: 4
+  slideStartBoost: 4
+  slideMinStartSpeed: 3
+  slideMinSpeed: 3.5
+  slideFriction: 5
+  slopeGain: 1
+  slideMaxSpeed: 22
+  slideSteerRate: 140
+  slideCooldown: 0.25
+  slideRequiresHold: 1
+  slideJumpBoost: 1.5
+  slideOnLand: 1
+  slideCapsuleHeight: 0.95
+  capsuleHeight: 1.6
+  capsuleRadius: 0.36
+  stepOffset: 0.35
+  slopeLimit: 50

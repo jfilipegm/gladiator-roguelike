@@ -13,7 +13,9 @@ namespace Gladiator.Gameplay
     /// (scaled by the card's rarity, like Boons), and the player's stats multiply everything on top.
     /// Implemented patterns: MeleeArc (Gladius), Thrust (Spear), Projectile (Javelins), Returning (Chakram), Orbit (Gorm's
     /// Flail: range = orbit radius, width = ball radius, speed = m/s along the circle, cooldown = re-hit interval per enemy),
-    /// Lob (Bomb Satchel: acquireRange = throw range, width = blast radius, flightTime/fuse shortened by Projectile Speed).
+    /// Lob (Bomb Satchel: acquireRange = throw range, width = blast radius, flightTime/fuse shortened by Projectile Speed),
+    /// GroundSlam (the Cleaver), Chain (the Storm Spear), MultiHit (the Trident: `prongs` thrust lines fanned across
+    /// arcDegrees, `prongInterval` s apart).
     /// </summary>
     [CreateAssetMenu(menuName = "Gladiator/Weapon", fileName = "WP_")]
     public sealed class WeaponDef : ScriptableObject
@@ -96,6 +98,12 @@ namespace Gladiator.Gameplay
         public float tipLength;
         [Tooltip("MeleeArc / Thrust with Amount > 1: each extra strike goes for the next-nearest enemy instead of the nearest again.")]
         public bool spreadStrikes;
+
+        [Header("MultiHit (the Trident, Phase 5.14)")]
+        [Tooltip("MultiHit: jabs per flurry, fanned evenly across arcDegrees (each a Thrust line: range long, width wide).")]
+        [Min(1)] public int prongs = 3;
+        [Tooltip("MultiHit: seconds between two jabs of one flurry.")]
+        public float prongInterval = 0.07f;
 
         [Header("Hit effects (every pattern, Phase 5.5)")]
         [Tooltip("Run by BoonEffects on this weapon's direct hits only, at potency 1: StatusOnHit (chance 1 = always), ChainSpark, GroundOnHit.")]

@@ -159,3 +159,26 @@ Arena 3 exists, so `UL_BloodKnight` switches from the interim "beat Gorm below 3
 - **Model:** `BlenderSrc/characters/ch_ashenoracle.py`; the stranger uses the same model.
 
 **Tests:** a censer burst curses what it hits and leaves a patch that curses an enemy walking in; a cursed enemy's death bursts and passes the curse on; a hit releases the veil (curses, slows, pushes) and a second hit inside the cooldown doesn't; standing in the stranger's ring for 3 s saves the flag, stepping out resets the reading, and he leaves after 25 s; the flag unlocks the Oracle.
+
+## The Net-Weaver (Phase 5.14)
+| | |
+|---|---|
+| **Fantasy** | A fisherman who walked into the arena with his own net and never lost a fight he wanted to win. A retiarius: no helmet, no shield, only reach, patience and a mocking grin. He catches men like tuna, then spears them in the net. |
+| **Silhouette** | 1.65 m, bare-headed (a fisherman's knotted headband, a topknot), a tall bronze **galerus** rising above his left shoulder, a wrapped manica on the left arm, a wide belt and a short tunic. A **net** hangs from his left shoulder down his back like a cape with lead weights on its fringe, and a long **trident** (three prongs) is held across his body. 64 px test against the Net-Thrower (an enemy that also carries a trident and a net), the Thunder Champion (an upright spear) and the Nobody: the galerus over one shoulder and the net cape. From the camera behind him: the net cape, its cords player cyan. |
+| **Weapon** | **Trident**, the new **`MultiHit`** pattern (CLAUDE.md §6.8 "Trident (3-prong multi-hit)"). Every 1.2 s, **three quick jabs fanned across 36°** at the nearest enemy (left, centre, right, 0.07 s apart), each a 4.2 m line, 8 damage. Up close all three land on the same enemy (24); further out they spread across three. Levels 2–8: damage, area, attack speed, a second flurry (Amount), damage, crit chance, area + damage. |
+| **Passive: Caught** | His hits do **+50 % damage to Rooted** enemies and **+25 % to Slowed** ones (both Boon effects, so they work with every weapon he picks up: the Net, the snares...). |
+| **Ability: Cast Net** | Starting a slide with the net ready (every 4 s) **flings a weighted net 5 m ahead** along the slide. Where it lands, everything within 3.2 m is **hauled toward the middle and Rooted** (2 s), and takes 6 × his Damage. Bosses can't be held: they're only Slowed (and so Caught). The net lies on the sand while it holds them. |
+| **Strength** | Control: he gathers a crowd into one spot and holds it there for the trident. Brutal up close against a single target. |
+| **Weakness** | Short reach (4.2 m, the Spear reaches further), no armour, 95 HP. Without the net ready he has to stand close to the horde to hurt it. |
+| **Personality** | A low, wide stance; light on his feet (105 % speed); a showman's twirl of the trident between flurries. |
+| **Unlock: win with the spear** | §6.7 "Win with the spear/trident". `UL_NetWeaver` (new condition **`WinWithWeapon spear 1`**: beat a run's boss while holding the Spear). Codex hint: *"A fisherman watches the spearmen from the stands. Win a run with a spear in your hands."* The unlock also adds the Trident to everyone's level-up pool. |
+
+**Colours:** the net, its ring and the trident's jabs are the player's cool white-cyan, never orange-red.
+
+**How it's built:**
+- **`MultiHit`** in `WeaponSystem`: on impact, `prongs` thrusts at `arcDegrees` / (prongs − 1) apart, `prongInterval` s apart (a thrust line each, like the Spear's `ThrustHit`, with the thrust visual per prong); Amount = more flurries at whoever is nearest next.
+- **`WinWithWeapon`** unlock condition: `SaveData.weaponWins` counts a win for every weapon held at the end of a won run (`RunSummary.weapons`).
+- **Traits:** `TR_Caught` (`EffectsTrait`: `DamageVsStatus` Root 0.5, Slow 0.25) and `TR_CastNet` (`CastNet`: on `SlideEvent` with the net ready, a 0.3 s throw arc, then the haul: a knockback toward the landing point, Root (Slow for bosses), damage, and the net drawn on the sand while it holds).
+- **Model:** `BlenderSrc/characters/ch_netweaver.py` (≤ 1,200 tris), `WP_Trident`, `PR_NetCast`.
+
+**Tests:** a flurry close up hits one enemy three times; at range the prongs hit three enemies spread across the fan and miss one outside it; Caught adds 50 % against a rooted enemy; a slide with the net ready hauls a group toward the landing point and roots it, a second slide inside the cooldown doesn't; a boss is slowed, not rooted; a won run holding the Spear unlocks him and a won run without it doesn't.

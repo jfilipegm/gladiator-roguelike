@@ -46,6 +46,7 @@ namespace Gladiator.Gameplay
         readonly float[] _spotD = new float[16];
         Transform[] _bearerLegs = System.Array.Empty<Transform>();
         Quaternion[] _bearerBind = System.Array.Empty<Quaternion>();
+        bool[] _bearerLeft = System.Array.Empty<bool>(); // cached: Object.name allocates
         Vector3 _leapFrom;
         readonly float[] _weights = new float[8];
         Vector3 _pos, _aim, _target, _entryEnd;
@@ -833,10 +834,11 @@ namespace Gladiator.Gameplay
             if (root != null) foreach (var t in root.GetComponentsInChildren<Transform>(true)) if (t.name.StartsWith("BLeg")) n++;
             _bearerLegs = new Transform[n];
             _bearerBind = new Quaternion[n];
+            _bearerLeft = new bool[n];
             if (n == 0) return;
             int k = 0;
             foreach (var t in root.GetComponentsInChildren<Transform>(true))
-                if (t.name.StartsWith("BLeg")) { _bearerLegs[k] = t; _bearerBind[k] = t.localRotation; k++; }
+                if (t.name.StartsWith("BLeg")) { _bearerLegs[k] = t; _bearerBind[k] = t.localRotation; _bearerLeft[k] = t.name.EndsWith("L"); k++; }
         }
 
         /// <summary>Phase 2: a ring of burning ground along the wall foot ("he set the fence on fire").</summary>
@@ -901,8 +903,7 @@ namespace Gladiator.Gameplay
             for (int k = 0; k < _bearerLegs.Length; k++) // the bearers march in step: front and back pairs, left and right legs opposite
             {
                 if (_bearerLegs[k] == null) continue;
-                bool left = _bearerLegs[k].name.EndsWith("L");
-                float swing = walking ? 26f * Mathf.Sin(_walk + (left ? 0f : Mathf.PI)) : 0f;
+                float swing = walking ? 26f * Mathf.Sin(_walk + (_bearerLeft[k] ? 0f : Mathf.PI)) : 0f;
                 _bearerLegs[k].localRotation = _bearerBind[k] * Quaternion.Euler(-swing, 0f, 0f);
             }
             if (_flail != null)

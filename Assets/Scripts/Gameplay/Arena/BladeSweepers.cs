@@ -52,6 +52,7 @@ namespace Gladiator.Gameplay
         float[] _angle = System.Array.Empty<float>();  // degrees, the blade's heading
         float[] _speed = System.Array.Empty<float>();  // degrees per second now
         float[] _playerCd = System.Array.Empty<float>();
+        bool[] _wasSpinning = System.Array.Empty<bool>();
         Matrix4x4[] _matrices = System.Array.Empty<Matrix4x4>();
         readonly int[] _query = new int[256];
         RenderParams _rp;
@@ -78,6 +79,7 @@ namespace Gladiator.Gameplay
             _angle = new float[n];
             _speed = new float[n];
             _playerCd = new float[n];
+            _wasSpinning = new bool[n];
             _matrices = new Matrix4x4[Mathf.Max(1, n)];
             for (int i = 0; i < n; i++)
             {
@@ -134,11 +136,13 @@ namespace Gladiator.Gameplay
                 }
                 else if (alwaysSpin || t < telegraph + spin) want = FullSpeed;
                 else want = 0f;
-                if (_speed[i] < FullSpeed * 0.5f && want >= FullSpeed) Spins++;
                 _speed[i] = Mathf.MoveTowards(_speed[i], want, FullSpeed * (want > _speed[i] ? 2.5f : 1.2f) * dt);
                 float a0 = _angle[i];
                 _angle[i] = Mathf.Repeat(a0 + _speed[i] * dt, 360f);
-                if (IsSpinning(i))
+                bool spinning = IsSpinning(i);
+                if (spinning && !_wasSpinning[i]) Spins++; // once per spin-up (v1 counted every frame of the ramp)
+                _wasSpinning[i] = spinning;
+                if (spinning)
                 {
                     if (tele != null) tele.Circle(hubs[i], bladeLength, 1f, telegraphColor, TelegraphRenderer.Style.Ring, 0.1f, i * 0.31f);
                     float swept = _speed[i] * dt;

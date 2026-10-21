@@ -6,6 +6,8 @@ namespace Gladiator.Gameplay
     /// <summary>
     /// The player's stat pipeline: the gladiator's base values + every upgrade's modifiers (StatBlock), then the admin
     /// buff layer (DevSettings) on top, so "reset buffs" never undoes a real pick. Every system reads its numbers here.
+    /// P1: Breakdown splits each total into its base and sources (cards, synergies, traits, the admin layer) for the
+    /// stats page.
     /// </summary>
     public sealed class PlayerStats : MonoBehaviour
     {
@@ -30,9 +32,11 @@ namespace Gladiator.Gameplay
         }
 
         /// <summary>Final value: pipeline × admin buffs.</summary>
-        public float Get(StatId s)
+        public float Get(StatId s) => WithAdmin(s, Block.Get(s));
+
+        /// <summary>`v`, a pipeline value of `s`, with the admin buffs on top: what Get returns (previews use it on their copy).</summary>
+        public static float WithAdmin(StatId s, float v)
         {
-            float v = Block.Get(s);
             switch (s)
             {
                 case StatId.Damage: return v * DevSettings.DamageMul;
@@ -44,6 +48,19 @@ namespace Gladiator.Gameplay
                 case StatId.CritChance: return v + DevSettings.CritBonus;
                 default: return v;
             }
+        }
+
+        /// <summary>
+        /// Get(s) split into shares that add up to it: into[0] the base, then one per source (StatBlock.Breakdown), then
+        /// the admin layer as its own share when it changes the stat. Returns how many were written (no allocation).
+        /// </summary>
+        public int Breakdown(StatId s, StatShare[] into)
+        {
+            int n = Block.Breakdown(s, into);
+            float admin = Get(s) - Block.Get(s);
+            if (n < into.Length && Mathf.Abs(admin) > 1e-6f)
+                into[n++] = new StatShare { Source = new StatSource(StatSourceKind.Admin), Amount = admin, Count = 1 };
+            return n;
         }
 
         public float MaxHp => Get(StatId.MaxHp);

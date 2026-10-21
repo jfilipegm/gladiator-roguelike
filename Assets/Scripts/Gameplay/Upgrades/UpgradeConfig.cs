@@ -38,6 +38,16 @@ namespace Gladiator.Gameplay
         [Tooltip("Ignore card input for this long after the cards appear (s), so a held jump/click doesn't pick blind.")]
         public float inputGrace = 0.3f;
 
+        [Header("Vows (P1: trade-off cards)")]
+        [Tooltip("Vows' combined share of the odds for each level-up card while other cards are eligible (0.15 ≈ a Vow in 2 of every 5 level-ups). Their own weights only split this share.")]
+        [Range(0f, 0.5f)] public float vowShare = 0.15f;
+        [Tooltip("At most this many Vows among one pick's cards.")]
+        [Range(0, 4)] public int maxVowsPerPick = 1;
+        [Tooltip("Vows in chest, altar and boss rewards too (off: rewards you paid for are pure upside).")]
+        public bool vowsInRewards = false;
+        [Tooltip("A Vow's drawbacks scale with rarity by this (gentler than rarityMagnitude): a Legendary Vow gives far more for a little more.")]
+        public float[] vowDrawbackMagnitude = { 1f, 1.1f, 1.2f, 1.3f };
+
         [Header("Evolutions (Phase 5.5)")]
         [Tooltip("Chest, altar and boss rewards put a ready evolution in their first slot.")]
         public bool evolutionInRewards = true;
@@ -48,6 +58,8 @@ namespace Gladiator.Gameplay
             rarityWeights[(int)r] * Mathf.Exp(Mathf.Max(0f, luck) * luckStrength * (int)r);
 
         public float Magnitude(Rarity r) => rarityMagnitude[(int)r];
+        public float DrawbackMagnitude(Rarity r) =>
+            vowDrawbackMagnitude != null && (int)r < vowDrawbackMagnitude.Length ? vowDrawbackMagnitude[(int)r] : 1f;
         public Color RarityColor(Rarity r) => rarityColors[(int)r];
 
         /// <summary>3 cards, or 4 with Luck (`roll01` uniform in [0,1)).</summary>
@@ -62,6 +74,7 @@ namespace Gladiator.Gameplay
             if (rarityWeights == null || rarityWeights.Length != RarityCount) System.Array.Resize(ref rarityWeights, RarityCount);
             if (rarityMagnitude == null || rarityMagnitude.Length != RarityCount) System.Array.Resize(ref rarityMagnitude, RarityCount);
             if (rarityColors == null || rarityColors.Length != RarityCount) System.Array.Resize(ref rarityColors, RarityCount);
+            if (vowDrawbackMagnitude == null || vowDrawbackMagnitude.Length != RarityCount) System.Array.Resize(ref vowDrawbackMagnitude, RarityCount);
         }
     }
 }

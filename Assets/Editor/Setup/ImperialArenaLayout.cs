@@ -139,7 +139,6 @@ namespace Gladiator.EditorTools
             var gates = new List<ArenaLayoutDef.Gate>();
             var crowd = new List<ArenaLayoutDef.CrowdZone>();
             var stone = new List<Vector4>();
-            var bounds = new List<Vector4>();
             void Add(string model, PieceRole role, Vector3 pos, float yaw, Vector3? scale = null) =>
                 pieces.Add(new ArenaLayoutDef.Piece { model = Env + model, role = role, position = pos, yaw = yaw, scale = scale ?? Vector3.one });
 
@@ -198,8 +197,6 @@ namespace Gladiator.EditorTools
                 Vector2 dir = (b - a).normalized, inward = new Vector2(dir.y, -dir.x);
                 float len = (b - a).magnitude;
                 stone.Add(new Vector4((a.x + b.x) * 0.5f, (a.y + b.y) * 0.5f, YawOf(inward), len + 0.3f));
-                Vector2 back = (a + b) * 0.5f - inward * 1.2f;
-                bounds.Add(new Vector4(back.x, back.y, YawOf(inward), len + 3f));
                 if (i == NorthEdge)
                     Side(a, b, new Vector2(SideGateX[0], GateHalf), new Vector2(PulvinarX, PulvinarHalf), new Vector2(SideGateX[1], GateHalf));
                 else if (i == SouthEdge)
@@ -236,7 +233,9 @@ namespace Gladiator.EditorTools
             crowd.Add(new ArenaLayoutDef.CrowdZone { center = new Vector3(PulvinarX, 4.2f, HalfZ + 3.85f), size = new Vector2(0.4f, 0.4f), yaw = 180f, count = 1 });
             l.solidWalls = stone.ToArray();
             l.solidWallHeight = 8.4f;
-            l.boundary = bounds.ToArray();
+            // the player's boundary (P1): one closed loop on the stone's face (no gate has a ledge in reach)
+            l.boundaryLoop = WallLine();
+            l.boundary = System.Array.Empty<Vector4>();
 
             // ---------- the spina: ten walkway segments, a meta at each end (three gold cones: they block), the obelisk
             // (blocks movement, shots and sight), the lap counter, and stairs on both long sides

@@ -50,7 +50,8 @@ namespace Gladiator.EditorTools
             ArenaSceneCommon.AddGameLoop();
 
             var env = new GameObject("Environment").transform;
-            foreach (var p in layout.pieces) PlacePiece(p, env);
+            var placed = new List<(PieceRole role, GameObject go, float baseY)>(); // for the perch guards (P1)
+            foreach (var p in layout.pieces) placed.Add((p.role, PlacePiece(p, env), p.position.y));
 
             var gateRoots = new List<Transform>();
             var gatesRoot = new GameObject("Gates").transform;
@@ -70,6 +71,7 @@ namespace Gladiator.EditorTools
                     var go = ArenaSceneCommon.PlaceProp(BarricadeModel, breakRoot, new Vector3(b.x, b.y, b.z), b.w);
                     UnStatic(go);
                     barricades.Add(go.transform);
+                    placed.Add((PieceRole.Prop, go, b.y));
                 }
                 foreach (var b in layout.braziers)
                 {
@@ -77,6 +79,7 @@ namespace Gladiator.EditorTools
                     AddFireLight(go);
                     UnStatic(go);
                     braziers.Add(go.transform);
+                    placed.Add((PieceRole.Prop, go, b.y));
                 }
             }
             foreach (var t in layout.spikeTraps) ArenaSceneCommon.PlaceDecor(SpikeGrateModel, env, t, 0f);
@@ -144,8 +147,10 @@ namespace Gladiator.EditorTools
                     if (bars != null) UnStatic(bars.gameObject);
                     cageRoots.Add(go.transform);
                     cageBars.Add(bars);
+                    placed.Add((PieceRole.Solid, go, c.y));
                 }
             }
+            AddPerchGuards(layout, placed); // P1: before the bake, so a fresh bake of the scene matches it
             var hypogeum = PlaceHypogeum(layout, env); // R2: before the bake, so it samples the floor over every hole
             ArenaNavBaker.Bake(enemies, System.IO.Path.GetFileNameWithoutExtension(scenePath));
             ArenaSceneCommon.AddRunSystems(player);
@@ -303,7 +308,7 @@ namespace Gladiator.EditorTools
             return scenePath;
         }
 
-        static void PlacePiece(in ArenaLayoutDef.Piece p, Transform parent)
+        static GameObject PlacePiece(in ArenaLayoutDef.Piece p, Transform parent)
         {
             Vector3? scale = p.scale == Vector3.one || p.scale == Vector3.zero ? (Vector3?)null : p.scale;
             GameObject go;
@@ -315,12 +320,15 @@ namespace Gladiator.EditorTools
                 default: go = ArenaSceneCommon.PlaceDecor(p.model, parent, p.position, p.yaw, scale); break;
             }
             if (p.model.EndsWith("PR_Brazier")) AddFireLight(go);
+            return go;
         }
 
-        /// <summary>Invisible walls that only the player hits (Props layer: the camera and the nav bake ignore them), tall
-        /// enough that no number of air jumps clears them.</summary>
+        /// <summary>Invisible walls that only the player hits (Props layer: the camera and the height grid ignore them), tall
+        /// enough that no number of air jumps clears them: along the layout's closed boundary loop (P1), else the legacy
+        /// separate walls.</summary>
         static void AddBoundary(ArenaLayoutDef layout, Transform env)
         {
+            if (layout.boundaryLoop != null && layout.boundaryLoop.Length >= 3) { AddBoundaryLoop(layout, env); return; }
             if (layout.boundary == null || layout.boundary.Length == 0) return;
             var root = new GameObject("Boundary").transform;
             root.SetParent(env, false);
@@ -334,6 +342,152 @@ namespace Gladiator.EditorTools
                 box.size = new Vector3(b.w, 30f, 1f);
                 box.center = new Vector3(0f, 12f, -0.5f); // yaw faces inward: the inner face on the line, the box behind it
             }
+        }
+
+        const float LoopWallThickness = 1f, LoopWallHeight = 30f;
+
+        /// <summary>P1 (the producer's playtest of v0.17.0: the player got onto the Slave Pit's platforms and behind them
+        /// where neighbouring walls stood at different distances): one wall per edge of the closed boundary loop, its
+        /// inner face on the line and its box behind it, each run on past a convex corner so no wedge opens behind it;
+        /// and ArenaBounds on the root (the motor's last-resort clamp to the same loop).</summary>
+        static void AddBoundaryLoop(ArenaLayoutDef layout, Transform env)
+        {
+            var loop = layout.boundaryLoop;
+            var root = new GameObject("Boundary").transform;
+            root.SetParent(env, false);
+            var bounds = root.gameObject.AddComponent<ArenaBounds>();
+            bounds.polygon = (Vector2[])loop.Clone();
+            bounds.center = new Vector2(layout.center.x, layout.center.z);
+            int n = loop.Length, walls = 0;
+            float wind = SignedArea(loop) >= 0f ? 1f : -1f;
+            for (int k = 0; k < n; k++)
+            {
+                Vector2 prev = loop[(k + n - 1) % n], a = loop[k], b = loop[(k + 1) % n], next = loop[(k + 2) % n];
+                Vector2 d = b - a;
+                float len = d.magnitude;
+                if (len < 1e-3f) continue;
+                Vector2 dir = d / len, inward = new Vector2(-dir.y, dir.x) * wind;
+                float extA = Convex(prev, a, b, wind) ? LoopWallThickness : 0f, extB = Convex(a, b, next, wind) ? LoopWallThickness : 0f;
+                Vector2 mid = (a + b) * 0.5f + dir * ((extB - extA) * 0.5f);
+                var go = new GameObject("Wall");
+                go.layer = Layers.Props;
+                go.transform.SetParent(root, false);
+                go.transform.SetPositionAndRotation(new Vector3(mid.x, 0f, mid.y), Quaternion.LookRotation(new Vector3(inward.x, 0f, inward.y)));
+                var box = go.AddComponent<BoxCollider>();
+                box.size = new Vector3(len + extA + extB, LoopWallHeight, LoopWallThickness);
+                box.center = new Vector3(0f, LoopWallHeight * 0.4f, -LoopWallThickness * 0.5f); // the inner face on the line
+                walls++;
+            }
+            Debug.Log($"[ArenaBuilder] {layout.id}: boundary loop of {n} corners, {walls} walls, {PerimeterOf(loop):0} m round");
+        }
+
+        /// <summary>Shoelace: positive when the loop runs counter-clockwise seen from above (x right, z up).</summary>
+        public static float SignedArea(Vector2[] loop)
+        {
+            float twice = 0f;
+            for (int i = 0, j = loop.Length - 1; i < loop.Length; j = i++) twice += loop[j].x * loop[i].y - loop[i].x * loop[j].y;
+            return twice * 0.5f;
+        }
+
+        static float PerimeterOf(Vector2[] loop)
+        {
+            float l = 0f;
+            for (int i = 0, j = loop.Length - 1; i < loop.Length; j = i++) l += (loop[i] - loop[j]).magnitude;
+            return l;
+        }
+
+        /// <summary>True if the loop turns toward its inside at b (an interior angle under 180°).</summary>
+        static bool Convex(Vector2 a, Vector2 b, Vector2 c, float wind)
+        {
+            Vector2 e1 = b - a, e2 = c - b;
+            return (e1.x * e2.y - e1.y * e2.x) * wind > 0f;
+        }
+
+        /// <summary>True if (x, z) is inside the loop (crossing number; editor-side twin of ArenaBounds.Contains).</summary>
+        public static bool InsideLoop(Vector2[] loop, Vector2 p)
+        {
+            bool inside = false;
+            for (int i = 0, j = loop.Length - 1; i < loop.Length; j = i++)
+            {
+                Vector2 a = loop[i], b = loop[j];
+                if ((a.y > p.y) != (b.y > p.y) && p.x < (b.x - a.x) * (p.y - a.y) / (b.y - a.y) + a.x) inside = !inside;
+            }
+            return inside;
+        }
+
+        /// <summary>How far above its base a top may be before the player could perch on it out of the horde's reach
+        /// (enemy melee needs |dy| &lt; 1).</summary>
+        public const float PerchHeight = 1f;
+
+        /// <summary>
+        /// P1 (the safe perch): every top the player could stand on more than PerchHeight above the ground round it,
+        /// where enemies can't follow, slides them off (NoPerch). A prop's box collider is its whole outline, so its top
+        /// is the only place to stand: NoPerch goes on it. A solid piece reaching inside the boundary loop (a statue, a
+        /// pillar, the obelisk, the shed) has ledges on its mesh: an invisible box sleeve round its outline (Props
+        /// layer: the camera ignores it) with NoPerch hides them all. Walkable pieces are left alone: enemies climb them.
+        /// </summary>
+        static void AddPerchGuards(ArenaLayoutDef layout, List<(PieceRole role, GameObject go, float baseY)> placed)
+        {
+            var loop = layout.boundaryLoop;
+            bool haveLoop = loop != null && loop.Length >= 3;
+            int props = 0, sleeves = 0;
+            var names = new System.Text.StringBuilder();
+            foreach (var (role, go, baseY) in placed)
+            {
+                if (go == null || (role != PieceRole.Prop && role != PieceRole.Solid)) continue;
+                var b = PieceBounds(go);
+                if (b.size == Vector3.zero) continue;
+                var t = go.transform;
+                float top = float.MinValue;
+                bool reachesIn = false;
+                for (int i = 0; i < 8; i++)
+                {
+                    var w = t.TransformPoint(b.center + Vector3.Scale(b.extents, new Vector3((i & 1) == 0 ? -1 : 1, (i & 2) == 0 ? -1 : 1, (i & 4) == 0 ? -1 : 1)));
+                    top = Mathf.Max(top, w.y);
+                    if (haveLoop && InsideLoop(loop, new Vector2(w.x, w.z))) reachesIn = true;
+                }
+                if (top - baseY <= PerchHeight) continue;
+                if (role == PieceRole.Prop)
+                {
+                    if (go.GetComponent<BoxCollider>() == null) continue;
+                    go.AddComponent<NoPerch>();
+                    props++;
+                    continue;
+                }
+                var c = t.TransformPoint(b.center);
+                if (!reachesIn && !(haveLoop && InsideLoop(loop, new Vector2(c.x, c.z)))) continue; // a wall or a gate: behind the loop
+                var sleeve = new GameObject("PerchSleeve");
+                sleeve.layer = Layers.Props;
+                sleeve.transform.SetParent(t, false);
+                var box = sleeve.AddComponent<BoxCollider>();
+                box.center = b.center;
+                box.size = b.size;
+                sleeve.AddComponent<NoPerch>();
+                sleeves++;
+                if (names.Length < 400) names.Append(' ').Append(go.name);
+            }
+            Debug.Log($"[ArenaBuilder] {layout.id}: perch guards on {props} props, sleeves on {sleeves} solid pieces:{names}");
+        }
+
+        /// <summary>A placed model's mesh bounds in its root's local space (all its parts).</summary>
+        static Bounds PieceBounds(GameObject go)
+        {
+            var inv = go.transform.worldToLocalMatrix;
+            bool any = false;
+            var b = new Bounds();
+            foreach (var mf in go.GetComponentsInChildren<MeshFilter>(true))
+            {
+                var m = mf.sharedMesh;
+                if (m == null) continue;
+                var mb = m.bounds;
+                var toRoot = inv * mf.transform.localToWorldMatrix;
+                for (int i = 0; i < 8; i++)
+                {
+                    var p = toRoot.MultiplyPoint3x4(mb.center + Vector3.Scale(mb.extents, new Vector3((i & 1) == 0 ? -1 : 1, (i & 2) == 0 ? -1 : 1, (i & 4) == 0 ? -1 : 1)));
+                    if (!any) { b = new Bounds(p, Vector3.zero); any = true; } else b.Encapsulate(p);
+                }
+            }
+            return b;
         }
 
         /// <summary>Invisible stone (Environment layer: the camera, the player and the nav bake all see it) behind a wall
@@ -527,6 +681,7 @@ namespace Gladiator.EditorTools
             block.transform.SetParent(go.transform, false);
             block.transform.localPosition = new Vector3(0f, 2f, 0.3f); // on the door line: closed doors look and act solid
             block.AddComponent<BoxCollider>().size = new Vector3(4.4f, 4f, 0.3f);
+            block.AddComponent<NoPerch>(); // P1: its top (4 m) is inside the boundary loop and in reach of two air jumps
             return go.transform;
         }
 

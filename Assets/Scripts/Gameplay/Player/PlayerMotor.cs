@@ -88,6 +88,7 @@ namespace Gladiator.Gameplay
         bool _jumpCutDone, _ascendingFromJump;
         float _takeoffY, _apexY;
         Vector3 _pendingImpulse;
+        Collider _perch;      // a NoPerch top under the player this tick (null: none)
 
         void Awake()
         {
@@ -216,6 +217,11 @@ namespace Gladiator.Gameplay
                     if (into < 0f) _hv -= n * into;
                 }
             }
+
+            // P1 (arena integrity): no standing on a NoPerch top, and never outside the arena's boundary loop
+            if (_perch != null) SlideOffPerch(dt);
+            var bounds = ArenaBounds.Instance;
+            if (bounds != null) KeepInside(bounds);
 
             if (!IsGrounded && transform.position.y > _apexY) _apexY = transform.position.y;
 
@@ -389,15 +395,41 @@ namespace Gladiator.Gameplay
         bool ProbeGround(out Vector3 normal)
         {
             normal = Vector3.up;
+            _perch = null;
             if (_ascendingFromJump && _vy > 0.01f) return false; // just jumped: don't snap back down
             float r = _cc.radius * 0.95f;
             Vector3 origin = transform.position + Vector3.up * (r + 0.05f);
             float dist = IsGrounded ? 0.25f : 0.1f;
             if (!Physics.SphereCast(origin, r, Vector3.down, out var hit, dist, Layers.SolidMask, QueryTriggerInteraction.Ignore))
                 return false;
+            if (hit.collider.TryGetComponent<NoPerch>(out _)) { _perch = hit.collider; return false; } // slides off (Tick)
             if (Vector3.Angle(hit.normal, Vector3.up) > config.slopeLimit) return false;
             normal = hit.normal;
             return true;
+        }
+
+        /// <summary>On a NoPerch top: no walking back onto it, no free-fall speed building up while resting on it, and a
+        /// slide off its nearest side that stays in the arena (NoPerch.SlideDirection).</summary>
+        void SlideOffPerch(float dt)
+        {
+            Vector3 dir = NoPerch.SlideDirection(transform.position, _perch);
+            float against = Vector3.Dot(_hv, dir);
+            if (against < 0f) _hv -= dir * against;
+            if (_vy < -config.groundStick) _vy = -config.groundStick;
+            _cc.Move(dir * (config.perchSlideSpeed * dt));
+        }
+
+        /// <summary>The last resort behind the arena's invisible walls: outside the boundary loop, back in at once, the
+        /// outward part of the speed gone (ArenaBounds counts it as a leak).</summary>
+        void KeepInside(ArenaBounds bounds)
+        {
+            Vector3 p = transform.position;
+            if (!bounds.Clamp(ref p, _cc.radius + 0.05f, out var inward)) return;
+            _cc.enabled = false;
+            transform.position = p;
+            _cc.enabled = true;
+            float outward = -(_hv.x * inward.x + _hv.z * inward.y);
+            if (outward > 0f) { _hv.x += inward.x * outward; _hv.z += inward.y * outward; }
         }
 
         bool HasHeadroom()

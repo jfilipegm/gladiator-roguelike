@@ -2,7 +2,7 @@
 ~50 m sand arena ringed by a stone foundation wall with tiered wooden stands on top, three stone gates, stone platforms
 and a dais, wooden barricades (the Champion smashes them), iron spike grates (they hurt everyone) and banners.
 
-ARGS: part=structures|terrain|props. Every piece goes to Assets/Art/Models/Environment/. Origins at the base; wall-like
+ARGS: part=structures|terrain|props|gateback (P1: SM_ProvGateTunnel; review=SM_ProvGateTunnel renders it with a gate). Every piece goes to Assets/Art/Models/Environment/. Origins at the base; wall-like
 pieces face -Y (their front, toward the arena centre, arrives as Unity +Z). Seeded randomness: re-runs are identical.
 """
 import importlib
@@ -87,6 +87,57 @@ def prov_gate(name, opening=3.2, height=3.3, depth=1.2):
                   swatch="iron_d", parent=root)
         finish(planks)
         K.join([h] + planks, "Door" + side)
+    return root
+
+
+def open_box(name, size, location, swatch, inward=False, drop=(), parent=None):
+    """A box (pivot at its bottom centre) with some faces left out (drop: any of "front" (-Y), "back", "left", "right",
+    "top", "bottom"); inward=True flips it to be seen from inside (a tunnel's lining)."""
+    o = K.box(name, size=size, location=location, pivot=(0, 0, -1), swatch=swatch, parent=parent)
+    bm = bmesh.new()
+    bm.from_mesh(o.data)
+    axes = {"front": Vector((0, -1, 0)), "back": Vector((0, 1, 0)), "left": Vector((-1, 0, 0)), "right": Vector((1, 0, 0)),
+            "top": Vector((0, 0, 1)), "bottom": Vector((0, 0, -1))}
+    gone = [f for f in bm.faces if any(f.normal.dot(axes[d]) > 0.9 for d in drop)]
+    bmesh.ops.delete(bm, geom=gone, context="FACES")
+    if inward:
+        for f in bm.faces:
+            f.normal_flip()
+    bm.to_mesh(o.data)
+    bm.free()
+    return o
+
+
+def gate_tunnel(name, opening=3.2, open_h=3.6, width=5.0, height=4.15, start=0.6, depth=6.0):
+    """P1 (the producer: "the arenas must remain closed, the player should be able to see outside of it but never
+    give the idea he can leave"): the passage behind each stone gate, so an open door shows a dark tunnel ending in
+    bars, never the town outside. Same origin as SM_ProvGate (front face on y = 0, toward the arena -Y); it runs from
+    the gate's back (y = start) `depth` metres back: a sandstone block as wide as the gate's lintel (its top shows over
+    the walkway behind the wall, like a gatehouse), lined inside with stone fading into darkness, a sand floor, an iron
+    grille near its end and black behind it. Decor: the player never gets in (the boundary loop runs across the gate)."""
+    root = K.empty(name)
+    y0, y1 = start, start + depth
+    half = opening / 2
+    shell = open_box(name + "_Tunnel", (width, depth, height), (0, (y0 + y1) / 2, 0), "sandstone", drop=("front", "bottom"),
+                     parent=root)
+    K.set_swatch_where(shell, "stone_grey", lambda c, n: n.z > 0.5)
+    mouth = 1.6  # the lining's first metres catch the arena's light: stone, then darkness
+    parts = [shell,
+             open_box("Mouth", (opening, mouth, open_h), (0, y0 + mouth / 2, 0), "sandstone_d", inward=True,
+                      drop=("front", "back")),
+             open_box("Deep", (opening, depth - mouth - 0.2, open_h), (0, y0 + mouth + (depth - mouth - 0.2) / 2, 0),
+                      "charcoal", inward=True, drop=("front",))]
+    K.set_swatch_where(parts[1], "sand_d", lambda c, n: n.z > 0.5)   # its floor (flipped: faces up)
+    K.set_swatch_where(parts[2], "slate", lambda c, n: n.z > 0.5)
+    K.set_swatch_where(parts[2], "ink", lambda c, n: n.y < -0.5)     # the far end, seen from the arena
+    gy = y1 - 1.0
+    for i in range(10):  # the grille: ten bars across the passage, three straps
+        x = -half + 0.16 + i * (opening - 0.32) / 9
+        parts.append(K.box("Bar%d" % i, size=(0.09, 0.09, open_h), location=(x, gy, 0), pivot=(0, 0, -1), swatch="iron_d"))
+    for z in (0.5, 1.8, 3.1):
+        parts.append(K.box("Strap", size=(opening, 0.12, 0.12), location=(0, gy, z), pivot=(0, 0, -1), swatch="iron"))
+    finish(parts)
+    K.join(parts, name + "_Tunnel")
     return root
 
 
@@ -334,6 +385,17 @@ elif PART == "terrain":
         "SM_ProvPlatform": prov_platform("SM_ProvPlatform"),
         "SM_ProvDais": prov_dais("SM_ProvDais"),
     }
+elif PART == "gateback":
+    items = {"SM_ProvGateTunnel": gate_tunnel("SM_ProvGateTunnel")}
+    if ARGS.get("review") == "SM_ProvGateTunnel":  # noqa: F821  (P1: the gate and its tunnel together)
+        gate = prov_gate("SM_ProvGate_Review")
+        combo = K.empty("GateAndTunnel")
+        for o in (gate, items["SM_ProvGateTunnel"]):
+            o.parent = combo
+        OUT["gate_tunnel_review"] = K.review_render(combo, "sm_provgate_tunnel", size=480)
+        for o in K.descendants(gate):
+            bpy.data.objects.remove(o, do_unlink=True)
+        items["SM_ProvGateTunnel"].parent = None
 else:
     items = {
         "PR_Barricade": barricade("PR_Barricade"),

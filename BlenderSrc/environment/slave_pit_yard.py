@@ -18,7 +18,7 @@ import random
 import bmesh
 import bpy
 import gladiator_kit as K
-from mathutils import Vector
+from mathutils import Matrix, Vector
 
 importlib.reload(K)
 PART = ARGS.get("part", "enclosure")  # noqa: F821  (ARGS injected by Tools/blender_bridge.py)
@@ -47,6 +47,17 @@ def finish(objs):
 
 def unity_to_blender(x, z):
     return -x, -z
+
+
+def at_origin(obj):
+    """K.join keeps the first part's origin, and K.export_fbx turns the root 180 deg about that origin: a piece whose
+    origin isn't the world origin arrives displaced by twice its offset (P1, the producer's playtest of v0.17.0: the
+    platforms' decks stood 3 m inside the boundary, a safe perch; palisade and fence runs slid 4.5 m sideways). Bake
+    the offset into the mesh so the piece's origin is the world origin again. Roots that are empties are left alone."""
+    if obj.type == "MESH" and obj.location.length > 1e-6:
+        obj.data.transform(Matrix.Translation(obj.location))
+        obj.location = (0, 0, 0)
+    return obj
 
 
 # ------------------------------------------------------------------------------------------------ the boundary
@@ -221,6 +232,53 @@ def yard_gate(name, opening=4.0, height=4.6):
                   swatch="rusty_iron", parent=root)
         finish(planks)
         K.join([h] + planks, "Door" + side)
+    return root
+
+
+def holding_pen(name, inner=4.6, depth=6.0, seed=11):
+    """P1 (the producer: "the arenas must remain closed, the player should be able to see outside of it but never
+    give the idea he can leave"): the pen behind each log gate where the next convicts wait, so an open door shows
+    where the horde comes from, never the road. Sharpened logs (a little lower than the palisade) on three sides,
+    closed at the back, two rails outside, trampled mud and straw on the floor. Same origin as SM_YardGate (front face
+    on y = 0, toward the yard); the pen runs from behind the gate's towers (y = 0.6) `depth` metres back. Decor: the
+    player never gets in (the boundary loop crosses the gate)."""
+    rng = random.Random(seed)
+    root = K.empty(name)
+    y0, y1 = 0.6, 0.6 + depth
+    hx = inner / 2 + 0.25  # log centres: their inner faces line up with the gate's inner towers (x = +-2.3)
+    parts = [K.box(name + "_Pen", size=(inner, depth, 0.06), location=(0, (y0 + y1) / 2, 0.0), pivot=(0, 0, -1),
+                   swatch="mud", parent=root)]
+    i = 0
+
+    def log(x, y, h):
+        nonlocal i
+        sw = ("wood", "wood_dark", "wood", "wood_light")[rng.randrange(4)]
+        parts.append(K.cylinder("Log%d" % i, radius=0.25, depth=h, verts=6, location=(x, y, 0), pivot=(0, 0, -1),
+                                taper=rng.uniform(0.85, 0.95), swatch=sw))
+        parts.append(K.cone("Tip%d" % i, radius=0.23, depth=0.4, verts=6, location=(x, y, h), pivot=(0, 0, -1),
+                            swatch="wood_light"))
+        i += 1
+
+    n_side = int(round(depth / 0.5))
+    for sx in (-1, 1):
+        for k in range(n_side):
+            log(sx * hx, y0 + 0.25 + k * 0.5, rng.uniform(3.0, 3.6))
+    n_back = int(round(2 * hx / 0.5))
+    for k in range(n_back + 1):
+        log(-hx + k * 2 * hx / n_back, y1 + 0.2, rng.uniform(3.4, 3.9))
+    for z in (1.0, 2.4):  # rails lashed on the outside
+        for sx in (-1, 1):
+            parts.append(K.box("RailS", size=(0.16, depth + 0.4, 0.18), location=(sx * (hx + 0.32), (y0 + y1) / 2 + 0.2, z),
+                               pivot=(0, 0, 0), swatch="wood_dark"))
+        parts.append(K.box("RailB", size=(2 * hx + 0.8, 0.16, 0.18), location=(0, y1 + 0.52, z), pivot=(0, 0, 0),
+                           swatch="wood_dark"))
+    for k in range(7):  # straw trodden into the mud
+        st = K.box("Straw%d" % k, size=(rng.uniform(0.5, 1.0), rng.uniform(0.4, 0.8), 0.07),
+                   location=(rng.uniform(-1.6, 1.6), rng.uniform(y0 + 0.8, y1 - 0.6), 0.04), pivot=(0, 0, -1), swatch="straw")
+        st.rotation_euler = (0, 0, rng.uniform(0, 3.1))
+        parts.append(st)
+    finish(parts)
+    K.join(parts, name + "_Pen")
     return root
 
 
@@ -660,6 +718,7 @@ if PART == "enclosure":
         "SM_YardPlatformB": platform_section("SM_YardPlatformB", 6),
         "SM_YardGate": yard_gate("SM_YardGate"),
         "PR_Shed": shed("PR_Shed"),
+        "SM_YardPen": holding_pen("SM_YardPen"),
     }
 elif PART == "ground":
     items = {
@@ -693,7 +752,17 @@ else:
     }
 for n, o in items.items():
     OUT[n] = K.tri_count(K.descendants(o))
-    K.export_fbx(o, "Environment/" + n)
+    K.export_fbx(at_origin(o), "Environment/" + n)
+if REVIEW and PART == "enclosure":
+    # P1: the gate and its pen together (front, side, 3/4) and the pen's 64 px silhouette
+    pen = items["SM_YardPen"]
+    OUT["pen_review"] = K.review_render(pen, "sm_yardpen", size=480)
+    combo = K.empty("GateAndPen")
+    for o in (items["SM_YardGate"], pen):
+        o.parent = combo
+    OUT["gate_pen_review"] = K.review_render(combo, "sm_yardgate_pen", size=480)
+    for o in (items["SM_YardGate"], pen):
+        o.parent = None
 if REVIEW and PART != "ground":
     # a lineup of everything, side by side, for the 3-angle review
     lineup = K.empty("Lineup")

@@ -28,6 +28,8 @@ MonoBehaviour:
   evolvesFrom: {fileID: 0}
   catalyst: {fileID: 0}
   perLevel: []
+  vow: 0
+  drawbacks: []
   effects:
   - kind: 3
     status: {fileID: 11400000, guid: c4e3ba58329c4cad9b688e5c182978b7, type: 2}

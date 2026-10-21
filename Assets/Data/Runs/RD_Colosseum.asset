@@ -18,3 +18,9 @@ MonoBehaviour:
   arenas:
   - displayName: THE COLOSSEUM
     scenePath: Assets/Scenes/Arenas/Colosseum.unity
+  thumbnail: {fileID: 21300000, guid: 442f1cdbf9e140334bef03175af5bd18, type: 3}
+  tagline: I have become a legend.
+  hazards: Trapdoors that drop into the hypogeum, lifts that raise packs from below.
+  layout: {fileID: 11400000, guid: 9f7aacab21789fae9a19f38a950a2f9b, type: 2}
+  bossPortrait: {fileID: 21300000, guid: e1f3640bd5ba61127b397965fee49335, type: 3}
+  bossName: The Eternal Victor, First Champion Of The Colosseum

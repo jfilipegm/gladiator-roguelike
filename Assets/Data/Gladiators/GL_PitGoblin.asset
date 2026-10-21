@@ -35,3 +35,5 @@ MonoBehaviour:
   unlock: {fileID: 11400000, guid: 062cde42a02861921afcb4e11cd6dbb6, type: 2}
   selectLine: 
   tradeoff: 'Fast and greedy, but fragile: 70 HP, -10 % damage.'
+  portrait: {fileID: 21300000, guid: 0bd0965486ab7bba79c78565d41802c3, type: 3}
+  portraitSilhouette: {fileID: 21300000, guid: 982f942a76391c3afb51ca67d1a7849a, type: 3}

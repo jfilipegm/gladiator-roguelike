@@ -18,3 +18,9 @@ MonoBehaviour:
   arenas:
   - displayName: THE IMPERIAL ARENA
     scenePath: Assets/Scenes/Arenas/ImperialArena.unity
+  thumbnail: {fileID: 21300000, guid: fe830e2c6e6359dae87b5811d0228330, type: 3}
+  tagline: One of the greatest alive.
+  hazards: Chariot races that trample the track, Praetorian formations.
+  layout: {fileID: 11400000, guid: afe0c7255e39580cea54133141711fbe, type: 2}
+  bossPortrait: {fileID: 21300000, guid: 636b44a190de189a9a4b1eaa0048d048, type: 3}
+  bossName: The Emperor's Champion, First Spear Of The Empire

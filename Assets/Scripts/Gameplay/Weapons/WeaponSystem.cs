@@ -31,6 +31,8 @@ namespace Gladiator.Gameplay
         public bool InEcho;
         /// <summary>Chain: the enemy the swing was aimed at (slot + uid, so a recycled slot isn't mistaken for it).</summary>
         public int Target = -1, TargetUid;
+        /// <summary>P1: game seconds since the player went down (an Orbit weapon's balls fall to the sand).</summary>
+        public float DownT;
 
         /// <summary>Reuses this slot object for `def` at level 1 (slots are allocated once, so equipping is GC-free).</summary>
         internal void Init(WeaponDef def)
@@ -49,6 +51,7 @@ namespace Gladiator.Gameplay
             EchoT = -1f;
             AreaBoost = 1f;
             InEcho = false;
+            DownT = 0f;
         }
     }
 
@@ -84,6 +87,10 @@ namespace Gladiator.Gameplay
         const int MaxOrbiters = 8;
 
         PlayerStats _stats;
+        PlayerHealth _health;
+
+        /// <summary>P1 (playtest): the player is dead or the run is over. Nothing swings, fires or bites any more.</summary>
+        public bool Halted => (_health != null && _health.IsDead) || RunState.CombatOver;
 
         // Player stats (upgrades × admin buffs) every weapon scales with.
         public float DamageMul => _stats != null ? _stats.Damage : DevSettings.DamageMul;
@@ -125,6 +132,7 @@ namespace Gladiator.Gameplay
         void Awake()
         {
             _stats = GetComponent<PlayerStats>();
+            _health = GetComponent<PlayerHealth>();
             if (startingWeapons != null)
                 foreach (var w in startingWeapons) if (w != null) Equip(w);
         }
@@ -215,6 +223,7 @@ namespace Gladiator.Gameplay
         {
             if (dt <= 0f) return;
             var em = EnemyManager.Instance;
+            if (Halted) { Hold(em, dt); return; }
             bool anySwing = false;
             for (int i = 0; i < _weapons.Count; i++)
             {
@@ -232,6 +241,53 @@ namespace Gladiator.Gameplay
             {
                 TemporaryLeft = Mathf.Max(0f, TemporaryLeft - dt);
                 if (TemporaryLeft > 0f) TickWeapon(_loan, em, dt);
+            }
+        }
+
+        /// <summary>
+        /// P1: the player went down (or the run is over) and every weapon stops at once: the swing in progress never
+        /// lands, the jabs, echoes and extra strikes still to come are dropped, a flail's balls fall to the sand where
+        /// they were, and the companions stand where they are. Nothing hits any more.
+        /// </summary>
+        void Hold(EnemyManager em, float dt)
+        {
+            if (animator != null) animator.AttackT = -1f;
+            for (int i = 0; i < _weapons.Count; i++) HoldWeapon(_weapons[i], em, dt);
+            if (TemporaryLeft > 0f) HoldWeapon(_loan, em, dt);
+        }
+
+        void HoldWeapon(WeaponInstance w, EnemyManager em, float dt)
+        {
+            w.SwingT = -1f;
+            w.EchoT = -1f;
+            w.ProngLeft = 0;
+            w.BurstLeft = 0;
+            w.DownT += dt;
+            var d = w.Def;
+            if (d.pattern == WeaponPattern.Orbit) DropOrbit(w, em);
+            else if (d.pattern == WeaponPattern.Summon && _pack != null) _pack.Hold(dt);
+        }
+
+        /// <summary>A halted flail: its balls stay at the angle they stopped at and drop to the ground under them.</summary>
+        void DropOrbit(WeaponInstance w, EnemyManager em)
+        {
+            var pp = PlayerProjectiles.Instance;
+            if (pp == null) return;
+            var d = w.Def;
+            float area = AreaOf(w);
+            float radius = Mathf.Max(0.5f, d.range * area), scale = d.meshScale * Mathf.Sqrt(area);
+            int n = Mathf.Min(AmountOf(w), MaxOrbiters), mesh = MeshOf(w, pp);
+            float drop = 0.5f * 9.81f * w.DownT * w.DownT;
+            Vector3 centre = transform.position + Vector3.up * orbitHeight;
+            for (int b = 0; b < n; b++)
+            {
+                float a = w.Phase + b * (Mathf.PI * 2f / n);
+                var outward = new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a));
+                Vector3 pos = centre + outward * radius;
+                float ground = em != null && em.Height != null ? em.Height.Sample(pos.x, pos.z) : transform.position.y;
+                pos.y = Mathf.Max(ground + 0.15f, pos.y - drop);
+                var rot = Quaternion.LookRotation(outward, Vector3.up) * Quaternion.Euler(0f, 0f, w.Clock * orbitRoll);
+                pp.Orbiter(mesh, pos, rot, scale, Vector3.zero);
             }
         }
 
@@ -687,6 +743,7 @@ namespace Gladiator.Gameplay
         /// credit, like any of its hits.</summary>
         public void CompanionHit(WeaponInstance w, EnemyManager em, int i, Vector3 dir, float mul)
         {
+            if (Halted) return;
             var info = Hit(w, em, i, dir, DamageFlags.Melee);
             info.Amount *= mul;
             Strike(w, em, i, info);

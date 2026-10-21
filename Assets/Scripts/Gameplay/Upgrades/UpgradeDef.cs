@@ -58,6 +58,29 @@ namespace Gladiator.Gameplay
         public bool IsEvolution => evolvesFrom != null;
         [Tooltip("Added to the player's stats each time this is taken, scaled by the card's rarity.")]
         public StatMod[] perLevel = Array.Empty<StatMod>();
+
+        [Header("Vow (P1: trade-off cards)")]
+        [Tooltip("A Vow: a big upside (perLevel) sworn with a downside (drawbacks). Split red/gold frame; its own share of the level-up odds (UpgradeConfig.vowShare).")]
+        public bool vow;
+        [Tooltip("Vows: the price, added with each take like perLevel but scaled by the gentler UpgradeConfig.vowDrawbackMagnitude.")]
+        public StatMod[] drawbacks = Array.Empty<StatMod>();
+
+        public bool IsVow => vow;
+
+        /// <summary>
+        /// One take's stat modifiers into `stats`: perLevel at the rarity's magnitude, a Vow's drawbacks at the gentler
+        /// drawback magnitude. Taking a card (BuildState) and previewing it (StatPreview) both go through here.
+        /// </summary>
+        public void AddStats(StatBlock stats, Rarity rarity, UpgradeConfig config, in StatSource source)
+        {
+            if (stats == null || kind == UpgradeKind.Consumable) return;
+            float scale = config != null ? config.Magnitude(rarity) : 1f;
+            if (perLevel != null) // weapon cards carry their levels on the WeaponDef instead
+                for (int m = 0; m < perLevel.Length; m++) stats.Add(perLevel[m], scale, source);
+            if (!vow || drawbacks == null) return;
+            float price = config != null ? config.DrawbackMagnitude(rarity) : 1f;
+            for (int m = 0; m < drawbacks.Length; m++) stats.Add(drawbacks[m], price, source);
+        }
         [Tooltip("Behaviour (M2.6): status on hit, sparks, bursts, slide trails… handled by BoonEffects.")]
         public BoonEffect[] effects = Array.Empty<BoonEffect>();
         [Tooltip("Consumables: heal this fraction of max HP.")]

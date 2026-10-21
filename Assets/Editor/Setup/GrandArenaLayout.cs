@@ -123,7 +123,6 @@ namespace Gladiator.EditorTools
             var gates = new List<ArenaLayoutDef.Gate>();
             var crowd = new List<ArenaLayoutDef.CrowdZone>();
             var stone = new List<Vector4>();
-            var bounds = new List<Vector4>();
             void Add(string model, PieceRole role, Vector3 pos, float yaw, Vector3? scale = null) =>
                 pieces.Add(new ArenaLayoutDef.Piece { model = Env + model, role = role, position = pos, yaw = yaw, scale = scale ?? Vector3.one });
 
@@ -164,8 +163,6 @@ namespace Gladiator.EditorTools
                 Vector2 dir = (b - a).normalized, inward = new Vector2(dir.y, -dir.x);
                 float len = (b - a).magnitude;
                 stone.Add(new Vector4((a.x + b.x) * 0.5f, (a.y + b.y) * 0.5f, YawOf(inward), len + 0.3f));
-                Vector2 back = (a + b) * 0.5f - inward * 1.2f;
-                bounds.Add(new Vector4(back.x, back.y, YawOf(inward), len + 3f));
                 int kind = i % 4; // 0: the arm's tip (the gate), 1: its east side, 2: the patron box, 3: the next arm's west side
                 if (kind == 0)
                 {
@@ -188,7 +185,9 @@ namespace Gladiator.EditorTools
             }
             l.solidWalls = stone.ToArray();
             l.solidWallHeight = 8.4f;
-            l.boundary = bounds.ToArray();
+            // the player's boundary (P1): one closed loop on the stone's face (the gates' frames have no ledge below 7 m)
+            l.boundaryLoop = WallLine();
+            l.boundary = System.Array.Empty<Vector4>();
 
             // ---------- the plaza: the dais (stairs on four sides) under the Patron's statue
             Add("SM_GrandDais", PieceRole.Walkable, Vector3.zero, 0f);

@@ -12,8 +12,8 @@ namespace Gladiator.Tests
     /// <summary>
     /// Phase 5.6 secrets (docs/UNLOCKS.md) in their arenas: the Golden Rat comes out of a hole, outruns a run, is caught
     /// by touch (coins, the flag at once, the Sling unlocks when the run ends) or dives away in time; the Bookmaker takes
-    /// a stake in his ring, the HUD counts the wager down, a win pays and saves the flag, a loss keeps the stake, and no
-    /// gold means no bet.
+    /// a stake in his ring when you press E (P1: like the chests, with a prompt over him), the HUD counts the wager down,
+    /// a win pays and saves the flag, a loss keeps the stake, and no gold means no bet.
     /// </summary>
     public class SecretPlayTests
     {
@@ -23,6 +23,7 @@ namespace Gladiator.Tests
         EnemyManager _em;
         PlayerMotor _motor;
         RunState _run;
+        ScriptedInput _input;
 
         [TearDown]
         public void TearDown()
@@ -48,7 +49,7 @@ namespace Gladiator.Tests
             if (Director.Instance != null) Director.Instance.enabled = false;
             var lvl = Object.FindAnyObjectByType<LevelUpController>();
             if (lvl != null) lvl.enabled = false;
-            Player.Main.OverrideSource = new ScriptedInput();
+            Player.Main.OverrideSource = _input = new ScriptedInput();
             Player.Main.GetComponent<WeaponSystem>().enabled = false; // nothing dies by accident: kills are the test's
             _em = EnemyManager.Instance;
             _em.KillAll();
@@ -119,13 +120,20 @@ namespace Gladiator.Tests
             _run.AddGold(100);
             Assert.AreEqual(100, _run.Gold);
             _motor.Teleport(Ground(bm.Position + new Vector3(0.3f, 0f, 0.3f)));
-            yield return new WaitForSeconds(bm.channelTime + 0.4f);
-            Assert.AreEqual(Bookmaker.Phase.Wager, bm.State, "standing in his ring takes the bet");
+            yield return new WaitForSeconds(1.6f);
+            Assert.AreEqual(Bookmaker.Phase.Waiting, bm.State, "P1: standing in his ring alone takes nothing");
+            Assert.IsTrue(bm.InReach, "in his ring");
+            var hud = Object.FindAnyObjectByType<Hud>();
+            StringAssert.Contains("WAGER " + bm.stake + " GOLD", hud.BookmakerTagText, "the prompt over him");
+            StringAssert.Contains("[E]", hud.PromptText, "and the bottom prompt, like a chest's");
+            _input.Next.InteractPressed = true;
+            yield return null;
+            yield return null;
+            Assert.AreEqual(Bookmaker.Phase.Wager, bm.State, "E in his ring takes the bet");
             Assert.AreEqual(100 - bm.stake, _run.Gold, "the stake");
             Assert.AreEqual(bm.minKills, bm.Target, "no kills lately: the floor");
             Assert.IsTrue(RunObjective.Active);
             yield return null;
-            var hud = Object.FindAnyObjectByType<Hud>();
             StringAssert.Contains("WAGER", hud.ObjectiveText);
             StringAssert.Contains("/ " + bm.Target, hud.ObjectiveText);
 
@@ -147,6 +155,14 @@ namespace Gladiator.Tests
             var bm = Bookmaker.Instance;
             bm.Place(1);
             Assert.AreEqual(0, _run.Gold);
+            _motor.Teleport(Ground(bm.Position + new Vector3(0.3f, 0f, 0.3f)));
+            yield return new WaitForSeconds(0.4f);
+            var hud = Object.FindAnyObjectByType<Hud>();
+            StringAssert.Contains("NEED " + bm.stake + " GOLD", hud.BookmakerTagText, "P1: short of the stake, the prompt says so");
+            _input.Next.InteractPressed = true;
+            yield return null;
+            yield return null;
+            Assert.AreEqual(Bookmaker.Phase.Waiting, bm.State, "no gold, no wager (E does nothing but his line)");
             Assert.IsFalse(bm.TryBet(), "no gold, no wager");
             Assert.AreEqual(Bookmaker.Phase.Waiting, bm.State);
 

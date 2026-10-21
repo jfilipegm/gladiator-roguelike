@@ -57,6 +57,42 @@ namespace Gladiator.EditorTools
             return o.ToArray();
         }
 
+        /// <summary>The player's boundary loop (P1): the stage wall's sections stand 1.3 m proud of the wall line and their
+        /// engaged columns' bases (1.4 m up, a perch out of the horde's reach) reach 2.33 m in, so along the north the loop
+        /// runs StageLoop inside the line; round the bowl it's the invisible stone's face, and TunnelLoop in front of each
+        /// tunnel (its podium cap, 3 m up, reaches 0.3 m in) for TunnelLoopHalf either side of it.</summary>
+        public const float StageLoop = 2.35f, TunnelLoop = 0.3f, TunnelLoopHalf = TunnelHalf + 0.3f;
+
+        /// <summary>The loop, clockwise from above (north-west corner first), with a square step at each tunnel's notch.</summary>
+        public static Vector2[] BoundaryLoop()
+        {
+            var o = new List<Vector2> { new Vector2(-AX, ZN - StageLoop), new Vector2(AX, ZN - StageLoop) };
+            var ts = new List<(float t, float before, float after)>();
+            const int Steps = 96;
+            for (int i = 0; i <= Steps; i++)
+            {
+                float t = Mathf.PI * i / Steps;
+                bool notch = false;
+                foreach (float c in Tunnels) notch |= Mathf.Abs(t - c) * CurveSpeed(c) < TunnelLoopHalf;
+                float d = notch ? TunnelLoop : 0f;
+                ts.Add((t, d, d));
+            }
+            foreach (float c in Tunnels)
+            {
+                float h = TunnelLoopHalf / CurveSpeed(c);
+                ts.Add((c - h, 0f, TunnelLoop));
+                ts.Add((c + h, TunnelLoop, 0f));
+            }
+            ts.Sort((a, b) => a.t.CompareTo(b.t));
+            void Add(Vector2 p) { if ((p - o[o.Count - 1]).sqrMagnitude > 1e-4f) o.Add(p); }
+            foreach (var (t, before, after) in ts)
+            {
+                Add(Curve(t, before).p);
+                if (after != before) Add(Curve(t, after).p);
+            }
+            return o.ToArray();
+        }
+
         /// <summary>The seating bowl's foot as runs of (point, inward normal), split at the tunnels like
         /// amphitheater.py's cavea_path: east side (stage line down to the curve), the curve, west side.</summary>
         static List<List<(Vector2 p, Vector2 n)>> BowlRuns()
@@ -193,8 +229,9 @@ namespace Gladiator.EditorTools
             }
             l.solidWalls = stone.ToArray();
             l.solidWallHeight = 8.4f;
-            // the stage wall is 7.5 m: an invisible wall behind it keeps air jumps off its top (player only)
-            l.boundary = new[] { new Vector4(0f, ZN + 1.7f, 180f, 2f * AX + 4f) };
+            // the player's boundary (P1): one closed loop in front of the stage wall's columns and the bowl's stone
+            l.boundaryLoop = BoundaryLoop();
+            l.boundary = System.Array.Empty<Vector4>();
 
             // ---------- line-of-sight blockers: a portico ring of twelve columns round the middle, four statues
             for (int i = 0; i < 12; i++)

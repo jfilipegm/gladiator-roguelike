@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Gladiator.Gameplay
 {
@@ -15,12 +16,29 @@ namespace Gladiator.Gameplay
     /// <summary>
     /// Rolls level-up cards (CLAUDE.md §6.5): distinct, eligible upgrades picked by weight, each with a rarity rolled
     /// from UpgradeConfig odds shifted by Luck and clamped to the upgrade's min/max rarity. When nothing is eligible the
-    /// slot gets a filler consumable. Uses GameRandom (seeded per run) and preallocated buffers: no allocation.
+    /// slot gets a filler consumable. Vows (P1) share a fixed slice of the odds (UpgradeConfig.vowShare) however big the
+    /// rest of the pool is, at most maxVowsPerPick per pick, and only in picks without a rarity floor (level-ups) unless
+    /// vowsInRewards. Uses GameRandom (seeded per run) and preallocated buffers: no allocation.
     /// </summary>
     public sealed class UpgradeRoller
     {
         UpgradeDef[] _cand = new UpgradeDef[64];
         float[] _w = new float[64];
+
+        /// <summary>Can Vows roll in this pick? Rewards (a rarity floor: chests, the altar, the boss) are pure upside unless vowsInRewards.</summary>
+        public bool VowsAllowed(UpgradeConfig config) => config != null && (config.vowsInRewards || MinRarity == Rarity.Common);
+
+        /// <summary>
+        /// The weight each eligible Vow gets in a pick where the other eligible cards weigh `othersTotal` and the eligible
+        /// Vows' own weights sum to `vowsTotal`: together they make up vowShare of the odds. With nothing else eligible
+        /// the Vows keep their own weights.
+        /// </summary>
+        public static float VowWeightScale(UpgradeConfig config, float othersTotal, float vowsTotal)
+        {
+            if (vowsTotal <= 0f || othersTotal <= 0f) return 1f;
+            float share = Mathf.Clamp(config.vowShare, 0f, 0.95f);
+            return othersTotal * share / (1f - share) / vowsTotal;
+        }
 
         /// <summary>Can `d` be offered right now? Not banished, not maxed; if it's new: not locked by meta progression and a free slot.</summary>
         public static bool IsEligible(UpgradeDef d, BuildState build, UpgradeConfig config)
@@ -117,7 +135,8 @@ namespace Gladiator.Gameplay
         {
             card = default;
             int n = 0;
-            float total = 0f;
+            float total = 0f, vows = 0f;
+            bool vowsOk = VowsAllowed(config) && ShownVows(shown, shownCount, ignoreSlot) < config.maxVowsPerPick;
             if (pool != null)
             {
                 EnsureCapacity(pool.Count);
@@ -125,10 +144,18 @@ namespace Gladiator.Gameplay
                 {
                     var d = pool[i];
                     if (!IsEligible(d, build, config) || Shown(d, shown, shownCount, ignoreSlot)) continue;
+                    if (d.IsVow && !vowsOk) continue;
                     _cand[n] = d;
                     _w[n] = d.weight;
-                    total += d.weight;
+                    if (d.IsVow) vows += d.weight;
+                    else total += d.weight;
                     n++;
+                }
+                if (vows > 0f)
+                {
+                    float k = VowWeightScale(config, total, vows);
+                    for (int i = 0; i < n; i++) if (_cand[i].IsVow) _w[i] *= k;
+                    total += vows * k;
                 }
             }
             UpgradeDef pick = null;
@@ -159,6 +186,13 @@ namespace Gladiator.Gameplay
         {
             for (int i = 0; i < count; i++) if (i != ignoreSlot && shown[i].Def == d) return true;
             return false;
+        }
+
+        static int ShownVows(CardOffer[] shown, int count, int ignoreSlot)
+        {
+            int n = 0;
+            for (int i = 0; i < count; i++) if (i != ignoreSlot && shown[i].Def != null && shown[i].Def.IsVow) n++;
+            return n;
         }
 
         void EnsureCapacity(int n)

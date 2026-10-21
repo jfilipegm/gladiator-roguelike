@@ -2,10 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using Gladiator.Gameplay;
 using UnityEditor;
-using UnityEditor.SceneManagement;
 using UnityEngine;
-using UnityEngine.Rendering.Universal;
-using UnityEngine.SceneManagement;
 
 namespace Gladiator.EditorTools
 {
@@ -109,71 +106,26 @@ namespace Gladiator.EditorTools
 
             var mat = AssetDatabase.LoadAssetAtPath<Material>(LookSetup.CharMat);
             var envMat = AssetDatabase.LoadAssetAtPath<Material>(LookSetup.EnvMat);
-            var scene = EditorSceneManager.NewPreviewScene();
-            var rt = RenderTexture.GetTemporary(Cell, Cell, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB);
             try
             {
-                var camGo = new GameObject("PortraitCam");
-                SceneManager.MoveGameObjectToScene(camGo, scene);
-                var cam = camGo.AddComponent<Camera>();
-                cam.scene = scene;
-                cam.cameraType = CameraType.Preview;
-                cam.clearFlags = CameraClearFlags.SolidColor;
-                cam.backgroundColor = new Color(0f, 0f, 0f, 0f);
-                cam.orthographic = true;
-                cam.nearClipPlane = 0.05f;
-                cam.farClipPlane = 50f;
-                cam.allowHDR = false;
-                cam.allowMSAA = false;
-                cam.targetTexture = rt;
-                var data = camGo.AddComponent<UniversalAdditionalCameraData>();
-                data.renderPostProcessing = false;
-                data.renderShadows = false;
-                var key = new GameObject("Key").AddComponent<Light>();
-                SceneManager.MoveGameObjectToScene(key.gameObject, scene);
-                key.type = LightType.Directional;
-                key.intensity = 1.3f;
-                key.color = new Color(1f, 0.96f, 0.9f);
-                key.transform.rotation = Quaternion.Euler(40f, 150f, 0f);
-
-                var ids = new string[jobs.Count];
-                for (int i = 0; i < jobs.Count; i++)
+                // the whole body, from the front-left (the rig is shared with the select screens' portraits: PortraitBaker)
+                using (var rig = new PortraitBaker.Rig(Cell, Cell))
                 {
-                    ids[i] = jobs[i].id;
-                    var inst = Object.Instantiate(jobs[i].model);
-                    SceneManager.MoveGameObjectToScene(inst, scene);
-                    inst.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
-                    var rends = inst.GetComponentsInChildren<Renderer>(true);
-                    bool prop = jobs[i].id == "sc:pit_goblin";
-                    foreach (var r in rends) r.sharedMaterial = prop ? envMat : mat;
-                    var bounds = new Bounds(inst.transform.position + Vector3.up, Vector3.zero);
-                    bool first = true;
-                    foreach (var r in rends)
+                    var ids = new string[jobs.Count];
+                    for (int i = 0; i < jobs.Count; i++)
                     {
-                        if (first) { bounds = r.bounds; first = false; }
-                        else bounds.Encapsulate(r.bounds);
+                        ids[i] = jobs[i].id;
+                        rig.Render(jobs[i].model, jobs[i].id == "sc:pit_goblin" ? envMat : mat, false);
+                        int col = i % Columns, row = i / Columns;
+                        rig.CopyTo(atlas, col * Cell, (rows - 1 - row) * Cell);
                     }
-                    // a three-quarter view from the front-left, a little above
-                    var rot = Quaternion.Euler(12f, 150f, 0f);
-                    cam.transform.rotation = rot;
-                    cam.transform.position = bounds.center - rot * Vector3.forward * (bounds.extents.magnitude + 5f);
-                    cam.orthographicSize = Mathf.Max(bounds.extents.y, Mathf.Max(bounds.extents.x, bounds.extents.z)) * 1.12f;
-                    cam.Render();
-                    var prev = RenderTexture.active;
-                    RenderTexture.active = rt;
-                    int col = i % Columns, row = i / Columns;
-                    atlas.ReadPixels(new Rect(0, 0, Cell, Cell), col * Cell, (rows - 1 - row) * Cell);
-                    RenderTexture.active = prev;
-                    Object.DestroyImmediate(inst);
+                    atlas.Apply();
+                    File.WriteAllBytes(PortraitPath, atlas.EncodeToPNG());
+                    cfg.portraitIds = ids;
                 }
-                atlas.Apply();
-                File.WriteAllBytes(PortraitPath, atlas.EncodeToPNG());
-                cfg.portraitIds = ids;
             }
             finally
             {
-                RenderTexture.ReleaseTemporary(rt);
-                EditorSceneManager.ClosePreviewScene(scene);
                 Object.DestroyImmediate(atlas);
             }
             AssetDatabase.ImportAsset(PortraitPath);

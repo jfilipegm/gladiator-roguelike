@@ -56,15 +56,15 @@ namespace Gladiator.Gameplay
         }
 
         /// <summary>
-        /// Takes one level of `d` at `rarity`: adds its per-level modifiers (scaled by the rarity) to `stats`. Consumables
-        /// aren't owned (their heal/gold is PlayerBuild's job). Returns the new level (0 for a consumable).
+        /// Takes one level of `d` at `rarity`: adds its per-level modifiers (scaled by the rarity; a Vow's drawbacks too)
+        /// to `stats`, each tagged with the card as its source (P1 stats page). Consumables aren't owned (their heal/gold
+        /// is PlayerBuild's job). Returns the new level (0 for a consumable).
         /// </summary>
         public int Take(UpgradeDef d, Rarity rarity, StatBlock stats, UpgradeConfig config)
         {
             if (d.kind == UpgradeKind.Consumable) return 0;
             float scale = config.Magnitude(rarity);
-            if (stats != null && d.perLevel != null) // weapon cards carry their levels on the WeaponDef instead
-                for (int m = 0; m < d.perLevel.Length; m++) stats.Add(d.perLevel[m], scale);
+            d.AddStats(stats, rarity, config, new StatSource(StatSourceKind.Card, d));
             Version++;
             for (int i = 0; i < _owned.Count; i++)
             {
@@ -131,7 +131,7 @@ namespace Gladiator.Gameplay
                 var s = all[i];
                 if (s == null || s.tag == UpgradeTag.None || _synergies.Contains(s) || TagCount(s.tag) < s.count) continue;
                 _synergies.Add(s);
-                if (stats != null && s.mods != null) for (int m = 0; m < s.mods.Length; m++) stats.Add(s.mods[m], 1f);
+                if (stats != null && s.mods != null) for (int m = 0; m < s.mods.Length; m++) stats.Add(s.mods[m], 1f, new StatSource(StatSourceKind.Synergy, s));
                 added++;
             }
             if (added > 0) Version++;

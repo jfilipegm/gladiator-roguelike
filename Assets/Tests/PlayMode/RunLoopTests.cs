@@ -70,13 +70,14 @@ namespace Gladiator.Tests
             var build = Player.Main.GetComponent<PlayerBuild>();
             var picked = lvl.Offers[0].Def;
             int version0 = build.Stats.Block.Version;
+            int level0 = build.State.LevelOf(picked); // 1 when the offer is the starting weapon's level card
             lvl.Choose(0);
             yield return null;
             Assert.IsFalse(lvl.IsOpen);
             Assert.AreEqual(1f, Time.timeScale, "game resumes");
             Assert.IsTrue(Player.Main.InputEnabled);
             Assert.AreEqual(1, lvl.TimesChosen);
-            Assert.AreEqual(1, build.State.LevelOf(picked), "the picked upgrade is owned");
+            Assert.AreEqual(level0 + 1, build.State.LevelOf(picked), "the picked upgrade is owned, one level up");
             if (picked.kind == UpgradeKind.Weapon)
                 Assert.IsNotNull(Player.Main.GetComponent<WeaponSystem>().Find(picked.weapon), "a weapon card equips/levels its weapon");
             else if (picked.perLevel != null && picked.perLevel.Length > 0)

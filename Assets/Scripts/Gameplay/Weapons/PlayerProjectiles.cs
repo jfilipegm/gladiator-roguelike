@@ -57,6 +57,8 @@ namespace Gladiator.Gameplay
         [Tooltip("Particles for the blast (the shared death-pop system).")]
         public DeathPopFx burst;
         public float blastShake = 0.07f;
+        [Tooltip("P1: shots in flight when the player goes down fizzle out in a puff (at most this many puffs).")]
+        public int maxFizzles = 24;
         [Header("Shockwaves (GroundSlam, the Verdict)")]
         [Tooltip("A pale ring that runs out from a slam over `shockwaveTime` and fades: player colours, never orange-red.")]
         public Color shockwaveColor = new Color(0.82f, 0.97f, 1f, 0.95f);
@@ -332,8 +334,14 @@ namespace Gladiator.Gameplay
 
         public void Clear()
         {
-            _waveCount = 0;
+            ClearFlight();
             _orbCount = 0;
+        }
+
+        /// <summary>Everything in flight, bolts and shockwaves (not this frame's orbiters).</summary>
+        void ClearFlight()
+        {
+            _waveCount = 0;
             _boltCount = 0;
             for (int i = 0; i < _high; i++) _used[i] = false;
             _high = _count = 0;
@@ -342,6 +350,7 @@ namespace Gladiator.Gameplay
         public void Tick(float dt, float unscaledDt)
         {
             if (dt <= 0f) { Draw(true); return; } // paused: keep the last frame on screen
+            if (RunState.CombatOver) { TickHalted(); return; }
             if (_player == null && Player.Main != null) _player = Player.Main.transform;
             var em = EnemyManager.Instance;
             Vector3 hand = _player != null ? _player.position + Vector3.up * flightHeight : Vector3.zero;
@@ -363,6 +372,24 @@ namespace Gladiator.Gameplay
             AddOrbiters();
             StepBolts(dt);
             StepShockwaves(dt);
+            Draw(false);
+        }
+
+        /// <summary>
+        /// P1: the player went down or the run is over. Whatever is in flight fizzles out at once (no hits, no blasts);
+        /// a halted flail's fallen balls (WeaponSystem queues them) are still drawn.
+        /// </summary>
+        void TickHalted()
+        {
+            if (_count > 0 || _boltCount > 0 || _waveCount > 0)
+            {
+                for (int i = 0, puffs = 0; i < _high && burst != null && puffs < maxFizzles; i++)
+                    if (_used[i] && _kind[i] != Kind.Thrust) { burst.Burst(_pos[i], 4, 1.5f, 0.08f, blastColorB, Color.white); puffs++; }
+                ClearFlight();
+            }
+            for (int k = 0; k < MaxMeshes; k++) _batch[k] = 0;
+            _streakBatch = 0;
+            AddOrbiters();
             Draw(false);
         }
 

@@ -25,6 +25,10 @@ namespace Gladiator.EditorTools
         const float WallWidth = 4.6f;   // the wall, stand and gate models' width
         const float WallHeight = 2.4f;  // the stands sit on the wall top
         const float PlayInset = 1.1f;   // enemies stay this far inside the wall face
+        /// <summary>The player's boundary loop (P1): this far inside the wall line, just in front of the frontmost face a
+        /// player could stand on (the walls' coping at 0.16, the gates' lintels at 0.28): the 2.4 m wall top, a perch out
+        /// of the horde's reach, can't be reached.</summary>
+        public const float LoopInset = 0.3f;
         static readonly int[] GateEdges = { 0, 2, 4, 6 }; // mid north, east, south, west: gate 0 (north) is the boss's
 
         [MenuItem("Gladiator/Arenas/Regenerate Provincial Pit Layout (overwrites)")]
@@ -142,6 +146,8 @@ namespace Gladiator.EditorTools
                     float side = (len - WallWidth) * 0.5f;
                     Vector2 mid = (a + b) * 0.5f;
                     gates.Add(new ArenaLayoutDef.Gate { position = V3(mid - n * 0.6f), yaw = YawOf(n) });
+                    // P1 ("the arenas must remain closed"): a dark passage ending in bars behind the door, not the town
+                    Add("SM_ProvGateTunnel", PieceRole.Decor, V3(mid - n * 0.6f), YawOf(n));
                     Run(a, dir, n, side);
                     Run(mid + dir * (WallWidth * 0.5f), dir, n, side);
                 }
@@ -200,6 +206,8 @@ namespace Gladiator.EditorTools
 
             l.pieces = pieces.ToArray();
             l.gates = gates.ToArray();
+            l.boundaryLoop = Inset(wall, LoopInset);
+            l.boundary = System.Array.Empty<Vector4>();
             l.crowd = crowd.ToArray();
             l.zones = new ArenaLayoutDef.Zone[0];
 

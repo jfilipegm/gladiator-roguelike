@@ -74,6 +74,17 @@ MonoBehaviour:
   freeEscortsOnDeath: 0
   breakStatus: {fileID: 11400000, guid: 53a24c2b311ddf3f7b918de9ef2dff3d, type: 2}
   breakShieldsDown: 3
+  reviveCount: 0
+  reviveDelay: 2.5
+  reviveHpMul: 0.5
+  stompRadius: 0.9
+  burnStopsRevive: 1
+  pileMesh: {fileID: 0}
+  breathAngle: 60
+  breathTime: 1
+  breathPatches: 3
+  breathPatchRadius: 1.4
+  breathKnockback: 4
   xp: 12
   goldChance: 0.35
   prewarm: 8

@@ -3,7 +3,10 @@ using UnityEngine;
 
 namespace Gladiator.Gameplay
 {
-    /// <summary>Card descriptions written from the data with the rarity's real numbers ("+17% Damage"), allocation-free.</summary>
+    /// <summary>
+    /// Card descriptions written from the data with the rarity's real numbers ("+17% Damage"), allocation-free. A Vow's
+    /// drawbacks follow its upside in red, at the gentler drawback magnitude.
+    /// </summary>
     public static class CardText
     {
         static readonly string[] RarityNames = { "COMMON", "UNCOMMON", "RARE", "LEGENDARY" };
@@ -45,6 +48,16 @@ namespace Gladiator.Gameplay
                 if (i > 0) t.Append('\n');
                 Mod(d.perLevel[i], scale, t);
             }
+            if (d.IsVow && d.drawbacks != null) // P1: the price, in the hurts-you colour
+            {
+                float price = config.DrawbackMagnitude(o.Rarity);
+                for (int i = 0; i < d.drawbacks.Length; i++)
+                {
+                    Line(t, DrawbackColor);
+                    Mod(d.drawbacks[i], price, t);
+                    t.Append("</color>");
+                }
+            }
             for (int i = 0; d.effects != null && i < d.effects.Length; i++)
             {
                 if (t.Length > 0) t.Append('\n');
@@ -53,6 +66,8 @@ namespace Gladiator.Gameplay
         }
 
         const string EvoColor = "#FFC94A", TagColor = "#8CEBFF";
+        /// <summary>A Vow's drawback lines (orange-red: anything that hurts the player, CLAUDE.md §5).</summary>
+        public const string DrawbackColor = "#FF6A55";
 
         static CharBuffer Line(CharBuffer t, string color)
         {
@@ -152,13 +167,16 @@ namespace Gladiator.Gameplay
             }
         }
 
-        /// <summary>One modifier as a card line: "+17% Damage", "+28 Max HP", "+0.6 HP Regen/s", "x1.25 Area".</summary>
+        /// <summary>One modifier as a card line: "+17% Damage", "+28 Max HP", "+0.6 HP Regen/s", "-20% Max HP" (×0.8).</summary>
         public static void Mod(in StatMod m, float scale, CharBuffer t)
         {
             float v = m.Scaled(scale);
-            if (m.op == ModOp.Multiply)
+            if (m.op == ModOp.Multiply) // as the change it makes: ×0.8 reads "-20%", ×1.25 "+25%"
             {
-                t.Append('x').Append(v, 2);
+                float pct = (v - 1f) * 100f;
+                t.Append(pct < 0f ? '-' : '+');
+                pct = Mathf.Abs(pct);
+                t.Append(pct, pct >= 10f ? 0 : 1).Append('%');
             }
             else
             {

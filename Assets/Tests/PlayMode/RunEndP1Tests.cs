@@ -13,7 +13,8 @@ namespace Gladiator.Tests
     /// <summary>
     /// P1 (the producer's v0.17.0 playtest, part B): on death every weapon, companion and player projectile stops at once
     /// and the run stops counting; the crowd gives one last reaction (a groan, a cheer) and fades to silence, and ducks
-    /// while the game is paused; the dev tag is spelled out in a corner; the synergy chips fit their names.
+    /// while the game is paused; the dev tag is spelled out in a corner; the synergy chips fit their names; PAUSED and
+    /// its hint sit left of the stats page.
     /// (The Bookmaker on E is in SecretPlayTests.)
     /// </summary>
     public class RunEndP1Tests
@@ -69,6 +70,7 @@ namespace Gladiator.Tests
         [TearDown]
         public void TearDown()
         {
+            if (Player.Main != null) Player.Main.SetPaused(false);
             DevSettings.ResetAll();
             TimeController.ResetForNewRun();
         }
@@ -234,6 +236,60 @@ namespace Gladiator.Tests
             yield return new WaitForSecondsRealtime(sfx.duckTime + 0.3f);
             Assert.AreEqual(1f, sfx.CrowdDuck, 1e-3f, "and it comes back on resume");
             Assert.IsFalse(sfx.CrowdEnding);
+        }
+
+        /// <summary>The arena intro holds the game paused behind its title card; the crowd stays full there (only menus and
+        /// cards duck it). FeedbackTests' crowd swell runs in that window too.</summary>
+        [UnityTest, Timeout(60000)]
+        public IEnumerator Crowd_IsNotDucked_UnderTheArenaIntro()
+        {
+            SaveSandbox.Wipe();
+            DevSettings.ResetAll();
+            DevSettings.GodMode = true;
+            TimeController.GameSpeed = 1f;
+            TimeController.ResetForNewRun();
+            var op = SceneManager.LoadSceneAsync(SlavePit, LoadSceneMode.Single);
+            while (!op.isDone) yield return null;
+            var intro = RunIntro.Instance;
+            Assert.IsNotNull(intro, "the Slave Pit opens on its title card");
+            if (intro.Current != RunIntro.Stage.Holding) Assert.Inconclusive("the intro was already past its hold on the first frame");
+            Assert.IsTrue(TimeController.IsPaused, "the intro holds the game paused");
+            var sfx = SfxPlayer.Instance;
+            for (int k = 0; k < 10; k++) sfx.Tick(0f, 0.1f); // a second of real time, still on the title card
+            Assert.AreEqual(1f, sfx.CrowdDuck, 1e-3f, "the crowd isn't ducked under the title card");
+        }
+
+        /// <summary>The stats page opens on the right with the pause menu: PAUSED and its hint are centred in the space
+        /// left of it, and nothing wraps. At 16:9 (1920×1080 and 1280×720 alike) the canvas is the 1920×1080 reference,
+        /// so the free width there is checked in reference units too.</summary>
+        [UnityTest, Timeout(60000)]
+        public IEnumerator Paused_SitsLeftOfTheStatsPage_WithoutWrapping()
+        {
+            yield return Boot(SlavePit);
+            var hud = Object.FindAnyObjectByType<Hud>();
+            var pause = hud.PauseRect;
+            float fullWidth = pause.rect.width;
+            _player.SetPaused(true);
+            yield return null;
+            yield return null;
+            var page = StatsPanel.Instance;
+            Assert.IsNotNull(page, "every arena has the stats page");
+            Assert.AreEqual(StatsPanel.Mode.Pause, page.Current, "the stats page is up beside the pause menu");
+            var pc = new Vector3[4];
+            var sc = new Vector3[4];
+            pause.GetWorldCorners(pc);
+            page.Page.GetWorldCorners(sc);
+            Debug.Log($"[P1] screen {Screen.width}x{Screen.height}: pause box x {pc[0].x:0}-{pc[2].x:0}, page from x {sc[0].x:0}; text needs {hud.PauseTextWidth:0} of {pause.rect.width:0} units");
+            Assert.Less(pause.rect.width, fullWidth, "the pause box makes room for the page");
+            Assert.LessOrEqual(pc[2].x, sc[0].x, "and ends left of it");
+            Assert.LessOrEqual(hud.PauseTextWidth, pause.rect.width, "PAUSED and both hint lines fit their box");
+            Assert.AreEqual(3, hud.PauseLineCount, "PAUSED, then the hint on two lines: nothing wraps");
+            float free16x9 = 1920f - StatsPanel.PageWidth - StatsPanel.Margin - 80f; // 40 units clear on each side
+            Assert.LessOrEqual(hud.PauseTextWidth, free16x9, "fits at 1920x1080 and 1280x720");
+
+            _player.SetPaused(false);
+            yield return null;
+            Assert.AreEqual(fullWidth, hud.PauseRect.rect.width, 0.5f, "unpaused: back to the full width");
         }
 
         [UnityTest, Timeout(60000)]

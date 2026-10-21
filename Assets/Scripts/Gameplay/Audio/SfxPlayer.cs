@@ -8,7 +8,8 @@ namespace Gladiator.Gameplay
     /// limits, distance fade and stereo pan computed from the camera, priority voice stealing. Combat sounds come from
     /// the event bus (hits, crits, kills, damage, pickups, level-ups, announcer, Director); one-off sounds are played
     /// directly with SfxPlayer.Play / Play2D. Also runs the crowd loop, louder as CrowdExcitement rises. P1 (playtest):
-    /// the crowd ducks while the game is paused (level-up cards, pause menu) and comes back on resume; when the run ends
+    /// the crowd ducks while the game is paused (level-up cards, pause menu; not the arena intro's hold, where it stays
+    /// full under the title card) and comes back on resume; when the run ends
     /// it gives one last reaction (a groan for a death, a cheer for a win) and its loops fade to silence, then stop.
     /// </summary>
     public sealed class SfxPlayer : MonoBehaviour, ITickable
@@ -43,7 +44,7 @@ namespace Gladiator.Gameplay
         Transform _cam;
 
         [Header("Crowd: pauses and the end of the run (P1)")]
-        [Tooltip("Crowd volume while the game is paused (level-up cards, pause menu), as a fraction of its live volume.")]
+        [Tooltip("Crowd volume while the game is paused (level-up cards, pause menu; not the arena intro), as a fraction of its live volume.")]
         [Range(0f, 1f)] public float pauseDuck = 0.25f;
         [Tooltip("Real seconds the crowd takes to duck for a pause, and to come back.")]
         public float duckTime = 0.3f;
@@ -172,8 +173,11 @@ namespace Gladiator.Gameplay
             float roar = c != null ? bank.crowdLoud * Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(bank.crowdRoarFrom, 1f, ex)) : 0f;
             _murmurLevel = Chase(_murmurLevel, murmur, unscaledDt);
             _roarLevel = Chase(_roarLevel, roar, unscaledDt);
-            // paused (cards, pause menu): the crowd drops back behind the menu and swells again on resume
-            _duck = Mathf.MoveTowards(_duck, TimeController.IsPaused ? pauseDuck : 1f, unscaledDt * (1f - pauseDuck) / Mathf.Max(0.01f, duckTime));
+            // paused (cards, pause menu): the crowd drops back behind the menu and swells again on resume. The arena intro
+            // also holds the game paused behind its title card: the crowd stays full there (the producer's call, P1).
+            var intro = RunIntro.Instance;
+            bool menu = TimeController.IsPaused && (intro == null || intro.Current != RunIntro.Stage.Holding);
+            _duck = Mathf.MoveTowards(_duck, menu ? pauseDuck : 1f, unscaledDt * (1f - pauseDuck) / Mathf.Max(0.01f, duckTime));
             _crowd.volume = _murmurLevel * _duck;
             if (_roar != null) _roar.volume = _roarLevel * _duck;
             // nobody fighting: the whole crowd slows and drops a little (a settling murmur); excited: a touch faster

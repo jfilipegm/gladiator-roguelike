@@ -45,3 +45,6 @@ Good ideas that are **not** in the current phase. Pull from here only when a pha
 - **Upgrade icons** — cards and the HUD build strip show 2-letter glyphs (`UpgradeDef.glyph`); procedural pixel icons per Boon/weapon in the Phase 4 juice pass.
 - **Ability-ready pip on the HUD** (Phase 5.14) — the slide abilities (Lightning Dash, Make It Rain, Cast Net) have cooldowns the player can't see; a small pip by the HP bar would help. None of them has one yet, so the Net-Weaver doesn't either.
 - **A dedicated cast-net prop** (Phase 5.14) — the Cast Net draws the thrown Net's mesh scaled ×5; a denser 3 m net with more cords would read better on the sand.
+- **More companions** (Phase 5.15) — the GDD's boar and hawk for the Beastmaster (a second `Summon` weapon each: a boar that charges, a hawk that dives), and a companion that can be hurt and revived if the pack ever feels too safe.
+- **Freed beasts that bolt** (Phase 5.15) — a freed cur vanishes in a white burst; running off through a gate would sell the "freed" better.
+

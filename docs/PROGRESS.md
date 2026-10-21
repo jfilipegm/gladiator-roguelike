@@ -1,7 +1,7 @@
 # Progress
 
 **Current phase:** Phase 5 — expansion
-**Current milestone:** Phase 5.15 the Beastmaster (next, branch `phase5-beastmaster`). v0.15.0 (the Net-Weaver) released 2026-10-21. **Merge window:** the producer said "please continue with all Merges up until i get home at 19h00" (09:27 WEST, 2026-10-21): merge and release green milestone PRs without asking until 19:00 WEST that day, then ask again.
+**Current milestone:** Phase 5.15 the Beastmaster, IN PROGRESS on branch `phase5-beastmaster` (built, tested, bot runs; see "In progress — Phase 5.15"). v0.15.0 (the Net-Weaver) released 2026-10-21. **Merge window:** the producer said "please continue with all Merges up until i get home at 19h00" (09:27 WEST, 2026-10-21): merge and release green milestone PRs without asking until 19:00 WEST that day, then ask again.
 **Last updated:** 2026-10-21
 
 **Repository:** https://github.com/jfilipegm/gladiator-roguelike (public, branch `main`, remote `origin`, `.blend` files via Git LFS). Work on a branch per milestone, push as you go, merge through a PR; release every playable build (`Tools/release`).
@@ -381,6 +381,33 @@
   - **Full suites:** EditMode 78/78, PlayMode 183/183.
 - **v0.15.0 released 2026-10-21:** https://github.com/jfilipegm/gladiator-roguelike/releases/tag/v0.15.0.
   - Smoke runs of the downloaded archives (`-bot -timed -botSeconds 40`), all v0.15.0, 0 exceptions: Linux as the Net-Weaver in the Slave Pit (44 kills, 5 nets, clock to 37 s), Linux as the Nobody in the Stone Amphitheater (42 kills, 37 s), Windows under Wine as the Net-Weaver (37 kills, 6 nets, 37 s). Their Profiling files were deleted. macOS not run.
+
+## In progress — Phase 5.15 the Beastmaster (branch `phase5-beastmaster`)
+- **Why:** the producer's "continue with all Merges up until 19h00"; the GDD's next gladiator, and the last weapon pattern (`Summon`). Spec: `docs/GLADIATORS.md` "The Beastmaster"; DECISIONS "Phase 5.15".
+- **Done (verified):**
+  - **`Summon`** (`WeaponSystem.TickSummon` + `CompanionPack`): wolves as a weapon (Amount = wolves, Damage = a bite, cooldown = bite interval, speed = run speed, acquireRange = hunting radius around him, range = the leash, meshScale = their size); bites through `WeaponSystem.CompanionHit` (crits, on-hit, Boon procs, kill credit). A holder per wolf with the model under it (`PartRig.Apply` owns the model root), the player's palette material, a heel circle, separation, obstacle push-out and height snapping; pounces as a lerped arc; despawn when not driven (game time, so pauses keep them). `WP_WolfPack` (2 wolves, 9 per bite, 0.8 s, levels +3 wolves) + card + icon.
+  - **Traits:** `TR_FeralBond` (a hit: frenzy 4 s, bites ×1.6, runs ×1.25) and `TR_HuntingHorn` (a slide, every 5 s: every wolf pounces on a different enemy near the point 4 m ahead: 3 bites + Stagger; it waits if there's nothing to hunt). **Bug found and fixed:** both trait ScriptableObjects were in one file, so Unity loaded `TR_HuntingHorn` as a Feral Bond (one asset class per script file): split into `FeralBondTrait.cs` / `HuntingHornTrait.cs`.
+  - **The Beast Handler** (`EN_BeastHandler`, a Lunger: 110 HP, 2.5 m/s, a 3.5 m whip crack): `EnemyDef.escort/escortCount/leashLength` + `EnemyManager.Leash.cs` (escorts spawned with him, clamped to the leash with a rope drawn on the sand; freed on his death: a quiet despawn, no kill). In `ST_StoneAmphitheater` (from 1:40) and `ST_GrandArena` (from 1:10).
+  - **Unlock:** new `UnlockConditionKind.KillEnemies` (the Bestiary's `enemyKills`); `UL_Beastmaster` = 25 handlers; adds the Wolf Pack.
+  - **Models:** `CH_Beastmaster` (720 tris, iteration 2), `CH_Wolf` (252), `EN_BeastHandler` (268, iteration 2). Menu + Codex rebuilt. Version 0.16.0.
+  - **Tests:** `BeastmasterTests` 6/6, `UnlockVarietyTests` 7/7.
+  - **Play-mode screenshots:** `bm_hunt`, `bm_pounce`.
+  - **Bot runs (dev build, `-gladiator beastmaster`, 10 min), 0 exceptions:**
+    - Stone Amphitheater: 355 fps avg, 197 fps at ≥ 250 enemies (p95 6.4 ms), gameplay 1.88 / 2.40 ms; GC 518 B/s, of which ~230 KB is the victory screen + save; level 33, 8,253 kills; wolves 3, 2,944 bites, 124 pounces; **the Beast Lord beaten, Survived at 528**; 5 curs freed (handler weight 0.5–0.9 then: too few, raised to 0.8–1.4).
+    - Grand Arena: 314 fps avg, 178 fps at ≥ 250 (400 cap; p95 7.8 ms), gameplay 1.88 / 2.57 ms; GC 153 B/s; level 39, 9,571 kills; 2,972 bites, 120 pounces; the Patron at 85 % (the bot near him 8 s of 46).
+    - **Handler tuning:** freed curs were a bad proxy (most curs die before their handler). The bot now logs `handlersKilled`: a measuring run at weight 0.8–1.4 (Amphitheater, cap 8) killed **219 handlers** (214 fps at ≥ 250, the Beast Lord beaten). Lowered to weight 0.3–0.5, cap 4, from 2:10 (Amphitheater) and 0.3–0.5, cap 5, from 1:30 (Grand Arena); **not re-measured yet**.
+- **Next (in order):**
+  1. One Amphitheater bot run (`Tools/perfrun bot 600 -timed -gladiator beastmaster -arena stone_amphitheater`) to check `handlersKilled` (aim: 25 reachable in 1–2 runs, not a flood); rebuild the dev build first (`BuildScripts.BuildLinuxDev`).
+  2. Fill TESTED_LINE in `docs/releases/v0.16.0.md`; full suites (EditMode, PlayMode); PR; merge (inside the window, until 19:00 WEST); `Tools/release 0.16.0`; smoke-run the archives; a docs PR recording the release.
+  3. **Then Arena 5, the Imperial Arena** (design notes below).
+
+### Arena 5 design notes (drafted 2026-10-21, not built)
+- **Shape:** a hippodrome along X: straight sides at z = ±44 from x = −95 (the west end: the carceres, a row of arched starting stalls) to x = 51, a semicircle (r 44) around (51, 0) to x = 95 (the sphendone; the boss's triumphal gate at its apex). ≈ 15,900 m² minus the spina ≈ 15,300 m² (1.31× the Grand Arena). Convex, so the radial edge table works. Palette A6: travertine + imperial purple + gold.
+- **The spina:** a raised walkway (1.2 m, 6 m wide) from x = −60 to x = 40 with stairs, an obelisk at the middle (line-of-sight blocker), the metae (three gold cones) at both ends, a lap counter (7 gold eggs). Vertical variety + a safe island.
+- **New rule: chariot races** (`ChariotRace`): from ~1:30, every ~45 s trumpets, the track lane (a ~4 m loop at ~14 m from the spina's axis: straights at z = ±14, half-circles round the metae) glows orange-red for 3 s, then two quadrigae run 2 laps (~22 m/s, opposite phases) trampling everything in the lane (the player: big damage + knockback; enemies: massive). The lane is drawn darker on the floor at all times (readable as "the track").
+- **New enemies:** the **Praetorian** (ShieldBearer, purple crest, tall scutum) spawned as a **formation** by a **Centurion** leader: reuse the Phase 5.15 escort system with formation slots (line abreast, offsets in the leader's frame) instead of a leash; when the centurion dies the line breaks (they fight on, not freed: needs a `freeEscortsOnDeath` flag).
+- **Boss: the Emperor's Champion** (3 phases: needs `BossDef.phase3At/phase3Attacks` and `_phase == 2` checks → `>= 2`): P1 spear thrust (Whip/Thrust lane), shield bash (Bash), javelin fan (Volley); P2 (60 %) calls Praetorian formations as guards + Charge; P3 (30 %) "FOR THE EMPEROR!": the chariot races run back to back and he's faster. Entrance: through the triumphal gate.
+- **Art (BlenderSrc/environment/imperial_arena.py, parts like grand_arena.py):** SM_ImpFloor (sand + darker track lane), SM_ImpStand_4m (travertine/purple/gold profile), SM_Carceres bay, SM_ImpGate, SM_Pulvinar (imperial box, north side), SM_Spina_10m, SM_SpinaEnd (metae), SM_Obelisk, SM_SpinaStairs, PR_Chariot (quadriga ~700 tris), EN_Praetorian, EN_Centurion (≤ 300), EN_EmperorsChampion (≤ 2,500).
 
 ## Next (after the producer's playtest of v0.9.0–v0.15.0)
 - **The overnight run (2026-10-21, 01:25–05:40 WEST)** merged and released five milestones under the producer's "proceed with any merge in the next 5h40": v0.9.0 Arena 3 (PR #11, the producer's OK), v0.10.0 the Murder Machine (#12), v0.11.0 the Thunder Champion (#13), v0.12.0 the Golden Idol (#14), v0.13.0 the Ashen Oracle (#15). After 07:05 WEST, ask before every merge again.

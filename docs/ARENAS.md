@@ -112,6 +112,10 @@ the pens, and a stage wall built to impress.
 - **War Boar** (`EN_WarBoar`, `Dasher` that doesn't flank, tramples): only from the cages (and the Beast Lord). A
   low, wide tusked boar: it lines up, shows its lane for 0.7 s, then charges 14 m. It hurts **everything** in the
   lane (enemies take 3× its damage). Counter: sidestep, jump, or let it plough the horde.
+- **Beast Handler** (`EN_BeastHandler`, `Lunger`; Phase 5.15, also in the Grand Arena from 1:30): a bald handler in a leather apron
+  who walks **two Pit Curs on leashes** (a rope on the sand) and cracks a whip (a short brace, a 3.5 m crack). The curs
+  can't stray more than 3.5 m from him; **kill him and they're freed** (they vanish, no fight). From 2:10, 4 at most.
+  Counter: go for the handler first. 25 of them unlock the Beastmaster.
 
 ### Building blocks
 - **Data:** `ArenaLayoutDef.eliteEvery` (→ Director), `cages` (positions/yaws), `cageFirst`, `cageEvery`, `cagePack`, `cageBeast`, per-gate `model`, the D's

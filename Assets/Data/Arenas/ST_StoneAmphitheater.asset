@@ -96,9 +96,9 @@ MonoBehaviour:
   - enemy: {fileID: 11400000, guid: adbc7c3a7323374ada7cf17a7a7273bf, type: 2}
     from: 130
     to: 0
-    weightStart: 0.5
-    weightEnd: 0.9
-    maxAlive: 6
+    weightStart: 0.3
+    weightEnd: 0.5
+    maxAlive: 4
     swarm: 0
     elite: 1
   affixes:

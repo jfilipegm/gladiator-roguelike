@@ -140,6 +140,8 @@ namespace Gladiator.Gameplay
         }
 
         /// <summary>What the bot ended up with (perf runs record which upgrades were exercised).</summary>
+        static readonly int HandlerTypeId = GameInfo.StableId("beasthandler");
+
         void LogBuild()
         {
             var player = Player.Main;
@@ -178,6 +180,12 @@ namespace Gladiator.Gameplay
                 sb.Append(" goldStolen ").Append(enemies.GoldStolen).Append(" (back ").Append(enemies.GoldReturned).Append(") blinks ").Append(enemies.Blinks);
             if (ep != null && ep.RunesErupted > 0) sb.Append(" runes ").Append(ep.RunesErupted).Append(" (hit you ").Append(ep.RuneHits).Append(')');
             if (enemies != null && enemies.EscortsFreed > 0) sb.Append(" cursFreed ").Append(enemies.EscortsFreed);
+            if (run != null) // Beast Handlers killed (the Beastmaster's unlock counts them; C26)
+                for (int k = 0; k < run.KilledTypeCount; k++)
+                {
+                    run.GetTypeKills(k, out int type, out int n);
+                    if (type == HandlerTypeId) sb.Append(" handlersKilled ").Append(n);
+                }
             var pb = player.GetComponent<PlayerBuild>();
             if (pb != null)
             {

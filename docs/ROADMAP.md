@@ -95,6 +95,18 @@ and rules, its menu or Codex screens, and its save and unlock changes, each part
 - **Merges, versions, releases, smoke runs** and the shared docs.
 - **Merge window:** until 19:00 WEST on 2026-10-21. After that, ask the producer before every merge.
 
+## 5b. Usage pacing (approved by the producer, 2026-10-21)
+Every session (the orchestrator and every worker) draws on the same plan limits: a 5-hour window and a weekly limit.
+Running parts in parallel doesn't make an item cheaper; it only spends the budget faster.
+- **When to check:** `get_usage` each time a worker reports, and before starting any worker.
+- **The 5-hour window:** burn rate = change in percent ÷ time between readings. Projected = now + rate × time to reset.
+  - Projected under ~85 %: more workers may start, if there's parallel work and memory for them.
+  - Projected over ~90 %: no new workers; the running ones finish.
+  - Always keep ~10 % in reserve for the orchestrator to finish testing, committing and pushing.
+- **Weekly:** spread what's left evenly over the days to the weekly reset (the daily share). Don't go over it unless the
+  producer says so.
+- **Measure** how much of the weekly limit one full 5-hour window costs, and refine the numbers above.
+
 ## 6. Setup before the first item
 1. ~~Write `Tools/ccheck`~~ (done 2026-10-21: all six assemblies in ~6 s; tried in a worktree with an injected error).
 2. ~~Create `docs/tracks/` and the worker rules~~ (done: `docs/tracks/README.md`; R1's contract `docs/tracks/R1-imperial-arena.md`).

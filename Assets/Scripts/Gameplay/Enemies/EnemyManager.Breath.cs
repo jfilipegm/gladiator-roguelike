@@ -28,7 +28,7 @@ namespace Gladiator.Gameplay
         /// <summary>Breaths started this run (tests, bot log).</summary>
         public int Breaths { get; private set; }
         /// <summary>Breaths that hit the player.</summary>
-        public int BreathHitsPlayer { get; private set; }
+        public int BreathHits { get; private set; }
         /// <summary>Enemies burned by a breath (each at most once per breath).</summary>
         public int BreathEnemyHits { get; private set; }
 
@@ -125,7 +125,7 @@ namespace Gladiator.Gameplay
                 if (_playerHealth.TakeDamage(new DamageInfo { Amount = def.attackDamage, Flags = DamageFlags.Area, Point = player, Direction = aim }))
                 {
                     _attackHit[i] = true;
-                    BreathHitsPlayer++;
+                    BreathHits++;
                     if (_playerMotor != null) _playerMotor.AddImpulse(aim * def.breathKnockback + Vector3.up * breathKnockUp);
                 }
             }

@@ -86,7 +86,7 @@ namespace Gladiator.Tests
             Vector3 a = A, b = B;
             R2TestArena.PutPlayer(b);
             yield return new WaitForSeconds(0.3f); // landed
-            int breaths = _em.Breaths, hitsYou = _em.BreathHitsPlayer, zones = HazardZones.Instance.Count;
+            int breaths = _em.Breaths, hitsYou = _em.BreathHits, zones = HazardZones.Instance.Count;
 
             int c = _em.Spawn(_chimera, a);
             yield return UntilState(c, Windup, 5f); // its first cooldown is at most 0.7 × 4.5 s
@@ -108,7 +108,7 @@ namespace Gladiator.Tests
             Assert.AreEqual(Recover, _em.GetAiState(c), "then it stands smoking");
             Assert.AreEqual(1f, Time.time - t1, 0.12f, "after 1 s of fire");
             Assert.AreEqual(1, _hits.Count, "the player in the cone: hit once");
-            Assert.AreEqual(hitsYou + 1, _em.BreathHitsPlayer);
+            Assert.AreEqual(hitsYou + 1, _em.BreathHits);
             Assert.AreEqual(zones + 3, HazardZones.Instance.Count, "three fire patches along the cone");
 
             yield return UntilState(c, Move, 2f);
@@ -125,7 +125,7 @@ namespace Gladiator.Tests
             Vector3 far9 = R2TestArena.Spot(a + aim * 9f);
             R2TestArena.PutPlayer(b);
             yield return new WaitForSeconds(0.3f);
-            int hitsYou = _em.BreathHitsPlayer, breaths = _em.Breaths;
+            int hitsYou = _em.BreathHits, breaths = _em.Breaths;
 
             int c = _em.Spawn(_chimera, a);
             yield return UntilState(c, Windup, 5f);
@@ -133,7 +133,7 @@ namespace Gladiator.Tests
             R2TestArena.PutPlayer(off40); // the cone is locked where you stood: step 40° off it
             yield return UntilState(c, Recover, 3f);
             Assert.AreEqual(breaths + 1, _em.Breaths);
-            Assert.AreEqual(hitsYou, _em.BreathHitsPlayer, "40° off its aim: missed");
+            Assert.AreEqual(hitsYou, _em.BreathHits, "40° off its aim: missed");
             Assert.AreEqual(0, _hits.Count);
 
             R2TestArena.PutPlayer(b); // in front again for the next one
@@ -142,7 +142,7 @@ namespace Gladiator.Tests
             R2TestArena.PutPlayer(far9); // straight down its aim, past the cone's 8 m
             yield return UntilState(c, Recover, 3f);
             Assert.AreEqual(breaths + 2, _em.Breaths);
-            Assert.AreEqual(hitsYou, _em.BreathHitsPlayer, "9 m away: missed");
+            Assert.AreEqual(hitsYou, _em.BreathHits, "9 m away: missed");
             Assert.AreEqual(0, _hits.Count);
         }
 

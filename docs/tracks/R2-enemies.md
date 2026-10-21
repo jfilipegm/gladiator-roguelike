@@ -47,7 +47,7 @@ Code only, no Unity: `Tools/ccheck` errors=0, 0 warnings; **no test has been run
   `breathFxEvery` (0.15 s), `SfxId.FirePot` as it starts.
   - **The player**, once per breath (`_attackHit`): `InCone(p, aim, len, angle, player, playerRadius)` and feet within
     ±`breathJumpClear` (1.2 m) → `attackDamage`, `DamageFlags.Area`, impulse `aim × breathKnockback + up × breathKnockUp`
-    (2.5). `BreathHitsPlayer++` (only when `TakeDamage` lands; i-frames retry later in the same breath, like the lunge).
+    (2.5). `BreathHits++` (only when `TakeDamage` lands; i-frames retry later in the same breath, like the lunge).
   - **Other enemies**, once per breath (the War Boar's trample serials `_charge` / `_trampled`): `QueryAlive(p, len)`,
     body circle in the cone, height within 1.5 m, not itself, **not its own def**, not `Scripted` →
     `attackDamage × trampleMul`, `Area | Proc`, `SourceId = BreathSourceId`, knockback `breathKnockback`.
@@ -73,9 +73,9 @@ Code only, no Unity: `Tools/ccheck` errors=0, 0 warnings; **no test has been run
 
 ### Counters (public, for the bot log)
 `PilesMade`, `PilesRisen`, `PilesStomped`, `PilesBurned`, `PilesDenied`, `PilesOverflow`, `PileCount`; `Breaths`,
-`BreathHitsPlayer`, `BreathEnemyHits`. Accessors: `GetPilePosition(k)`, `GetPileTime(k)`, `GetPileDef(k)`,
+`BreathHits`, `BreathEnemyHits`. Accessors: `GetPilePosition(k)`, `GetPileTime(k)`, `GetPileDef(k)`,
 `TimesRevived(i)`, `GetHpFloor(i)`. The design's log line `piles P (risen, stomped, burned) breaths (hit you)` maps to
-`PilesMade (PilesRisen, PilesStomped, PilesBurned) Breaths (BreathHitsPlayer)`.
+`PilesMade (PilesRisen, PilesStomped, PilesBurned) Breaths (BreathHits)`.
 
 ### Tunables (on the `EnemyManager` component; defaults apply to every scene without a rebuild)
 `pileRingColor`, `boneColorA/B`, `pileScaleIn` 0.15, `pileShakeTime` 0.5, `stompMaxHeight` 0.5; `breathFacingSlack` 10,
@@ -137,7 +137,7 @@ Code only, no Unity: `Tools/ccheck` errors=0, 0 warnings; **no test has been run
   affix and half its elite max HP, the second death an elite kill; 60 killed at once → 48 piles, 12 overflow kills,
   the 48 stand up from the prewarmed pool.
 - **PlayMode `ChimeraTests`** (stand-in Chimera, rooted with moveSpeed 0): wind-up 1 s with a wind-up threat and no
-  damage → breath 1 s → the player hit once, `BreathHitsPlayer` +1, three patches → recover → move; a player moved 40°
+  damage → breath 1 s → the player hit once, `BreathHits` +1, three patches → recover → move; a player moved 40°
   off the locked aim, then (next breath) 9 m down it, isn't hit; a dummy in the cone loses exactly 72 for the whole
   breath, one 55° off, another Chimera (turned away so it never breathes) and a Scripted boss in the cone lose nothing;
   `SetHpFloor` keeps a Scripted slot at 100 through a 5,000 hit, `Execute` (false) and burn ticks, `SetHp` sets and

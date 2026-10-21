@@ -234,6 +234,7 @@ namespace Gladiator.Tests
             int open = 0, closed = 0;
             foreach (var t in Object.FindObjectsByType<Transform>())
             {
+                if (t.parent != null && t.parent.name == t.name) continue; // the FBX's mesh child shares its root's name
                 if (t.name == "SM_CarceresOpen") { open++; Assert.AreEqual(14f, Mathf.Abs(t.position.z), 0.01f); Assert.AreEqual(-95f, t.position.x, 0.01f); }
                 if (t.name == "SM_Carceres") closed++;
             }

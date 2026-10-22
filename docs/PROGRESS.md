@@ -1,7 +1,7 @@
 # Progress
 
 **Current phase:** Phase 5 — expansion
-**Current milestone:** R3 — Asterion, the Chained (branch `phase5-asterion`, release v0.20.0): design and art done and merged, the contract final (`docs/tracks/R3-asterion.md`); the three code parts (chain, rage, setup) proposed as cards on 2026-10-22 09:50. v0.19.0 (the playtest fixes) released 2026-10-22. **Ask the producer before every merge.**
+**Current milestone:** R3 — Asterion, the Chained (branch `phase5-asterion`, release v0.20.0): design and art done and merged, the contract final (`docs/tracks/R3-asterion.md`); the three code parts started 09:44 from the producer's card clicks: setup done (`claude/sleepy-pare-af0042` @ f166b72, ccheck errors only on the R3-STUB names), chain and rage running. Merge order chain → rage → setup. v0.19.0 (the playtest fixes) released 2026-10-22. **Ask the producer before every merge.**
 **Last updated:** 2026-10-21
 
 **Repository:** https://github.com/jfilipegm/gladiator-roguelike (public, branch `main`, remote `origin`, `.blend` files via Git LFS). Work on a branch per milestone, push as you go, merge through a PR; release every playable build (`Tools/release`).

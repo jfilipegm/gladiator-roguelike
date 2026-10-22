@@ -69,7 +69,7 @@ namespace Gladiator.Gameplay
             Gladiator = gladiator;
             Run = run;
             ArenaIndex = 0;
-            GameRandom.Seed((int)NextRunSeed()); // Q14 (R7): every run rolls differently (R8 replaces this with seeded streams)
+            SeedRun(); // Q14 (R7): every run rolls differently (R8 replaces this with seeded streams)
             Load(run != null && run.arenas.Length > 0 ? run.arenas[0].scenePath : null);
         }
 
@@ -77,7 +77,7 @@ namespace Gladiator.Gameplay
         public static void Retry()
         {
             TimeController.ResetForNewRun();
-            GameRandom.Seed((int)NextRunSeed()); // Q14 (R7): a fresh run, fresh rolls
+            SeedRun(); // Q14 (R7): a fresh run, fresh rolls
             var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
             if (scene.buildIndex >= 0) UnityEngine.SceneManagement.SceneManager.LoadScene(scene.buildIndex);
             else UnityEngine.SceneManagement.SceneManager.LoadScene(scene.path);
@@ -86,9 +86,17 @@ namespace Gladiator.Gameplay
         static uint _runCounter;
 
         /// <summary>
-        /// Q14 (R7): a seed for the next run that differs every time (the clock's ticks and a counter, through a 32-bit
-        /// hash; never 0). Runs loaded straight into an arena (bots, tests) don't call it: their rolls stay fixed per launch.
+        /// Q14 (R7): seeds GameRandom for the run about to load, so chests, gifts and whims change from run to run. Bot and
+        /// stress runs (-bot, -stress) keep today's fixed sequence per launch, so perf runs stay comparable; runs loaded
+        /// straight into an arena (tests) never come through here.
         /// </summary>
+        static void SeedRun()
+        {
+            if (CommandLine.Has("-bot") || CommandLine.Has("-stress")) return;
+            GameRandom.Seed((int)NextRunSeed());
+        }
+
+        /// <summary>A seed that differs every time (the clock's ticks and a counter, through a 32-bit hash; never 0).</summary>
         static uint NextRunSeed()
         {
             ulong ticks = (ulong)System.Diagnostics.Stopwatch.GetTimestamp();

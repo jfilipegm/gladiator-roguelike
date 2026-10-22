@@ -27,6 +27,7 @@ namespace Gladiator.Tests
             DevSettings.GodMode = true;
             TimeController.GameSpeed = 1f;
             TimeController.ResetForNewRun();
+            GameRandom.Seed(5150); // Q14 (R7): the chests' generator seeds from GameRandom now: a seeded load places them the same way every time
             var op = SceneManager.LoadSceneAsync(Scene, LoadSceneMode.Single);
             while (!op.isDone) yield return null;
             yield return null;

@@ -20,6 +20,10 @@ namespace Gladiator.UI
     /// ("PROCLAIMED BY THE EDITOR"). Built once; a toggle only recolours and retexts the cards. Menu-only UI: it
     /// allocates freely. `save` is the save the menu shows (MetaProgress.Data): buying and closing write through
     /// MetaProgress.
+    /// U1: a carved `Marble` page (the menu scales it with UiKit.FitScale), the header engraved in Title 48 over a
+    /// crimson rule; the cards dark `Stone` plates (name Title 26, effect Body 20, share Number 22); ON = a focus ring in
+    /// the danger colour hugging the card plus the ON chip; the keyboard focus a gold ring outside it; locked cards
+    /// darker; BUY a bronze plate; the footer in Title 26.
     /// </summary>
     public sealed class EdictsPanel : IUiHoverTarget
     {
@@ -27,25 +31,17 @@ namespace Gladiator.UI
         /// <summary>The panel's box at 1:1 (the menu scales it down to fit smaller canvases).</summary>
         public static readonly Vector2 Size = new Vector2(1640f, 980f);
         static readonly Vector2 Card = new Vector2(780f, 100f);
-        const float GapX = 20f, GapY = 12f, Ring = 6f, GridTop = 340f;
+        const float GapX = 20f, GapY = 12f, Ring = 6f, GridTop = 340f, RightW = 250f;
 
-        static readonly Color Gold = new Color(1f, 0.84f, 0.3f);
-        static readonly Color DimGold = new Color(1f, 0.84f, 0.3f, 0.45f);
-        static readonly Color HintGold = new Color(1f, 0.84f, 0.3f, 0.7f);
         /// <summary>Anything that hurts the player (CLAUDE.md §5): the edicts that are on.</summary>
         public static readonly Color Hurt = new Color(1f, 0.33f, 0.2f);
-        static readonly Color Soft = new Color(1f, 1f, 1f, 0.78f);
-        static readonly Color Dim = new Color(1f, 1f, 1f, 0.42f);
         static readonly Color Pale = new Color(1f, 1f, 1f, 0.55f);
-        static readonly Color BoxColor = new Color(0.05f, 0.06f, 0.09f, 0.98f);
-        static readonly Color Border = new Color(0.3f, 0.3f, 0.34f, 0.9f);
-        static readonly Color BorderDark = new Color(0.16f, 0.16f, 0.19f, 0.9f);
-        static readonly Color CardColor = new Color(0.08f, 0.1f, 0.14f, 1f);
-        static readonly Color CardOn = new Color(0.2f, 0.08f, 0.06f, 1f);
-        static readonly Color CardDark = new Color(0.035f, 0.04f, 0.055f, 1f);
+        /// <summary>A locked card's stone: the plate darkened.</summary>
+        static readonly Color StoneDark = new Color(0.55f, 0.55f, 0.55f, 1f);
         static readonly Color PlateColor = new Color(0.02f, 0.02f, 0.03f, 1f);
         static readonly Color Silhouette = new Color(0f, 0f, 0f, 0.9f);
-        const string HurtHex = "#FF5433", GoldHex = "#FFD84A";
+        /// <summary>Gold written on the marble page (the bright gold doesn't read on marble).</summary>
+        const string HurtHex = "#FF5433", GoldHex = "#A8741F";
 
         const string KeysLine = "Arrows: move  ·  Enter / A: toggle or buy  ·  X / Backspace: clear  ·  Esc / B: done";
         const string KeysReadOnly = "Esc / B: back";
@@ -54,20 +50,20 @@ namespace Gladiator.UI
         {
             public RunModifierDef Def;
             public CanvasGroup Group;
-            public Image Ring, Border, Inner, Chip, Padlock;
+            public Image Ring, OnRing, Border, Chip, Padlock;
             public RawImage Icon;
             public TextMeshProUGUI Glyph, Name, Line, Renown, State;
             public Button Buy;
+            public UiPlate BuyPlate;
             public TextMeshProUGUI BuyLabel;
         }
 
-        readonly TMP_FontAsset _font;
-        readonly Material _fontMat;
         MetaConfig _meta;
         SaveData _save;
         Action _onClose;
         GameObject _root;
         RectTransform _box;
+        Image _page;
         TextMeshProUGUI _header, _sub, _renown, _footer, _keys;
         Button _clear, _done;
         RunModifierDef[] _defs = Array.Empty<RunModifierDef>();
@@ -75,11 +71,8 @@ namespace Gladiator.UI
         bool[] _on = Array.Empty<bool>();
         int _focus, _hover = -1;
 
-        public EdictsPanel(TMP_FontAsset font, Material fontMat)
-        {
-            _font = font;
-            _fontMat = fontMat;
-        }
+        /// <summary>The font arguments are ignored (U1: the theme decides).</summary>
+        public EdictsPanel(TMP_FontAsset font, Material fontMat) { }
 
         /// <summary>Called after every toggle, clear or purchase (the menu's button and tablet follow the panel live).</summary>
         public Action OnChanged;
@@ -125,8 +118,20 @@ namespace Gladiator.UI
         public string CardLine(int i) => i >= 0 && i < _cards.Length ? _cards[i].Line.text : "";
         public string CardState(int i) => i >= 0 && i < _cards.Length ? (_cards[i].Buy.gameObject.activeSelf ? _cards[i].BuyLabel.text : _cards[i].State.text) : "";
         public RectTransform CardRect(int i) => _cards[i].Border.rectTransform;
-        public Color CardFrame(int i) => _cards[i].Border.color;
+        /// <summary>The colour of the frame that marks the card's state: the ON ring (orange-red: it hurts you) while it's
+        /// on, else the stone plate's tint.</summary>
+        public Color CardFrame(int i) => _on[i] ? _cards[i].OnRing.color : _cards[i].Border.color;
         public TextMeshProUGUI CardName(int i) => _cards[i].Name;
+        // ---- tests (U1): the look
+        /// <summary>The page's frame (`FrameKind.Marble`) and card `i`'s plate (`FrameKind.Stone`).</summary>
+        public int PageFrame => _page != null ? UiFrames.KindOf(_page) : -1;
+        public int CardPlate(int i) => UiFrames.KindOf(_cards[i].Border);
+        /// <summary>Card `i`'s ON ring: shown (enabled with alpha) only while it's on; its frame kind and colour.</summary>
+        public bool OnRingShown(int i) => _cards[i].OnRing.enabled && _cards[i].OnRing.color.a > 0f;
+        public int OnRingKind(int i) => UiFrames.KindOf(_cards[i].OnRing);
+        public Color OnRingColor(int i) => _cards[i].OnRing.color;
+        public Component HeaderLabel => _header;
+        public UiPlate BuyPlate(int i) => _cards[i].BuyPlate;
 
         /// <summary>"×1.65" (two decimals at most, invariant culture).</summary>
         public static string MulText(float mul) => "×" + mul.ToString("0.##", CultureInfo.InvariantCulture);
@@ -155,42 +160,51 @@ namespace Gladiator.UI
             _root = go;
             UiFactory.Stretch((RectTransform)go.transform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             var mid = new Vector2(0.5f, 0.5f);
-            var dim = UiFactory.Image("Dim", go.transform, new Color(0.02f, 0.02f, 0.04f, 0.86f), mid, mid, Vector2.zero, Vector2.zero, PixelIcons.White);
+            var night = UiTheme.Current.night;
+            night.a = 0.86f;
+            var dim = UiFactory.Image("Dim", go.transform, night, mid, mid, Vector2.zero, Vector2.zero, PixelIcons.White);
             UiFactory.Stretch(dim.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             dim.raycastTarget = true; // the arena screen underneath takes no clicks
 
             _box = UiFactory.Rect("Box", go.transform, mid, mid, Vector2.zero, Size);
-            UiFactory.Image("Frame", _box, Border, mid, mid, Vector2.zero, Size, PixelIcons.White);
-            UiFactory.Image("Back", _box, BoxColor, mid, mid, Vector2.zero, Size - new Vector2(6f, 6f), PixelIcons.White).raycastTarget = true;
+            _page = UiKit.Frame("Page", _box, FrameKind.Marble, mid, mid, Vector2.zero, Size, Color.white);
+            _page.raycastTarget = true;
 
-            float left = -Size.x * 0.5f + 30f, right = Size.x * 0.5f - 30f;
-            _header = Text(_box, "", 54, Gold, new Vector2(left + 500f, 436f), new Vector2(1000f, 70f), TextAlignmentOptions.Left, FontStyles.Bold);
-            _sub = Text(_box, "", 22, Soft, new Vector2(left + 500f, 388f), new Vector2(1000f, 32f), TextAlignmentOptions.Left, FontStyles.Italic);
-            _renown = Text(_box, "", 34, Gold, new Vector2(right - 280f, 436f), new Vector2(560f, 60f), TextAlignmentOptions.Right, FontStyles.Bold);
+            var th = UiTheme.Current;
+            float left = -Size.x * 0.5f + 40f, right = Size.x * 0.5f - 40f;
+            var leftMid = new Vector2(0f, 0.5f);
+            _header = Text(_box, "", TextRole.Title, 48, th.marbleInk, new Vector2(left + 500f, 440f), new Vector2(1000f, 62f), TextAlignmentOptions.Left, TextLook.Engraved);
+            UiKit.Rule("Rule", _box, mid, leftMid, new Vector2(left, 404f), 720f);
+            _sub = Text(_box, "", TextRole.Body, 22, th.marbleInk, new Vector2(left + 500f, 380f), new Vector2(1000f, 30f), TextAlignmentOptions.Left, TextLook.Engraved);
+            _renown = Text(_box, "", TextRole.Number, 34, th.goldBright, new Vector2(right - 260f, 440f), new Vector2(520f, 50f), TextAlignmentOptions.Right, TextLook.Outline);
 
             _cards = new CardView[_defs.Length];
             for (int i = 0; i < _defs.Length; i++) _cards[i] = BuildCard(i);
             if (_defs.Length == 0)
-                Text(_box, "No edicts yet.", 28, Dim, new Vector2(0f, 0f), new Vector2(800f, 60f), TextAlignmentOptions.Center, FontStyles.Normal);
+                Text(_box, "No edicts yet.", TextRole.Body, 28, th.marbleInk, new Vector2(0f, 0f), new Vector2(800f, 60f), TextAlignmentOptions.Center, TextLook.Engraved);
 
-            _footer = Text(_box, "", 36, Color.white, new Vector2(0f, -366f), new Vector2(1000f, 50f), TextAlignmentOptions.Center, FontStyles.Bold);
-            _keys = Text(_box, "", 22, Dim, new Vector2(0f, -440f), new Vector2(1060f, 30f), TextAlignmentOptions.Center, FontStyles.Normal);
-            _clear = UiFactory.Button("Clear", _box, "CLEAR", mid, mid, new Vector2(left + 110f, -432f), new Vector2(220f, 64f), _font, _fontMat, () => ClearAll(), 30f);
-            _done = UiFactory.Button("Done", _box, "DONE", mid, mid, new Vector2(right - 110f, -432f), new Vector2(220f, 64f), _font, _fontMat, () => Close(), 30f);
+            _footer = Text(_box, "", TextRole.Title, 26, th.marbleInk, new Vector2(0f, -364f), new Vector2(1000f, 40f), TextAlignmentOptions.Center, TextLook.Engraved);
+            var keys = th.marbleInk;
+            keys.a = 0.75f;
+            _keys = Text(_box, "", TextRole.Body, 22, keys, new Vector2(0f, -440f), new Vector2(1060f, 30f), TextAlignmentOptions.Center, TextLook.Flat);
+            _clear = UiKit.Button("Clear", _box, "CLEAR", ButtonStyle.Secondary, mid, mid, new Vector2(left + 110f, -432f), new Vector2(220f, 66f), () => ClearAll(), 28f).Button;
+            _done = UiKit.Button("Done", _box, "DONE", ButtonStyle.Primary, mid, mid, new Vector2(right - 110f, -432f), new Vector2(220f, 66f), () => Close(), 28f).Button;
             go.SetActive(false);
         }
 
         CardView BuildCard(int i)
         {
             var d = _defs[i];
+            var th = UiTheme.Current;
             var v = new CardView { Def = d };
             var mid = new Vector2(0.5f, 0.5f);
             int col = i % Columns, row = i / Columns;
             var pos = new Vector2((col - (Columns - 1) * 0.5f) * (Card.x + GapX), GridTop - Card.y * 0.5f - row * (Card.y + GapY));
             var holder = UiFactory.Rect("Edict_" + d.id, _box, mid, mid, pos, Card + new Vector2(Ring * 2f, Ring * 2f));
             v.Group = holder.gameObject.AddComponent<CanvasGroup>();
-            v.Ring = UiFactory.Image("Ring", holder, Color.clear, mid, mid, Vector2.zero, Card + new Vector2(Ring * 2f, Ring * 2f), PixelIcons.White);
-            v.Border = UiFactory.Image("Border", holder, Border, mid, mid, Vector2.zero, Card, PixelIcons.White);
+            // the keyboard focus: a gold ring outside the ON ring's place
+            v.Ring = UiKit.Frame("Ring", holder, FrameKind.Focus, mid, mid, Vector2.zero, Card + new Vector2(Ring * 4f, Ring * 4f), Color.clear);
+            v.Border = UiKit.Frame("Border", holder, FrameKind.Stone, mid, mid, Vector2.zero, Card, Color.white);
             v.Border.raycastTarget = true;
             var button = v.Border.gameObject.AddComponent<Button>();
             button.transition = Selectable.Transition.None;
@@ -200,8 +214,10 @@ namespace Gladiator.UI
             var hover = v.Border.gameObject.AddComponent<UiHover>();
             hover.Target = this;
             hover.Id = i;
-            v.Inner = UiFactory.Image("Inner", v.Border.transform, CardColor, mid, mid, Vector2.zero, Card - new Vector2(6f, 6f), PixelIcons.White);
-            var c = v.Inner.transform;
+            // ON: the danger ring hugging the plate (it hurts you)
+            v.OnRing = UiKit.Frame("OnRing", holder, FrameKind.Focus, mid, mid, Vector2.zero, Card + new Vector2(Ring * 2f, Ring * 2f), Hurt);
+            v.OnRing.enabled = false;
+            var c = v.Border.transform;
             float half = Card.x * 0.5f;
 
             // the icon: a 20 px atlas cell at 3× (whole art pixels); before the atlas has its row, the initial
@@ -217,30 +233,31 @@ namespace Gladiator.UI
                 v.Icon.texture = d.icon;
                 v.Icon.uvRect = new Rect(0f, 1f - (d.iconRow + 1) * ch, cw, ch);
             }
-            v.Glyph = Text(c, Initial(d), 36, Hurt, iconAt, new Vector2(60f, 60f), TextAlignmentOptions.Center, FontStyles.Bold);
+            v.Glyph = Text(c, Initial(d), TextRole.Title, 36, Hurt, iconAt, new Vector2(60f, 60f), TextAlignmentOptions.Center, TextLook.Flat);
             v.Glyph.enabled = !hasIcon;
 
             // the words: name and effect line in the middle, the Renown share and the state on the right
-            float x0 = -half + 96f, x1 = half - 206f, cx = (x0 + x1) * 0.5f, w = x1 - x0;
-            v.Name = Text(c, d.displayName, 26, Color.white, new Vector2(cx, 27f), new Vector2(w, 30f), TextAlignmentOptions.Left, FontStyles.Bold);
+            float x0 = -half + 96f, x1 = half - RightW - 16f, cx = (x0 + x1) * 0.5f, w = x1 - x0;
+            v.Name = Text(c, d.displayName, TextRole.Title, 26, th.ink, new Vector2(cx, 25f), new Vector2(w, 34f), TextAlignmentOptions.Left, TextLook.Flat);
             v.Name.textWrappingMode = TextWrappingModes.NoWrap;
             AutoSize(v.Name, 18f, 26f);
-            v.Line = Text(c, "", 19, Soft, new Vector2(cx, -17f), new Vector2(w, 54f), TextAlignmentOptions.TopLeft, FontStyles.Normal);
-            AutoSize(v.Line, 13f, 19f);
-            float rx = half - 104f, rw = 184f;
-            v.Renown = Text(c, Share(d), 20, Gold, new Vector2(rx, 25f), new Vector2(rw, 28f), TextAlignmentOptions.Right, FontStyles.Bold);
+            v.Line = Text(c, "", TextRole.Body, 20, th.ink, new Vector2(cx, -19f), new Vector2(w, 52f), TextAlignmentOptions.TopLeft, TextLook.Flat);
+            AutoSize(v.Line, 18f, 20f);
+            float rx = half - 12f - RightW * 0.5f, rw = RightW;
+            v.Renown = Text(c, Share(d), TextRole.Number, 22, th.gold, new Vector2(rx, 24f), new Vector2(rw, 30f), TextAlignmentOptions.Right, TextLook.Outline);
             v.Renown.textWrappingMode = TextWrappingModes.NoWrap;
-            AutoSize(v.Renown, 14f, 20f);
-            v.State = Text(c, "", 20, Dim, new Vector2(rx, -18f), new Vector2(rw, 34f), TextAlignmentOptions.Right, FontStyles.Bold);
+            AutoSize(v.Renown, 18f, 22f);
+            v.State = Text(c, "", TextRole.Title, 20, th.dust, new Vector2(rx, -19f), new Vector2(rw, 30f), TextAlignmentOptions.Right, TextLook.Flat);
             v.State.textWrappingMode = TextWrappingModes.NoWrap;
-            AutoSize(v.State, 13f, 20f);
-            v.Padlock = UiFactory.Image("Padlock", c, Color.white, mid, mid, new Vector2(half - 184f, -18f), new Vector2(18f, 24f), PixelIcons.Lock);
-            v.Chip = UiFactory.Image("On", c, Hurt, mid, mid, new Vector2(half - 54f, -18f), new Vector2(84f, 34f), PixelIcons.White);
-            Text(v.Chip.transform, "ON", 24, Color.white, Vector2.zero, new Vector2(84f, 34f), TextAlignmentOptions.Center, FontStyles.Bold);
-            v.Buy = UiFactory.Button("Buy", c, "BUY", mid, mid, new Vector2(rx, -18f), new Vector2(rw, 40f), _font, _fontMat, () => Buy(index), 18f);
+            AutoSize(v.State, 18f, 20f);
+            v.Padlock = UiFactory.Image("Padlock", c, Color.white, mid, mid, new Vector2(half - RightW - 4f, -19f), new Vector2(18f, 24f), PixelIcons.Lock);
+            v.Chip = UiFactory.Image("On", c, Hurt, mid, mid, new Vector2(half - 56f, -19f), new Vector2(84f, 34f), PixelIcons.White);
+            Text(v.Chip.transform, "ON", TextRole.Title, 24, Color.white, Vector2.zero, new Vector2(84f, 34f), TextAlignmentOptions.Center, TextLook.Flat);
+            v.BuyPlate = UiKit.Button("Buy", c, "BUY", ButtonStyle.Primary, mid, mid, new Vector2(rx, -19f), new Vector2(rw, 40f), () => Buy(index), 20f);
+            v.Buy = v.BuyPlate.Button;
             v.BuyLabel = UiFactory.Label(v.Buy);
             v.BuyLabel.overflowMode = TextOverflowModes.Truncate;
-            AutoSize(v.BuyLabel, 13f, 18f);
+            AutoSize(v.BuyLabel, 18f, 20f);
             return v;
         }
 
@@ -418,37 +435,38 @@ namespace Gladiator.UI
 
         void Draw(int i)
         {
+            var th = UiTheme.Current;
             var v = _cards[i];
             var d = v.Def;
             bool on = _on[i], locked = IsLocked(i);
             var u = d.unlock != null ? d.unlock : _meta != null ? _meta.edictsUnlock : null;
             bool market = locked && d.unlock != null && d.unlock.category == UnlockCategory.Market;
             bool dark = locked && !market && !(ReadOnly && on); // the daily may proclaim an edict you haven't earned: it shows lit
-            v.Ring.color = i == _focus ? Gold : i == _hover ? Pale : Color.clear;
-            v.Border.color = on ? Hurt : dark ? BorderDark : Border;
-            v.Inner.rectTransform.sizeDelta = Card - (on ? new Vector2(10f, 10f) : new Vector2(6f, 6f));
-            v.Inner.color = on ? CardOn : dark ? CardDark : CardColor;
+            v.Ring.color = i == _focus ? th.gold : i == _hover ? Pale : Color.clear;
+            v.OnRing.enabled = on;
+            v.Border.color = dark ? StoneDark : Color.white;
             v.Icon.color = dark ? Silhouette : Color.white;
-            v.Glyph.color = dark ? Dim : Hurt;
-            v.Name.color = dark ? Dim : Color.white;
+            v.Glyph.color = dark ? th.dust : Hurt;
+            v.Name.color = dark ? th.dust : th.ink;
             v.Line.text = dark ? (u != null && !string.IsNullOrEmpty(u.hint) ? u.hint : "???") : !string.IsNullOrEmpty(d.effectLine) ? d.effectLine : d.description ?? "";
-            v.Line.fontStyle = dark ? FontStyles.Italic : FontStyles.Normal;
-            v.Line.color = dark ? HintGold : Soft;
-            v.Renown.color = dark ? DimGold : Gold;
+            v.Line.color = dark ? th.dust : th.ink;
+            var share = th.gold;
+            if (dark) share.a = 0.45f;
+            v.Renown.color = share;
             v.Chip.gameObject.SetActive(on);
             bool buy = market && !ReadOnly && !on;
-            v.Buy.gameObject.SetActive(buy);
+            v.BuyPlate.Root.gameObject.SetActive(buy);
             if (buy)
             {
                 int cost = Mathf.Max(0, d.unlock.renownCost);
                 bool afford = _save.renown >= cost;
                 v.BuyLabel.text = afford ? "BUY · " + cost + " RENOWN" : cost + " RENOWN";
-                v.BuyLabel.color = afford ? Color.white : Dim;
                 v.Buy.interactable = afford;
+                v.BuyPlate.SetState(afford ? UiState.Normal : UiState.Disabled);
             }
             v.Padlock.enabled = dark;
             v.State.text = on || buy ? "" : dark ? Progress(u) : market ? "LOCKED" : "OFF";
-            v.State.color = dark ? HintGold : Dim;
+            v.State.color = th.dust;
             v.Group.alpha = ReadOnly && !on ? 0.4f : 1f;
         }
 
@@ -467,13 +485,12 @@ namespace Gladiator.UI
             t.fontSizeMax = max;
         }
 
-        TextMeshProUGUI Text(Transform parent, string text, float size, Color color, Vector2 pos, Vector2 box, TextAlignmentOptions align, FontStyles style)
+        static TextMeshProUGUI Text(Transform parent, string text, TextRole role, float size, Color color, Vector2 pos, Vector2 box, TextAlignmentOptions align, TextLook look)
         {
             var mid = new Vector2(0.5f, 0.5f);
-            var t = UiFactory.Text("Line", parent, text, size, color, align, mid, mid, pos, box, _font, _fontMat);
-            t.fontStyle = style;
+            var t = UiKit.Text("Line", parent, text, role, size, color, align, mid, mid, pos, box, look);
             t.textWrappingMode = TextWrappingModes.Normal;
-            t.overflowMode = TextOverflowModes.Truncate; // the font has no U+2026: Ellipsis warns (docs/tracks/README.md)
+            t.overflowMode = TextOverflowModes.Truncate; // never Ellipsis (docs/tracks/README.md)
             return t;
         }
     }

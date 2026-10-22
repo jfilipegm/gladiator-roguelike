@@ -15,6 +15,8 @@ namespace Gladiator.UI
     /// his skins in MetaConfig.skins order. Cycling previews each on the diorama (onPreview) and equips it at once when
     /// it's owned (the classic look by Unequip), so FIGHT! always fights in an owned skin; buying a Market skin equips
     /// it. Hidden when the gladiator has no skins. Menu-only UI: it allocates when it's shown, never per frame.
+    /// U1: a riveted `Bronze` plate; the arrows small marble plates, BUY a bronze one (dimmed while it's out of reach);
+    /// the name in Title 26, the status in Body 20.
     /// </summary>
     public sealed class SkinStrip
     {
@@ -24,15 +26,10 @@ namespace Gladiator.UI
         public const string ClassicName = "CLASSIC";
 
         const float ArrowX = 302f, ContentW = 536f, ChipEdge = 18f, ChipGap = 4f, ChipsToName = 12f, NameY = 22f, StatusY = -26f;
+        const float BuyW = 420f, BuyX = -40f;
 
-        static readonly Color PlateColor = new Color(0.04f, 0.05f, 0.07f, 0.78f);
-        static readonly Color Gold = new Color(1f, 0.84f, 0.3f);
-        static readonly Color Soft = new Color(1f, 1f, 1f, 0.78f);
-        static readonly Color Dim = new Color(1f, 1f, 1f, 0.5f);
         static readonly Color ChipRim = new Color(0.89f, 0.84f, 0.74f, 0.85f); // bone: a black chip still reads on the plate
 
-        readonly TMP_FontAsset _font;
-        readonly Material _fontMat;
         readonly List<SkinDef> _skins = new List<SkinDef>();
         GladiatorDef _g;
         MetaConfig _meta;
@@ -40,17 +37,15 @@ namespace Gladiator.UI
         Action<SkinDef> _onPreview;
         RectTransform _root;
         Button _prev, _next, _buy;
+        UiPlate _buyPlate;
         TextMeshProUGUI _name, _status, _buyLabel, _buyKey;
         RectTransform _chipRow;
         Image[] _chips = Array.Empty<Image>();
         int _index;
         string _namePlain = "", _statusPlain = "";
 
-        public SkinStrip(TMP_FontAsset font, Material fontMat)
-        {
-            _font = font;
-            _fontMat = fontMat;
-        }
+        /// <summary>The font arguments are ignored (U1: the theme decides).</summary>
+        public SkinStrip(TMP_FontAsset font, Material fontMat) { }
 
         /// <summary>The equipped skin changed (true: it was bought): the menu redraws the roster tile, the Renown, the Codex.</summary>
         public Action<bool> OnChanged;
@@ -82,13 +77,18 @@ namespace Gladiator.UI
         public RectTransform BuyRect => (RectTransform)_buy.transform;
         public int ChipCount { get { int n = 0; foreach (var c in _chips) if (c.transform.parent.gameObject.activeSelf) n++; return n; } }
         public Color Chip(int i) => _chips[i].color;
+        /// <summary>Tests (U1): the plate the strip is drawn on (`FrameKind.Bronze`), BUY's plate, the name label.</summary>
+        public int PlateFrame => _root != null ? UiFrames.KindOf(_root.GetComponent<Image>()) : -1;
+        public UiPlate BuyPlate => _buyPlate;
+        public Component NameLabel => _name;
 
         /// <summary>Builds the strip once (hidden until Show). Its bottom centre sits at `pos` from `anchor`.</summary>
         public void Build(Transform root, Vector2 anchor, Vector2 pos, Action<SkinDef> onPreview)
         {
             _onPreview = onPreview;
+            var th = UiTheme.Current;
             var mid = new Vector2(0.5f, 0.5f);
-            var plate = UiFactory.Image("SkinStrip", root, PlateColor, anchor, new Vector2(0.5f, 0f), pos, Size, PixelIcons.White);
+            var plate = UiKit.Frame("SkinStrip", root, FrameKind.Bronze, anchor, new Vector2(0.5f, 0f), pos, Size, Color.white);
             _root = plate.rectTransform;
             var t = _root.transform;
 
@@ -104,29 +104,31 @@ namespace Gladiator.UI
                 _chips[i] = UiFactory.Image("Colour", rim.transform, Color.white, mid, mid, Vector2.zero, new Vector2(ChipEdge, ChipEdge), PixelIcons.White);
             }
 
-            _name = UiFactory.Text("Name", t, "", 32f, Color.white, TextAlignmentOptions.Center, mid, mid, new Vector2(0f, NameY), new Vector2(ContentW, 48f), _font, _fontMat);
-            _name.overflowMode = TextOverflowModes.Truncate; // the font has no ellipsis glyph
+            _name = UiKit.Text("Name", t, "", TextRole.Title, 26f, th.ink, TextAlignmentOptions.Center, mid, mid, new Vector2(0f, NameY), new Vector2(ContentW, 40f));
+            _name.enableAutoSizing = true; _name.fontSizeMin = 18f; _name.fontSizeMax = 26f;
+            _name.overflowMode = TextOverflowModes.Truncate; // never Ellipsis
 
-            _status = UiFactory.Text("Status", t, "", 24f, Soft, TextAlignmentOptions.Center, mid, mid, new Vector2(0f, StatusY), new Vector2(ContentW, 36f), _font, _fontMat);
-            _status.fontStyle = FontStyles.Normal;
-            _status.enableAutoSizing = true; _status.fontSizeMin = 18f; _status.fontSizeMax = 24f;
+            _status = UiKit.Text("Status", t, "", TextRole.Body, 20f, th.ink, TextAlignmentOptions.Center, mid, mid, new Vector2(0f, StatusY), new Vector2(ContentW, 30f));
+            _status.enableAutoSizing = true; _status.fontSizeMin = 18f; _status.fontSizeMax = 20f;
             _status.overflowMode = TextOverflowModes.Truncate;
 
-            _buy = UiFactory.Button("SkinBuy", t, "", mid, mid, new Vector2(-28f, StatusY), new Vector2(340f, 40f), _font, _fontMat, () => Buy(), 24f);
+            _buyPlate = UiKit.Button("SkinBuy", t, "", ButtonStyle.Primary, mid, mid, new Vector2(BuyX, StatusY), new Vector2(BuyW, 40f), () => Buy(), 22f);
+            _buy = _buyPlate.Button;
             _buyLabel = UiFactory.Label(_buy);
-            _buyLabel.enableAutoSizing = true; _buyLabel.fontSizeMin = 16f; _buyLabel.fontSizeMax = 24f;
+            _buyLabel.enableAutoSizing = true; _buyLabel.fontSizeMin = 18f; _buyLabel.fontSizeMax = 22f;
             _buyLabel.overflowMode = TextOverflowModes.Truncate;
-            _buyKey = UiFactory.Text("BuyKey", t, "F / Y", 20f, Dim, TextAlignmentOptions.Left, mid, mid, new Vector2(196f, StatusY), new Vector2(72f, 30f), _font, _fontMat);
-            _buyKey.fontStyle = FontStyles.Normal;
+            _buyKey = UiKit.Text("BuyKey", t, "F / Y", TextRole.Body, 20f, th.dust, TextAlignmentOptions.Left, mid, mid,
+                new Vector2(BuyX + BuyW * 0.5f + 8f + 36f, StatusY), new Vector2(72f, 30f));
 
             _root.gameObject.SetActive(false);
         }
 
+        /// <summary>A small marble plate (60 × 88: the old hit area) with the chevron turned left or right.</summary>
         Button Arrow(string name, Transform parent, float x, float angle, UnityEngine.Events.UnityAction onClick)
         {
             var mid = new Vector2(0.5f, 0.5f);
-            var b = UiFactory.Button(name, parent, "", mid, mid, new Vector2(x, 0f), new Vector2(60f, 88f), _font, _fontMat, onClick, 24f);
-            var glyph = UiFactory.Image("Chevron", b.transform, Color.white, mid, mid, Vector2.zero, new Vector2(30f, 24f), PixelIcons.Chevron);
+            var b = UiKit.Button(name, parent, "", ButtonStyle.Secondary, mid, mid, new Vector2(x, 0f), new Vector2(60f, 88f), onClick, 24f).Button;
+            var glyph = UiFactory.Image("Chevron", b.transform, UiTheme.Current.marbleInk, mid, mid, Vector2.zero, new Vector2(30f, 24f), PixelIcons.Chevron);
             glyph.rectTransform.localEulerAngles = new Vector3(0f, 0f, angle); // the chevron points up: turn it left / right
             return b;
         }
@@ -224,11 +226,11 @@ namespace Gladiator.UI
             for (int i = 0; i < _chips.Length; i++) _chips[i].transform.parent.gameObject.SetActive(i < chips);
             float chipsW = chips > 0 ? chips * ChipEdge + (chips - 1) * ChipGap + ChipsToName : 0f;
             float maxName = ContentW - chipsW;
-            float nameW = Mathf.Min(_name.GetPreferredValues(_name.text, maxName, 48f).x + 2f, maxName);
+            float nameW = Mathf.Min(_name.GetPreferredValues(_name.text, maxName, 40f).x + 2f, maxName);
             float left = -(chipsW + nameW) * 0.5f;
             _chipRow.anchoredPosition = new Vector2(left, NameY);
             _name.rectTransform.anchoredPosition = new Vector2(left + chipsW + nameW * 0.5f, NameY);
-            _name.rectTransform.sizeDelta = new Vector2(nameW, 48f);
+            _name.rectTransform.sizeDelta = new Vector2(nameW, 40f);
 
             // the status line: equipped, a price, or a goal
             bool market = s != null && !CurrentOwned && s.unlock != null && s.unlock.category == UnlockCategory.Market;
@@ -240,8 +242,8 @@ namespace Gladiator.UI
                 bool afford = renown >= cost;
                 _statusPlain = afford ? "BUY · " + cost + " RENOWN" : cost + " RENOWN · NEED " + (cost - renown) + " MORE";
                 _buyLabel.text = _statusPlain;
-                _buyLabel.color = afford ? Color.white : Dim;
                 _buy.interactable = afford;
+                _buyPlate.SetState(afford ? UiState.Normal : UiState.Disabled);
                 _buyKey.gameObject.SetActive(afford);
                 return;
             }
@@ -250,12 +252,12 @@ namespace Gladiator.UI
             {
                 _statusPlain = "EQUIPPED";
                 _status.text = _statusPlain;
-                _status.color = Gold;
+                _status.color = UiTheme.Current.gold;
                 return;
             }
             Goal(s.unlock, out _statusPlain, out string rich);
             _status.text = rich;
-            _status.color = Soft;
+            _status.color = UiTheme.Current.ink;
         }
 
         /// <summary>How a locked, unbuyable skin is earned: "Win 3 runs as the Nobody · 1 / 3" (a champion skin), else its

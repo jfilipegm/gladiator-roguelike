@@ -19,6 +19,9 @@ namespace Gladiator.UI
     /// seven scored dailies, newest first (date, who, where, outcome, time, kills, Renown), today's framed in gold.
     /// Built once (hidden rows wait for records); Show rewrites the words and pictures, Tick only the clock, once a second.
     /// Menu-only UI: it allocates freely. Truncate, never Ellipsis (the font has no U+2026).
+    /// U1: the proclamation inside a `Mosaic` border, the arena and gladiator cards on `Bronze`, the edicts block on
+    /// `Stone`; "SCORED ATTEMPT" in Title gold, "PRACTICE …" in Body dust; the clock in Number 28. The ledger on a `Wax`
+    /// tablet with its values in Number; today's line ringed in gold, a won day's outcome between small laurels.
     /// </summary>
     public sealed class DailyPanel : IUiHoverTarget
     {
@@ -26,19 +29,11 @@ namespace Gladiator.UI
         public static readonly Vector2 Size = new Vector2(1760f, 790f);
         /// <summary>The ledger's rows (the save keeps more: MetaConfig.dailyLedger).</summary>
         public const int LedgerShown = 7;
-        const float LeftW = 900f, RightW = 840f, Pad = 17f;
-        const float CardW = 425f, CardH = 250f, RowH = 84f, LedgerRowH = 92f, LedgerPitch = 100f;
+        const float LeftW = 900f, RightW = 840f, Pad = 30f;
+        const float CardW = 412f, CardH = 250f, RowH = 84f, LedgerRowH = 88f, LedgerPitch = 96f, LedgerTop = 300f;
 
-        static readonly Color Gold = new Color(1f, 0.84f, 0.3f);
-        static readonly Color DimGold = new Color(1f, 0.84f, 0.3f, 0.6f);
         static readonly Color Hurt = EdictsPanel.Hurt;
-        static readonly Color Soft = new Color(1f, 1f, 1f, 0.78f);
-        static readonly Color Dim = new Color(1f, 1f, 1f, 0.45f);
         static readonly Color Pale = new Color(1f, 1f, 1f, 0.55f);
-        static readonly Color Grey = new Color(0.72f, 0.72f, 0.76f, 1f);
-        static readonly Color BoxColor = new Color(0.05f, 0.06f, 0.09f, 0.96f);
-        static readonly Color Border = new Color(0.3f, 0.3f, 0.34f, 0.9f);
-        static readonly Color CardColor = new Color(0.08f, 0.1f, 0.14f, 1f);
         static readonly Color PlateColor = new Color(0.02f, 0.02f, 0.03f, 1f);
         static readonly Color ArenaFallback = new Color(0.45f, 0.32f, 0.22f, 1f);
         const string GoldHex = "#FFD84A", HurtHex = "#FF5433", StruckHex = "#FFFFFF66";
@@ -54,14 +49,13 @@ namespace Gladiator.UI
 
         sealed class LedgerRow
         {
-            public RectTransform Root;
+            public RectTransform Root, Laurels;
             public Image Frame;
             public TextMeshProUGUI Date, Year, Who, Where, Outcome, Detail, Renown;
         }
 
-        readonly TMP_FontAsset _font;
-        readonly Material _fontMat;
         CodexConfig _codex;
+        Image _proclamationFrame, _ledgerFrame;
         RectTransform _box, _edictsBlock;
         Image _edictsRing;
         RawImage _thumb, _portrait;
@@ -77,11 +71,8 @@ namespace Gladiator.UI
         int _clockMinutes = int.MinValue;
         bool _hover;
 
-        public DailyPanel(TMP_FontAsset font, Material fontMat)
-        {
-            _font = font;
-            _fontMat = fontMat;
-        }
+        /// <summary>The font arguments are ignored (U1: the theme decides).</summary>
+        public DailyPanel(TMP_FontAsset font, Material fontMat) { }
 
         /// <summary>The edicts block was clicked: the menu opens the Edicts page read-only on the day's edicts.</summary>
         public Action OnEdicts;
@@ -112,8 +103,17 @@ namespace Gladiator.UI
             return r.Date.text + " " + r.Year.text + " · " + r.Who.text + " · " + r.Where.text + " · " + r.Outcome.text + " · " + r.Detail.text + " · " + r.Renown.text;
         }
         public RectTransform LedgerRect(int i) => i >= 0 && i < _ledger.Length ? _ledger[i].Root : null;
-        /// <summary>The ledger line `i` is today's (framed in gold).</summary>
-        public bool LedgerIsToday(int i) => i >= 0 && i < LedgerRows && _ledger[i].Frame.color == Gold;
+        /// <summary>The ledger line `i` is today's (ringed in gold).</summary>
+        public bool LedgerIsToday(int i) => i >= 0 && i < LedgerRows && _ledger[i].Frame.enabled;
+        // ---- tests (U1): the look
+        /// <summary>The proclamation's frame (`FrameKind.Mosaic`) and the ledger's (`FrameKind.Wax`).</summary>
+        public int ProclamationFrame => UiFrames.KindOf(_proclamationFrame);
+        public int LedgerFrame => UiFrames.KindOf(_ledgerFrame);
+        /// <summary>The attempt line and the clock (their theme roles: Title for SCORED ATTEMPT, Body for practice; Number).</summary>
+        public Component StatusLabel => _status;
+        public Component ClockLabel => _next;
+        /// <summary>Ledger line `i`'s outcome has the laurels (a won day).</summary>
+        public bool LedgerHasLaurels(int i) => i >= 0 && i < LedgerRows && _ledger[i].Laurels != null;
 
         /// <summary>Tests (their assembly has no TextMeshPro): the first active text under `root` that's cut off after
         /// autosizing, as "Name: words", or null when everything fits.</summary>
@@ -196,45 +196,48 @@ namespace Gladiator.UI
             BuildLedger(UiFactory.Rect("Ledger", _box, mid, mid, new Vector2(Size.x * 0.5f - RightW * 0.5f, 0f), new Vector2(RightW, Size.y)));
         }
 
-        void Panel(RectTransform r, Vector2 size)
+        static Image Panel(RectTransform r, Vector2 size, FrameKind kind)
         {
             var mid = new Vector2(0.5f, 0.5f);
-            UiFactory.Image("Frame", r, Border, mid, mid, Vector2.zero, size, PixelIcons.White);
-            UiFactory.Image("Back", r, BoxColor, mid, mid, Vector2.zero, size - new Vector2(6f, 6f), PixelIcons.White).raycastTarget = true;
+            var frame = UiKit.Frame("Frame", r, kind, mid, mid, Vector2.zero, size, Color.white);
+            frame.raycastTarget = true;
+            return frame;
         }
 
         void BuildProclamation(RectTransform p)
         {
+            var th = UiTheme.Current;
             var size = new Vector2(LeftW, Size.y);
-            Panel(p, size);
+            _proclamationFrame = Panel(p, size, FrameKind.Mosaic);
             var mid = new Vector2(0.5f, 0.5f);
             float inner = LeftW - Pad * 2f;
-            Text(p, "THE EDITOR PROCLAIMS", 24, DimGold, new Vector2(0f, 360f), new Vector2(inner, 32f), TextAlignmentOptions.Left, FontStyles.Bold);
+            Text(p, "THE EDITOR PROCLAIMS", TextRole.Title, 24, th.gold, new Vector2(0f, 350f), new Vector2(inner, 32f), TextAlignmentOptions.Left);
 
-            // the arena and the gladiator, side by side
+            // the arena and the gladiator, side by side, each on a bronze plate
             float cx = (CardW + (inner - CardW * 2f)) * 0.5f;
-            var arena = Card(p, "Arena", new Vector2(-cx, 215f));
+            var arena = Card(p, "Arena", new Vector2(-cx, 210f));
+            UiFactory.Image("Plate", arena, PlateColor, mid, mid, new Vector2(0f, 24f), new Vector2(296f, 170f), PixelIcons.White);
             _thumb = UiFactory.Rect("Thumbnail", arena, mid, mid, new Vector2(0f, 24f), new Vector2(288f, 162f)).gameObject.AddComponent<RawImage>();
             _thumb.raycastTarget = false;
-            _arenaName = Text(arena, "", 30, Color.white, new Vector2(0f, -79f), new Vector2(CardW - 24f, 40f), TextAlignmentOptions.Center, FontStyles.Bold);
-            AutoSize(_arenaName, 20f, 30f);
-            _arenaLine = Text(arena, "", 19, Soft, new Vector2(0f, -107f), new Vector2(CardW - 24f, 26f), TextAlignmentOptions.Center, FontStyles.Italic);
-            AutoSize(_arenaLine, 14f, 19f);
-            var glad = Card(p, "Gladiator", new Vector2(cx, 215f));
+            _arenaName = Text(arena, "", TextRole.Title, 30, th.ink, new Vector2(0f, -79f), new Vector2(CardW - 24f, 40f), TextAlignmentOptions.Center);
+            AutoSize(_arenaName, 18f, 30f);
+            _arenaLine = Text(arena, "", TextRole.Body, 20, th.dust, new Vector2(0f, -106f), new Vector2(CardW - 24f, 28f), TextAlignmentOptions.Center);
+            AutoSize(_arenaLine, 18f, 20f);
+            var glad = Card(p, "Gladiator", new Vector2(cx, 210f));
             UiFactory.Image("Plate", glad, PlateColor, mid, mid, new Vector2(0f, 24f), new Vector2(170f, 170f), PixelIcons.White);
             _portrait = UiFactory.Rect("Portrait", glad, mid, mid, new Vector2(0f, 24f), new Vector2(162f, 162f)).gameObject.AddComponent<RawImage>();
             _portrait.raycastTarget = false;
-            _gladName = Text(glad, "", 30, Color.white, new Vector2(0f, -79f), new Vector2(CardW - 24f, 40f), TextAlignmentOptions.Center, FontStyles.Bold);
-            AutoSize(_gladName, 20f, 30f);
-            _gladLine = Text(glad, "", 19, Soft, new Vector2(0f, -107f), new Vector2(CardW - 24f, 26f), TextAlignmentOptions.Center, FontStyles.Italic);
-            AutoSize(_gladLine, 14f, 19f);
+            _gladName = Text(glad, "", TextRole.Title, 30, th.ink, new Vector2(0f, -79f), new Vector2(CardW - 24f, 40f), TextAlignmentOptions.Center);
+            AutoSize(_gladName, 18f, 30f);
+            _gladLine = Text(glad, "", TextRole.Body, 20, th.dust, new Vector2(0f, -106f), new Vector2(CardW - 24f, 28f), TextAlignmentOptions.Center);
+            AutoSize(_gladLine, 18f, 20f);
 
-            // the day's edicts: one block, a click opens the Edicts page read-only
-            float blockTop = 77f, blockH = 30f + 2f * RowH + 8f + 12f;
+            // the day's edicts: one dark stone block, a click opens the Edicts page read-only
+            float blockTop = 74f, blockH = 30f + 2f * RowH + 8f + 12f;
             var blockPos = new Vector2(0f, blockTop - blockH * 0.5f);
             var blockSize = new Vector2(inner, blockH);
-            _edictsRing = UiFactory.Image("Ring", p, Color.clear, mid, mid, blockPos, blockSize + new Vector2(12f, 12f), PixelIcons.White);
-            var block = UiFactory.Image("Edicts", p, new Color(0f, 0f, 0f, 0.001f), mid, mid, blockPos, blockSize, PixelIcons.White);
+            _edictsRing = UiKit.Frame("Ring", p, FrameKind.Focus, mid, mid, blockPos, blockSize + new Vector2(12f, 12f), Color.clear);
+            var block = UiKit.Frame("Edicts", p, FrameKind.Stone, mid, mid, blockPos, blockSize, Color.white);
             block.raycastTarget = true;
             _edictsBlock = block.rectTransform;
             var button = block.gameObject.AddComponent<Button>();
@@ -244,93 +247,98 @@ namespace Gladiator.UI
             var hover = block.gameObject.AddComponent<UiHover>();
             hover.Target = this;
             hover.Id = 0;
-            _edictsLabel = Text(_edictsBlock, "THE DAY'S EDICTS", 22, DimGold, new Vector2(0f, blockH * 0.5f - 15f), new Vector2(inner, 30f), TextAlignmentOptions.Left, FontStyles.Bold);
+            _edictsLabel = Text(_edictsBlock, "THE DAY'S EDICTS", TextRole.Title, 22, th.gold, new Vector2(0f, blockH * 0.5f - 18f), new Vector2(inner - 24f, 30f), TextAlignmentOptions.Left);
+            AutoSize(_edictsLabel, 18f, 22f);
             BuildEdictRows(blockH, inner);
-            _noEdicts = Text(_edictsBlock, "No edicts today: the Editor is in a mild mood.", 22, Dim, new Vector2(0f, blockH * 0.5f - 30f - 6f - RowH * 0.5f), new Vector2(inner, 40f), TextAlignmentOptions.Center, FontStyles.Italic);
+            _noEdicts = Text(_edictsBlock, "No edicts today: the Editor is in a mild mood.", TextRole.Body, 22, th.dust, new Vector2(0f, blockH * 0.5f - 30f - 6f - RowH * 0.5f), new Vector2(inner - 24f, 40f), TextAlignmentOptions.Center);
 
             // the Renown, the attempt and the clock
-            _renown = Text(p, "", 34, Gold, new Vector2(0f, -172f), new Vector2(inner, 48f), TextAlignmentOptions.Center, FontStyles.Bold);
-            AutoSize(_renown, 22f, 34f);
-            _status = Text(p, "", 30, Gold, new Vector2(0f, -226f), new Vector2(inner, 44f), TextAlignmentOptions.Center, FontStyles.Bold);
+            _renown = Text(p, "", TextRole.Title, 30, th.gold, new Vector2(0f, -172f), new Vector2(inner, 44f), TextAlignmentOptions.Center);
+            AutoSize(_renown, 22f, 30f);
+            _status = Text(p, "", TextRole.Title, 30, th.gold, new Vector2(0f, -224f), new Vector2(inner, 44f), TextAlignmentOptions.Center);
             AutoSize(_status, 18f, 30f);
-            _statusSub = Text(p, "", 20, Dim, new Vector2(0f, -262f), new Vector2(inner, 30f), TextAlignmentOptions.Center, FontStyles.Italic);
-            AutoSize(_statusSub, 14f, 20f);
-            _next = Text(p, "", 24, Soft, new Vector2(0f, -340f), new Vector2(inner, 34f), TextAlignmentOptions.Center, FontStyles.Bold);
+            _statusSub = Text(p, "", TextRole.Body, 20, th.dust, new Vector2(0f, -262f), new Vector2(inner, 30f), TextAlignmentOptions.Center);
+            AutoSize(_statusSub, 18f, 20f);
+            _next = Text(p, "", TextRole.Number, 28, th.ink, new Vector2(0f, -334f), new Vector2(inner, 36f), TextAlignmentOptions.Center, TextLook.Outline);
         }
 
         void BuildEdictRows(float blockH, float inner)
         {
+            var th = UiTheme.Current;
             var mid = new Vector2(0.5f, 0.5f);
             _edictRows = new EdictRow[2];
+            float rowW = inner - 24f;
             for (int i = 0; i < _edictRows.Length; i++)
             {
                 float y = blockH * 0.5f - 30f - 6f - RowH * 0.5f - i * (RowH + 8f);
                 var v = new EdictRow();
-                v.Root = UiFactory.Rect("Edict" + i, _edictsBlock, mid, mid, new Vector2(0f, y), new Vector2(inner, RowH));
-                UiFactory.Image("Back", v.Root, CardColor, mid, mid, Vector2.zero, new Vector2(inner, RowH), PixelIcons.White);
-                UiFactory.Image("Edge", v.Root, Hurt, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), Vector2.zero, new Vector2(5f, RowH), PixelIcons.White);
-                float half = inner * 0.5f;
+                v.Root = UiFactory.Rect("Edict" + i, _edictsBlock, mid, mid, new Vector2(0f, y), new Vector2(rowW, RowH));
+                UiFactory.Image("Edge", v.Root, Hurt, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), Vector2.zero, new Vector2(5f, RowH - 8f), PixelIcons.White);
+                float half = rowW * 0.5f;
                 var iconAt = new Vector2(-half + 48f, 0f);
                 UiFactory.Image("IconPlate", v.Root, PlateColor, mid, mid, iconAt, new Vector2(68f, 68f), PixelIcons.White);
                 v.Icon = UiFactory.Rect("Icon", v.Root, mid, mid, iconAt, new Vector2(60f, 60f)).gameObject.AddComponent<RawImage>();
                 v.Icon.raycastTarget = false;
-                v.Glyph = Text(v.Root, "", 36, Hurt, iconAt, new Vector2(60f, 60f), TextAlignmentOptions.Center, FontStyles.Bold);
+                v.Glyph = Text(v.Root, "", TextRole.Title, 36, Hurt, iconAt, new Vector2(60f, 60f), TextAlignmentOptions.Center);
                 float x0 = -half + 96f, x1 = half - 196f, cx = (x0 + x1) * 0.5f, w = x1 - x0;
-                v.Name = Text(v.Root, "", 26, Color.white, new Vector2(cx, 20f), new Vector2(w, 32f), TextAlignmentOptions.Left, FontStyles.Bold);
+                v.Name = Text(v.Root, "", TextRole.Title, 26, th.ink, new Vector2(cx, 20f), new Vector2(w, 34f), TextAlignmentOptions.Left);
                 AutoSize(v.Name, 18f, 26f);
-                v.Line = Text(v.Root, "", 19, Soft, new Vector2(cx, -16f), new Vector2(w, 46f), TextAlignmentOptions.TopLeft, FontStyles.Normal);
+                v.Line = Text(v.Root, "", TextRole.Body, 20, th.ink, new Vector2(cx, -16f), new Vector2(w, 46f), TextAlignmentOptions.TopLeft);
                 v.Line.textWrappingMode = TextWrappingModes.Normal;
-                AutoSize(v.Line, 13f, 19f);
-                v.Share = Text(v.Root, "", 20, Gold, new Vector2(half - 98f, 0f), new Vector2(176f, 30f), TextAlignmentOptions.Right, FontStyles.Bold);
-                AutoSize(v.Share, 14f, 20f);
+                AutoSize(v.Line, 18f, 20f);
+                v.Share = Text(v.Root, "", TextRole.Number, 22, th.gold, new Vector2(half - 98f, 0f), new Vector2(176f, 30f), TextAlignmentOptions.Right, TextLook.Outline);
+                AutoSize(v.Share, 18f, 22f);
                 _edictRows[i] = v;
             }
         }
 
-        RectTransform Card(RectTransform p, string name, Vector2 pos)
+        static RectTransform Card(RectTransform p, string name, Vector2 pos)
         {
             var mid = new Vector2(0.5f, 0.5f);
             var r = UiFactory.Rect(name, p, mid, mid, pos, new Vector2(CardW, CardH));
-            UiFactory.Image("Back", r, CardColor, mid, mid, Vector2.zero, new Vector2(CardW, CardH), PixelIcons.White);
+            UiKit.Frame("Back", r, FrameKind.Bronze, mid, mid, Vector2.zero, new Vector2(CardW, CardH), Color.white);
             return r;
         }
 
         void BuildLedger(RectTransform p)
         {
+            var th = UiTheme.Current;
             var size = new Vector2(RightW, Size.y);
-            Panel(p, size);
+            _ledgerFrame = Panel(p, size, FrameKind.Wax);
             var mid = new Vector2(0.5f, 0.5f);
             float inner = RightW - Pad * 2f, half = inner * 0.5f;
-            Text(p, "THE LEDGER", 34, Gold, new Vector2(0f, 356f), new Vector2(inner, 46f), TextAlignmentOptions.Left, FontStyles.Bold);
-            _ledgerCounts = Text(p, "", 22, Soft, new Vector2(0f, 354f), new Vector2(inner, 32f), TextAlignmentOptions.Right, FontStyles.Normal);
-            AutoSize(_ledgerCounts, 15f, 22f);
+            Text(p, "THE LEDGER", TextRole.Title, 34, th.gold, new Vector2(0f, 346f), new Vector2(inner, 44f), TextAlignmentOptions.Left);
+            _ledgerCounts = Text(p, "", TextRole.Title, 22, th.waxInk, new Vector2(0f, 344f), new Vector2(inner, 30f), TextAlignmentOptions.Right);
+            AutoSize(_ledgerCounts, 18f, 22f);
             _ledger = new LedgerRow[LedgerShown];
-            float top = 310f;
+            var band = th.night;
+            band.a = 0.35f;
             for (int i = 0; i < LedgerShown; i++)
             {
                 var v = new LedgerRow();
-                float y = top - LedgerRowH * 0.5f - i * LedgerPitch;
+                float y = LedgerTop - LedgerRowH * 0.5f - i * LedgerPitch;
                 v.Root = UiFactory.Rect("Row" + i, p, mid, mid, new Vector2(0f, y), new Vector2(inner, LedgerRowH));
-                v.Frame = UiFactory.Image("Frame", v.Root, Border, mid, mid, Vector2.zero, new Vector2(inner, LedgerRowH), PixelIcons.White);
-                UiFactory.Image("Back", v.Root, CardColor, mid, mid, Vector2.zero, new Vector2(inner - 6f, LedgerRowH - 6f), PixelIcons.White);
+                UiFactory.Image("Back", v.Root, band, mid, mid, Vector2.zero, new Vector2(inner, LedgerRowH), PixelIcons.White);
+                v.Frame = UiKit.Frame("Frame", v.Root, FrameKind.Focus, mid, mid, Vector2.zero, new Vector2(inner, LedgerRowH), th.gold);
+                v.Frame.enabled = false;
                 float x = -half + 16f;
-                v.Date = Text(v.Root, "", 26, Color.white, new Vector2(x + 55f, 14f), new Vector2(110f, 32f), TextAlignmentOptions.Left, FontStyles.Bold);
-                v.Year = Text(v.Root, "", 18, Dim, new Vector2(x + 55f, -18f), new Vector2(110f, 26f), TextAlignmentOptions.Left, FontStyles.Normal);
-                x += 124f;
-                v.Who = Text(v.Root, "", 24, Color.white, new Vector2(x + 150f, 14f), new Vector2(300f, 32f), TextAlignmentOptions.Left, FontStyles.Bold);
-                AutoSize(v.Who, 16f, 24f);
-                v.Where = Text(v.Root, "", 19, Soft, new Vector2(x + 150f, -18f), new Vector2(300f, 26f), TextAlignmentOptions.Left, FontStyles.Normal);
-                AutoSize(v.Where, 14f, 19f);
-                x += 312f;
-                v.Outcome = Text(v.Root, "", 24, Gold, new Vector2(x + 105f, 14f), new Vector2(210f, 32f), TextAlignmentOptions.Left, FontStyles.Bold);
-                v.Detail = Text(v.Root, "", 19, Soft, new Vector2(x + 105f, -18f), new Vector2(210f, 26f), TextAlignmentOptions.Left, FontStyles.Normal);
-                AutoSize(v.Detail, 14f, 19f);
-                v.Renown = Text(v.Root, "", 30, Gold, new Vector2(half - 16f - 60f, 0f), new Vector2(120f, 40f), TextAlignmentOptions.Right, FontStyles.Bold);
+                v.Date = Text(v.Root, "", TextRole.Number, 26, th.waxInk, new Vector2(x + 50f, 14f), new Vector2(100f, 32f), TextAlignmentOptions.Left, TextLook.Outline);
+                v.Year = Text(v.Root, "", TextRole.Body, 18, th.dust, new Vector2(x + 50f, -18f), new Vector2(100f, 26f), TextAlignmentOptions.Left);
+                x += 112f;
+                v.Who = Text(v.Root, "", TextRole.Title, 22, th.waxInk, new Vector2(x + 145f, 14f), new Vector2(290f, 32f), TextAlignmentOptions.Left);
+                AutoSize(v.Who, 18f, 22f);
+                v.Where = Text(v.Root, "", TextRole.Body, 20, th.dust, new Vector2(x + 145f, -18f), new Vector2(290f, 28f), TextAlignmentOptions.Left);
+                AutoSize(v.Where, 18f, 20f);
+                x += 298f;
+                v.Outcome = Text(v.Root, "", TextRole.Title, 22, th.gold, new Vector2(x + 110f, 14f), new Vector2(220f, 32f), TextAlignmentOptions.Center);
+                v.Detail = Text(v.Root, "", TextRole.Number, 20, th.waxInk, new Vector2(x + 110f, -18f), new Vector2(220f, 28f), TextAlignmentOptions.Center, TextLook.Outline);
+                AutoSize(v.Detail, 18f, 20f);
+                v.Renown = Text(v.Root, "", TextRole.Number, 30, th.goldBright, new Vector2(half - 14f - 54f, 0f), new Vector2(108f, 40f), TextAlignmentOptions.Right, TextLook.Outline);
                 AutoSize(v.Renown, 18f, 30f);
                 v.Root.gameObject.SetActive(false);
                 _ledger[i] = v;
             }
-            _ledgerEmpty = Text(p, "No dailies yet. Your first scored attempt writes the first line.", 24, Dim, new Vector2(0f, top - LedgerRowH * 0.5f), new Vector2(inner - 40f, 70f), TextAlignmentOptions.Center, FontStyles.Italic);
+            _ledgerEmpty = Text(p, "No dailies yet. Your first scored attempt writes the first line.", TextRole.Body, 24, th.dust, new Vector2(0f, LedgerTop - LedgerRowH * 0.5f), new Vector2(inner - 40f, 70f), TextAlignmentOptions.Center);
             _ledgerEmpty.textWrappingMode = TextWrappingModes.Normal;
         }
 
@@ -375,6 +383,7 @@ namespace Gladiator.UI
             else _edictsLabel.text = EdictCount > 0 ? "THE DAY'S EDICTS  <color=#FFFFFF73>click or E / Y to read them</color>" : "THE DAY'S EDICTS";
             _noEdicts.gameObject.SetActive(EdictCount == 0);
             _edictsBlock.GetComponent<Button>().interactable = EdictCount > 0;
+            var th = UiTheme.Current;
 
             // the Renown: the daily's ×1.5 only pays on the scored attempt (struck through on practice)
             float daily = 1f + Mathf.Max(0f, meta != null ? meta.dailyRenownBonus : 0.5f);
@@ -387,20 +396,23 @@ namespace Gladiator.UI
             // the attempt
             if (!valid)
             {
+                UiKit.Style(_status, TextRole.Title, TextLook.Flat);
                 _status.text = "THE EDITOR HAS NOTHING TO PROCLAIM";
-                _status.color = Grey;
+                _status.color = th.dust;
                 _statusSub.text = "No arena or gladiator to send out today.";
             }
             else if (Scored)
             {
+                UiKit.Style(_status, TextRole.Title, TextLook.Flat);
                 _status.text = "SCORED ATTEMPT";
-                _status.color = Gold;
+                _status.color = th.gold;
                 _statusSub.text = "Your first fight today counts: " + dailyMul + " Renown and a line in the ledger.";
             }
             else
             {
+                UiKit.Style(_status, TextRole.Body, TextLook.Flat);
                 _status.text = TodaysRecord(save, _date, out var rec) ? "PRACTICE · " + ResultLine(rec) : "PRACTICE · today's scored attempt was left unfinished";
-                _status.color = Grey;
+                _status.color = th.dust;
                 _statusSub.text = "Practice pays as a normal run: no daily bonus, no ledger line.";
             }
 
@@ -440,6 +452,7 @@ namespace Gladiator.UI
 
         void DrawLedger(SaveData save)
         {
+            var th = UiTheme.Current;
             var list = save.dailies;
             int n = list != null ? Mathf.Min(LedgerShown, list.Count) : 0;
             LedgerRows = n;
@@ -455,10 +468,18 @@ namespace Gladiator.UI
                 v.Who.text = GladiatorName(r.gladiator);
                 v.Where.text = RunName(r.run);
                 v.Outcome.text = OutcomeWord(r.outcome);
-                v.Outcome.color = r.outcome == (int)RunOutcome.Died ? Hurt : r.outcome == (int)RunOutcome.Survived ? Gold : Grey;
+                // a death is Roman red's soft tone on the wax, not the orange-red of what hurts you (spec §1.2)
+                v.Outcome.color = r.outcome == (int)RunOutcome.Died ? th.loss : r.outcome == (int)RunOutcome.Survived ? th.gold : th.dust;
                 v.Detail.text = Clock(r.elapsed) + " · " + r.kills.ToString("N0", CultureInfo.InvariantCulture) + " kills";
                 v.Renown.text = "+" + r.renown.ToString(CultureInfo.InvariantCulture);
-                v.Frame.color = r.date == _date ? Gold : Border;
+                v.Frame.enabled = r.date == _date;
+                // laurel means victory (spec §1.3): a won day's outcome between two small branches
+                if (v.Laurels != null) { UnityEngine.Object.Destroy(v.Laurels.gameObject); v.Laurels = null; }
+                if (r.outcome == (int)RunOutcome.Survived)
+                {
+                    v.Outcome.ForceMeshUpdate(true, true);
+                    v.Laurels = UiKit.Laurels("Laurels", v.Outcome, 6f);
+                }
             }
             _ledgerEmpty.gameObject.SetActive(n == 0);
             _ledgerCounts.text = "PLAYED " + save.dailiesPlayed + "  ·  WON " + save.dailiesWon;
@@ -529,12 +550,12 @@ namespace Gladiator.UI
             t.fontSizeMax = max;
         }
 
-        TextMeshProUGUI Text(Transform parent, string text, float size, Color color, Vector2 pos, Vector2 box, TextAlignmentOptions align, FontStyles style)
+        static TextMeshProUGUI Text(Transform parent, string text, TextRole role, float size, Color color, Vector2 pos, Vector2 box, TextAlignmentOptions align,
+            TextLook look = TextLook.Flat)
         {
             var mid = new Vector2(0.5f, 0.5f);
-            var t = UiFactory.Text("Line", parent, text, size, color, align, mid, mid, pos, box, _font, _fontMat);
-            t.fontStyle = style;
-            t.overflowMode = TextOverflowModes.Truncate; // the font has no U+2026: Ellipsis warns (docs/tracks/README.md)
+            var t = UiKit.Text("Line", parent, text, role, size, color, align, mid, mid, pos, box, look);
+            t.overflowMode = TextOverflowModes.Truncate; // never Ellipsis (docs/tracks/README.md)
             return t;
         }
     }

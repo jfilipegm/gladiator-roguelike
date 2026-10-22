@@ -21,6 +21,7 @@ namespace Gladiator.Gameplay
         SynergiesFound,   // amount = different synergies ever switched on
         WinWithWeapon,    // id = WeaponDef.id held at the end of a won run ("a|b" = any of them: the base and its evolution), amount = wins (Phase 5.14)
         KillEnemies,      // id = EnemyDef.id ("a|b" = any of them), amount = lifetime kills of that type (the Bestiary; Phase 5.15)
+        WinWithEdicts,    // amount = edicts on in one won run (any arena; id unused) (R7)
     }
 
     /// <summary>Where an unlock lives in the Codex and how it's earned (Phase 5.6, docs/UNLOCKS.md).</summary>

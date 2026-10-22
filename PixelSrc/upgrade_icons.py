@@ -1239,6 +1239,187 @@ ICONS["weapon_labyrinth_chain"] = grid([  # Labyrinth Chain (R3): bronze links d
 ])
 
 
+
+# R7 Edicts (rows "ed_<id>"): each glyph sits inside an orange-red frame, the colour language for "it hurts you".
+def edict(rows):
+    """A 12 px glyph framed for an edict: a red ring (its corners cut round), a dark gap (the outline), the glyph."""
+    assert len(rows) == ART - 4, f"{len(rows)} rows"
+    g = blank()
+    for i in range(1, ART - 1):
+        g[0][i] = g[ART - 1][i] = g[i][0] = g[i][ART - 1] = "e"
+    for y, r in enumerate(rows):
+        assert len(r) == ART - 4, f"row {r!r} is {len(r)} wide"
+        for x, ch in enumerate(r):
+            if ch != ".":
+                g[y + 2][x + 2] = ch
+    return g
+
+
+ICONS["ed_iron_hides"] = edict([  # Iron Hides (review iterations 2-3: a beetle, then too thin): a blade snapping on iron, a spark
+    "...........w",
+    "..........wl",
+    ".........wls",
+    "......y.wl..",
+    ".......h....",
+    ".....wl.y...",
+    "....wls.....",
+    "y..wls......",
+    ".ywls.......",
+    "..Y.........",
+    ".b.y........",
+    "y...y.......",
+])
+
+ICONS["ed_hungry_horde"] = edict([  # The Hungry Horde: three skulls, the front one gaping
+    ".lll....lll.",
+    "lllll..lllll",
+    "lklkl..lklkl",
+    ".lll....lll.",
+    "....wwww....",
+    "...wwwwww...",
+    "..wwwwwwwl..",
+    "..wkkwwkkl..",
+    "..wkkwwkkl..",
+    "..wwwkkwwl..",
+    "...wlwlwl...",
+    "....llll....",
+])
+
+ICONS["ed_blood_sport"] = edict([  # Blood Sport: a heart shot through by an arrow
+    "..........sw",
+    ".........bss",
+    "..eee..ebe..",
+    ".ewweeebeee.",
+    ".eweeebeeeE.",
+    "..eeebeeeE..",
+    "...ebeeeE...",
+    "...beeeE....",
+    "..b..eE.....",
+    ".b..........",
+    "wb..........",
+    "ww..........",
+])
+
+ICONS["ed_glass_jaw"] = edict([  # Glass Jaw: a glass heart, cracked through
+    "............",
+    "............",
+    "..ccc..ccc..",
+    ".cwwcckcccC.",
+    ".cwcccckccC.",
+    "..cccckccC..",
+    "...ccckcC...",
+    "....cckC....",
+    ".....kC.....",
+    "............",
+    "............",
+    "............",
+])
+
+ICONS["ed_swift_foes"] = edict([  # Swift Foes: a skull rushing in, speed lines behind it
+    "............",
+    "............",
+    "......wwww..",
+    ".....wwwwww.",
+    "lll.wwwwwwwl",
+    "....wkkwwkkl",
+    ".ll.wkkwwkkl",
+    "....wwwkkwwl",
+    "lll..wlwlwl.",
+    "......llll..",
+    "............",
+    "............",
+])
+
+ICONS["ed_empty_purses"] = edict([  # Empty Purses (review iteration 2: read as a bulb): a gold coin split in half
+    "............",
+    "...hY.......",
+    ".hhyY..YY...",
+    "hyyyY..Yyyy.",
+    "hyyyY..Yyyyy",
+    "yyyyY..Yyyyy",
+    "yyyyY..YyyyY",
+    "yyyyY..YyyyY",
+    "YyyyY..YyyyY",
+    ".YyyY..YyyyY",
+    "...YY..YyyY.",
+    ".......YY...",
+])
+
+ICONS["ed_fickle_crowd"] = edict([  # A Fickle Crowd (review iteration 2: read as an ice cream): the thumb turned down
+    "............",
+    "wlffffffff..",
+    "wlfFFFFFf...",
+    "wlfffffffff.",
+    "wlfFFFFFFf..",
+    "wlfffffffff.",
+    "wlfFFFFFFFf.",
+    "wlfffffffff.",
+    "...fFFf.....",
+    "....fFf.....",
+    "....fFf.....",
+    "....ff......",
+])
+
+ICONS["ed_meagre_choices"] = edict([  # Meagre Choices: two cards where there were three
+    "............",
+    ".yyyyy.yyyyy",
+    ".ywwwy.ywwwy",
+    ".ywcwy.ywcwy",
+    ".ycccy.ycccy",
+    ".ywcwy.ywcwy",
+    ".ywwwy.ywwwy",
+    ".ywwwy.ywwwy",
+    ".yyyyy.yyyyy",
+    "............",
+    "............",
+    "............",
+])
+
+ICONS["ed_impatient_emperor"] = edict([  # The Impatient Emperor: an hourglass inside the emperor's laurel
+    "............",
+    "..Y......Y..",
+    ".yY.bbbb.Yy.",
+    ".Y..lnnl..Y.",
+    "yY...nl...Yy",
+    "y....nl....y",
+    "yY..lnnl..Yy",
+    ".Y..nnnn..Y.",
+    ".yY.bbbb.Yy.",
+    "..Y......Y..",
+    "...yY..Yy...",
+    "............",
+])
+
+ICONS["ed_champions_day"] = edict([  # Champions' Day: a horned champion's helm, eyes glowing
+    "w..........w",
+    "n....yy....n",
+    "nn..yyyy..nn",
+    ".nn.ssss.nn.",
+    "..nlsssssn..",
+    "..lsssssss..",
+    "..soossoos..",
+    "..lsssssss..",
+    "..lssddsss..",
+    "..ls.dd.ss..",
+    "..ls....ss..",
+    "............",
+])
+
+ICONS["ed_no_mercy"] = edict([  # No Mercy (review iteration 2: read as a clover): the healer's cross, struck out
+    "............",
+    "....gggG..e.",
+    "....gggG.ee.",
+    "....gggGee..",
+    ".ggggggeegG.",
+    ".gggggeeggG.",
+    ".ggggeegggG.",
+    ".GGGeegGGGG.",
+    "...eeggG....",
+    "..eegggG....",
+    ".ee.GGGG....",
+    "............",
+])
+
 # ---------- frames ----------
 def to_rgba(g):
     """Fill + 4-neighbour outline, as an RGBA pixel grid (None = transparent)."""

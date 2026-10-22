@@ -20,7 +20,8 @@ namespace Gladiator.Gameplay
     [Serializable]
     public sealed class SaveData
     {
-        public const int CurrentVersion = 1;
+        /// <summary>1: everything up to v0.20.0. 2: R7's edicts (edictsChosen, edictWins, bestEdictWin).</summary>
+        public const int CurrentVersion = 2;
 
         public int version = CurrentVersion;
         public int renown;
@@ -56,6 +57,13 @@ namespace Gladiator.Gameplay
         public List<IdCount> upgradesTaken = new List<IdCount>();
         /// <summary>Codex entries already shown unlocked/discovered (anything else that's open is NEW).</summary>
         public List<string> codexSeen = new List<string>();
+        // R7 Edicts (save v2; filled by Migrate in older files).
+        /// <summary>RunModifierDef ids the player last chose on the arena screen (remembered between runs).</summary>
+        public List<string> edictsChosen = new List<string>();
+        /// <summary>RunModifierDef id → won runs with that edict on.</summary>
+        public List<IdCount> edictWins = new List<IdCount>();
+        /// <summary>The most edicts on in one won run (the WinWithEdicts condition, the Codex's Records).</summary>
+        public int bestEdictWin;
 
         public static long Count(List<IdCount> list, string id)
         {
@@ -123,8 +131,12 @@ namespace Gladiator.Gameplay
             enemyKills ??= new List<IdCount>();
             upgradesTaken ??= new List<IdCount>();
             codexSeen ??= new List<string>();
+            // v1 → v2 (R7): the edict lists; nothing to convert.
+            edictsChosen ??= new List<string>();
+            edictWins ??= new List<IdCount>();
+            if (bestEdictWin < 0) bestEdictWin = 0;
             if (renown < 0) renown = 0;
-            // v0 (no version field) → v1: nothing to convert yet.
+            // v0 (no version field) → v1: nothing to convert. Each step is an idempotent fill, so any older file runs them all.
             if (version < CurrentVersion) version = CurrentVersion;
         }
     }

@@ -131,7 +131,7 @@ namespace Gladiator.UI
             t.enableAutoSizing = false;
             t.fontSize = size;
             if (string.IsNullOrEmpty(t.text)) return 0f;
-            return Mathf.Ceil(t.GetPreferredValues(t.text, width, 0f).y) + 2f;
+            return Mathf.Ceil(t.GetPreferredValues(t.text, width, 0f).y);
         }
 
         public static string Count(long n, string one, string many) => n + " " + (n == 1 ? one : many);
@@ -150,7 +150,9 @@ namespace Gladiator.UI
     public sealed class GladiatorTablet
     {
         const int MaxTraits = 3;
-        const float Portrait = 192f, M = 14f, Indent = 58f, Gap = 8f, TradeoffY = 214f, RuleY = 274f, FlowTop = 284f;
+        const float Portrait = 192f, M = 14f, Indent = 58f, Gap = 6f, TradeoffY = 212f, RuleY = 268f, FlowTop = 276f;
+        /// <summary>The flowing rows may run to 6 units above the wax's bottom edge (the wooden rim is outside it).</summary>
+        const float BottomMargin = 6f;
 
         CodexConfig _codex;
         RawImage _portrait, _weaponIcon;
@@ -187,7 +189,7 @@ namespace Gladiator.UI
             _select = LanistaTablet.Text(wax, "Select", x, 98f, cw, 28f, TextRole.Body, 22f, LanistaTablet.Hint, tl, LanistaTablet.Floor);
             _runs = LanistaTablet.Text(wax, "Runs", x, 128f, cw, 28f, TextRole.Body, 22f, ink, tl, LanistaTablet.Floor);
             _stats = LanistaTablet.Text(wax, "Stats", x, 158f, cw, 28f, TextRole.Body, 22f, ink, tl, LanistaTablet.Floor);
-            _tradeoff = LanistaTablet.Text(wax, "Tradeoff", M, TradeoffY, inner, 54f, TextRole.Body, 20f, LanistaTablet.Label, tl, LanistaTablet.Floor);
+            _tradeoff = LanistaTablet.Text(wax, "Tradeoff", M, TradeoffY, inner, 52f, TextRole.Body, 20f, LanistaTablet.Label, tl, LanistaTablet.Floor);
 
             LanistaTablet.Rule(wax, RuleY);
             _desc = LanistaTablet.Text(wax, "Description", M, FlowTop, inner, 100f, TextRole.Body, 22f, ink, tl, LanistaTablet.Floor);
@@ -288,7 +290,7 @@ namespace Gladiator.UI
 
         bool Lay(int traits, float size, bool clamp)
         {
-            float w = LanistaTablet.WaxSize.x, inner = w - 2f * M, bottom = LanistaTablet.WaxSize.y - M;
+            float w = LanistaTablet.WaxSize.x, inner = w - 2f * M, bottom = LanistaTablet.WaxSize.y - BottomMargin;
             float y = FlowTop;
             float h = LanistaTablet.Height(_desc, size, inner);
             if (clamp) h = Mathf.Min(h, Mathf.Max(0f, bottom - y));

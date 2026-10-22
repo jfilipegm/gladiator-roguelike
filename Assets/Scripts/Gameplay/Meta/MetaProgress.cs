@@ -45,7 +45,7 @@ namespace Gladiator.Gameplay
     /// <summary>What a run earned: shown on the end screen.</summary>
     public sealed class RunRewards
     {
-        /// <summary>Renown the run paid (BaseRenown × (1 + EdictBonus), rounded once).</summary>
+        /// <summary>Renown the run paid (the rounded BaseRenown × (1 + EdictBonus), rounded).</summary>
         public int Renown;
         /// <summary>The run's Renown before its edicts (equals Renown when none were on).</summary>
         public int BaseRenown;

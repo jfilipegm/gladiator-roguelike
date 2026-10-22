@@ -33,9 +33,9 @@ namespace Gladiator.Gameplay
         public int BaseRenownFor(in RunSummary run) => Mathf.Max(0, Mathf.RoundToInt(BaseRenown(run)));
 
         /// <summary>What the run pays: the base × (1 + the edicts' bonus), win or lose (bounties are never multiplied).
-        /// Rounded once, from the unrounded base.</summary>
+        /// The rounded base the end screen shows is what's multiplied, so its line adds up ("+4 ×1.45 = +6", not +5).</summary>
         public int RenownFor(in RunSummary run) =>
-            Mathf.Max(0, Mathf.RoundToInt(BaseRenown(run) * (1f + Mathf.Max(0f, run.EdictBonus))));
+            Mathf.Max(0, Mathf.RoundToInt(BaseRenownFor(run) * (1f + Mathf.Max(0f, run.EdictBonus))));
 
         float BaseRenown(in RunSummary run)
         {

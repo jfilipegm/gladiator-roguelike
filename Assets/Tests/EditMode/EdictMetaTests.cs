@@ -103,8 +103,10 @@ namespace Gladiator.Tests
             Assert.AreEqual(Mathf.RoundToInt(26 * 1.45f), _meta.RenownFor(Run(RunOutcome.Died, 240f, 500, null, 0, 0.45f)), "a death pays the bonus too");
             Assert.AreEqual(Mathf.RoundToInt(26 * 1.5f * 3.35f), _meta.RenownFor(Run(RunOutcome.Died, 240f, 500, null, 1, 2.35f)), "all eleven: ×3.35");
             Assert.AreEqual(26, _meta.RenownFor(Run(RunOutcome.Died, 240f, 500, null, 0, -0.5f)), "a negative bonus never takes Renown away");
-            // rounded once, from the unrounded base: 100 s and 37 kills = 7.41 → ×1.65 = 12.2
-            Assert.AreEqual(Mathf.RoundToInt((100f / 60f * 4f + 0.37f * 2f) * 1.65f), _meta.RenownFor(Run(RunOutcome.Died, 100f, 37, null, 0, 0.65f)));
+            // the rounded base the end screen shows is what's multiplied: 100 s and 37 kills = 7.41 → 7 → ×1.65 = 11.55 → 12;
+            // 3.6 → 4 → ×1.45 = 5.8 → 6 (from the unrounded base it would be 5.22 → 5, and "+4 ×1.45 = +5" reads wrong)
+            Assert.AreEqual(Mathf.RoundToInt(7 * 1.65f), _meta.RenownFor(Run(RunOutcome.Died, 100f, 37, null, 0, 0.65f)));
+            Assert.AreEqual(_meta.BaseRenownFor(Run(RunOutcome.Died, 100f, 37, null, 0, 0.65f)), 7);
         }
 
         [Test]

@@ -8,48 +8,63 @@ using UnityEngine.UI;
 namespace Gladiator.UI
 {
     /// <summary>
-    /// Level-up cards (M2.4): rarity-coloured cards with the real numbers, level pips, NEW/LV tag; Reroll, Banish and
+    /// Level-up cards (M2.4): rarity-framed cards with the real numbers, level pips, NEW/LV tag; Reroll, Banish and
     /// Skip. Mouse (hover + click), keyboard (1-4, arrows/A-D + Enter, R/B/X, Esc cancels banish) or gamepad (d-pad /
     /// stick, South pick, West reroll, North banish, East cancel, Select skip). Input is ignored for a short grace
     /// after opening so a held jump/click can't pick blind.
     /// GC: built once; shown/hidden with a CanvasGroup (alpha + raycasts). Not SetActive, and not Canvas.enabled: a
     /// disabled canvas drops its GraphicRegistry set and re-creates it on enable (~8 KB per open, measured). No
     /// Selectable colour tweens; texts are pre-sized and written from char buffers or non-allocating SetText.
-    /// P1: the stats column (StatsPanel, created here) sits on the right and previews the selected card, so the cards,
-    /// title and buttons move left (and shrink if the screen is narrow) to make room. Vows get a split red/gold frame.
+    /// U1 layout A (docs/tracks/U1-design.md §6, §8.3): 300×520 cards centred with the title and the buttons, the stats
+    /// column (StatsPanel, created here) in the right margin; LevelUpLayout says where on every screen shape. Each card
+    /// wears its rarity's frame (stone, bronze, silver + meander, gold + a laurel wreath behind the icon) round a dark
+    /// inside: the rarity band, the icon on a halo, tag, name, pips, description, key. A Vow's band is split crimson |
+    /// gold. Buttons are bronze tabulae ansatae with key chips (UiKit.Plate + UiHit: no Button in a run).
     /// </summary>
     public sealed class LevelUpPanel : MonoBehaviour, ITickable, IUiHitTarget
     {
+        [Tooltip("Unused since U1 (UiTheme decides the fonts); kept so the scene builders' links stay valid.")]
         public TMP_FontAsset font;
         public Material fontMaterial;
 
         const int MaxCards = 4, MaxPips = 8;
-        const float PipY = -14f;
         const int IdReroll = 10, IdBanish = 11, IdSkip = 12;
-        const float CardW = 340f, CardH = 536f, Spacing = 380f;
+        /// <summary>The buttons' ids for Hover / Click (UiHit; tests click them the way the mouse does).</summary>
+        public const int RerollId = IdReroll, BanishId = IdBanish, SkipId = IdSkip;
+        const float CardW = LevelUpLayout.CardW, CardH = LevelUpLayout.CardH;
+        // the card (spec §6.2), y from its centre: 9 frame · 40 band · 112 icon · 26 tag · 68 name · 30 pips ·
+        // 174 description · 30 key · 24 foot (the frame's)
+        const float Inset = 9f, BandY = 231f, BandH = 40f, IconY = 151f, IconSize = 100f, IconHaloW = 140f, IconHaloH = 112f,
+            WreathY = 143f, TagY = 82f, TagH = 26f, NameY = 35f, NameH = 68f, PipY = -14f, PipSize = 14f, PipPitch = 20f,
+            DescY = -117f, DescH = 174f, KeyY = -221f, KeyH = 30f;
+        const float SelectedScale = 1.04f, RingOut = 6f, HaloOut = 22f;
+        // layout A at 1920×1080, in the content's units from the canvas centre: the title's glyphs from y 46, the
+        // subtitle at 188, the cards' tops at 262, the buttons at 812 (from the top)
+        const float TitleY = 425f, TitleH = 150f, TitleMaxW = 1400f, SubY = 326f, SubH = 50f, CardsY = 18f,
+            ButtonsY = -305f, ButtonPitch = 306f;
+        static readonly Vector2 ButtonSize = new Vector2(280f, 66f);
 
         sealed class CardView
         {
             public RectTransform Root;
-            public Image Glow, Border, VowHalf, Inner, Band;
+            public Image Halo, Inside, Frame, Focus, Band, VowHalf, IconHalo, Wreath;
             public TextMeshProUGUI Rarity, Kind, Title, Desc, Key;
             public Image[] Pips;
             public UpgradeIconView Icon;
+            public FrameKind FrameKind = FrameKind.CardStone;
+            public Color RarityColor = Color.white;
+            public bool VowBand;
             public readonly CharBuffer Text = new CharBuffer(384); // description + Phase 5.5 hints with colour tags
         }
 
-        static readonly Color Dim = new Color(0.02f, 0.03f, 0.06f, 0.62f);
-        static readonly Color InnerColor = new Color(0.12f, 0.14f, 0.18f, 0.98f);
-        static readonly Color BanishRed = new Color(1f, 0.3f, 0.24f);
-        static readonly Color AltarRed = new Color(0.9f, 0.16f, 0.36f);
+        static readonly Color BandInk = new Color32(0x17, 0x12, 0x0F, 0xFF);
+        static readonly Color AltarRed = new Color(0.9f, 0.16f, 0.36f); // the altar's blood (today's)
         static readonly Color PipEmpty = new Color(0.26f, 0.29f, 0.34f);
         static readonly Color PipOwned = new Color(0.9f, 0.92f, 0.95f);
         static readonly Color NewGold = new Color(1f, 0.86f, 0.3f);
-        static readonly Color ActionColor = new Color(0.16f, 0.2f, 0.25f, 0.98f);
-        static readonly Color ActionHover = new Color(0.27f, 0.33f, 0.4f, 1f);
-        // P1 Vows: the frame's left half is the oath's blood red, the right half its gold
-        static readonly Color VowRed = new Color(0.86f, 0.16f, 0.14f);
         static readonly Color VowGold = new Color(1f, 0.76f, 0.22f);
+        static readonly Color BanishTint = new Color(0.6f, 0.6f, 0.6f, 1f); // banish mode: every frame at 60 %
+        const float SelectedGlow = 0.45f, IconGlow = 0.55f;
 
         Canvas _canvas;
         CanvasGroup _group;
@@ -57,8 +72,9 @@ namespace Gladiator.UI
         StatsPanel _statsPanel;
         TextMeshProUGUI _title, _sub;
         readonly CardView[] _cards = new CardView[MaxCards];
-        Image _reroll, _banish, _skip;
-        TextMeshProUGUI _rerollText, _banishText;
+        UiPlate _reroll, _banish, _skip;
+        Color _goldBright, _gold, _crimson, _crimsonLight, _ink;
+        LevelUpLayout.Fit _fit = new LevelUpLayout.Fit { ContentScale = 1f, StatsScale = 1f, Centred = true };
         bool _shown, _banishMode;
         int _selected, _hoverAction = -1, _drawnVersion = -1, _shownCount;
         int _drawnRerolls = -1, _drawnBanishes = -1;
@@ -74,37 +90,75 @@ namespace Gladiator.UI
         public string CardDescription(int i) => _cards[i].Text.ToString();
         public UpgradeIconView CardIcon(int i) => _cards[i].Icon;
         public RectTransform CardRect(int i) => _cards[i].Root;
-        /// <summary>Tests: card `i` wears the Vow frame.</summary>
+        /// <summary>Tests: card `i` wears the Vow's split band (crimson | gold).</summary>
         public bool CardIsVowFramed(int i) => _cards[i].VowHalf.color.a > 0f;
-        /// <summary>The cards, title and buttons (moved left for the stats column).</summary>
+        /// <summary>Tests: the FrameKind card `i`'s frame shows (UiFrames.KindOf), and whether the laurel wreath is behind its icon.</summary>
+        public int CardFrame(int i) => UiFrames.KindOf(_cards[i].Frame);
+        public bool CardHasWreath(int i) => i < _shownCount && _cards[i].Wreath.color.a > 0f;
+        /// <summary>Tests: card `i`'s name, description and key labels (role checks).</summary>
+        public Component CardNameLabel(int i) => _cards[i].Title;
+        public Component CardDescriptionLabel(int i) => _cards[i].Desc;
+        public Component CardKeyLabel(int i) => _cards[i].Key;
+        /// <summary>The cards, title and buttons (centred, or slid left for the stats column: LevelUpLayout).</summary>
         public RectTransform Content => _content;
         public StatsPanel Stats => _statsPanel;
+        /// <summary>The layout of the last redraw, and the stats column's scale in it.</summary>
+        public LevelUpLayout.Fit Fit => _fit;
+        public float StatsScale => _fit.StatsScale;
+        /// <summary>Tests: the title's and subtitle's words, the title label, the panel's canvas.</summary>
+        public string TitleText => _title.text;
+        public string SubtitleText => _sub.text;
+        public Component TitleLabel => _title;
+        public RectTransform CanvasRect => (RectTransform)_canvas.transform;
+        /// <summary>Tests: button `i` (0 Reroll, 1 Banish, 2 Skip).</summary>
+        public UiPlate ActionPlate(int i) => i == 0 ? _reroll : i == 1 ? _banish : _skip;
+        public RectTransform ActionRect(int i) => ActionPlate(i).Root;
+        /// <summary>Tests: redraw the offers next tick (after a test edits LevelUpController.Offers, e.g. their rarity).</summary>
+        public void ForceRedraw() => _drawnVersion = -1;
 
         void Awake()
         {
+            var th = UiTheme.Current;
+            _goldBright = th.goldBright;
+            _gold = th.gold;
+            _crimson = th.crimson;
+            _crimsonLight = th.crimsonLight;
+            _ink = th.ink;
             _canvas = UiFactory.Canvas("LevelUpCanvas", transform, UiSortOrder.LevelUp);
             var root = _canvas.transform;
-            var dim = UiFactory.Image("Dim", root, Dim, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, PixelIcons.White);
+            var mid = new Vector2(0.5f, 0.5f);
+            var dimColor = th.night;
+            dimColor.a = 0.64f;
+            var dim = UiFactory.Image("Dim", root, dimColor, mid, mid, Vector2.zero, Vector2.zero, PixelIcons.White);
             UiFactory.Stretch(dim.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             dim.raycastTarget = true; // eat clicks meant for the world
-            var mid = new Vector2(0.5f, 0.5f);
             _content = UiFactory.Rect("Content", root, mid, mid, Vector2.zero, Vector2.zero);
             root = _content;
-            _title = UiFactory.Text("Title", root, "LEVEL UP!", 92, NewGold, TextAlignmentOptions.Center, mid, mid, new Vector2(0, 385), new Vector2(1200, 120), font, fontMaterial);
-            _sub = UiFactory.Text("Sub", root, "choose one", 34, new Color(1f, 1f, 1f, 0.8f), TextAlignmentOptions.Center, mid, mid, new Vector2(0, 318), new Vector2(1400, 50), font, fontMaterial);
-            _sub.fontStyle = FontStyles.Normal;
+            _title = UiKit.Text("Title", root, "LEVEL UP!", TextRole.Shout, 132f, _goldBright, TextAlignmentOptions.Center, mid, mid,
+                new Vector2(0f, TitleY), new Vector2(TitleMaxW, TitleH), TextLook.Outline);
+            AutoSize(_title, 72f, 132f); // SPOILS OF VICTORY at 4:3
+            _sub = UiKit.Text("Sub", root, "choose one", TextRole.Body, 34f, _ink, TextAlignmentOptions.Center, mid, mid,
+                new Vector2(0f, SubY), new Vector2(TitleMaxW, SubH), TextLook.Outline);
+            AutoSize(_sub, 22f, 34f);
 
             for (int i = 0; i < MaxCards; i++) _cards[i] = BuildCard(root, i);
 
-            _reroll = BuildAction(root, IdReroll, new Vector2(-340, -340), out _rerollText);
-            _banish = BuildAction(root, IdBanish, new Vector2(0, -340), out _banishText);
-            _skip = BuildAction(root, IdSkip, new Vector2(340, -340), out var skipText);
-            skipText.text = "[X] Skip";
+            _reroll = BuildAction(root, IdReroll, "R", -ButtonPitch);
+            _banish = BuildAction(root, IdBanish, "B", 0f);
+            _skip = BuildAction(root, IdSkip, "X", ButtonPitch);
 
             Presize();
+            _skip.Label.SetText("Skip");
             _group = _canvas.gameObject.AddComponent<CanvasGroup>();
             SetVisible(false);
             EnsureStatsPanel();
+        }
+
+        static void AutoSize(TMP_Text t, float min, float max)
+        {
+            t.enableAutoSizing = true;
+            t.fontSizeMin = min;
+            t.fontSizeMax = max;
         }
 
         /// <summary>The stats page lives beside the cards: use the scene's, or make one (no scene rebuild needed).</summary>
@@ -124,17 +178,23 @@ namespace Gladiator.UI
             _statsPanel.cards = this;
         }
 
-        /// <summary>Centre the cards in the room the stats column leaves, shrinking them if a narrow screen needs it.</summary>
+        /// <summary>
+        /// Layout A on this canvas (LevelUpLayout): the content's scale and x, the title's room (it may not run off either
+        /// edge), and the stats column's scale. Only on a redraw (open, reroll, banish), never per frame.
+        /// </summary>
         void LayoutContent()
         {
-            float reserve = _statsPanel != null ? _statsPanel.PickReserve : 0f;
-            float width = ((RectTransform)_canvas.transform).rect.width;
-            if (width < 1f) width = 1920f;
-            float row = Mathf.Max(1000f, (_shownCount - 1) * Spacing + CardW * 1.06f); // the buttons span ~980
-            float room = width - reserve - 2f * StatsPanel.Margin;
-            float s = Mathf.Clamp(room / row, 0.6f, 1f);
+            var size = ((RectTransform)_canvas.transform).rect.size;
+            if (size.x < 1f || size.y < 1f) size = MenuLayout.Reference;
+            _fit = LevelUpLayout.For(size, _shownCount);
+            float s = _fit.ContentScale;
             _content.localScale = new Vector3(s, s, 1f);
-            _content.anchoredPosition = new Vector2(-reserve * 0.5f, 0f);
+            _content.anchoredPosition = new Vector2(_fit.ContentX, 0f);
+            float cx = size.x * 0.5f + _fit.ContentX;
+            float titleW = Mathf.Min(TitleMaxW, 2f * Mathf.Min(cx - LevelUpLayout.Edge, size.x - LevelUpLayout.Edge - cx) / s);
+            _title.rectTransform.sizeDelta = new Vector2(titleW, TitleH);
+            _sub.rectTransform.sizeDelta = new Vector2(titleW, SubH);
+            if (_statsPanel != null) _statsPanel.SetPickScale(_fit.StatsScale);
         }
 
         void SetVisible(bool on)
@@ -147,49 +207,63 @@ namespace Gladiator.UI
         CardView BuildCard(Transform parent, int index)
         {
             var mid = new Vector2(0.5f, 0.5f);
+            var th = UiTheme.Current;
+            float innerW = CardW - 2f * Inset;
             var v = new CardView();
             v.Root = UiFactory.Rect("Card" + index, parent, mid, mid, Vector2.zero, new Vector2(CardW, CardH));
-            v.Glow = UiFactory.Image("Glow", v.Root, Color.clear, mid, mid, Vector2.zero, new Vector2(CardW + 22, CardH + 22), PixelIcons.White);
-            v.Border = UiFactory.Image("Border", v.Root, Color.white, mid, mid, Vector2.zero, new Vector2(CardW, CardH), PixelIcons.White);
-            v.Border.raycastTarget = true;
-            var hit = v.Border.gameObject.AddComponent<UiHit>();
+            // back to front: the selected card's halo, the dark inside, the rarity frame, the focus ring
+            v.Halo = UiKit.Frame("Halo", v.Root, FrameKind.Halo, mid, mid, Vector2.zero, new Vector2(CardW + 2f * HaloOut, CardH + 2f * HaloOut), Color.clear);
+            v.Inside = UiFactory.Image("Inside", v.Root, th.cardInside, mid, mid, Vector2.zero, new Vector2(CardW - 6f, CardH - 6f), PixelIcons.White);
+            v.Inside.raycastTarget = true;
+            var hit = v.Inside.gameObject.AddComponent<UiHit>();
             hit.Target = this; hit.Id = index;
-            v.VowHalf = UiFactory.Image("VowHalf", v.Root, Color.clear, mid, mid, new Vector2(-CardW * 0.25f, 0f), new Vector2(CardW * 0.5f, CardH), PixelIcons.White);
-            v.Inner = UiFactory.Image("Inner", v.Root, InnerColor, mid, mid, Vector2.zero, new Vector2(CardW - 12, CardH - 12), PixelIcons.White);
-            v.Band = UiFactory.Image("Band", v.Root, Color.white, mid, mid, new Vector2(0, CardH * 0.5f - 30), new Vector2(CardW - 12, 48), PixelIcons.White);
-            v.Rarity = UiFactory.Text("Rarity", v.Root, "COMMON", 26, new Color(0.06f, 0.07f, 0.09f), TextAlignmentOptions.Center, mid, mid, new Vector2(0, CardH * 0.5f - 30), new Vector2(CardW - 20, 44), font, null);
-            v.Icon = new UpgradeIconView(v.Root, "Icon", mid, new Vector2(0, 150), 100f, lively: true); // playtest: an animated 8-bit icon
-            v.Kind = UiFactory.Text("Kind", v.Root, "NEW!", 26, NewGold, TextAlignmentOptions.Center, mid, mid, new Vector2(0, 82), new Vector2(CardW - 20, 40), font, fontMaterial);
-            v.Title = UiFactory.Text("Title", v.Root, "Title", 38, Color.white, TextAlignmentOptions.Center, mid, mid, new Vector2(0, 34), new Vector2(CardW - 30, 84), font, fontMaterial);
-            v.Title.textWrappingMode = TextWrappingModes.Normal;
+            v.Frame = UiKit.Frame("Frame", v.Root, FrameKind.CardStone, mid, mid, Vector2.zero, new Vector2(CardW, CardH), Color.white);
+            v.Focus = UiKit.Frame("Focus", v.Root, FrameKind.Focus, mid, mid, Vector2.zero, new Vector2(CardW + 2f * RingOut, CardH + 2f * RingOut), Color.clear);
+            v.Band = UiFactory.Image("Band", v.Root, Color.white, mid, mid, new Vector2(0f, BandY), new Vector2(innerW, BandH), PixelIcons.White);
+            v.VowHalf = UiFactory.Image("VowHalf", v.Root, Color.clear, mid, mid, new Vector2(-innerW * 0.25f, BandY), new Vector2(innerW * 0.5f, BandH), PixelIcons.White);
+            v.Rarity = UiKit.Text("Rarity", v.Root, "COMMON", TextRole.Title, 24f, BandInk, TextAlignmentOptions.Center, mid, mid,
+                new Vector2(0f, BandY), new Vector2(innerW - 8f, BandH));
+            v.Rarity.characterSpacing = 12f; // the band's letter-spacing (spec §2.2)
+            // the icon on a halo in its rarity colour; a Legendary's laurel wreath behind it (playtest: an animated 8-bit icon)
+            v.IconHalo = UiKit.Frame("IconHalo", v.Root, FrameKind.Halo, mid, mid, new Vector2(0f, IconY), new Vector2(IconHaloW, IconHaloH), Color.clear);
+            v.Wreath = UiKit.Frame("Wreath", v.Root, FrameKind.LaurelWreath, mid, mid, new Vector2(0f, WreathY), UiFrames.NativeSize(FrameKind.LaurelWreath), Color.clear);
+            v.Icon = new UpgradeIconView(v.Root, "Icon", mid, new Vector2(0f, IconY), IconSize, lively: true);
+            v.Kind = UiKit.Text("Kind", v.Root, "NEW!", TextRole.Title, 21f, NewGold, TextAlignmentOptions.Center, mid, mid,
+                new Vector2(0f, TagY), new Vector2(innerW - 8f, TagH));
+            v.Title = UiKit.Text("Title", v.Root, "Title", TextRole.Title, 32f, _ink, TextAlignmentOptions.Center, mid, mid,
+                new Vector2(0f, NameY), new Vector2(innerW - 12f, NameH));
+            v.Title.textWrappingMode = TextWrappingModes.Normal; // two lines, then smaller
+            AutoSize(v.Title, 26f, 32f);
             v.Pips = new Image[MaxPips];
             for (int p = 0; p < MaxPips; p++)
-                v.Pips[p] = UiFactory.Image("Pip" + p, v.Root, PipEmpty, mid, mid, new Vector2(0, PipY), new Vector2(18, 18), PixelIcons.White);
-            v.Desc = UiFactory.Text("Desc", v.Root, "Desc", 30, new Color(0.85f, 0.95f, 1f), TextAlignmentOptions.Top, mid, mid, new Vector2(0, -122), new Vector2(CardW - 36, 166), font, fontMaterial);
+                v.Pips[p] = UiFactory.Image("Pip" + p, v.Root, PipEmpty, mid, mid, new Vector2(0f, PipY), new Vector2(PipSize, PipSize), PixelIcons.White);
+            v.Desc = UiKit.Text("Desc", v.Root, "Desc", TextRole.Body, 24f, _ink, TextAlignmentOptions.Top, mid, mid,
+                new Vector2(0f, DescY), new Vector2(innerW - 12f, DescH));
             v.Desc.textWrappingMode = TextWrappingModes.Normal;
-            v.Desc.enableAutoSizing = true; // evolutions and tag hints run longer: shrink to fit, never below 21
-            v.Desc.fontSizeMin = 21f;
-            v.Desc.fontSizeMax = 30f;
-            v.Desc.fontStyle = FontStyles.Normal;
-            v.Key = UiFactory.Text("Key", v.Root, "[" + (index + 1) + "]", 28, new Color(1f, 1f, 1f, 0.55f), TextAlignmentOptions.Center, mid, mid, new Vector2(0, -CardH * 0.5f + 32), new Vector2(CardW - 20, 44), font, fontMaterial);
+            v.Desc.richText = true;
+            AutoSize(v.Desc, 18f, 24f); // evolutions and tag hints run longer: shrink to fit, never below the 18 floor
+            var keyColor = _ink;
+            keyColor.a = 0.5f;
+            v.Key = UiKit.Text("Key", v.Root, "[" + (index + 1) + "]", TextRole.Number, 26f, keyColor, TextAlignmentOptions.Center, mid, mid,
+                new Vector2(0f, KeyY), new Vector2(innerW, KeyH));
             return v;
         }
 
-        Image BuildAction(Transform parent, int id, Vector2 pos, out TextMeshProUGUI label)
+        /// <summary>A bronze tabula ansata with its key chip; a UiHit takes the pointer (no Button: no Selectable tweens in a run).</summary>
+        UiPlate BuildAction(Transform parent, int id, string key, float x)
         {
             var mid = new Vector2(0.5f, 0.5f);
-            var img = UiFactory.Image("Action" + id, parent, ActionColor, mid, mid, pos, new Vector2(300, 64), PixelIcons.White);
-            img.raycastTarget = true;
-            var hit = img.gameObject.AddComponent<UiHit>();
+            var plate = UiKit.Plate("Action" + id, parent, "", ButtonStyle.Primary, mid, mid, new Vector2(x, ButtonsY), ButtonSize, 30f, key);
+            plate.Frame.raycastTarget = true;
+            var hit = plate.Frame.gameObject.AddComponent<UiHit>();
             hit.Target = this; hit.Id = id;
-            label = UiFactory.Text("Label", img.transform, "", 28, Color.white, TextAlignmentOptions.Center, mid, mid, Vector2.zero, new Vector2(290, 60), font, fontMaterial);
-            label.fontStyle = FontStyles.Normal;
-            return img;
+            AutoSize(plate.Label, 20f, 30f); // "Banish (1)" never truncates, whatever room the key chip leaves
+            return plate;
         }
 
         /// <summary>
-        /// Grow every TMP buffer once with longer text than will ever show, so opening never allocates. The text holds
-        /// every character the cards use, so the dynamic font atlas has all its glyphs before the first level-up.
+        /// Grow every TMP buffer once with longer text than will ever show, so opening never allocates. The theme's fonts
+        /// are static atlases (U1), so this no longer adds glyphs; it still sizes TMP's character arrays.
         /// </summary>
         void Presize()
         {
@@ -207,12 +281,14 @@ namespace Gladiator.UI
                 {
                     t.SetText(t == c.Desc ? descText : Long);
                     t.ForceMeshUpdate(true, true);
+                    t.SetText(""); // a parked card shows nothing (and nothing cut off)
                 }
             }
-            foreach (var t in new[] { _title, _sub, _rerollText, _banishText })
+            foreach (var t in new[] { _title, _sub, _reroll.Label, _banish.Label, _skip.Label })
             {
                 t.SetText(Long);
                 t.ForceMeshUpdate(true, true);
+                t.SetText("");
             }
             _title.SetText("LEVEL UP!");
             _sub.SetText("choose one");
@@ -331,22 +407,37 @@ namespace Gladiator.UI
             _shownCount = c.ChoiceCount;
             var cfg = c.Config;
             LayoutContent();
-            float x0 = -(_shownCount - 1) * Spacing * 0.5f;
             for (int i = 0; i < MaxCards; i++)
             {
                 var v = _cards[i];
                 bool on = i < _shownCount;
                 // unused cards park off-screen instead of being deactivated
-                v.Root.anchoredPosition = on ? new Vector2(x0 + i * Spacing, 0f) : new Vector2(0f, -5000f);
+                v.Root.anchoredPosition = on ? new Vector2(LevelUpLayout.CardX(i, _shownCount), CardsY) : new Vector2(0f, -5000f);
                 if (!on) continue;
                 var o = c.Offers[i];
                 var col = cfg.RarityColor(o.Rarity);
-                v.Band.color = col;
+                v.RarityColor = col;
+                var kind = FrameFor(o.Rarity);
+                if (kind != v.FrameKind) { v.FrameKind = kind; UiFrames.Apply(v.Frame, kind); }
+                v.Wreath.color = o.Rarity == Rarity.Legendary ? Color.white : Color.clear;
+                var halo = col;
+                halo.a = IconGlow;
+                v.IconHalo.color = halo;
+                bool vow = o.Def.IsVow;
+                v.Band.color = vow ? _gold : col;
+                v.VowHalf.color = vow ? _crimson : Color.clear; // a Vow: the oath's crimson | its gold
+                if (vow != v.VowBand)
+                {
+                    v.VowBand = vow; // light words, outlined, read on both halves
+                    UiKit.Style(v.Rarity, TextRole.Title, vow ? TextLook.Outline : TextLook.Flat);
+                    v.Rarity.characterSpacing = 12f;
+                    v.Rarity.color = vow ? _ink : BandInk;
+                }
                 v.Rarity.text = CardText.RarityName(o.Rarity);
                 v.Title.text = o.Def.displayName;
                 v.Icon.Set(o.Def, col, i * 0.31f);
                 if (o.Def.kind == UpgradeKind.Consumable) { v.Kind.color = PipOwned; v.Kind.text = "SUPPLIES"; }
-                else if (o.Def.IsVow) { v.Kind.color = VowGold; if (o.IsNew) v.Kind.text = "A VOW!"; else v.Kind.SetText("VOW LV {0}", o.Level); }
+                else if (vow) { v.Kind.color = VowGold; if (o.IsNew) v.Kind.text = "A VOW!"; else v.Kind.SetText("VOW LV {0}", o.Level); }
                 else if (o.Def.evolvesFrom != null) { v.Kind.color = NewGold; v.Kind.text = "EVOLUTION!"; }
                 else if (o.IsNew) { v.Kind.color = NewGold; v.Kind.text = o.Def.kind == UpgradeKind.Weapon ? "NEW WEAPON!" : "NEW!"; }
                 else { v.Kind.color = PipOwned; v.Kind.SetText("LV {0}", o.Level); }
@@ -354,33 +445,39 @@ namespace Gladiator.UI
                 if (c.build != null) CardText.Hints(o, c.build.State, c.build.catalog, v.Text);
                 v.Desc.SetCharArray(v.Text.Chars, 0, v.Text.Length);
                 int pips = o.Def.kind == UpgradeKind.Consumable ? 0 : Mathf.Min(MaxPips, o.Def.maxLevel);
-                float px0 = -(pips - 1) * 13f;
+                float px0 = -(pips - 1) * PipPitch * 0.5f;
                 for (int p = 0; p < MaxPips; p++)
                 {
                     var pip = v.Pips[p];
                     if (p >= pips) { pip.color = Color.clear; continue; }
-                    pip.rectTransform.anchoredPosition = new Vector2(px0 + p * 26f, PipY);
+                    pip.rectTransform.anchoredPosition = new Vector2(px0 + p * PipPitch, PipY);
                     pip.color = p < o.Level - 1 ? PipOwned : p == o.Level - 1 ? col : PipEmpty;
                 }
             }
             _drawnBanishMode = !_banishMode; // force the dynamic part to refresh
         }
 
+        /// <summary>Rarity = material: stone, bronze, silver (a meander in its foot), gold (and the wreath).</summary>
+        static FrameKind FrameFor(Rarity r) => r switch
+        {
+            Rarity.Uncommon => FrameKind.CardBronze,
+            Rarity.Rare => FrameKind.CardSilver,
+            Rarity.Legendary => FrameKind.CardGold,
+            _ => FrameKind.CardStone,
+        };
+
         void RefreshDynamic(LevelUpController c)
         {
-            var cfg = c.Config;
             for (int i = 0; i < _shownCount; i++)
             {
                 var v = _cards[i];
                 bool sel = i == _selected;
-                bool vow = c.Offers[i].Def != null && c.Offers[i].Def.IsVow;
-                var col = _banishMode ? BanishRed : vow ? VowGold : cfg.RarityColor(c.Offers[i].Rarity);
-                v.Border.color = sel ? Color.Lerp(col, Color.white, 0.35f) : col * 0.85f;
-                var half = _banishMode ? BanishRed : VowRed;
-                v.VowHalf.color = !vow ? Color.clear : sel ? Color.Lerp(half, Color.white, 0.25f) : half * 0.85f;
-                var glow = col; glow.a = sel ? 0.45f : 0f;
-                v.Glow.color = glow;
-                float s = sel ? 1.06f : 1f;
+                v.Frame.color = _banishMode ? BanishTint : Color.white;
+                v.Focus.color = !sel ? Color.clear : _banishMode ? _crimson : Color.white; // white ring; crimson to banish
+                var glow = v.RarityColor;
+                glow.a = sel ? SelectedGlow : 0f;
+                v.Halo.color = glow;
+                float s = sel ? SelectedScale : 1f;
                 if (!Mathf.Approximately(v.Root.localScale.x, s)) v.Root.localScale = new Vector3(s, s, 1f);
             }
             if (_banishMode != _drawnBanishMode || c.Source != _drawnSource)
@@ -390,19 +487,19 @@ namespace Gladiator.UI
                 if (_banishMode)
                 {
                     _title.text = "BANISH";
-                    _title.color = BanishRed;
+                    _title.color = _crimsonLight; // Roman red, not orange-red: banishing doesn't hurt you
                     _sub.text = "pick a card to remove it for the rest of the run";
                 }
                 else if (c.Source == PickSource.Chest)
                 {
                     _title.text = "ARMORY CHEST";
-                    _title.color = NewGold;
+                    _title.color = _goldBright;
                     _sub.text = "choose one: uncommon or better";
                 }
                 else if (c.Source == PickSource.Boss)
                 {
-                    _title.text = "THE PIT MASTER'S HOARD";
-                    _title.color = NewGold;
+                    _title.text = "SPOILS OF VICTORY"; // every boss's reward (U1; it read "THE PIT MASTER'S HOARD")
+                    _title.color = _goldBright;
                     _sub.text = "take one: rare or better";
                 }
                 else if (c.Source == PickSource.Altar)
@@ -414,23 +511,22 @@ namespace Gladiator.UI
                 else
                 {
                     _title.text = "LEVEL UP!";
-                    _title.color = NewGold;
+                    _title.color = _goldBright;
                     _sub.text = "choose one";
                 }
             }
             int rr = c.RerollsLeft, bn = c.BanishesLeft;
-            if (rr != _drawnRerolls) { _drawnRerolls = rr; _rerollText.SetText("[R] Reroll ({0})", rr); }
-            if (bn != _drawnBanishes) { _drawnBanishes = bn; _banishText.SetText("[B] Banish ({0})", bn); }
-            _reroll.color = Action(IdReroll, rr > 0);
-            _banish.color = _banishMode ? BanishRed * 0.7f : Action(IdBanish, bn > 0);
-            _skip.color = Action(IdSkip, true);
+            if (rr != _drawnRerolls) { _drawnRerolls = rr; _reroll.Label.SetText("Reroll ({0})", rr); }
+            if (bn != _drawnBanishes) { _drawnBanishes = bn; _banish.Label.SetText("Banish ({0})", bn); }
+            SetState(_reroll, rr <= 0 ? UiState.Disabled : _hoverAction == IdReroll ? UiState.Focused : UiState.Normal);
+            SetState(_banish, _banishMode ? UiState.Pressed : bn <= 0 ? UiState.Disabled : _hoverAction == IdBanish ? UiState.Focused : UiState.Normal);
+            SetState(_skip, _hoverAction == IdSkip ? UiState.Focused : UiState.Normal);
         }
 
-        Color Action(int id, bool enabled)
+        /// <summary>Colours only, and only when the state changes (UiPlate.SetState allocates nothing).</summary>
+        static void SetState(UiPlate plate, UiState state)
         {
-            var col = _hoverAction == id && enabled ? ActionHover : ActionColor;
-            if (!enabled) col.a = 0.35f;
-            return col;
+            if (plate.State != state) plate.SetState(state);
         }
     }
 }

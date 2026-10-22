@@ -146,3 +146,7 @@ Evolutions arrive after 8 weapon levels plus a catalyst plus a chest, so late in
 - **The risk:** every edict's handicap and Renown bonus is a guess (×3.35 with all eleven); some may never be worth taking, others free Renown. Iron Hides doesn't reach the Eternal Victor's remains (`BossController` sets that HP absolutely). Bot runs launched straight into an arena still replay the same chests, gifts and whims per launch (on purpose: perf runs stay comparable) until R8's `-runSeed`.
 - **Proposal:** judge in the playtest; tune `ED_*` (`renownBonus` and the effect fields); scale `remainsHp` by `scriptedHpMul` if the Victor feels soft under Iron Hides.
 - **Update (R8, v0.22.0):** closed for the repeating randomness: every run-shaping draw is on a seeded stream or fork; bot and perf runs pass `-runSeed` to stay comparable.
+
+## C32 — Skins: prices are guesses, dark skins on dark floors (NEW, R6)
+- **The risk:** the Market prices (250–350, 3,200 Renown for all ten) are guesses against a Renown economy that is itself a guess (C17); a skin may cost too little to feel earned or too much next to the edicts. The darkest skins (Unbowed, Night Knight, Black Wolf, Headsman of Rome) stand out less against the Slave Pit's mud and the night arenas, though their silhouettes are unchanged.
+- **Proposal:** judge in the playtest; prices are `price` in `BlenderSrc/characters/skins.json` (re-run Create Skin Data). If a dark skin gets lost in a fight, lift one swatch (a lighter trim or belt) in its remap.

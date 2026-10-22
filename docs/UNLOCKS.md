@@ -136,3 +136,8 @@ Both are new components in the RattlingCrate mould: spots from `ArenaLayoutDef.s
 ## The Daily Games (R8, v0.22.0)
 - **UL_Daily** (beat Gorm, with the Edicts): the DAILY button opens.
 - **Challenges:** Daily Bread (play 3 scored dailies, `DailiesPlayed 3`, +100 Renown), Champion of the Day (win a scored daily, `DailiesWon 1`, +150).
+
+## Skins (R6, v0.23.0)
+Twenty skins, two per gladiator, made by `Gladiator/Setup/Gladiators/Create Skin Data` from `BlenderSrc/characters/skins.json`: one `SK_*` + `UL_Skin_*` pair each. Worn from the strip under the select screen's diorama (Q / E, LB / RB; F / gamepad North buys).
+- **Market (10):** Freedman, Sewer King, Ashen Knight (250 each); Headsman of Rome, Storm-Grey, Silver Idol, Bone Oracle, Deep Sea, Winter Hunter, The White Bull (350 each). 3,200 Renown in all.
+- **Champion (10, `WinWithGladiator <gladiator> 3`):** Unbowed, Ratcatcher, Night Knight, Bronze Colossus, Olympian, Jade Idol, Violet Oracle, Pearl Diver, Black Wolf, Bronze Bull.

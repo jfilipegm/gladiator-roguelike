@@ -5,7 +5,10 @@
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
         "Gladiator.Core",
-        "Gladiator.Gameplay"
+        "Gladiator.Gameplay",
+        "Gladiator.UI",
+        "Unity.TextMeshPro",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [
         "Editor"

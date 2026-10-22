@@ -35,7 +35,7 @@ namespace Gladiator.UI
         // the card (spec §6.2), y from its centre: 9 frame · 40 band · 112 icon · 26 tag · 68 name · 30 pips ·
         // 174 description · 30 key · 24 foot (the frame's)
         const float Inset = 9f, BandY = 231f, BandH = 40f, IconY = 151f, IconSize = 100f, IconHaloW = 140f, IconHaloH = 112f,
-            WreathY = 143f, TagY = 82f, TagH = 26f, NameY = 35f, NameH = 68f, PipY = -14f, PipSize = 14f, PipPitch = 20f,
+            WreathY = 143f, TagY = 82f, TagH = 28f, NameY = 35f, NameH = 68f, PipY = -14f, PipSize = 14f, PipPitch = 20f,
             DescY = -117f, DescH = 174f, KeyY = -221f, KeyH = 30f;
         const float SelectedScale = 1.04f, RingOut = 6f, HaloOut = 22f;
         // layout A at 1920×1080, in the content's units from the canvas centre: the title's glyphs from y 46, the

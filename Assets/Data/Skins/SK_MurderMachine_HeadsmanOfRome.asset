@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 875766629d42b02d0ada5a71714f75d1, type: 3}
+  m_Name: SK_MurderMachine_HeadsmanOfRome
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.SkinDef
+  id: murder_machine_headsman_of_rome
+  displayName: Headsman of Rome
+  description: 'The Emperor''s own headsman: a black hood, cold iron and a mantle of imperial purple.'
+  gladiator: {fileID: 11400000, guid: c0766fee8c3737abb9d813cf9b327c3a, type: 2}
+  model: {fileID: 919132149155446097, guid: 5e41aa0c5d9fee65c9feec3d0100e495, type: 3}
+  portrait: {fileID: 21300000, guid: 2a3dc5381153d6c88b8991488340f49e, type: 3}
+  unlock: {fileID: 11400000, guid: 15f8f4fd1fd8eaf7ba581219300ae6e1, type: 2}
+  chips:
+  - {r: 0.11764706, g: 0.105882354, b: 0.09803922, a: 1}
+  - {r: 0.36862746, g: 0.39215687, b: 0.41960785, a: 1}
+  - {r: 0.39215687, g: 0.2784314, b: 0.56078434, a: 1}

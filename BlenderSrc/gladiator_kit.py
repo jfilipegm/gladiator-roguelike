@@ -67,9 +67,32 @@ def palette_material():
     return mat
 
 
+def active_skin():
+    """The skin being exported (R6), or None: os.environ["GLADIATOR_SKIN"] = JSON {"suffix": "_Freedman",
+    "remap": {"cloth_white": "white", …}, "keep": ["Gladius"]}. "keep" (optional): name prefixes of parts (and their
+    children) that keep their swatches, i.e. the held weapon (spec R7-design §4.2 rule 5). Read on every call, because
+    every character script reloads this module (a module global would be wiped). Set by characters/build_skins.py."""
+    raw = os.environ.get("GLADIATOR_SKIN")
+    return json.loads(raw) if raw else None
+
+
+def _skin_swatch(obj, swatch):
+    sk = active_skin()
+    if not sk:
+        return swatch
+    keep = sk.get("keep") or ()
+    o = obj
+    while o is not None:
+        if any(o.name.startswith(k) for k in keep):
+            return swatch
+        o = o.parent
+    return sk["remap"].get(swatch, swatch)
+
+
 def set_swatch(obj, swatch, faces=None):
-    """Collapse the UVs of `faces` (indices; default all) of obj onto one palette swatch."""
-    u, v = palette()[swatch]
+    """Collapse the UVs of `faces` (indices; default all) of obj onto one palette swatch (through the skin's remap
+    when GLADIATOR_SKIN is set, see active_skin())."""
+    u, v = palette()[_skin_swatch(obj, swatch)]
     me = obj.data
     if not me.uv_layers:
         me.uv_layers.new(name="UVMap")
@@ -309,8 +332,13 @@ def export_fbx(root, rel_path):
     nodes (rigid-part rigs are full of them). Unity's conversion maps Blender -Y to -Z, so the root gets a temporary
     180 deg yaw here: asset front (Blender -Y) arrives at Unity +Z, asset left (Blender +X) at Unity -X, every
     part keeps identity rotation, and only the FBX root node carries the 180 deg yaw (under an identity prefab root).
+    With GLADIATOR_SKIN set (see active_skin()) it writes Characters/Skins/<basename of rel_path><suffix>.fbx instead.
     """
     import math
+    sk = active_skin()
+    if sk:
+        base = os.path.basename(rel_path)
+        rel_path = os.path.join("Characters", "Skins", (base[:-4] if base.endswith(".fbx") else base) + sk["suffix"])
     path = os.path.join(MODELS_DIR, rel_path if rel_path.endswith(".fbx") else rel_path + ".fbx")
     os.makedirs(os.path.dirname(path), exist_ok=True)
     bpy.ops.object.select_all(action="DESELECT")

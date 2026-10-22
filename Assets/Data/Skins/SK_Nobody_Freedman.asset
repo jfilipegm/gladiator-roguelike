@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 875766629d42b02d0ada5a71714f75d1, type: 3}
+  m_Name: SK_Nobody_Freedman
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.SkinDef
+  id: nobody_freedman
+  displayName: Freedman
+  description: Bleached linen and a bronze shield, polished for the day he walks out a free man.
+  gladiator: {fileID: 11400000, guid: fb2a9c8c134c113e99d7d8b67db69361, type: 2}
+  model: {fileID: 919132149155446097, guid: 13c56c5f58fc435fabff2d7757a26b62, type: 3}
+  portrait: {fileID: 21300000, guid: 86afabece30f98fbc82dcf84572b946a, type: 3}
+  unlock: {fileID: 11400000, guid: b5475df553aa9f6379938f13bf77d328, type: 2}
+  chips:
+  - {r: 0.9607843, g: 0.94509804, b: 0.9098039, a: 1}
+  - {r: 0.8509804, g: 0.64705884, b: 0.36862746, a: 1}
+  - {r: 0.6039216, g: 0.41568628, b: 0.25882354, a: 1}

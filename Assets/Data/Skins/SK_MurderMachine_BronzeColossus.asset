@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 875766629d42b02d0ada5a71714f75d1, type: 3}
+  m_Name: SK_MurderMachine_BronzeColossus
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.SkinDef
+  id: murder_machine_bronze_colossus
+  displayName: Bronze Colossus
+  description: Polished bronze from hood to boots, cast like a temple statue.
+  gladiator: {fileID: 11400000, guid: c0766fee8c3737abb9d813cf9b327c3a, type: 2}
+  model: {fileID: 919132149155446097, guid: e1f6b5422073a67cda1d823ca8fa67f3, type: 3}
+  portrait: {fileID: 21300000, guid: b78994fe96aa8920b980f8d36c5f37ed, type: 3}
+  unlock: {fileID: 11400000, guid: 74ea75f713c753b548dc2dc296a9bb81, type: 2}
+  chips:
+  - {r: 0.8509804, g: 0.64705884, b: 0.36862746, a: 1}
+  - {r: 0.6901961, g: 0.47843137, b: 0.22745098, a: 1}
+  - {r: 0.47843137, g: 0.30980393, b: 0.13333334, a: 1}

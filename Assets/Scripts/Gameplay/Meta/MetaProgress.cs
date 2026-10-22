@@ -439,5 +439,93 @@ namespace Gladiator.Gameplay
             Debug.Log("[Meta] daily " + date + ": the scored attempt starts");
             return true;
         }
+
+        // ---------------------------------------------------------------- Skins (R6)
+
+        /// <summary>Can `s` be worn: free (no unlock), or its unlock (Market or champion challenge) is earned?</summary>
+        public static bool IsOwned(SkinDef s, SaveData d) => s != null && d != null && (s.unlock == null || d.IsUnlocked(s.unlock.id));
+
+        public static bool IsOwned(SkinDef s) => IsOwned(s, Data);
+
+        /// <summary>The skin `g` wears: the first of `meta.skins` that is `g`'s, owned and in `equippedSkins`; null = the
+        /// default look (also for an unknown or no longer owned id).</summary>
+        public static SkinDef EquippedSkin(GladiatorDef g, MetaConfig meta, SaveData d)
+        {
+            if (g == null || meta == null || meta.skins == null || d == null || d.equippedSkins == null || d.equippedSkins.Count == 0)
+                return null;
+            foreach (var s in meta.skins)
+                if (s != null && s.gladiator == g && d.equippedSkins.Contains(s.id) && IsOwned(s, d)) return s;
+            return null;
+        }
+
+        public static SkinDef EquippedSkin(GladiatorDef g, MetaConfig meta) => EquippedSkin(g, meta, Data);
+
+        /// <summary>Pure: equips an owned skin in `d`, replacing whatever its gladiator wore (one per gladiator). False =
+        /// not owned, no skin or gladiator, or an id that breaks the rule "&lt;gladiator id&gt;_…" (the replacing goes by it):
+        /// nothing changes.</summary>
+        public static bool Equip(SkinDef s, SaveData d)
+        {
+            if (s == null || d == null || s.gladiator == null || !SkinDef.IdBelongsTo(s.id, s.gladiator.id) || !IsOwned(s, d))
+                return false;
+            d.equippedSkins ??= new List<string>();
+            RemoveSkinsOf(s.gladiator, d.equippedSkins, s.id);
+            if (!d.equippedSkins.Contains(s.id)) d.equippedSkins.Add(s.id);
+            return true;
+        }
+
+        /// <summary>Equips an owned skin (one per gladiator) and saves when that changed anything. False = not owned.</summary>
+        public static bool Equip(SkinDef s)
+        {
+            if (s != null && s.gladiator != null && !SkinDef.IdBelongsTo(s.id, s.gladiator.id))
+                Debug.LogWarning($"[Meta] skin '{s.id}' can't be equipped: its id must start with '{s.gladiator.id}_'");
+            var list = Data.equippedSkins;
+            int before = list != null ? list.Count : 0;
+            bool had = list != null && list.Contains(s != null ? s.id : null);
+            if (!Equip(s, Data)) return false;
+            if (!had || Data.equippedSkins.Count != before)
+            {
+                SaveSystem.Save(Data);
+                Debug.Log("[Meta] skin equipped: " + s.id);
+            }
+            return true;
+        }
+
+        /// <summary>Pure: back to `g`'s default look in `d`. True if a skin was equipped.</summary>
+        public static bool Unequip(GladiatorDef g, SaveData d)
+        {
+            if (g == null || d == null || d.equippedSkins == null) return false;
+            return RemoveSkinsOf(g, d.equippedSkins, null) > 0;
+        }
+
+        /// <summary>Back to `g`'s default look; saves when a skin was equipped.</summary>
+        public static void Unequip(GladiatorDef g)
+        {
+            if (Unequip(g, Data)) SaveSystem.Save(Data);
+        }
+
+        /// <summary>Fills `into` (cleared first) with `g`'s skins in `meta.skins` order, owned or not; returns how many.</summary>
+        public static int SkinsOf(GladiatorDef g, MetaConfig meta, List<SkinDef> into)
+        {
+            if (into == null) return 0;
+            into.Clear();
+            if (g == null || meta == null || meta.skins == null) return 0;
+            foreach (var s in meta.skins)
+                if (s != null && s.gladiator == g && !into.Contains(s)) into.Add(s);
+            return into.Count;
+        }
+
+        /// <summary>Removes `g`'s skin ids from `list` (by the id rule, SkinDef.IdBelongsTo), except `keep`. Returns how many.</summary>
+        static int RemoveSkinsOf(GladiatorDef g, List<string> list, string keep)
+        {
+            int n = 0;
+            for (int i = list.Count - 1; i >= 0; i--)
+            {
+                string id = list[i];
+                if (id == keep || !SkinDef.IdBelongsTo(id, g.id)) continue;
+                list.RemoveAt(i);
+                n++;
+            }
+            return n;
+        }
     }
 }

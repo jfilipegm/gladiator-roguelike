@@ -53,8 +53,13 @@ namespace Gladiator.Tests
             Assert.AreEqual(arsenal, codex.EntryCount(CodexPanel.Tab.Arsenal), "every weapon, evolution, Boon and synergy");
             Assert.AreEqual(cfg.bestiary.Length, codex.EntryCount(CodexPanel.Tab.Bestiary));
             int ch = 0, se = 0, ma = 0;
+            var hidden = new System.Collections.Generic.HashSet<UnlockDef>(); // R6: a skin hides until its gladiator is earned
+            if (cfg.meta.skins != null)
+                foreach (var s in cfg.meta.skins)
+                    if (s != null && s.unlock != null && s.gladiator != null && s.gladiator.unlock != null) hidden.Add(s.unlock);
             foreach (var u in cfg.meta.unlocks)
             {
+                if (hidden.Contains(u)) continue;
                 if (u.category == UnlockCategory.Challenge) ch++;
                 else if (u.category == UnlockCategory.Secret) se++;
                 else ma++;

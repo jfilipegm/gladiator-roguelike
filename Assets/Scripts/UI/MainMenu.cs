@@ -30,6 +30,10 @@ namespace Gladiator.UI
     /// starts the plan, skipping both select screens (the first attempt of the UTC day is scored, later ones practice),
     /// and the edicts block (E / gamepad North) opens the Edicts page read-only. `-daily yyyymmdd` starts a practice daily
     /// of that date at once (bot and perf runs; it never spends the save's attempt).
+    /// R6: the skins. Under the diorama the SkinStrip shows the picked gladiator's skins ("◀ FREEDMAN · 2 / 3 ▶"):
+    /// Q / E (LB / RB, or its arrows) cycle them on the diorama, an owned one is equipped at once, F / gamepad North (or
+    /// its button) buys a Market one. The roster tiles show each gladiator's equipped skin, and FIGHT! (and the daily's)
+    /// fights in it (`-skin &lt;id&gt;` for bot runs: any skin, owned or not; it picks its gladiator when -gladiator doesn't).
     /// </summary>
     public sealed class MainMenu : MonoBehaviour
     {
@@ -103,6 +107,11 @@ namespace Gladiator.UI
         DailyPlan _todayPlan;
         bool _dailyOpen;
 
+        // R6: the skins (the strip under the diorama; the prefab the diorama shows)
+        SkinStrip _skins;
+        GameObject _heroPrefab, _heroShown;
+        TextMeshProUGUI _selectKeys;
+
         /// <summary>Earned: no unlock, or its unlock is in the save.</summary>
         public static bool IsAvailable(GladiatorDef g) => g != null && (g.unlock == null || MetaProgress.IsUnlocked(g.unlock));
         public static bool IsAvailable(RunDef r) => r != null && (r.unlock == null || MetaProgress.IsUnlocked(r.unlock));
@@ -166,6 +175,92 @@ namespace Gladiator.UI
             SfxPlayer.Play2D(SfxId.Card);
             PickStep(s);
             return true;
+        }
+
+        // ---- the skins (R6) -----------------------------------------------------------------------------------------
+
+        /// <summary>The strip under the diorama (tests drive it).</summary>
+        public SkinStrip Skins => _skins;
+        /// <summary>The model prefab the diorama shows: the picked gladiator's, or the skin on the strip.</summary>
+        public GameObject HeroPrefab => _heroPrefab;
+        /// <summary>The diorama's instance of HeroPrefab.</summary>
+        public GameObject HeroShown => _heroShown;
+        /// <summary>The gladiator screen's key line (tests).</summary>
+        public string SelectKeysText => _selectKeys != null ? _selectKeys.text : "";
+
+        /// <summary>Q / E, LB / RB, the strip's arrows: the next (dir &gt; 0) or previous skin. False when there's none.</summary>
+        public bool CycleSkin(int dir) => _skins != null && _skins.Cycle(dir);
+
+        /// <summary>F, gamepad North, the strip's button: buys the Market skin on show and equips it.</summary>
+        public BuyResult BuySkin() => _skins != null && _skins.Shown ? _skins.Buy() : BuyResult.NotForSale;
+
+        /// <summary>The strip follows the gladiator the diorama shows (re-opened on his equipped skin when he changes).</summary>
+        void RefreshSkins()
+        {
+            var g = Selected;
+            if (_skins != null && _skins.Gladiator != g) _skins.Show(g, meta, MetaProgress.Data);
+            ShowHero(g, _skins != null && _skins.Gladiator == g ? _skins.Current : null);
+        }
+
+        /// <summary>The strip cycled: the diorama wears the skin on show, owned or not (FIGHT! takes the equipped one).</summary>
+        void PreviewSkin(SkinDef s) => ShowHero(_skins.Gladiator, s);
+
+        /// <summary>The equipped skin changed (bought = Renown was spent): the tile, the corner's Renown and the Codex follow.</summary>
+        void OnSkinChanged(bool bought)
+        {
+            for (int i = 0; i < _available.Length; i++) if (_available[i] == _skins.Gladiator) RefreshTilePortrait(i);
+            if (!bought) return;
+            if (_menuRenown != null) _menuRenown.text = "RENOWN  " + MetaProgress.Data.renown;
+            if (Codex != null) Codex.Refresh(); // its Market was built before the purchase
+            RefreshCodexButton();
+        }
+
+        /// <summary>An earned tile shows its gladiator's equipped skin (its baked portrait), else his own.</summary>
+        void RefreshTilePortrait(int i)
+        {
+            if (_roster == null || i < 0 || i >= _available.Length) return;
+            var g = _available[i];
+            var s = meta != null ? MetaProgress.EquippedSkin(g, meta) : null;
+            _roster.SetPortrait(i, s != null && s.portrait != null ? s.portrait : g.portrait);
+        }
+
+        /// <summary>`-skin &lt;id&gt;` (bot / perf runs: any skin, owned or not), or null.</summary>
+        SkinDef CommandLineSkin()
+        {
+            string id = CommandLine.Get("-skin");
+            if (string.IsNullOrEmpty(id)) return null;
+            if (meta != null && meta.skins != null)
+                foreach (var s in meta.skins) if (s != null && s.id == id) return s;
+            Debug.LogWarning("[Skins] -skin: no skin \"" + id + "\"");
+            return null;
+        }
+
+        /// <summary>The skin `g` fights in: `-skin`'s when it's his, else his equipped one (null = his own colours).</summary>
+        SkinDef SkinFor(GladiatorDef g, SkinDef commandLine)
+        {
+            if (commandLine != null)
+            {
+                if (commandLine.gladiator == g) return commandLine;
+                Debug.LogWarning("[Skins] -skin " + commandLine.id + " belongs to " + (commandLine.gladiator != null ? commandLine.gladiator.id : "nobody") +
+                                 ", not " + (g != null ? g.id : "nobody") + ": his equipped skin instead");
+            }
+            return g != null && meta != null ? MetaProgress.EquippedSkin(g, meta) : null;
+        }
+
+        /// <summary>Drops equipped skin ids no SkinDef knows (a skin taken out of the data; spec §5). Not while there are
+        /// no skins as data at all (before SkinSetup has run), which would wipe every choice.</summary>
+        void PruneSkins()
+        {
+            var d = MetaProgress.Data;
+            if (meta == null || meta.skins == null || meta.skins.Length == 0 || d.equippedSkins == null) return;
+            int dropped = d.equippedSkins.RemoveAll(id =>
+            {
+                foreach (var s in meta.skins) if (s != null && s.id == id) return false;
+                return true;
+            });
+            if (dropped == 0) return;
+            SaveSystem.Save(d);
+            Debug.Log("[Skins] dropped " + dropped + " equipped skin id(s) no SkinDef knows");
         }
 
         // ---- the Codex --------------------------------------------------------------------------------------------
@@ -239,6 +334,7 @@ namespace Gladiator.UI
             SfxPlayer.Play2D(SfxId.Pick);
             if (Edicts != null && Edicts.IsOpen) Edicts.Close(); // read-only: closing saves nothing
             bool scored = MetaProgress.BeginDaily(_todayPlan.Date);
+            GameSession.Skin = SkinFor(_todayPlan.Gladiator, null); // R6: the day fixes the gladiator, not his colours
             GameSession.StartDaily(_todayPlan, scored);
             RefreshDailyButton(); // a test's suppressed load leaves the menu up
         }
@@ -288,6 +384,7 @@ namespace Gladiator.UI
             }
             Debug.Log("[Daily] practice daily " + date + ": " + plan.Run.id + ", " + plan.Gladiator.id + ", " + (plan.Edicts != null ? plan.Edicts.Length : 0) + " edicts");
             _todayPlan = plan;
+            GameSession.Skin = SkinFor(plan.Gladiator, CommandLineSkin());
             GameSession.StartDaily(plan, false);
             return true;
         }
@@ -378,6 +475,7 @@ namespace Gladiator.UI
         void Awake()
         {
             MetaProgress.CheckUnlocks(meta); // a discovery from a run that was quit, not finished
+            PruneSkins(); // R6
             // R7: the Edicts, once earned and once they exist as data (before EdictSetup there are none to show)
             _edictsShown = meta != null && meta.edicts != null && meta.edicts.Length > 0 && MetaProgress.EdictsOpen(meta);
             _chosenEdicts = _edictsShown ? MetaProgress.ChosenEdicts(meta) : Array.Empty<RunModifierDef>();
@@ -500,12 +598,21 @@ namespace Gladiator.UI
             _available = new GladiatorDef[open];
             for (int i = 0; i < open; i++) _available[i] = slots[i].Def;
 
-            _fight = Chrome(root, "CHOOSE YOUR GLADIATOR", "Arrows / d-pad: move     Enter / A: fight     Esc / B: back", StartRun, CloseSelect);
+            bool skins = meta != null && meta.skins != null && meta.skins.Length > 0; // R6: once they exist as data
+            _fight = Chrome(root, "CHOOSE YOUR GLADIATOR", skins
+                ? "Arrows / d-pad: move     Q / E: skin     Enter / A: fight     Esc / B: back"
+                : "Arrows / d-pad: move     Enter / A: fight     Esc / B: back", StartRun, CloseSelect);
+            _selectKeys = root.Find("Keys").GetComponent<TextMeshProUGUI>();
             _roster = new RosterGrid(font);
             _roster.Build(root, new Vector2(0f, 1f), new Vector2(MenuLayout.Margin, -MenuLayout.Top), slots, MenuLayout.Columns, codex, Choose);
             _tablet = new GladiatorTablet(font);
             var corner = new Vector2(1f, 1f);
             _tablet.Build(root, corner, corner, new Vector2(-MenuLayout.Margin, -MenuLayout.Top), codex);
+            // R6: the skin strip under the diorama, between BACK and FIGHT!; the tiles in their equipped skins
+            _skins = new SkinStrip(font, fontMaterial);
+            _skins.Build(root, new Vector2(0.5f, 0f), new Vector2(0f, 28f), PreviewSkin);
+            _skins.OnChanged = OnSkinChanged;
+            for (int i = 0; i < _available.Length; i++) RefreshTilePortrait(i);
 
             // the last gladiator played this session stays picked
             _pick = 0;
@@ -628,22 +735,35 @@ namespace Gladiator.UI
                 _tablet.Show(_roster.Def(_slot), open, MetaProgress.Data, _roster.Hint(_slot));
                 _fight.interactable = open;
             }
-            ShowHero(Selected); // a locked pick leaves the last earned gladiator standing
+            RefreshSkins(); // the diorama and the strip: a locked pick leaves the last earned gladiator standing
         }
 
-        /// <summary>The diorama shows whoever is picked (the scene's own hero is the Nobody, hidden once another stands in).</summary>
-        void ShowHero(GladiatorDef g)
+        /// <summary>The diorama shows whoever is picked, in `skin` when it's his (the scene's own hero is the Nobody, hidden
+        /// once another stands in). Instances are cached by model prefab, so each skin is built once.</summary>
+        void ShowHero(GladiatorDef g, SkinDef skin)
         {
-            if (hero == null || g == null || g.model == null) return;
-            if (!_heroModels.TryGetValue(g.model, out var shown))
+            if (hero == null || g == null) return;
+            bool his = skin != null && skin.gladiator == g && skin.model != null;
+            var model = his ? skin.model : g.model;
+            if (model == null) // the Nobody's own look: his GladiatorDef has no model, the scene's hero is him
             {
-                shown = Instantiate(g.model, hero.parent, false);
-                shown.name = "Hero_" + g.id;
-                shown.transform.SetPositionAndRotation(hero.position, hero.rotation);
-                if (heroMaterial != null)
-                    foreach (var r in shown.GetComponentsInChildren<Renderer>(true)) r.sharedMaterial = heroMaterial;
-                _heroModels[g.model] = shown;
+                _heroPrefab = null;
+                _heroShown = hero.gameObject;
+                foreach (var kv in _heroModels) kv.Value.SetActive(false);
+                hero.gameObject.SetActive(true);
+                return;
             }
+            if (!_heroModels.TryGetValue(model, out var shown))
+            {
+                shown = Instantiate(model, hero.parent, false);
+                shown.name = "Hero_" + g.id + (his ? "_" + skin.id : "");
+                shown.transform.SetPositionAndRotation(hero.position, hero.rotation);
+                if (heroMaterial != null) // a skin is the same palette with other cells: the one shared material
+                    foreach (var r in shown.GetComponentsInChildren<Renderer>(true)) r.sharedMaterial = heroMaterial;
+                _heroModels[model] = shown;
+            }
+            _heroPrefab = model;
+            _heroShown = shown;
             hero.gameObject.SetActive(false);
             foreach (var kv in _heroModels) kv.Value.SetActive(kv.Value == shown);
         }
@@ -656,6 +776,11 @@ namespace Gladiator.UI
             Set(_arena, screen == Screen.Arena);
             Set(_codex, screen == Screen.Codex);
             Set(_daily, screen == Screen.Daily);
+            if (screen == Screen.Select && _skins != null) // R6: re-read the save (a skin bought in the Codex, Renown spent on an edict)
+            {
+                _skins.Show(Selected, meta, MetaProgress.Data);
+                ShowHero(Selected, _skins.Current);
+            }
         }
 
         static void Set(CanvasGroup g, bool on)
@@ -694,15 +819,20 @@ namespace Gladiator.UI
         {
             SfxPlayer.Play2D(SfxId.Pick);
             var g = Selected;
+            var cmdSkin = CommandLineSkin(); // R6: bot / perf runs
             string wanted = CommandLine.Get("-gladiator");
             if (!string.IsNullOrEmpty(wanted)) // bot / perf runs: anyone, earned or not
+            {
                 foreach (var d in gladiators) if (d != null && d.id == wanted) g = d;
+            }
+            else if (cmdSkin != null && cmdSkin.gladiator != null) g = cmdSkin.gladiator; // -skin alone: its wearer
             var r = SelectedRun;
             string arena = CommandLine.Get("-arena");
             if (!string.IsNullOrEmpty(arena))
                 foreach (var d in AllRuns) if (d != null && d.id == arena) r = d;
             if (Edicts != null && Edicts.IsOpen) Edicts.Close(); // the page covers FIGHT!, but a launch from code keeps its choice
             RunModifiers.Set(EdictsForLaunch());
+            GameSession.Skin = SkinFor(g, cmdSkin); // R6: the equipped (owned) skin, never the strip's preview
             GameSession.StartRun(g, r);
         }
 
@@ -741,6 +871,12 @@ namespace Gladiator.UI
                 int dx = (right ? 1 : 0) - (left ? 1 : 0), dy = (down ? 1 : 0) - (up ? 1 : 0);
                 if (dx != 0) MoveCursor(dx, 0);
                 else if (dy != 0) MoveCursor(0, dy);
+                // R6: Q / E and LB / RB cycle the skins, F / North buys
+                bool prevSkin = (kb != null && kb.qKey.wasPressedThisFrame) || (pad != null && pad.leftShoulder.wasPressedThisFrame);
+                bool nextSkin = (kb != null && kb.eKey.wasPressedThisFrame) || (pad != null && pad.rightShoulder.wasPressedThisFrame);
+                bool buySkin = (kb != null && kb.fKey.wasPressedThisFrame) || (pad != null && pad.buttonNorth.wasPressedThisFrame);
+                if (prevSkin != nextSkin) CycleSkin(nextSkin ? 1 : -1);
+                if (buySkin) BuySkin();
                 if (confirm) StartRun();
                 else if (back) CloseSelect();
                 return;

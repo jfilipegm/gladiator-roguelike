@@ -9,6 +9,7 @@
 | slate | neutral | 0 | 4 | 0.28125 | 0.96875 | #5F5C58 | 0.0 |
 | charcoal | neutral | 0 | 5 | 0.34375 | 0.96875 | #3A3633 | 0.0 |
 | ink | neutral | 0 | 6 | 0.40625 | 0.96875 | #1E1B19 | 0.0 |
+| ivory | neutral | 0 | 7 | 0.46875 | 0.96875 | #F2E6C4 | 0.0 |
 | skin_pale | skin | 1 | 0 | 0.03125 | 0.90625 | #F2C9A0 | 0.0 |
 | skin_light | skin | 1 | 1 | 0.09375 | 0.90625 | #E3A97A | 0.0 |
 | skin_mid | skin | 1 | 2 | 0.15625 | 0.90625 | #C68052 | 0.0 |
@@ -64,6 +65,9 @@
 | bronze | metal | 8 | 5 | 0.34375 | 0.46875 | #B07A3A | 0.0 |
 | bronze_l | metal | 8 | 6 | 0.40625 | 0.46875 | #D9A55E | 0.0 |
 | rusty_iron | metal | 8 | 7 | 0.46875 | 0.46875 | #6E5040 | 0.0 |
+| silver | metal | 8 | 8 | 0.53125 | 0.46875 | #E1E6EC | 0.0 |
+| silver_d | metal | 8 | 9 | 0.59375 | 0.46875 | #A3ABB5 | 0.0 |
+| obsidian | metal | 8 | 10 | 0.65625 | 0.46875 | #27232F | 0.0 |
 | cloth_white | cloth_leather | 9 | 0 | 0.03125 | 0.40625 | #E8E2D2 | 0.0 |
 | cloth_red | cloth_leather | 9 | 1 | 0.09375 | 0.40625 | #B8352C | 0.0 |
 | cloth_blue | cloth_leather | 9 | 2 | 0.15625 | 0.40625 | #2F5C9A | 0.0 |
@@ -73,6 +77,9 @@
 | leather | cloth_leather | 9 | 6 | 0.40625 | 0.40625 | #73472A | 0.0 |
 | leather_l | cloth_leather | 9 | 7 | 0.46875 | 0.40625 | #9A6A42 | 0.0 |
 | cloth_sack | cloth_leather | 9 | 8 | 0.53125 | 0.40625 | #B79E78 | 0.0 |
+| cloth_black | cloth_leather | 9 | 9 | 0.59375 | 0.40625 | #2C2B30 | 0.0 |
+| cloth_purple | cloth_leather | 9 | 10 | 0.65625 | 0.40625 | #64478F | 0.0 |
+| cloth_teal | cloth_leather | 9 | 11 | 0.71875 | 0.40625 | #2C8582 | 0.0 |
 | player_cyan | player_fx | 10 | 0 | 0.03125 | 0.34375 | #3FD8F0 | 0.0 |
 | player_white | player_fx | 10 | 1 | 0.09375 | 0.34375 | #F2FBFF | 0.0 |
 | player_gold | player_fx | 10 | 2 | 0.15625 | 0.34375 | #FFD24A | 0.0 |
@@ -107,6 +114,8 @@
 | ember | misc | 14 | 2 | 0.15625 | 0.09375 | #FF6A1A | 1.0 |
 | water | misc | 14 | 3 | 0.21875 | 0.09375 | #3E7A8C | 0.0 |
 | shadow | misc | 14 | 4 | 0.28125 | 0.09375 | #1A1410 | 0.0 |
+| jade | misc | 14 | 5 | 0.34375 | 0.09375 | #4E9E7F | 0.0 |
+| jade_d | misc | 14 | 6 | 0.40625 | 0.09375 | #2D6A55 | 0.0 |
 | debug_magenta | debug | 15 | 0 | 0.03125 | 0.03125 | #FF00FF | 0.0 |
 | grid_a | debug | 15 | 1 | 0.09375 | 0.03125 | #6B6B6B | 0.0 |
 | grid_b | debug | 15 | 2 | 0.15625 | 0.03125 | #7A7A7A | 0.0 |

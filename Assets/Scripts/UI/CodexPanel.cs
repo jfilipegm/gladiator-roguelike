@@ -24,6 +24,8 @@ namespace Gladiator.UI
     /// Market: the item), Enter = buy. Menu-only UI: it allocates freely when a page is built.
     /// R7: an unlock that opens edicts names them as its reward ("Reward: Edict — Glass Jaw") and shows the first one's
     /// icon; RECORDS adds "Most edicts in a win". R8: RECORDS adds "Dailies played" and "Dailies won" (scored dailies).
+    /// R6: a skin's unlock (MARKET or CHALLENGES) names it as its reward ("Reward: Skin — Freedman (The Nobody)") and
+    /// shows its baked portrait.
     /// </summary>
     public sealed class CodexPanel
     {
@@ -52,6 +54,7 @@ namespace Gladiator.UI
             public int IconRow;
             public string Portrait;      // portrait atlas id
             public UnlockDef Buy;        // Market
+            public Sprite Picture;       // a single sprite (R6: a skin's portrait)
             public bool New;
         }
 
@@ -334,7 +337,7 @@ namespace Gladiator.UI
             if (_meta == null || _meta.unlocks == null) return;
             foreach (var u in _meta.unlocks)
             {
-                if (u == null) continue;
+                if (u == null || SkinOfLockedGladiator(u)) continue;
                 bool open = _save.IsUnlocked(u.id);
                 var reward = Reward(u);
                 switch (u.category)
@@ -358,7 +361,7 @@ namespace Gladiator.UI
                             Id = "ul:" + u.id, Title = u.displayName, Kind = open ? "CHALLENGE · DONE" : "CHALLENGE",
                             Body = open ? u.description : u.hint, Footer = reward, Open = open,
                             Progress = MetaProgress.Progress01(u, _save), ProgressText = bar,
-                            Icon = RewardIcon(u, out int row), IconRow = row,
+                            Icon = RewardIcon(u, out int row), IconRow = row, Picture = SkinPicture(u),
                         });
                         break;
                     }
@@ -375,7 +378,7 @@ namespace Gladiator.UI
                         {
                             Id = "ul:" + u.id, Title = u.displayName, Kind = open ? "MARKET · OWNED" : "MARKET · " + u.renownCost + " RENOWN",
                             Body = u.description, Footer = "", Open = open, Progress = -1f,
-                            Icon = RewardIcon(u, out int mrow), IconRow = mrow, Buy = u, Lit = true,
+                            Icon = RewardIcon(u, out int mrow), IconRow = mrow, Buy = u, Lit = true, Picture = SkinPicture(u),
                         });
                         break;
                 }
@@ -396,6 +399,7 @@ namespace Gladiator.UI
             foreach (var g in _gladiators) if (g != null && g.unlock == u) r = g.displayName;
             if (r.Length == 0 && u.addsToPool != null && u.addsToPool.Length > 0 && u.addsToPool[0] != null) r = u.addsToPool[0].displayName;
             if (r.Length == 0) r = EdictReward(u);
+            if (r.Length == 0) r = SkinReward(u);
             if (u.renownBounty > 0) r += (r.Length > 0 ? "  +" : "+") + u.renownBounty + " Renown";
             return r.Length > 0 ? "Reward: " + r : "";
         }
@@ -437,6 +441,41 @@ namespace Gladiator.UI
                 sb.Append(edicts[i].displayName);
             }
             return sb.ToString();
+        }
+
+        /// <summary>"Skin — Freedman (The Nobody)", "Skins — A (The Nobody), B (The Nobody)", or "" (R6).</summary>
+        string SkinReward(UnlockDef u)
+        {
+            if (_meta == null || _meta.skins == null || u == null) return "";
+            var sb = new System.Text.StringBuilder();
+            int n = 0;
+            foreach (var s in _meta.skins)
+            {
+                if (s == null || s.unlock != u) continue;
+                if (n++ > 0) sb.Append(", ");
+                sb.Append(s.displayName);
+                if (s.gladiator != null) sb.Append(" (").Append(s.gladiator.displayName).Append(')');
+            }
+            return n == 0 ? "" : (n == 1 ? "Skin — " : "Skins — ") + sb;
+        }
+
+        /// <summary>The baked portrait of the first skin `u` gives, or null (R6).</summary>
+        /// <summary>A skin's unlock stays out of the Codex until its gladiator is earned: its Market card and its challenge
+        /// would show a secret gladiator's name and look, which the roster keeps as a silhouette.</summary>
+        bool SkinOfLockedGladiator(UnlockDef u)
+        {
+            if (_meta == null || _meta.skins == null) return false;
+            foreach (var s in _meta.skins)
+                if (s != null && s.unlock == u && s.gladiator != null && s.gladiator.unlock != null && !_save.IsUnlocked(s.gladiator.unlock.id))
+                    return true;
+            return false;
+        }
+
+        Sprite SkinPicture(UnlockDef u)
+        {
+            if (_meta == null || _meta.skins == null || u == null) return null;
+            foreach (var s in _meta.skins) if (s != null && s.unlock == u && s.portrait != null) return s.portrait;
+            return null;
         }
 
         /// <summary>The reward line the Codex gives `u` (tests).</summary>
@@ -607,6 +646,14 @@ namespace Gladiator.UI
                 img.uvRect = new Rect(0f, 1f - (e.IconRow + 1) * h, w, h);
                 img.color = e.Open || e.Lit ? Color.white : Silhouette;
                 img.raycastTarget = false;
+                return true;
+            }
+            if (e.Picture != null) // R6: a skin's portrait (a champion skin's stays dark until earned)
+            {
+                var rt = UiFactory.Rect("Portrait", card, mid, mid, pos, new Vector2(edge, edge));
+                var img = rt.gameObject.AddComponent<RawImage>();
+                img.raycastTarget = false;
+                RosterGrid.Show(img, e.Picture, e.Open || e.Lit ? Color.white : Silhouette);
                 return true;
             }
             return false;

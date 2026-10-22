@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 875766629d42b02d0ada5a71714f75d1, type: 3}
+  m_Name: SK_NetWeaver_DeepSea
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.SkinDef
+  id: net_weaver_deep_sea
+  displayName: Deep Sea
+  description: Teal nets and a sea-blue tunic, like something the tide brought in.
+  gladiator: {fileID: 11400000, guid: aca89070bfa5730529ba1e205fa325c9, type: 2}
+  model: {fileID: 919132149155446097, guid: 0ea33d9ce5252d8e796f0cc4f5137a56, type: 3}
+  portrait: {fileID: 21300000, guid: 3270362dbf04f1c93ae930a0fdaa3d4e, type: 3}
+  unlock: {fileID: 11400000, guid: 8e6e3ee2a0f534e5d9e582e394eb3d81, type: 2}
+  chips:
+  - {r: 0.17254902, g: 0.52156866, b: 0.50980395, a: 1}
+  - {r: 0.18431373, g: 0.36078432, b: 0.6039216, a: 1}
+  - {r: 0.7647059, g: 0.7921569, b: 0.81960785, a: 1}

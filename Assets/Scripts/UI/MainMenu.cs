@@ -745,7 +745,14 @@ namespace Gladiator.UI
             if (hero == null || g == null) return;
             bool his = skin != null && skin.gladiator == g && skin.model != null;
             var model = his ? skin.model : g.model;
-            if (model == null) return;
+            if (model == null) // the Nobody's own look: his GladiatorDef has no model, the scene's hero is him
+            {
+                _heroPrefab = null;
+                _heroShown = hero.gameObject;
+                foreach (var kv in _heroModels) kv.Value.SetActive(false);
+                hero.gameObject.SetActive(true);
+                return;
+            }
             if (!_heroModels.TryGetValue(model, out var shown))
             {
                 shown = Instantiate(model, hero.parent, false);

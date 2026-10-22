@@ -70,6 +70,10 @@ namespace Gladiator.Tests
             }
         }
 
+        /// <summary>The Nobody's model field is empty, which the Editor fills with a "missing" stand-in object; the menu
+        /// reports his classic look as a true null.</summary>
+        static GameObject Real(GameObject o) => o != null ? o : null;
+
         static List<SkinDef> SkinsOf(GladiatorDef g)
         {
             var list = new List<SkinDef>();
@@ -200,7 +204,7 @@ namespace Gladiator.Tests
             Assert.AreEqual(SkinStrip.ClassicName + " · 1 / " + strip.Count, strip.NameText);
             Assert.AreEqual("EQUIPPED", strip.StatusText);
             Assert.AreEqual(0, strip.ChipCount, "the classic look has no chips");
-            Assert.AreSame(nobody.model, _menu.HeroPrefab, "the diorama shows his own model");
+            Assert.AreSame(Real(nobody.model), _menu.HeroPrefab, "the diorama shows his own model");
             StringAssert.Contains("Q / E: skin", _menu.SelectKeysText);
 
             // under the diorama: on screen, between BACK and FIGHT!, covering neither
@@ -240,7 +244,7 @@ namespace Gladiator.Tests
             // the left arrow and the keys' API: back to the classic look, then round the end to the last skin
             Click(strip.PrevRect);
             Assert.AreEqual(0, strip.Index);
-            Assert.AreSame(nobody.model, _menu.HeroPrefab, "the classic look again");
+            Assert.AreSame(Real(nobody.model), _menu.HeroPrefab, "the classic look again");
             Assert.IsTrue(_menu.CycleSkin(-1));
             Assert.AreEqual(strip.Count - 1, strip.Index, "the strip wraps round");
             Assert.AreSame(skins[skins.Count - 1].model, _menu.HeroPrefab);
@@ -266,6 +270,7 @@ namespace Gladiator.Tests
             AssertOnScreen(strip.BuyRect, "BUY");
             Assert.IsNull(MetaProgress.EquippedSkin(Nobody, Meta), "not equipped before it's bought");
 
+            yield return null; // the button appeared this frame: the canvas draws it (and so makes it clickable) at frame end
             Click(strip.BuyRect); // the mouse buys it
             Assert.IsTrue(MetaProgress.IsOwned(market), "bought");
             Assert.AreEqual(40, MetaProgress.Data.renown, "the price is spent");
@@ -354,7 +359,7 @@ namespace Gladiator.Tests
             CycleTo(null); // the classic look: owned, so equipped (Unequip)
             Assert.IsNull(MetaProgress.EquippedSkin(Nobody, Meta));
             CollectionAssert.DoesNotContain(SavedFile().equippedSkins, market.id, "the classic look is saved too");
-            Assert.AreSame(Nobody.model, _menu.HeroPrefab);
+            Assert.AreSame(Real(Nobody.model), _menu.HeroPrefab);
         }
 
         [UnityTest, Timeout(60000)]

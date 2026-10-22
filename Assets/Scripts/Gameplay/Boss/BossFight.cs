@@ -8,7 +8,9 @@ namespace Gladiator.Gameplay
     /// is dragged off, the announcer calls the boss, the camera turns to the gate and the boss walks in (or, with
     /// entranceRise, to the arena's centre, where he rises from below: the Eternal Victor). When he dies:
     /// slow motion, his fall line ("GORM FALLS!"), the hoard (a Rare+ pick), then the run ends as a victory. Dying still
-    /// ends it as a loss. Words come from the BossDef.
+    /// ends it as a loss. Words come from the BossDef. A BossDef with a revealText teases what his fall sets free (R3:
+    /// "BELOW THE SAND, A CHAIN SNAPS." while Asterion is locked): the line comes revealDelay into the fall, and the fall
+    /// is held revealHold longer so it's read before the hoard.
     /// </summary>
     public sealed class BossFight : MonoBehaviour, ITickable
     {
@@ -24,7 +26,10 @@ namespace Gladiator.Gameplay
         public float fallSeconds = 1.8f;
 
         public Stage Current { get; private set; }
+        /// <summary>The boss's reveal line was raised during his fall (tests).</summary>
+        public bool RevealShown { get; private set; }
         float _t;
+        bool _revealChecked;
         PlayerCameraRig _rig;
 
         void Start()
@@ -65,6 +70,7 @@ namespace Gladiator.Gameplay
                         if (boss.scatterOnDefeat && EnemyManager.Instance != null) EnemyManager.Instance.DespawnAll(); // the beasts scatter
                         Current = Stage.Falling;
                         _t = 0f;
+                        _revealChecked = false;
                         TimeController.SlowMotion = fallSlowMo;
                         ScreenShake.Add(0.6f);
                         GameEvents.OnAnnounce.Raise(new AnnounceEvent { Kind = AnnounceKind.BossFalls, Text = boss.fallText, Color = new Color(1f, 0.86f, 0.4f), Seconds = 3f });
@@ -72,7 +78,12 @@ namespace Gladiator.Gameplay
                     }
                     break;
                 case Stage.Falling:
-                    if (_t >= fallSeconds)
+                    if (!_revealChecked && _t >= boss.revealDelay)
+                    {
+                        _revealChecked = true;
+                        if (WantsReveal(boss)) Reveal();
+                    }
+                    if (_t >= fallSeconds + (RevealShown ? boss.revealHold : 0f))
                     {
                         TimeController.SlowMotion = 1f;
                         var lvl = LevelUpController.Instance;
@@ -122,6 +133,21 @@ namespace Gladiator.Gameplay
             }
             GameEvents.OnAnnounce.Raise(new AnnounceEvent { Kind = AnnounceKind.BossEnters, Text = boss.enterText, Color = new Color(1f, 0.3f, 0.2f), Seconds = 3f });
             if (CrowdExcitement.Instance != null) CrowdExcitement.Instance.Spike(0.85f);
+        }
+
+        /// <summary>A reveal line, and its unlock (if any) not earned yet.</summary>
+        static bool WantsReveal(BossDef b) =>
+            !string.IsNullOrEmpty(b.revealText) && (b.revealUnlock == null || !MetaProgress.IsUnlocked(b.revealUnlock));
+
+        void Reveal()
+        {
+            RevealShown = true;
+            GameEvents.OnAnnounce.Raise(new AnnounceEvent { Kind = AnnounceKind.Line, Text = boss.revealText, Color = boss.revealColor, Seconds = 2.6f });
+            var em = EnemyManager.Instance;
+            Vector3 at = em != null ? em.arenaCenter : Vector3.zero; // below the stage
+            SfxPlayer.Play(SfxId.Rattle, at);
+            SfxPlayer.Play(SfxId.BossRoar, at);
+            ScreenShake.Add(0.15f);
         }
 
         void TurnCamera(float dt)

@@ -19,7 +19,8 @@ namespace Gladiator.EditorTools
     /// traits, and UL_GoldenIdol (10,000 lifetime gold). Phase 5.12: the Ashen Oracle (GL_AshenOracle), the Curse
     /// status, the Ashen Censer (Lob data + hit effects) and its card, the Contagion (Boon effects) and Smoke Veil traits,
     /// and UL_AshenOracle (the masked stranger's flag). Phase 5.14: the Net-Weaver (GL_NetWeaver), the Trident (MultiHit) and its
-    /// card, the Caught (Boon effects) and Cast Net traits, and UL_NetWeaver (WinWithWeapon spear).
+    /// card, the Caught (Boon effects) and Cast Net traits, and UL_NetWeaver (WinWithWeapon spear). Phase 5.15 and R3 live
+    /// in their own files (BeastmasterSetup, AsterionSetup), called from here.
     /// </summary>
     public static class GladiatorSetup
     {
@@ -183,6 +184,7 @@ namespace Gladiator.EditorTools
             AshenOracle();
             NetWeaver();
             BeastmasterSetup.CreateOrUpdate(); // Phase 5.15 (its own file: it also adds the Beast Handler to two arenas)
+            AsterionSetup.CreateOrUpdate();    // R3 (its own file: it also sets the tease on the Eternal Victor)
             UpgradeSetup.Refresh();
             MetaSetup.CreateOrUpdate();
             IconSetup.Apply(); // the goblin's and the knight's weapon cards get their icons too
@@ -202,6 +204,7 @@ namespace Gladiator.EditorTools
             var oracle = AssetDatabase.LoadAssetAtPath<GladiatorDef>(OraclePath);
             var weaver = AssetDatabase.LoadAssetAtPath<GladiatorDef>(NetWeaverPath);
             var beastmaster = AssetDatabase.LoadAssetAtPath<GladiatorDef>(BeastmasterSetup.BeastmasterPath);
+            var asterion = AssetDatabase.LoadAssetAtPath<GladiatorDef>(AsterionSetup.AsterionPath);
             var list = new System.Collections.Generic.List<GladiatorDef>();
             if (nobody != null) list.Add(nobody);
             if (goblin != null) list.Add(goblin);
@@ -212,6 +215,7 @@ namespace Gladiator.EditorTools
             if (oracle != null) list.Add(oracle);
             if (weaver != null) list.Add(weaver);
             if (beastmaster != null) list.Add(beastmaster);
+            if (asterion != null) list.Add(asterion);
             return list.ToArray();
         }
 

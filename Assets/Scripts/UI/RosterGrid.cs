@@ -15,6 +15,7 @@ namespace Gladiator.UI
     /// The gladiator select and the Codex's GLADIATORS tab both use it. Nothing slides: the grid is scaled to fit its
     /// column (MenuLayout). Built once; picks and hovers only recolour and move tiles (no allocation).
     /// Open tiles' buttons are named "Card" and locked ones "Locked" (a test clicks the earned gladiators' cards).
+    /// R6: SetPortrait puts another picture in an earned tile (the select screen: the equipped skin's portrait).
     /// </summary>
     public sealed class RosterGrid : IUiHoverTarget
     {
@@ -49,6 +50,9 @@ namespace Gladiator.UI
         Image[] _frameImages = Array.Empty<Image>(), _wreaths = Array.Empty<Image>(), _dots = Array.Empty<Image>();
         Button[] _buttons = Array.Empty<Button>();
         TextMeshProUGUI[] _names = Array.Empty<TextMeshProUGUI>();
+        RawImage[] _faces = Array.Empty<RawImage>();
+        Sprite[] _pictures = Array.Empty<Sprite>(); // what SetPortrait put in each tile (null = the gladiator's own)
+        CodexConfig _codex;
         Vector2[] _home = Array.Empty<Vector2>();
         int _pick = -1, _hover = -1;
         Action<int> _onClick;
@@ -93,6 +97,16 @@ namespace Gladiator.UI
         public bool HasNew(int i) => i >= 0 && i < _dots.Length && _dots[i].enabled;
         /// <summary>The name carved on tile `i` ("???" while locked).</summary>
         public string NameOf(int i) => i >= 0 && i < _names.Length ? _names[i].text : null;
+        /// <summary>Tests: the picture tile `i` shows: what SetPortrait put there, else its gladiator's baked portrait.</summary>
+        public Sprite PortraitOf(int i)
+        {
+            if (i < 0 || i >= _pictures.Length) return null;
+            if (_pictures[i] != null) return _pictures[i];
+            var d = _slots[i].Def;
+            return d == null ? null : _slots[i].Open ? d.portrait : d.portraitSilhouette;
+        }
+        /// <summary>Tests: tile `i`'s picture (its texture and the uv rect of the sprite on it).</summary>
+        public RawImage FaceImage(int i) => i >= 0 && i < _faces.Length ? _faces[i] : null;
 
         /// <summary>Builds every tile once. The grid's top-left corner sits at `pos` from `anchor`.</summary>
         public void Build(Transform parent, Vector2 anchor, Vector2 pos, Slot[] slots, int columns, CodexConfig codex, Action<int> onClick)
@@ -100,6 +114,7 @@ namespace Gladiator.UI
             _slots = slots ?? Array.Empty<Slot>();
             Columns = Mathf.Max(1, columns);
             _onClick = onClick;
+            _codex = codex;
             int n = _slots.Length;
             var full = GridMath.Size(Mathf.Max(n, Columns), Columns, MenuLayout.Tile, MenuLayout.Gap);
             var used = GridMath.Size(Mathf.Max(n, 1), Columns, MenuLayout.Tile, MenuLayout.Gap);
@@ -111,6 +126,8 @@ namespace Gladiator.UI
             _dots = new Image[n];
             _buttons = new Button[n];
             _names = new TextMeshProUGUI[n];
+            _faces = new RawImage[n];
+            _pictures = new Sprite[n];
             _home = new Vector2[n];
             for (int i = 0; i < n; i++) BuildTile(i, codex);
             Refresh();
@@ -154,6 +171,7 @@ namespace Gladiator.UI
             UiFactory.Image("Backdrop", t, s.Open ? Backdrop : BackdropLocked, mid, mid, new Vector2(0f, wy), new Vector2(Face, Face), PixelIcons.White);
             var face = UiFactory.Rect("Portrait", t, mid, mid, new Vector2(0f, wy), new Vector2(Face, Face)).gameObject.AddComponent<RawImage>();
             face.raycastTarget = false;
+            _faces[i] = face;
             SetPortrait(face, s.Def, s.Open, codex);
             if (!s.Open)
                 UiFactory.Image("Cracks", t, Color.white, mid, mid, new Vector2(0f, wy + 2f), new Vector2(Face * 0.75f, Face), PixelIcons.Crack);
@@ -201,6 +219,19 @@ namespace Gladiator.UI
                 return;
             }
             Show(img, PixelIcons.Bust, open ? Carved : Silhouette);
+        }
+
+        /// <summary>
+        /// R6: shows `s` in earned tile `slot` (the menu: the equipped skin's portrait); null puts back the gladiator's own
+        /// picture. Locked tiles keep their silhouette.
+        /// </summary>
+        public void SetPortrait(int slot, Sprite s)
+        {
+            if (slot < 0 || slot >= _faces.Length || !_slots[slot].Open) return;
+            var own = _slots[slot].Def != null ? _slots[slot].Def.portrait : null;
+            _pictures[slot] = s != null && s != own ? s : null;
+            if (s != null) Show(_faces[slot], s, Color.white);
+            else SetPortrait(_faces[slot], _slots[slot].Def, true, _codex);
         }
 
         /// <summary>A sprite's pixels on a RawImage (single-sprite textures: the whole texture).</summary>

@@ -9,14 +9,14 @@ using UnityEngine.UI;
 namespace Gladiator.UI
 {
     /// <summary>
-    /// The arena select as the climb itself (R9): every arena a wide stone step, stacked bottom to top and each a little
-    /// further right, the Slave Pit at the bottom and the newest at the top. A step is cut from its arena's palette
-    /// family (mud, ochre, sandstone, marble, gold, travertine: CLAUDE.md §7.1) and carries its thumbnail, name, the
-    /// ladder's line ("I need to survive.") and its Roman numeral, wreathed in laurel once its boss has fallen. Locked
-    /// steps are dark with "???" and a padlock. Picked: a gold focus ring and a small lift; hovered: a pale ring. Built
-    /// once; picks and hovers only recolour and move steps.
-    /// U1: the steps keep their palette art; the words are engraved (names Title, up to 30, all steps at the size the
-    /// longest name needs; lines Body 20; numerals Title).
+    /// The arena select (P3, the producer's note 12: the vertical ladder limited how many arenas fit): a grid of arena
+    /// tiles in a riveted `Bronze` frame, like the gladiator grid, three to a row in climb order (the Slave Pit top-left,
+    /// then left to right, row by row), so more arenas are only more rows. A tile is carved `Marble` tinted with its
+    /// arena's palette family (mud, ochre, sandstone, marble, gold, travertine: CLAUDE.md §7.1) and carries the arena's
+    /// thumbnail, its Roman numeral (in a gold laurel once its boss has fallen) and its name. Locked: dark `Stone`, a
+    /// dark thumbnail with a padlock, "???". Picked: a brighter face and a small lift; hovered: a brighter face. No rings.
+    /// Built once; picks and hovers only recolour and move tiles (no allocation). Every word sits inside its tile's
+    /// UiKit.ContentRect. The class keeps its R9 name (and Step, Climb) so callers and tests read the same.
     /// </summary>
     public sealed class ArenaLadder : IUiHoverTarget
     {
@@ -39,14 +39,29 @@ namespace Gladiator.UI
         };
         static readonly string[] Numerals = { "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII" };
 
-        const float Lift = 4f, Ring = 6f, NameMax = 30f, NameMin = 18f;
+        /// <summary>Tiles per row.</summary>
+        public const int Columns = 3;
+        /// <summary>A tile (canvas units): the 192 × 108 thumbnail bake at 1:1 with a 12-unit margin, the numeral and two
+        /// lines of name under it.</summary>
+        public static readonly Vector2 TileSize = new Vector2(216f, 250f);
+        public const float Gap = 12f;
+        /// <summary>The tiles' inset in the frame: the Bronze frame's padding (7 art px) + UiKit.ContentPad.</summary>
+        public const float Inset = 29f;
+        /// <summary>The diorama's gladiator stands between the grid and the tablet: at least this much stays clear.</summary>
+        public const float DioramaRoom = 300f;
+        /// <summary>How much an arena's palette colour is lightened on its tile (the names stay ≥ 3:1 on every family).</summary>
+        const float FaceLighten = 0.35f;
+        const float Lift = 4f, NameMax = 22f, NameMin = 18f, NumeralSize = 26f;
+        static readonly Vector2 Thumb = new Vector2(192f, 108f);
 
         Step[] _steps = Array.Empty<Step>();
-        RectTransform[] _tiles = Array.Empty<RectTransform>(), _frames = Array.Empty<RectTransform>();
-        Image[] _frameImages = Array.Empty<Image>(), _wreaths = Array.Empty<Image>();
+        RectTransform[] _tiles = Array.Empty<RectTransform>();
+        Image[] _faces = Array.Empty<Image>(), _wreaths = Array.Empty<Image>();
+        Color[] _faceColors = Array.Empty<Color>();
         Button[] _buttons = Array.Empty<Button>();
         TextMeshProUGUI[] _names = Array.Empty<TextMeshProUGUI>();
         Vector2[] _home = Array.Empty<Vector2>();
+        Image _frame;
         int _pick = -1, _hover = -1;
         Action<int> _onClick;
 
@@ -56,17 +71,26 @@ namespace Gladiator.UI
         public RectTransform Root { get; private set; }
         public int Count => _steps.Length;
         public int Pick => _pick;
+        public int Hovered => _hover;
         public bool IsOpen(int i) => i >= 0 && i < _steps.Length && _steps[i].Open;
         public RunDef Run(int i) => i >= 0 && i < _steps.Length ? _steps[i].Run : null;
+        /// <summary>Tests: tile `i`'s rect (its pixels on screen: the menus use a screen-space overlay canvas).</summary>
         public RectTransform Tile(int i) => _tiles[i];
         public Button Button(int i) => _buttons[i];
+        /// <summary>Its boss has fallen: the numeral wears the laurel.</summary>
         public bool HasWreath(int i) => i >= 0 && i < _wreaths.Length && _wreaths[i].enabled;
-        /// <summary>Tests: step `i`'s name label (its role and its size).</summary>
+        /// <summary>Tests: tile `i`'s name label (its role and its size).</summary>
         public Component NameLabel(int i) => i >= 0 && i < _names.Length ? _names[i] : null;
-        /// <summary>Tests: the colour of step `i`'s focus ring (gold picked, pale hovered, clear otherwise).</summary>
-        public Color RingColor(int i) => _frameImages[i].color;
+        /// <summary>Tests: the frame tile `i` is carved on (`Marble` open, `Stone` locked; -1 out of range).</summary>
+        public int TileFrame(int i) => i >= 0 && i < _faces.Length ? UiFrames.KindOf(_faces[i]) : -1;
+        /// <summary>Tests: tile `i`'s face tint (brighter while picked or hovered).</summary>
+        public Color FaceTint(int i) => i >= 0 && i < _faces.Length ? _faces[i].color : Color.clear;
+        /// <summary>Tests: tile `i` stands lifted (it's the pick).</summary>
+        public bool Lifted(int i) => i >= 0 && i < _tiles.Length && _tiles[i].anchoredPosition != _home[i];
+        /// <summary>Tests: the frame the tiles sit in (`FrameKind.Bronze`).</summary>
+        public int FrameKindShown => UiFrames.KindOf(_frame);
 
-        /// <summary>The arena's tier (its layout's, else its place on the ladder).</summary>
+        /// <summary>The arena's tier (its layout's, else its place in the climb).</summary>
         public static int Tier(RunDef r, int index) => r != null && r.layout != null ? r.layout.tier : index;
 
         public static string Numeral(int tier) => tier >= 0 && tier < Numerals.Length ? Numerals[tier] : (tier + 1).ToString();
@@ -78,98 +102,118 @@ namespace Gladiator.UI
             return kills > 0;
         }
 
-        /// <summary>Builds every step once. The ladder's bottom-left corner sits at `pos` from the canvas's bottom-left.</summary>
-        public void Build(Transform parent, Vector2 pos, Step[] steps, SaveData save, Action<int> onClick)
+        // ---- the grid's maths (pure: RosterLayoutTests)
+
+        /// <summary>The frame's size at 1:1 for `count` arenas: full rows of tiles (fewer than three: just those) plus the
+        /// frame's inset all round.</summary>
+        public static Vector2 FrameSize(int count) =>
+            GridMath.Size(Mathf.Max(1, count), Columns, TileSize, Gap) + new Vector2(2f * Inset, 2f * Inset);
+
+        /// <summary>The scale (at most 1) that fits the frame under the header, above the buttons and left of the diorama's
+        /// room beside the tablet on a canvas of `canvas` units.</summary>
+        public static float GridScale(Vector2 canvas, int count)
+        {
+            var size = FrameSize(count);
+            float width = canvas.x - MenuLayout.Margin - (canvas.x - MenuLayout.TabletLeft(canvas)) - DioramaRoom;
+            return GridMath.Fit(size, new Vector2(Mathf.Max(1f, Mathf.Min(size.x, width)), MenuLayout.BlockHeight(canvas)));
+        }
+
+        /// <summary>The frame's right edge (canvas units from the left) when its left sits at the margin.</summary>
+        public static float GridRight(Vector2 canvas, int count) => MenuLayout.Margin + FrameSize(count).x * GridScale(canvas, count);
+
+        /// <summary>Tile `index`'s centre from the frame's top-left corner (x right, y up: rows go negative).</summary>
+        public static Vector2 Cell(int index) => GridMath.Cell(index, Columns, TileSize, Gap) + new Vector2(Inset, -Inset);
+
+        // ---- building
+
+        /// <summary>R9's call: the grid's bottom-left corner at `pos` from the canvas's bottom-left.</summary>
+        public void Build(Transform parent, Vector2 pos, Step[] steps, SaveData save, Action<int> onClick) =>
+            Build(parent, Vector2.zero, Vector2.zero, pos, steps, save, onClick);
+
+        /// <summary>Builds the frame and every tile once: the frame's `pivot` at `pos` from `anchor` (the select screen: its
+        /// top-left under the header).</summary>
+        public void Build(Transform parent, Vector2 anchor, Vector2 pivot, Vector2 pos, Step[] steps, SaveData save, Action<int> onClick)
         {
             _steps = steps ?? Array.Empty<Step>();
             _onClick = onClick;
             int n = _steps.Length;
-            Root = UiFactory.Rect("Ladder", parent, Vector2.zero, Vector2.zero, pos, GridMath.LadderSize(Mathf.Max(n, 1), MenuLayout.Step, MenuLayout.StepGap, MenuLayout.StepShift));
+            _frame = UiKit.Frame("Arenas", parent, FrameKind.Bronze, anchor, pivot, pos, FrameSize(n), Color.white);
+            Root = _frame.rectTransform;
             _tiles = new RectTransform[n];
-            _frames = new RectTransform[n];
-            _frameImages = new Image[n];
+            _faces = new Image[n];
+            _faceColors = new Color[n];
             _wreaths = new Image[n];
             _buttons = new Button[n];
             _names = new TextMeshProUGUI[n];
             _home = new Vector2[n];
-            for (int i = 0; i < n; i++) BuildStep(i, save);
+            for (int i = 0; i < n; i++) BuildTile(i, save);
             ShareNameSize();
             Refresh();
         }
 
-        void BuildStep(int i, SaveData save)
+        void BuildTile(int i, SaveData save)
         {
             var s = _steps[i];
             var th = UiTheme.Current;
-            var tile = MenuLayout.Step;
-            var bottomLeft = Vector2.zero;
+            var topLeft = new Vector2(0f, 1f);
             var mid = new Vector2(0.5f, 0.5f);
-            var c = GridMath.LadderCell(i, tile, MenuLayout.StepGap, MenuLayout.StepShift);
+            var c = Cell(i);
             _home[i] = c;
             int tier = Tier(s.Run, i);
             int family = Mathf.Clamp(tier, 0, Stone.Length - 1);
 
-            // the focus ring round the step: gold while picked, pale while hovered
-            var frame = UiKit.Frame("Frame", Root, FrameKind.Focus, bottomLeft, mid, c, tile + new Vector2(Ring * 2f, Ring * 2f), Color.clear);
-            _frameImages[i] = frame;
-            _frames[i] = frame.rectTransform;
-
-            var block = UiFactory.Image(s.Open ? "Arena" : "Locked", Root, s.Open ? Stone[family] : RosterGrid.BoneLocked, bottomLeft, mid, c, tile, PixelIcons.Tessera);
-            block.type = Image.Type.Sliced;
-            block.raycastTarget = true;
-            var button = block.gameObject.AddComponent<Button>();
+            // the tile: carved marble in its arena's colour (dark stone while locked); its Button takes the click
+            var face = s.Open ? Color.Lerp(Stone[family], Color.white, FaceLighten) : Color.white;
+            face.a = 1f;
+            _faceColors[i] = face;
+            var tile = UiKit.Frame(s.Open ? "Arena" : "Locked", Root, s.Open ? FrameKind.Marble : FrameKind.Stone, topLeft, mid, c, TileSize, face);
+            tile.raycastTarget = true;
+            var button = tile.gameObject.AddComponent<Button>();
             button.transition = Selectable.Transition.None;
             button.navigation = new Navigation { mode = Navigation.Mode.None };
             int index = i;
             button.onClick.AddListener(() => _onClick?.Invoke(index));
-            var hover = block.gameObject.AddComponent<UiHover>();
+            var hover = tile.gameObject.AddComponent<UiHover>();
             hover.Target = this;
             hover.Id = i;
+            _faces[i] = tile;
             _buttons[i] = button;
-            _tiles[i] = block.rectTransform;
+            _tiles[i] = tile.rectTransform;
 
-            var t = block.transform;
-            float half = tile.x * 0.5f;
-            var thumbAt = new Vector2(-half + 112f, 0f);
-            UiFactory.Image("ThumbRim", t, s.Open ? th.waxWood : RosterGrid.Silhouette, mid, mid, thumbAt, new Vector2(200f, 116f), PixelIcons.White);
-            var thumb = UiFactory.Rect("Thumbnail", t, mid, mid, thumbAt, new Vector2(192f, 108f)).gameObject.AddComponent<RawImage>();
+            // the thumbnail at the top, in a thin wooden rim
+            var t = tile.transform;
+            float top = TileSize.y * 0.5f;
+            var thumbAt = new Vector2(0f, top - 14f - Thumb.y * 0.5f);
+            UiFactory.Image("ThumbRim", t, s.Open ? th.waxWood : RosterGrid.Silhouette, mid, mid, thumbAt, Thumb + new Vector2(8f, 8f), PixelIcons.White);
+            var thumb = UiFactory.Rect("Thumbnail", t, mid, mid, thumbAt, Thumb).gameObject.AddComponent<RawImage>();
             thumb.raycastTarget = false;
             SetThumbnail(thumb, s.Run, s.Open, Accent[family]);
             if (!s.Open) UiFactory.Image("Padlock", t, Color.white, mid, mid, thumbAt, new Vector2(28f, 36f), PixelIcons.Lock);
 
-            var numAt = new Vector2(half - 42f, 0f);
-            var wreath = UiFactory.Image("Wreath", t, Color.white, mid, mid, numAt, new Vector2(76f, 57f), PixelIcons.Wreath);
+            // under it: the numeral (in the laurel once the boss has fallen), then the name on up to two lines; every word
+            // inside the tile's content rect
+            var content = UiKit.ContentRect(s.Open ? FrameKind.Marble : FrameKind.Stone, TileSize);
+            float numY = thumbAt.y - Thumb.y * 0.5f - 4f - 15f;
+            var wreathSize = UiFrames.NativeSize(FrameKind.LaurelWreath) / UiFrames.ArtScale; // 1 unit per art px: it fits the row
+            var wreath = UiKit.Frame("Wreath", t, FrameKind.LaurelWreath, mid, mid, new Vector2(0f, numY), wreathSize, Color.white);
             wreath.enabled = s.Open && BossBeaten(s.Run, save, out _);
             _wreaths[i] = wreath;
-            var num = UiKit.Text("Numeral", t, Numeral(tier), TextRole.Title, 34f, s.Open ? Accent[family] : th.dust, TextAlignmentOptions.Center,
-                mid, mid, numAt + new Vector2(0f, 2f), new Vector2(70f, 50f), s.Open ? TextLook.Engraved : TextLook.Flat);
-            num.enableAutoSizing = true;
-            num.fontSizeMin = NameMin;
-            num.fontSizeMax = 34f;
-
-            // the name above the middle, the ladder's line below it: they meet at the step's centre line
-            float x0 = -half + 224f, x1 = half - 84f;
             var ink = s.Open ? th.marbleInk : th.dust;
             var look = s.Open ? TextLook.Engraved : TextLook.Flat;
-            var name = UiKit.Text("Name", t, s.Open ? StepName(s.Run) : "???", TextRole.Title, NameMax, ink, TextAlignmentOptions.BottomLeft,
-                mid, mid, new Vector2((x0 + x1) * 0.5f, 25f), new Vector2(x1 - x0, 58f), look);
+            UiKit.Text("Numeral", t, Numeral(tier), TextRole.Title, NumeralSize, ink, TextAlignmentOptions.Midline,
+                mid, mid, new Vector2(0f, numY), new Vector2(content.width, 30f), look);
+
+            float nameTop = numY - 18f;
+            var name = UiKit.Text("Name", t, s.Open ? StepName(s.Run) : "???", TextRole.Title, NameMax, ink, TextAlignmentOptions.Top,
+                mid, mid, new Vector2(0f, (nameTop + content.yMin) * 0.5f), new Vector2(content.width, nameTop - content.yMin), look);
             name.textWrappingMode = TextWrappingModes.Normal;
             name.enableAutoSizing = true;
             name.fontSizeMin = NameMin;
             name.fontSizeMax = NameMax;
             _names[i] = name;
-            if (s.Open && s.Run != null && !string.IsNullOrEmpty(s.Run.tagline))
-            {
-                var line = UiKit.Text("Tagline", t, s.Run.tagline, TextRole.Body, 20f, ink, TextAlignmentOptions.TopLeft,
-                    mid, mid, new Vector2((x0 + x1) * 0.5f, -32f), new Vector2(x1 - x0, 50f), look);
-                line.textWrappingMode = TextWrappingModes.Normal;
-                line.enableAutoSizing = true;
-                line.fontSizeMin = NameMin;
-                line.fontSizeMax = 20f;
-            }
         }
 
-        /// <summary>Every step's name at the size the longest needs (autosize per step would mix 30 and 23 on one ladder).</summary>
+        /// <summary>Every tile's name at the size the longest needs (autosize per tile would mix sizes on one grid).</summary>
         void ShareNameSize()
         {
             if (_names.Length == 0) return;
@@ -187,7 +231,7 @@ namespace Gladiator.UI
             }
         }
 
-        /// <summary>"THE SLAVE PIT" → "SLAVE PIT" (the step is narrow; the tablet keeps the article).</summary>
+        /// <summary>"THE SLAVE PIT" → "SLAVE PIT" (the tile is narrow; the tablet keeps the article).</summary>
         public static string StepName(RunDef r)
         {
             if (r == null) return "???";
@@ -210,7 +254,7 @@ namespace Gladiator.UI
             Refresh();
         }
 
-        /// <summary>Scales the whole ladder (MenuLayout.LadderScale) about its bottom-left corner.</summary>
+        /// <summary>Scales the whole grid (GridScale) about its pivot.</summary>
         public void Fit(float scale)
         {
             if (Root != null) Root.localScale = new Vector3(scale, scale, 1f);
@@ -225,23 +269,20 @@ namespace Gladiator.UI
 
         void Refresh()
         {
-            var th = UiTheme.Current;
             for (int i = 0; i < _tiles.Length; i++)
             {
                 bool picked = i == _pick;
-                _frameImages[i].color = picked ? th.gold : i == _hover ? RosterGrid.Pale : Color.clear;
+                float k = picked || i == _hover ? UiPlate.FaceFocused : UiPlate.FaceNormal;
+                var c = _faceColors[i];
+                _faces[i].color = new Color(c.r * k, c.g * k, c.b * k, 1f);
                 var at = _home[i] + (picked ? new Vector2(0f, Lift) : Vector2.zero);
-                if (_tiles[i].anchoredPosition != at)
-                {
-                    _tiles[i].anchoredPosition = at;
-                    _frames[i].anchoredPosition = at;
-                }
+                if (_tiles[i].anchoredPosition != at) _tiles[i].anchoredPosition = at;
             }
         }
     }
 
     /// <summary>
-    /// The tablet's arena page: the name, the ladder's line, the thumbnail (288 × 162: the bake at 1.5×, so the words fit
+    /// The tablet's arena page: the name, the arena's line, the thumbnail (288 × 162: the bake at 1.5×, so the words fit
     /// at the 18 floor), the description; the boss (portrait, name, beaten or not, with a laurel once beaten); then the
     /// floor (size and area), the hazards, the difficulty (enemy HP and damage taken) and the Renown multiplier. Locked:
     /// "???", a dark thumbnail, the padlock and the hint.
@@ -306,8 +347,9 @@ namespace Gladiator.UI
             _boss = LanistaTablet.Raw(wax, "Boss", M, by, 128f, 128f);
             LanistaTablet.Text(wax, "BossLabel", bx, by, w - bx - M, 24f, TextRole.Title, 18f, label, tl).text = "BOSS";
             _bossName = LanistaTablet.Text(wax, "BossName", bx, by + 24f, w - bx - M, 56f, TextRole.Body, 22f, ink, tl, floor);
-            _wreath = LanistaTablet.Image(wax, "Wreath", bx, by + 86f, 48f, 36f, Color.white, PixelIcons.Wreath);
-            _best = LanistaTablet.Text(wax, "Best", bx + 56f, by + 90f, w - bx - 56f - M, 28f, TextRole.Body, 20f, ink, tl, floor);
+            // P3: the redrawn gold laurel (1 unit per art px: it sits beside a 20-unit line)
+            _wreath = UiFrames.Apply(LanistaTablet.Image(wax, "Wreath", bx, by + 89f, 60f, 30f, Color.white), FrameKind.LaurelWreath);
+            _best = LanistaTablet.Text(wax, "Best", bx + 68f, by + 90f, w - bx - 68f - M, 28f, TextRole.Body, 20f, ink, tl, floor);
 
             _rows = LanistaTablet.Group(wax, "Rows", M, RowsTop, inner, RowsH).gameObject;
             var rows = _rows.transform;

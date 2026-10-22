@@ -31,6 +31,12 @@ namespace Gladiator.UI
     /// progress in bronze troughs; BUY a bronze plate; RECORDS on a `Wax` tablet with its values in Number; GLADIATORS is
     /// the scutum roster beside the wax tablet; &lt; &gt; and BACK marble. The whole page (1640 × 980) scales down with
     /// UiKit.FitScale (MainMenu.Refit).
+    /// P3 (the producer's notes 4, 6-9 and 11): no meander under the active tab; the NEW mark is a crimson wax seal with a
+    /// gold N (`SealNew`) on a tab's top-right corner over its last letter and on a new entry's corner (it was a gold
+    /// square and the word NEW); the pager's arrows are bronze pilum tips with no plate; the bottom row's words are light
+    /// and flat on the dark dim (they read dark when outlined); every entry's words sit inside its frame's content rect,
+    /// so a page holds 6 narrow or 4 wide entries (it held 9 and 6); the Market's keyboard focus is a soft band and a
+    /// pilum marker, not a ring.
     /// </summary>
     public sealed class CodexPanel
     {
@@ -70,7 +76,7 @@ namespace Gladiator.UI
         Button[] _tabButtons;
         UiPlate[] _tabPlates;
         Image[] _tabDots;
-        Image _tabMeander, _recordsFrame;
+        Image _recordsFrame;
         readonly List<Image> _cardFrames = new List<Image>(); // the entries drawn on the page (tests)
         readonly List<Entry>[] _tabs = new List<Entry>[TabCount];
         Tab _tab;
@@ -116,6 +122,13 @@ namespace Gladiator.UI
         public int EntryFrame(int k) => k >= 0 && k < _cardFrames.Count ? UiFrames.KindOf(_cardFrames[k]) : -1;
         /// <summary>The page box the menu scales (MainMenu.Refit).</summary>
         public RectTransform Box => _box;
+        /// <summary>Tests (P3): tab `t`'s NEW seal (`FrameKind.SealNew`) and whether it shows.</summary>
+        public Component TabSeal(Tab t) => _tabDots[(int)t];
+        public bool TabSealShown(Tab t) => _tabDots[(int)t].enabled;
+        /// <summary>Tests (P3): the drawn entries that wear the NEW seal; the pager's arrows.</summary>
+        public int SealedEntries { get; private set; }
+        public RectTransform PrevArrow { get; private set; }
+        public RectTransform NextArrow { get; private set; }
 
         /// <summary>Scales the page about the screen's centre (UiKit.FitScale: down, never up).</summary>
         public void Fit(float scale)
@@ -161,20 +174,22 @@ namespace Gladiator.UI
                 var pos = new Vector2(-690f + i * 230f, 345f);
                 _tabPlates[i] = UiKit.Button("Tab" + TabNames[i], box, TabNames[i], ButtonStyle.Secondary, mid, mid, pos, new Vector2(218, 62), () => Select((Tab)t), 24f);
                 _tabButtons[i] = _tabPlates[i].Button;
-                var dot = UiFactory.Image("New", _tabButtons[i].transform, th.gold, new Vector2(1f, 1f), new Vector2(0.5f, 0.5f), new Vector2(-14, -12), new Vector2(14, 14), PixelIcons.White);
-                dot.raycastTarget = false;
-                _tabDots[i] = dot;
+                // P3 (note 6): the NEW seal on the tab's top-right corner, over its last letter (no meander under the tab: note 9)
+                var seal = UiKit.Seal("New", _tabPlates[i].Root);
+                UiKit.PlaceSeal(seal, _tabPlates[i].Root, _tabPlates[i].Label);
+                _tabDots[i] = seal;
             }
-            _tabMeander = UiKit.Meander("TabMeander", box, true, mid, new Vector2(0.5f, 1f), new Vector2(-690f, 345f - 31f - 4f), 200f);
 
             _content = UiFactory.Rect("Content", box, mid, mid, new Vector2(0, -40), new Vector2(1600, 660));
             BuildRoster(box);
             UiKit.Button("Back", box, "BACK", ButtonStyle.Secondary, mid, mid, new Vector2(-640, -446), new Vector2(220, 66), () => Close(), 30f);
-            UiKit.Button("Prev", box, "<", ButtonStyle.Secondary, mid, mid, new Vector2(-150, -446), new Vector2(96, 66), () => Turn(-1), 30f);
-            UiKit.Button("Next", box, ">", ButtonStyle.Secondary, mid, mid, new Vector2(150, -446), new Vector2(96, 66), () => Turn(1), 30f);
-            _page = Text(box, "", TextRole.Title, 26, th.ink, new Vector2(0, -446), new Vector2(200, 40), TextAlignmentOptions.Center, TextLook.Outline);
+            // P3 (note 11): pilum-tip arrows, no plates
+            PrevArrow = (RectTransform)UiKit.Arrow("Prev", box, false, mid, mid, new Vector2(-150, -446), new Vector2(96, 66), () => Turn(-1)).transform;
+            NextArrow = (RectTransform)UiKit.Arrow("Next", box, true, mid, mid, new Vector2(150, -446), new Vector2(96, 66), () => Turn(1)).transform;
+            // P3 (note 8): light and flat on the dark dim (an outline made the thin letters read dark)
+            _page = Text(box, "", TextRole.Title, 26, th.ink, new Vector2(0, -446), new Vector2(200, 40), TextAlignmentOptions.Center, TextLook.Flat);
             Text(box, "Left / Right: tab    Up / Down: page or gladiator    Esc / B: back", TextRole.Body, 22, th.dust, new Vector2(530, -446), new Vector2(640, 32),
-                TextAlignmentOptions.Right, TextLook.Outline);
+                TextAlignmentOptions.Right, TextLook.Flat);
 
             Collect();
             Select(Tab.Records);
@@ -235,12 +250,13 @@ namespace Gladiator.UI
         {
             var mid = new Vector2(0.5f, 0.5f);
             _slots = RosterGrid.Slots(_gladiators, _locked);
-            // between the tab row (bottom edge 314) and the bottom row (top edge -407), the picked tile's wreath clear of the tabs
-            const float height = 700f;
+            // between the tab row (bottom edge 314) and the bottom row (top edge -413), the picked tile's wreath (it rises
+            // RosterGrid.WreathRoom over the grid) clear of the tabs
+            const float top = 314f - RosterGrid.WreathRoom - 2f, bottom = -406f, height = top - bottom;
             float tabletScale = GridMath.Fit(MenuLayout.Tablet, new Vector2(MenuLayout.Tablet.x, height));
             float gridW = GridMath.Size(MenuLayout.Columns, MenuLayout.Columns, MenuLayout.Tile, MenuLayout.Gap).x;
             var area = new Vector2(gridW + 60f + MenuLayout.Tablet.x * tabletScale, height);
-            _rosterRoot = UiFactory.Rect("Gladiators", root, mid, mid, new Vector2(0f, -56f), area);
+            _rosterRoot = UiFactory.Rect("Gladiators", root, mid, mid, new Vector2(0f, (top + bottom) * 0.5f), area);
             _roster = new RosterGrid(null);
             _roster.Build(_rosterRoot, new Vector2(0f, 1f), Vector2.zero, _slots, MenuLayout.Columns, _codex, FocusRoster);
             _roster.Fit(GridMath.Fit(GridMath.Size(_slots.Length, MenuLayout.Columns, MenuLayout.Tile, MenuLayout.Gap), new Vector2(gridW, area.y)));
@@ -531,9 +547,9 @@ namespace Gladiator.UI
         static int PerPage(Tab t) => t switch
         {
             Tab.Records => 100,
-            Tab.Challenges or Tab.Secrets or Tab.Market => 6,
+            Tab.Challenges or Tab.Secrets or Tab.Market => 4, // P3: 2 × 2 wide entries (their words inside the padding)
             Tab.Gladiators => 1024, // one grid, no pages
-            _ => 9,
+            _ => 6,                  // 3 × 2
         };
 
         public void Select(Tab t)
@@ -570,8 +586,7 @@ namespace Gladiator.UI
                 }
                 _tabDots[i].enabled = TabHasNew((Tab)i);
             }
-            var at = _tabMeander.rectTransform.anchoredPosition;
-            _tabMeander.rectTransform.anchoredPosition = new Vector2(-690f + (int)_tab * 230f, at.y);
+            SealedEntries = 0;
             bool roster = _tab == Tab.Gladiators;
             _rosterRoot.gameObject.SetActive(roster);
             _page.text = _tab == Tab.Records || roster ? "" : "PAGE " + (_pageIndex + 1) + " / " + PageCount;
@@ -580,10 +595,10 @@ namespace Gladiator.UI
 
             var list = Entries(_tab);
             int per = PerPage(_tab), start = _pageIndex * per;
-            bool wide = per == 6;
+            bool wide = per == 4;
             int cols = wide ? 2 : 3;
-            Vector2 size = wide ? new Vector2(780, 224) : new Vector2(516, 206); // wide: four Body 18 lines under a bar (measured 90.3)
-            float top = wide ? 217.5f : 222f;
+            Vector2 size = wide ? new Vector2(780, 324) : new Vector2(516, 324); // two rows in the 660-tall content
+            float top = 330f - size.y * 0.5f;
             for (int k = 0; k < per && start + k < list.Count; k++)
             {
                 int i = start + k;
@@ -609,19 +624,24 @@ namespace Gladiator.UI
         }
 
         /// <summary>A card: the picture on the left (portrait or icon, black while locked), the text on the right. Carved
-        /// marble while open or lit (the Market shows what you buy), dark stone while it's still a hint.</summary>
+        /// marble while open or lit (the Market shows what you buy), dark stone while it's still a hint. P3: the words are
+        /// laid from the frame's content rect (kind and title at its top, the footer at its bottom, the bar and BUY over the
+        /// footer, the body between), a new entry wears the seal on its corner, the Market's focus is a band and a marker.</summary>
         void DrawCard(in Entry e, Vector2 pos, Vector2 size, bool wide, bool focused)
         {
             var th = UiTheme.Current;
             var mid = new Vector2(0.5f, 0.5f);
             bool lit = e.Open || e.Lit;
-            if (focused) UiKit.Frame("Focus", _content, FrameKind.Focus, mid, mid, pos, size + new Vector2(12f, 12f), th.gold);
-            var frame = UiKit.Frame("Card", _content, lit ? FrameKind.Marble : FrameKind.Stone, mid, mid, pos, size, Color.white);
+            var kind = lit ? FrameKind.Marble : FrameKind.Stone;
+            var frame = UiKit.Frame("Card", _content, kind, mid, mid, pos, size, Color.white);
             _cardFrames.Add(frame);
             var card = frame.transform;
-            float pic = wide ? 150f : 100f, halfW = size.x * 0.5f, halfH = size.y * 0.5f; // an icon shows at 80 either way
+            if (focused) // under the words: a warm band on the marble, the pilum marker at the card's left
+                UiKit.Row("Focus", card, mid, mid, Vector2.zero, size, new Color(th.gold.r, th.gold.g, th.gold.b, 0.22f)).Show(true);
+            var cr = UiKit.ContentRect(kind, size);
+            float pic = wide ? 150f : 100f, halfW = size.x * 0.5f; // an icon shows at 80 either way
             bool hasPic = DrawPicture(card, e, new Vector2(-halfW + 18f + pic * 0.5f, 0f), pic);
-            float x0 = hasPic ? -halfW + 32f + pic : -halfW + 20f, x1 = halfW - 18f;
+            float x0 = hasPic ? Mathf.Max(cr.xMin, -halfW + 32f + pic) : cr.xMin, x1 = cr.xMax;
             float w = x1 - x0, cx = (x0 + x1) * 0.5f;
             bool bar = e.Progress >= 0f;
             bool buy = e.Buy != null && !e.Open;
@@ -630,38 +650,57 @@ namespace Gladiator.UI
             var hint = lit ? th.marbleInk : th.dust;
             var look = lit ? TextLook.Engraved : TextLook.Flat;
 
-            Text(card, "Kind", e.Kind, TextRole.Title, 18, lit ? th.bronzeDark : th.dust, new Vector2(cx, halfH - 24f), new Vector2(w, 24), TextAlignmentOptions.Left, look);
-            float newW = e.New ? 64f : 0f;
-            var title = Text(card, "Title", e.Title, TextRole.Title, 28, lit ? ink : th.dust, new Vector2(cx - newW * 0.5f, halfH - 52f), new Vector2(w - newW, 34), TextAlignmentOptions.Left, look);
+            // from the top: the kind (Title 18), the title (Title 28), each placed by its ink (Midline)
+            float kindY = cr.yMax - 7f, titleY = kindY - 7f - 6f - 10f;
+            Text(card, "Kind", e.Kind, TextRole.Title, 18, lit ? th.bronzeDark : th.dust, new Vector2(cx, kindY), new Vector2(w, 24), TextAlignmentOptions.MidlineLeft, look);
+            float sealW = e.New ? 32f : 0f;
+            var title = Text(card, "Title", e.Title, TextRole.Title, 28, lit ? ink : th.dust, new Vector2(cx - sealW * 0.5f, titleY), new Vector2(w - sealW, 34), TextAlignmentOptions.MidlineLeft, look);
             title.textWrappingMode = TextWrappingModes.NoWrap;
             title.enableAutoSizing = true; title.fontSizeMin = 18; title.fontSizeMax = 28;
+            if (e.New) // the seal on the card's top-right corner, beside the title
+            {
+                var seal = UiKit.Seal("New", card, 24f);
+                seal.rectTransform.anchoredPosition = new Vector2(halfW - 22f, size.y * 0.5f - 22f);
+                seal.enabled = true;
+                SealedEntries++;
+            }
 
-            float bodyTop = halfH - 70f, bodyBottom = -halfH + (bar || buy ? 60f : footer ? 32f : 18f);
+            // from the bottom: the footer (Body 18), then the bar and BUY over it
+            float y = cr.yMin;
+            if (footer)
+            {
+                Text(card, "Footer", e.Footer, TextRole.Body, 18, lit ? th.bronzeDark : th.dust, new Vector2(cx, y + 9f), new Vector2(w, 24), TextAlignmentOptions.MidlineLeft, look);
+                y += 18f + 8f;
+            }
+            if (bar || buy)
+            {
+                float rowY = y + 24f; // the BUY plate is 48 tall; the bar 24
+                if (bar)
+                {
+                    float barW = w - (buy ? 260f : 170f);
+                    var fill = UiKit.Bar("Progress", card, e.Open ? th.gain : th.gold, mid, mid, new Vector2(x0 + barW * 0.5f, rowY), new Vector2(barW, 24));
+                    fill.fillAmount = Mathf.Clamp01(e.Progress);
+                    Text(card, "ProgressText", e.ProgressText ?? "", TextRole.Number, 20, lit ? th.marbleInk : th.ink, new Vector2(x0 + barW + 84f, rowY), new Vector2(160, 28),
+                        TextAlignmentOptions.MidlineLeft, lit ? TextLook.Flat : TextLook.Outline);
+                }
+                if (buy)
+                {
+                    var u = e.Buy;
+                    bool afford = _save.renown >= u.renownCost;
+                    var plate = UiKit.Button("Buy", card, afford ? "BUY " + u.renownCost : "NEED " + (u.renownCost - _save.renown) + " MORE", ButtonStyle.Primary, mid, mid,
+                        new Vector2(x1 - 120f, rowY), new Vector2(240, 48), () => Buy(u), 22f);
+                    var label = UiFactory.Label(plate.Button);
+                    label.enableAutoSizing = true; label.fontSizeMin = 18f; label.fontSizeMax = 22f;
+                    plate.Button.interactable = afford;
+                    plate.SetState(afford ? UiState.Normal : UiState.Disabled);
+                }
+                y = rowY + 24f + 8f;
+            }
+
+            // the body between: top-aligned under the title, autosized 22 → 18
+            float bodyTop = titleY - 10f - 8f, bodyBottom = y;
             var body = Text(card, "Body", e.Body, TextRole.Body, 22, hint, new Vector2(cx, (bodyTop + bodyBottom) * 0.5f), new Vector2(w, bodyTop - bodyBottom), TextAlignmentOptions.TopLeft, look);
             body.enableAutoSizing = true; body.fontSizeMin = 18; body.fontSizeMax = 22;
-
-            if (bar)
-            {
-                float barW = w - (buy ? 260f : 170f);
-                var fill = UiKit.Bar("Progress", card, e.Open ? th.gain : th.gold, mid, mid,
-                    new Vector2(x0 + barW * 0.5f, -halfH + 44f), new Vector2(barW, 24));
-                fill.fillAmount = Mathf.Clamp01(e.Progress);
-                Text(card, "ProgressText", e.ProgressText ?? "", TextRole.Number, 20, th.ink, new Vector2(x0 + barW + 84f, -halfH + 44f), new Vector2(160, 28), TextAlignmentOptions.Left, TextLook.Outline);
-            }
-            if (footer)
-                Text(card, "Footer", e.Footer, TextRole.Body, 18, lit ? th.bronzeDark : th.dust, new Vector2(cx, -halfH + 18f), new Vector2(w, 24), TextAlignmentOptions.Left, look);
-            if (e.New) Text(card, "New", "NEW", TextRole.Title, 20, lit ? th.bronze : th.gold, new Vector2(halfW - 50f, halfH - 24f), new Vector2(70, 26), TextAlignmentOptions.Right, look);
-            if (buy)
-            {
-                var u = e.Buy;
-                bool afford = _save.renown >= u.renownCost;
-                var plate = UiKit.Button("Buy", card, afford ? "BUY " + u.renownCost : "NEED " + (u.renownCost - _save.renown) + " MORE", ButtonStyle.Primary, mid, mid,
-                    new Vector2(halfW - 136f, -halfH + 36f), new Vector2(240, 48), () => Buy(u), 22f);
-                var label = UiFactory.Label(plate.Button);
-                label.enableAutoSizing = true; label.fontSizeMin = 18f; label.fontSizeMax = 22f;
-                plate.Button.interactable = afford;
-                plate.SetState(afford ? UiState.Normal : UiState.Disabled);
-            }
         }
 
         bool DrawPicture(Transform card, in Entry e, Vector2 pos, float edge)

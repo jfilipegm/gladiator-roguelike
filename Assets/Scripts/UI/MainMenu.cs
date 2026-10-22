@@ -38,6 +38,11 @@ namespace Gladiator.UI
     /// column of tabulae ansatae (PLAY bronze, the rest marble) whose focus is the plate's gold ring; Renown on a bronze
     /// plate. Every screen's header in Title over a meander, its key line in Body, BACK marble and FIGHT! bronze. The
     /// Codex, the Edicts page and the Daily screen scale with UiKit.FitScale. Words, keys and test hooks unchanged.
+    /// P3 (the producer's v0.24.0 notes, docs/tracks/P3-notes.md): the title is the word itself in gold over the sky
+    /// between laurels, a thin gold meander under it and the line under that (no mosaic box); "RENOWN" in marble on its
+    /// bronze plate; the CODEX plate wears a crimson NEW seal on its top-right corner instead of "• n NEW"; the plates'
+    /// focus is the ansata's glow (UiKit). The arena screen is a grid of arena tiles (ArenaLadder, three to a row) moved
+    /// in 2D like the gladiator grid. Every label sits inside its frame's content rect (UiAudit).
     /// </summary>
     public sealed class MainMenu : MonoBehaviour
     {
@@ -68,6 +73,12 @@ namespace Gladiator.UI
 
         /// <summary>The gold of a dot or a multiplier written on a marble plate (the bright gold doesn't read on marble).</summary>
         const string MarbleGoldHex = "#A8741F";
+        /// <summary>The orange-red of what hurts you, written on marble: darker, so it reads there (4.3:1; the bright one is 2.6).</summary>
+        public const string MarbleHurtHex = "#B8361C";
+        /// <summary>P3: the title's size (it was 140 on the mosaic plaque).</summary>
+        const float TitleSize = 92f;
+        /// <summary>P3: the Renown plate (tall enough that both words sit inside its content rect).</summary>
+        static readonly Vector2 RenownPlateSize = new Vector2(340f, 86f);
 
         enum Screen { Menu, Select, Arena, Codex, Daily }
 
@@ -108,6 +119,7 @@ namespace Gladiator.UI
 
         // R8: the Daily Games (the second menu button and its screen)
         Button _dailyButton, _codexButton, _dailyFight;
+        Image _codexSeal;
         TextMeshProUGUI _dailyHint, _dailyHeader;
         DailyPlan _todayPlan;
         bool _dailyOpen;
@@ -153,7 +165,8 @@ namespace Gladiator.UI
         /// <summary>The main menu's title and the Renown number (their theme roles).</summary>
         public Component TitleLabel { get; private set; }
         public Component RenownLabel => _menuRenown;
-        /// <summary>The frames behind the title and the Renown (`Mosaic`, `Bronze`).</summary>
+        /// <summary>The frame under the title (P3: the gold meander rule, `MeanderGold`; it was the mosaic plaque) and the
+        /// one behind the Renown (`Bronze`).</summary>
         public Component TitlePlaque { get; private set; }
         public Component RenownPlate { get; private set; }
 
@@ -201,11 +214,23 @@ namespace Gladiator.UI
             RefreshRunPick();
         }
 
-        /// <summary>Up (+1) climbs the ladder, down (-1) descends. False at either end.</summary>
+        /// <summary>The next (+1) or previous (-1) arena in climb order (reading order on the grid). False at either end.</summary>
         public bool Climb(int d)
         {
             if (_ladder == null) return false;
             int s = GridMath.Climb(_step, _ladder.Count, d);
+            if (s == _step) return false;
+            SfxPlayer.Play2D(SfxId.Card);
+            PickStep(s);
+            return true;
+        }
+
+        /// <summary>The keyboard/gamepad move on the arena grid (dx right, dy down), as on the gladiator grid. False when
+        /// an edge blocks it.</summary>
+        public bool MoveArena(int dx, int dy)
+        {
+            if (_ladder == null) return false;
+            int s = GridMath.Step(_step, _ladder.Count, ArenaLadder.Columns, dx, dy);
             if (s == _step) return false;
             SfxPlayer.Play2D(SfxId.Card);
             PickStep(s);
@@ -303,8 +328,12 @@ namespace Gladiator.UI
         /// <summary>The Codex screen (tests drive it).</summary>
         public CodexPanel Codex { get; private set; }
         public bool CodexOpen => _screen == Screen.Codex;
-        /// <summary>The menu's CODEX button text ("CODEX • 3 NEW").</summary>
+        /// <summary>The menu's CODEX button text ("CODEX": P3 shows what's new with the seal).</summary>
         public string CodexButtonText => UiFactory.Label(_codexButton).text;
+        /// <summary>The CODEX plate wears the NEW seal (entries opened since the Codex was last viewed).</summary>
+        public bool CodexSealShown => _codexSeal != null && _codexSeal.enabled;
+        /// <summary>Tests: the seal (`FrameKind.SealNew`) on the CODEX plate.</summary>
+        public Component CodexSeal => _codexSeal;
 
         // ---- the Daily Games (R8) ---------------------------------------------------------------------------------
 
@@ -497,14 +526,18 @@ namespace Gladiator.UI
             _edictsButtonText = EdictsPanel.ButtonText(n, mul);
             UiFactory.Label(_edictsButton).text = n <= 0
                 ? _edictsButtonText
-                : "<color=#FF5433>EDICTS</color> · RENOWN <color=" + MarbleGoldHex + ">" + EdictsPanel.MulText(mul) + "</color>"; // orange-red: it hurts you
+                : "<color=" + MarbleHurtHex + ">EDICTS</color> · RENOWN <color=" + MarbleGoldHex + ">" + EdictsPanel.MulText(mul) + "</color>"; // orange-red: it hurts you (the marble's darker one)
         }
 
+        /// <summary>P3 (note 6): the crimson NEW seal on the CODEX plate's top-right corner while anything is new.</summary>
         void RefreshCodexButton()
         {
             int n = Codex != null ? Codex.RemainingNew : 0;
             var label = UiFactory.Label(_codexButton);
-            label.text = n > 0 ? "CODEX  <color=" + MarbleGoldHex + ">• " + n + " NEW</color>" : "CODEX";
+            label.text = "CODEX";
+            if (_codexSeal == null) return;
+            _codexSeal.enabled = n > 0;
+            if (n > 0) UiKit.PlaceSeal(_codexSeal, (RectTransform)_codexButton.transform, label);
         }
 
         void Awake()
@@ -576,15 +609,17 @@ namespace Gladiator.UI
         {
             var th = UiTheme.Current;
             var left = new Vector2(0f, 0.5f);
-            // the title and its line on a mosaic plaque, a gold meander under it (spec §5)
-            const float plaqueX = 86f, plaqueW = 940f;
-            var plaque = UiKit.Frame("TitlePlaque", root, FrameKind.Mosaic, left, new Vector2(0f, 0f), new Vector2(plaqueX, 96f), new Vector2(plaqueW, 284f), Color.white);
-            TitlePlaque = plaque;
-            TitleLabel = UiKit.Text("Title", root, title, TextRole.Title, 140f, th.gold, TextAlignmentOptions.Center, left, left,
-                new Vector2(plaqueX + 40f, 270f), new Vector2(plaqueW - 80f, 180f));
-            UiKit.Text("Subtitle", root, subtitle, TextRole.Body, 38f, th.ink, TextAlignmentOptions.Center, left, left,
-                new Vector2(plaqueX + 40f, 146f), new Vector2(plaqueW - 80f, 50f));
-            UiKit.Meander("Meander", root, true, left, left, new Vector2(plaqueX, 74f), plaqueW);
+            // P3 (note 3): no plaque. The word in Marcellus SC gold, outlined over the sky, between laurels; a thin gold
+            // meander under it, the line under that. Centred where the plaque stood, above the plates. (A real logo: BACKLOG.)
+            const float titleX = 556f, titleY = 262f, ruleY = 172f, lineY = 132f;
+            var word = UiKit.Text("Title", root, title, TextRole.Title, TitleSize, th.gold, TextAlignmentOptions.Center, left, new Vector2(0.5f, 0.5f),
+                new Vector2(titleX, titleY), new Vector2(900f, 130f), TextLook.Outline);
+            TitleLabel = word;
+            UiKit.Laurels("Laurels", word);
+            float ruleW = UiAudit.TryInkBounds(word, out var ink) ? Mathf.Max(200f, Mathf.Round(ink.width / 6f) * 6f) : 540f;
+            TitlePlaque = UiKit.Meander("Meander", root, true, left, new Vector2(0.5f, 0.5f), new Vector2(titleX, ruleY), ruleW);
+            UiKit.Text("Subtitle", root, subtitle, TextRole.Body, 36f, th.ink, TextAlignmentOptions.Center, left, new Vector2(0.5f, 0.5f),
+                new Vector2(titleX, lineY), new Vector2(900f, 50f), TextLook.Outline);
 
             // R8: DAILY under PLAY; the others one slot down. PLAY is the screen's main action (bronze), the rest marble.
             var size = new Vector2(360f, 66f);
@@ -600,6 +635,7 @@ namespace Gladiator.UI
             for (int i = 0; i < _menuPlates.Length; i++) _menuButtons[i] = _menuPlates[i].Button;
             _dailyButton = _menuButtons[1];
             _codexButton = _menuButtons[2];
+            _codexSeal = UiKit.Seal("New", _menuPlates[2].Root);
             // the greyed DAILY's hint, beside it (its unlock's hint)
             _dailyHint = UiKit.Text("DailyHint", root, "", TextRole.Body, 22f, th.dust, TextAlignmentOptions.Left, left, left,
                 new Vector2(494, -82), new Vector2(760, 40), TextLook.Outline);
@@ -608,24 +644,30 @@ namespace Gladiator.UI
             UiKit.Text("Keys", root, "Enter / A: select     Esc / B: back", TextRole.Body, 22f, th.dust, TextAlignmentOptions.Left,
                 new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(116, 40), new Vector2(900, 34), TextLook.Outline);
             var bottomRight = new Vector2(1f, 0f);
-            UiFactory.Text("Version", root, GameInfo.VersionLabel, 22, new Color(1f, 1f, 1f, 0.35f), TextAlignmentOptions.Right, bottomRight, bottomRight, new Vector2(-60, 40), new Vector2(400, 34), font, fontMaterial).fontStyle = FontStyles.Normal;
+            var faint = th.dust;
+            faint.a = 0.7f; // quiet, but outlined: it's over the scene (UiAudit)
+            UiKit.Text("Version", root, GameInfo.VersionLabel, TextRole.Body, 22f, faint, TextAlignmentOptions.Right, bottomRight, bottomRight,
+                new Vector2(-60, 40), new Vector2(400, 34), TextLook.Outline);
 
             // Renown on a small bronze plate in the top-right corner, the runs line under it
             var save = MetaProgress.Data;
             var corner = new Vector2(1f, 1f);
-            var plate = UiKit.Frame("RenownPlate", root, FrameKind.Bronze, corner, corner, new Vector2(-MenuLayout.Margin, -40f), new Vector2(330f, 66f), Color.white);
+            // P3 (note 2): "RENOWN" in the marble colour (light on the dark plate), both words inside the content rect,
+            // their ink centred on the plate (Midline)
+            var plate = UiKit.Frame("RenownPlate", root, FrameKind.Bronze, corner, corner, new Vector2(-MenuLayout.Margin, -40f), RenownPlateSize, Color.white);
             RenownPlate = plate;
-            var mid = new Vector2(0.5f, 0.5f);
+            var content = UiKit.ContentRect(FrameKind.Bronze, RenownPlateSize);
             var pl = new Vector2(0f, 0.5f);
-            UiKit.Text("RenownLabel", plate.transform, "RENOWN", TextRole.Title, 22f, th.bronzeInk, TextAlignmentOptions.Left, pl, pl,
-                new Vector2(22f, 0f), new Vector2(120f, 30f), TextLook.Engraved);
-            _menuRenown = UiKit.Text("Renown", plate.transform, "", TextRole.Number, 34f, th.goldBright, TextAlignmentOptions.Right, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f),
-                new Vector2(-22f, 0f), new Vector2(170f, 42f), TextLook.Outline);
+            float inX = content.xMin + RenownPlateSize.x * 0.5f; // from the plate's left edge
+            UiKit.Text("RenownLabel", plate.transform, "RENOWN", TextRole.Title, 22f, th.marble, TextAlignmentOptions.MidlineLeft, pl, pl,
+                new Vector2(inX, 0f), new Vector2(120f, content.height + 4f));
+            _menuRenown = UiKit.Text("Renown", plate.transform, "", TextRole.Number, 34f, th.goldBright, TextAlignmentOptions.MidlineRight, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f),
+                new Vector2(-inX, 0f), new Vector2(content.width - 130f, 42f), TextLook.Outline);
             _menuRenown.enableAutoSizing = true; _menuRenown.fontSizeMin = 22f; _menuRenown.fontSizeMax = 34f;
             SetMenuRenown();
             if (save.runs > 0)
                 UiKit.Text("Runs", root, save.runs + (save.runs == 1 ? " run  ·  " : " runs  ·  ") + save.victories + (save.victories == 1 ? " victory" : " victories"),
-                    TextRole.Body, 22f, th.ink, TextAlignmentOptions.Right, corner, corner, new Vector2(-MenuLayout.Margin, -114f), new Vector2(600, 30), TextLook.Outline);
+                    TextRole.Body, 22f, th.ink, TextAlignmentOptions.Right, corner, corner, new Vector2(-MenuLayout.Margin, -40f - RenownPlateSize.y - 10f), new Vector2(600, 30), TextLook.Outline);
             RefreshMenuFocus();
         }
 
@@ -678,7 +720,8 @@ namespace Gladiator.UI
                 : "Arrows / d-pad: move     Enter / A: fight     Esc / B: back", StartRun, CloseSelect);
             _selectKeys = root.Find("Keys").GetComponent<TextMeshProUGUI>();
             _roster = new RosterGrid(font);
-            _roster.Build(root, new Vector2(0f, 1f), new Vector2(MenuLayout.Margin, -MenuLayout.Top), slots, MenuLayout.Columns, codex, Choose);
+            // P3: the picked tile's wreath rises over the grid's top: the grid starts that much lower
+            _roster.Build(root, new Vector2(0f, 1f), new Vector2(MenuLayout.Margin, -MenuLayout.Top - RosterGrid.WreathRoom), slots, MenuLayout.Columns, codex, Choose);
             _tablet = new GladiatorTablet(font);
             var corner = new Vector2(1f, 1f);
             _tablet.Build(root, corner, corner, new Vector2(-MenuLayout.Margin, -MenuLayout.Top), codex);
@@ -714,8 +757,8 @@ namespace Gladiator.UI
             }
 
             _arenaFight = Chrome(root, "CHOOSE YOUR ARENA", _edictsShown
-                ? "Up / Down: climb     Enter / A: fight     E / Y: edicts     Esc / B: back"
-                : "Up / Down: climb     Enter / A: fight     Esc / B: back", Launch, BackToSelect);
+                ? "Arrows / d-pad: move     Enter / A: fight     E / Y: edicts     Esc / B: back"
+                : "Arrows / d-pad: move     Enter / A: fight     Esc / B: back", Launch, BackToSelect);
             _arenaKeys = root.Find("Keys").GetComponent<TextMeshProUGUI>();
             // R7: between BACK and FIGHT!, only once the Edicts are earned
             var bottom = new Vector2(0.5f, 0f);
@@ -723,8 +766,10 @@ namespace Gladiator.UI
             _edictsButton = _edictsPlate.Button;
             _edictsPlate.Root.gameObject.SetActive(_edictsShown);
             RefreshEdictsButton();
+            // P3 (note 12): the arenas as a grid of tiles under the header, like the gladiators
             _ladder = new ArenaLadder(font);
-            _ladder.Build(root, new Vector2(MenuLayout.Margin, MenuLayout.Bottom), steps, MetaProgress.Data, ChooseArena);
+            var topLeft = new Vector2(0f, 1f);
+            _ladder.Build(root, topLeft, topLeft, new Vector2(MenuLayout.Margin, -MenuLayout.Top), steps, MetaProgress.Data, ChooseArena);
             _arenaTablet = new ArenaTablet(font);
             var corner = new Vector2(1f, 1f);
             _arenaTablet.Build(root, corner, corner, new Vector2(-MenuLayout.Margin, -MenuLayout.Top));
@@ -742,21 +787,30 @@ namespace Gladiator.UI
             return 0;
         }
 
-        /// <summary>Scales the grid, the ladder and the tablets to the canvas (the window may have changed size).</summary>
+        /// <summary>Scales the grids and the tablets to the canvas (the window may have changed size).</summary>
         void Refit()
         {
             _screenW = UnityEngine.Screen.width;
             _screenH = UnityEngine.Screen.height;
             var canvas = GridMath.CanvasSize(_screenW, _screenH, MenuLayout.Reference, MenuLayout.Match);
             float tablet = MenuLayout.TabletScale(canvas);
-            if (_roster != null) _roster.Fit(MenuLayout.GridScale(canvas, _roster.Count));
+            if (_roster != null) _roster.Fit(RosterScale(canvas, _roster.Count));
             if (_tablet != null) _tablet.Fit(tablet);
-            if (_ladder != null) _ladder.Fit(MenuLayout.LadderScale(canvas, _ladder.Count));
+            if (_ladder != null) _ladder.Fit(ArenaLadder.GridScale(canvas, _ladder.Count));
             if (_arenaTablet != null) _arenaTablet.Fit(tablet);
             if (Edicts != null) Edicts.Fit(UiKit.FitScale(EdictsPanel.Size, canvas));
             // the Daily screen's blocks sit between the header and the buttons, inside the side margins
             if (Daily != null) Daily.Fit(UiKit.FitScale(DailyPanel.Size, new Vector2(canvas.x - 2f * MenuLayout.Margin, MenuLayout.BlockHeight(canvas)), 0f));
             if (Codex != null) Codex.Fit(UiKit.FitScale(CodexPanel.Size, canvas));
+        }
+
+        /// <summary>The roster's scale (MenuLayout.GridScale) with room above it for the picked tile's wreath.</summary>
+        public static float RosterScale(Vector2 canvas, int count)
+        {
+            var size = GridMath.Size(count, MenuLayout.Columns, MenuLayout.Tile, MenuLayout.Gap);
+            var area = new Vector2(GridMath.Size(MenuLayout.Columns, MenuLayout.Columns, MenuLayout.Tile, MenuLayout.Gap).x,
+                MenuLayout.BlockHeight(canvas) - RosterGrid.WreathRoom);
+            return Mathf.Min(MenuLayout.GridScale(canvas, count), GridMath.Fit(size, area));
         }
 
         /// <summary>Picks arena `r` if it's earned (tests). False if it's locked or unknown.</summary>
@@ -963,9 +1017,10 @@ namespace Gladiator.UI
                 bool left = (kb != null && (kb.leftArrowKey.wasPressedThisFrame || kb.aKey.wasPressedThisFrame)) || (pad != null && pad.dpad.left.wasPressedThisFrame);
                 bool right = (kb != null && (kb.rightArrowKey.wasPressedThisFrame || kb.dKey.wasPressedThisFrame)) || (pad != null && pad.dpad.right.wasPressedThisFrame);
                 if (edictsKey && EdictsButtonShown) { OpenEdicts(); return; }
-                // the ladder climbs up and to the right
-                if (up || right) Climb(1);
-                else if (down || left) Climb(-1);
+                // P3: the arena grid moves in 2D, like the gladiator grid
+                int dx = (right ? 1 : 0) - (left ? 1 : 0), dy = (down ? 1 : 0) - (up ? 1 : 0);
+                if (dx != 0) MoveArena(dx, 0);
+                else if (dy != 0) MoveArena(0, dy);
                 if (confirm)
                 {
                     if (ArenaFightEnabled) Launch();

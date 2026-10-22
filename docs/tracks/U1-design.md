@@ -379,6 +379,9 @@ Corners are anchored; the top-left plate, the centre timer and the top-right clu
 ---
 
 ## 12. Questions for the producer (my recommendation first)
+**Answered 2026-10-22: the producer accepted every recommendation** ("follow your recommendations"). The contract is
+final with them.
+
 - **Q1. Scutum roster tiles with the portrait in a round clipeus (recommended)** vs keeping R9's bone tesserae.
 - **Q2. Bronze for the main action, marble for the rest (recommended)** vs bronze on every button.
 - **Q3. Pause stats on carved marble (recommended), the level-up column bronze (layout A)** vs bronze for both.

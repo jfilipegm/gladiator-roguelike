@@ -1,11 +1,13 @@
-# U1 contract — the Roman UI look (DRAFT, 2026-10-22)
+# U1 contract — the Roman UI look (FINAL, 2026-10-22)
 
 **Spec:** `docs/tracks/U1-design.md` (the look per screen, type, colours, frames, the card, the banner, fit rules,
 decisions, Q1–Q8). This file splits the work into three parts by file ownership and fixes the names they share.
 
-**Draft until the producer answers Q1–Q8** (spec §12). Every recommendation is the default here, so the wave can start
-on them; what each answer would change: Q1 → U1-C (roster tiles), Q2 → B and C (`ButtonStyle` per button), Q3 → B
-(pause face), Q4 → B (routing table), Q5 → B (end screen), Q6 → B (one title), Q7 → nothing now, Q8 → the release.
+**FINAL (the producer, 2026-10-22): every recommendation of Q1–Q8 accepted** (spec §12): scutum roster tiles with
+the clipeus portrait; bronze for each screen's main action, marble for the rest; the pause page on marble, the
+level-up column bronze; banners only for swarms, elites, whims (crimson) and boss beats (purple), the rest callouts;
+YOU DIED on a held crimson banner; "SPOILS OF VICTORY" for every boss; keyboard letters on key chips (gamepad glyphs
+later); one release, v0.24.0. Nothing below changes.
 
 | Item | Item branch (proposed) | Release (proposed) | Parts |
 |---|---|---|---|
@@ -559,7 +561,7 @@ keep their kinds, texts and colours).
 ---
 
 ## Merge order and the orchestrator's steps
-**Before the wave:** the producer's answers to Q1–Q8 (or the defaults); `phase5-skins` merged; `phase5-ui` cut from
+**Before the wave:** `phase5-skins` merged; `phase5-ui` cut from
 `main`. Add the four font families to `phase5-ui` from github.com/google/fonts (`apache/luckiestguy`,
 `ofl/caesardressing`, `ofl/marcellussc`, `ofl/marcellus`: the Regular TTF and its licence file) at the paths above,
 then this contract, then start A, B and C together.

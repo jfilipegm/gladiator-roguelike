@@ -110,9 +110,10 @@ Nothing below changes CLAUDE.md: §6.7's row (Rage meter, chain sweeps, tragic, 
   push for everyone (shields stop the chain like any other hit).
 - **Q6. The tease line at the Victor's fall in R3 (recommended; the setup part, ~20 lines in `BossDef` / `BossFight`)**;
   the full visual reveal (the lift raising him chained, the chain snapping) is a BACKLOG item for later.
-- **Q7. The model's `Chain` part:** one part, a child of the model root (not of `ArmR`), pivot at the right hand's rest
-  position, lying on the sand behind him (recommended: it stays on the ground while he runs). The art part has the
-  request and decides; whatever it ships, the setup part writes its name into `WP_LabyrinthChain.modelPart`.
+- **Q7. The model's `Chain` part: settled by the art part** (fb3ae21): an empty child of the root at the right hand's
+  rest position (0.52, 0.435, −0.12), its renderers on its children (`ChainSeg0`–`3`, `ChainEnd`), so `SetActive` hides
+  it all. Its Codex view (full body) frames every renderer, so the trailing chain would shrink him to ~60 %: the setup
+  part makes `PortraitBaker` hide `Chain` for the bakes (below).
 - **Q8. The chain's card tag: `Heavy` (recommended)**, which adds a fourth HEAVY carrier; or no tag, like the Cleaver's
   card.
 - **Q9. The Nobody's *Underdog* (BACKLOG: bonus when outnumbered) would overlap the press.** If it's ever built, make it
@@ -124,9 +125,10 @@ Nothing below changes CLAUDE.md: §6.7's row (Rage meter, chain sweeps, tragic, 
   session (it would then own six more files and wait for the chain anyway).
 
 ## Needs from others
-- **art:** `CH_Asterion` with the six usual parts plus `Chain` (Q7); `WP_LabyrinthChain` with two meshes, `Link` (a run
-  of 3 links, 0.6 m along +Z, origin at its start, ≤ 48 tris) and `Weight` (the stone, origin at its centre, ring bolt
-  on its −Z face, ≤ 160 tris). The names in its notes win; the code parts read them from there.
+- **art (delivered, `claude/zealous-mirzakhani-ed2dcc` @ fb3ae21; names in its `docs/tracks/R3-art.md`):**
+  `CH_Asterion` 1,148 tris with the six usual parts plus `Chain` (Q7); `WP_LabyrinthChain` with `Link` (36 tris, 3 links,
+  0.6 m along +Z, origin at its start, each next one rolled 90°) and `Weight` (152 tris, 0.42 × 0.42 × 0.48 m, origin at
+  its centre, ring bolt on −Z, the stone's centre 0.33 m past the last link's end).
 - **orchestrator:** Q1–Q11; after setup merges, run `Gladiator/Setup/Gladiators/Create Gladiator Data` (it calls
   `AsterionSetup`), `Gladiator/Setup/Upgrade Icons`, `Bake Portraits`, `Bake Codex Portraits`, rebuild the menu scene
   (`menu.gladiators = GladiatorSetup.All()`); BACKLOG lines (below); GDD/UNLOCKS rows for him.
@@ -139,14 +141,14 @@ chain part merges; then it merges `phase5-asterion` and is clean). **setup** use
 `WeaponDef` and `PartAnimProfile` fields and both traits' fields; it codes against the names and merges last. PlayMode
 tests run after all three (the setup's after the art too).
 
-## The art brief (for the art part; it owns the scripts and the final names)
+## The art brief (as asked; the art part's notes record what shipped and win where they differ)
 - **CH_Asterion** (≤ 1,200 tris, rigid parts, export like `ch_beastmaster.py` / `ch_murdermachine.py`): `Body`, `Head`,
-  `ArmL`, `ArmR`, `LegL`, `LegR` with joint pivots, plus **`Chain`** (Q7). 1.95 m to the horn tips, the head low and
-  forward of the shoulder hump (1.6 m at the top of the head), **lyre horns ~1.0 m tip to tip** (`bone`, `charcoal` tips),
+  `ArmL`, `ArmR`, `LegL`, `LegR` with joint pivots, plus **`Chain`** (Q7). Asked: 1.95 m to the horn tips and lyre horns ~1.0 m wide; **shipped: 1.81 m, horns
+  ~1.25 m wide** (taller ones read as the Blood Knight's), the head low and forward of the shoulder hump (`bone`, `charcoal` tips),
   hide `ash`, muzzle and chest `bone`, mane on the hump `charcoal`, eyes `ink` (sad, no snarl), long heavy arms (knuckles
   near the knees), short thick legs, hooves `ink`; loincloth `cloth_blue` with an `ochre` meander hem; collar `bronze`
   (rope-worn, a broken ring hanging), a broken shackle on the left wrist, the right wrist's shackle joined to the chain;
-  a few pale scars; **a `player_cyan` meander brand across the shoulders** (the mark from the camera behind). The
+  a few pale scars; **a `player_cyan` brand on the upper back** (shipped: one labyrinth turn; the mark from the camera behind). The
   `Chain`: bronze links trailing 2–2.5 m behind him on the sand to **the stone** (~0.42 × 0.42 × 0.48 m, `stone_grey`
   with a `bone` meander, a `bronze` ring bolt).
 - **Review:** 3 angles + 64 px; a lineup with every gladiator, above all the Murder Machine, the Beastmaster, the Blood
@@ -169,6 +171,7 @@ class's doc comments.
 | `linkMesh` | Mesh | null | `WP_LabyrinthChain`'s `Link` | laid end to end from the hand to `mesh` (the stone) |
 | `linkLength` | float | 0.6 | 0.6 | the link mesh's length along +Z |
 | `chainHeight` | Vector2 | (1.05, 0.55) | same | the chain's height above the feet at the hand and at the stone |
+| `weightOffset` | float | 0.33 | 0.33 | the stone's centre past the last link's end (the art's `Weight` origin) |
 | `modelPart` | string | "" | `"Chain"` | a part of the gladiator's model this weapon swings: hidden while the weapon draws it |
 
 Existing fields the Sweep uses: `range` (the reach, × Area), `arcDegrees` (the arc), `tipLength` (× √Area), `width` (the
@@ -212,8 +215,8 @@ flips after every sweep), `int SweepLeft` (backswings to come), `bool SweepWhirl
   `AttackMirror = SweepDir < 0`, `AttackDirection = AimDir`, `AttackSpin = whirl ? cur − SweepFrom : 0`. After the last
   sweep: `AttackSpin = 0`, `AttackMirror = false`.
 - **Drawing (`DrawChain`)** at bearing `cur`: `dir = Quaternion.Euler(0, cur, 0) × AimDir`; the hand at `origin + up ×
-  chainHeight.x + dir × 0.45`; the stone at `origin + dir × reach + up × chainHeight.y`; `n = ceil(|stone − hand| /
-  linkLength)` links laid end to end (scaled along Z to fit exactly), each rolled 90° from the last,
+  chainHeight.x + dir × 0.45`; the stone at `origin + dir × reach + up × chainHeight.y`; `n = ceil((|stone − hand| −
+  weightOffset) / linkLength)` links laid end to end up to `weightOffset` short of the stone (scaled along Z to fit exactly), each rolled 90° from the last,
   `PlayerProjectiles.Orbiter(linkMesh, pos, rot, 1, zero)`; the stone `Orbiter(mesh, stone, LookRotation(dir) × a tumble
   of 360°/s, meshScale × √area, tangent)` (its streak behind it). A null mesh draws nothing (tests).
 - **The model part:** on the first sweep, find `modelPart` under `animator.visualRoot` by name once (`PartLooked`);
@@ -341,7 +344,7 @@ ahead gores it (8 damage, moved more than 1 m sideways within 0.3 s), one 90° o
 doesn't, the same one isn't gored twice within 1 s; Unchained, an enemy behind him is gored at 3 m/s (14 damage);
 a Scripted test enemy is damaged and not moved; the player dying while Unchained puts every stat back.
 
-### Setup — `AsterionSetup.cs` (new), `GladiatorSetup.cs`, `BossDef.cs`, `BossFight.cs`, `PixelSrc/upgrade_icons.py` and its atlas
+### Setup — `AsterionSetup.cs` (new), `GladiatorSetup.cs`, `PortraitBaker.cs`, `BossDef.cs`, `BossFight.cs`, `PixelSrc/upgrade_icons.py` and its atlas
 **`AsterionSetup`** (`Assets/Editor/Setup/`, like `BeastmasterSetup`; menu `Gladiator/Setup/Gladiators/Create Asterion
 Data`; every asset created once, then designer-owned, except the empty-reference fills):
 - Paths: `Dir = GladiatorSetup.Dir`; `GL_Asterion`, `TR_Gore`, `TR_Rage` there; `Assets/Data/Config/MovementConfig_Asterion`
@@ -352,8 +355,8 @@ Data`; every asset created once, then designer-owned, except the empty-reference
   at its end, swept round you in a wide arc. Everything it passes is shoved aside; the stone always crits: fight at the
   chain's length."*, `Sweep`; damage 15, critChance 0.05, critMultiplier 2, knockback 7, cooldown 1.6, swingDuration 0.8,
   windup 0.32, range 5.2, arcDegrees 240, width 0.5, acquireRange 5.6, amount 1, tipLength 1.4, sweepTime 0.3,
-  whirlTimeMul 1.5, sweepOutward 0.35, tipKnockbackMul 1.6, linkLength 0.6, chainHeight (1.05, 0.55), meshScale 1,
-  modelPart `"Chain"` (or the art's name), mesh = `Weight`, linkMesh = `Link`; levels: `L(Pct Damage 0.2)`,
+  whirlTimeMul 1.5, sweepOutward 0.35, tipKnockbackMul 1.6, linkLength 0.6, chainHeight (1.05, 0.55), weightOffset 0.33,
+  meshScale 1, modelPart `"Chain"`, mesh = `Weight`, linkMesh = `Link`; levels: `L(Pct Damage 0.2)`,
   `L(Pct Area 0.15)`, `L(Add Amount 1)`, `L(Pct AttackSpeed 0.15)`, `L(Pct Damage 0.25, Pct Knockback 0.2)`,
   `L(Pct Area 0.15)`, `L(Add Amount 1, Pct Damage 0.15)`.
 - **`UP_W_LabyrinthChain`:** id `weapon_labyrinth_chain`, glyph "LC", `UpgradeKind.Weapon`, maxLevel 8, weight 8, tag
@@ -384,6 +387,11 @@ Data`; every asset created once, then designer-owned, except the empty-reference
 **`GladiatorSetup.cs`:** call `AsterionSetup.CreateOrUpdate()` right after `BeastmasterSetup.CreateOrUpdate()`; add
 `GL_Asterion` last in `All()` (the select screen, the Codex and the portrait bakes follow).
 
+**`PortraitBaker.cs`:** `public static readonly string[] PortraitHidden = { "Chain" }`: `Rig.Render` sets parts with
+these names inactive on its instance before framing and rendering, in both views (the select screens' head and
+shoulders, and the Codex atlas, which uses the same rig, so `CodexSetup.cs` isn't touched). Every other model has no
+such part and bakes as before.
+
 **`BossDef.cs`** — a new header `"Reveal (R3)"` (defaults: no tease):
 | Field | Type | Default | Eternal Victor | Meaning |
 |---|---|---|---|---|
@@ -408,7 +416,7 @@ and `.txt` (`python3 PixelSrc/upgrade_icons.py`); the orchestrator runs `Gladiat
 has his model (its `Chain` part found and shown between sweeps), the 0.45 m capsule, his stats, the `Rage` and `Gore`
 components, and the chain sweeps at an enemy; a save that has beaten `eternal_victor` unlocks `asterion` and adds the
 chain's card to the pool, one that hasn't doesn't (like `BeastmasterTests`' unlock test); `UP_W_LabyrinthChain` has an
-icon and max level 8. The tease, with a test `BossDef` (CreateInstance, `revealText` set) in a test-arena boss fight:
+icon and max level 8. EditMode (in `AsterionTests`' file or its own): `PortraitBaker.PortraitHidden` contains `Chain`. The tease, with a test `BossDef` (CreateInstance, `revealText` set) in a test-arena boss fight:
 shown once after `revealDelay` while its test unlock is locked (`RevealShown`), not shown when unlocked, and the fall
 lasts `revealHold` longer only when shown; an existing boss with no `revealText` falls exactly as before.
 

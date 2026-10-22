@@ -38,9 +38,10 @@ part"; the card: `docs/GLADIATORS.md` § "Asterion, the Chained".
 - **The links between parts:** `WeaponSystem.WhirlSweeps` (Rage sets it, Sweep weapons read it);
   `PlayerPartAnimator.ScaleBoost` / `ExtraLean` / `HeadDrop` (Rage sets them); `WeaponSystem.Sweeps` / `Whirls` /
   `SweepHits` / `WeightHits` (the bot line reads them).
-- **Models:** `CH_Asterion` with the part **`Chain`** (the trailing chain and stone; the weapon hides it while it
-  swings); `WP_LabyrinthChain` with the meshes **`Link`** and **`Weight`**. If the art part ships other names, its notes
-  win and the setup part writes them into the data.
+- **Models** (the art part, `claude/zealous-mirzakhani-ed2dcc` @ fb3ae21): `CH_Asterion` with the part **`Chain`**, an
+  empty under the root holding `ChainSeg0`–`3` and `ChainEnd` (the stone): the weapon hides it with `SetActive` while it
+  swings, and the portrait bakes hide it; `WP_LabyrinthChain` with the meshes **`Link`** and **`Weight`** (the stone's
+  centre 0.33 m past the last link's end: `WeaponDef.weightOffset`).
 - **The tease:** `BossDef.revealText` / `revealUnlock` / `revealDelay` / `revealHold` / `revealColor`;
   `BossFight.RevealShown`.
 
@@ -48,11 +49,11 @@ part"; the card: `docs/GLADIATORS.md` § "Asterion, the Chained".
 |---|---|---|
 | **chain** | `Assets/Scripts/Gameplay/Weapons/WeaponDef.cs` (`Sweep` + its header of fields); `WeaponSystem.cs` (the sweep, backswings, the whirl flag, the drawing, the model part, counters, three pure statics); `PlayerProjectiles.cs` (`MaxOrbiters` 40); `Assets/Scripts/Gameplay/Animation/PlayerPartAnimator.cs` and `PartAnimProfile.cs` (mirror, spin, scale/lean/head hooks, idle head lift, twist scale); new tests `SweepMathTests` (EditMode), `ChainSweepTests` (PlayMode) | The chain sweeps its arc over time, hits what it passes once each, the stone crits and shoves harder, the push is sideways (radial for bosses), sweeps alternate and backswings follow without a wind-up, `WhirlSweeps` makes them 360°; every other weapon and gladiator unchanged; ccheck errors=0; tests written. |
 | **rage** | new `Assets/Scripts/Gameplay/Gladiators/GoreTrait.cs`, `RageTrait.cs`; `Assets/Scripts/UI/Hud.cs` (`DrawRage`); `Assets/Scripts/Gameplay/Dev/PlaytestBot.cs` (the summary line); new tests `RageTests` (PlayMode) | Gore (calm and Unchained), the meter (press, hits, cooling), Unchained (bellow, stats, no knockback, the whirl, poses) and Spent, `Halt`; the HUD bar and its labels; the bot line; ccheck errors=0 (only on the chain part's names until it merges); tests written. |
-| **setup** (codes against the other two; merges last) | new `Assets/Editor/Setup/AsterionSetup.cs`; `GladiatorSetup.cs` (the call and `All()`); `Assets/Scripts/Gameplay/Boss/BossDef.cs` and `BossFight.cs` (the tease); `PixelSrc/upgrade_icons.py` and the regenerated `Assets/Art/Textures/UI/UpgradeIcons.png` / `.txt`; new tests `AsterionTests` (PlayMode) | Every asset of R3-design's setup list with its numbers and words, the unlock (`DefeatBoss eternal_victor 1`, the chain into the pool), the tease on `BD_EternalVictor` set from `AsterionSetup`, the chain's icon; older bosses fall exactly as before; ccheck errors=0; tests written. |
+| **setup** (codes against the other two; merges last) | new `Assets/Editor/Setup/AsterionSetup.cs`; `GladiatorSetup.cs` (the call and `All()`); `PortraitBaker.cs` (`PortraitHidden`: the bakes hide `Chain`); `Assets/Scripts/Gameplay/Boss/BossDef.cs` and `BossFight.cs` (the tease); `PixelSrc/upgrade_icons.py` and the regenerated `Assets/Art/Textures/UI/UpgradeIcons.png` / `.txt`; new tests `AsterionTests` (PlayMode) | Every asset of R3-design's setup list with its numbers and words, the unlock (`DefeatBoss eternal_victor 1`, the chain into the pool), the tease on `BD_EternalVictor` set from `AsterionSetup`, the chain's icon; older bosses fall exactly as before; ccheck errors=0; tests written. |
 
 **No file is owned by two parts.** Not touched by anyone in R3: `PartRig.cs`, `EnemyManager*.cs`, `CompanionPack.cs`,
 the other traits, `BossController.cs`, `BossSetup.cs` (the tease is set from `AsterionSetup`), `Hypogeum.cs`,
-`CrowdExcitement.cs`, `CodexSetup.cs`, `MenuSceneBuilder.cs`, `PortraitBaker.cs`, `LanistaTablet.cs`, `RosterGrid.cs`,
+`CrowdExcitement.cs`, `CodexSetup.cs`, `MenuSceneBuilder.cs`, `LanistaTablet.cs`, `RosterGrid.cs`,
 `IconSetup.cs`, the shared docs (the orchestrator's).
 
 **Merge order:** chain → rage → setup (the art part any time before setup's PlayMode tests). After setup, the
@@ -61,4 +62,4 @@ menu scene.
 
 **Open questions for the orchestrator** (Q1–Q11 in `docs/tracks/R3-design.md`, a recommendation each): Unchained
 automatic or on a slide; Spent kept; the press radius; Gore while calm; shields; the tease in R3 and the full reveal in
-the BACKLOG; the `Chain` part's parent; the card's tag; Underdog; the first-guess numbers; three parts or two.
+the BACKLOG; the card's tag; Underdog; the first-guess numbers; three parts or two.

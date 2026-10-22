@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0ea0c2151f44fc41b534863b8707d7a, type: 3}
+  m_Name: UL_Skin_AshenOracle_VioletOracle
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.UnlockDef
+  id: skin_ashen_oracle_violet_oracle
+  displayName: 'Skin: Violet Oracle'
+  description: '3 wins as the Ashen Oracle earn a new look: Violet Oracle. Robes dyed the violet of the old mysteries. Wear it from the select screen.'
+  hint: Win 3 runs as the Ashen Oracle.
+  conditions:
+  - kind: 3
+    id: ashen_oracle
+    amount: 3
+  category: 0
+  renownCost: 0
+  renownBounty: 0
+  addsToPool: []

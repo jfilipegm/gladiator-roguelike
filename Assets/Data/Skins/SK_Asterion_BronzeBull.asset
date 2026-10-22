@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 875766629d42b02d0ada5a71714f75d1, type: 3}
+  m_Name: SK_Asterion_BronzeBull
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.SkinDef
+  id: asterion_bronze_bull
+  displayName: Bronze Bull
+  description: 'Talos, the bronze guardian of Crete: a hide of polished metal.'
+  gladiator: {fileID: 11400000, guid: b36d75c1cbe79bec9861b56ae7bceb69, type: 2}
+  model: {fileID: 919132149155446097, guid: bc4ca119f06e477039bd9465978f3767, type: 3}
+  portrait: {fileID: 21300000, guid: 85c157784c64ec022a90e7c7152a6e93, type: 3}
+  unlock: {fileID: 11400000, guid: d0f56d556ab16186a82fde7bbb5a9ac2, type: 2}
+  chips:
+  - {r: 0.8509804, g: 0.64705884, b: 0.36862746, a: 1}
+  - {r: 0.47843137, g: 0.30980393, b: 0.13333334, a: 1}
+  - {r: 0.96862745, g: 0.8509804, b: 0.41960785, a: 1}

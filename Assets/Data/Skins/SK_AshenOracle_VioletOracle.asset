@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 875766629d42b02d0ada5a71714f75d1, type: 3}
+  m_Name: SK_AshenOracle_VioletOracle
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.SkinDef
+  id: ashen_oracle_violet_oracle
+  displayName: Violet Oracle
+  description: Robes dyed the violet of the old mysteries.
+  gladiator: {fileID: 11400000, guid: 8e064a74ca9fac68e9f81d6f3b09f38a, type: 2}
+  model: {fileID: 919132149155446097, guid: 67de54b9f20b97b53a9472b6053b0852, type: 3}
+  portrait: {fileID: 21300000, guid: c60302380018e9df4affa7f3c940febf, type: 3}
+  unlock: {fileID: 11400000, guid: 3ba64624a998a14b1935d48ef0e7d5f7, type: 2}
+  chips:
+  - {r: 0.39215687, g: 0.2784314, b: 0.56078434, a: 1}
+  - {r: 0.2627451, g: 0.09411765, b: 0.30980393, a: 1}
+  - {r: 0.8901961, g: 0.84313726, b: 0.7372549, a: 1}

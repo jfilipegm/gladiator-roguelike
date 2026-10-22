@@ -226,6 +226,22 @@ namespace Gladiator.UI
         public static Image Rule(string name, Transform parent, Vector2 anchor, Vector2 pivot, Vector2 pos, float width) =>
             UiFactory.Image(name, parent, UiTheme.Current.crimson, anchor, pivot, pos, new Vector2(width, 3f), PixelIcons.White);
 
+        /// <summary>P3 (the producer's note 4): the gap every label keeps inside its frame's padding, canvas units.</summary>
+        public const float ContentPad = 8f;
+
+        /// <summary>P3: where labels may sit inside a frame of `kind` and `size`: the frame less its padding
+        /// (UiFrames.Padding) and ContentPad on every side, in the frame's local units with (0, 0) at its centre. Never
+        /// negative: a frame too small for its padding gives a zero-size rect at its centre.</summary>
+        public static Rect ContentRect(FrameKind kind, Vector2 size)
+        {
+            var p = UiFrames.Padding(kind);
+            float xMin = -size.x * 0.5f + p.x + ContentPad, xMax = size.x * 0.5f - p.z - ContentPad;
+            float yMin = -size.y * 0.5f + p.y + ContentPad, yMax = size.y * 0.5f - p.w - ContentPad;
+            if (xMax < xMin) xMin = xMax = (xMin + xMax) * 0.5f;
+            if (yMax < yMin) yMin = yMax = (yMin + yMax) * 0.5f;
+            return Rect.MinMaxRect(xMin, yMin, xMax, yMax);
+        }
+
         /// <summary>The scale that fits a `size` block in `canvas` with `margin` on every side, never above 1 (spec §8.2).</summary>
         public static float FitScale(Vector2 size, Vector2 canvas, float margin = 24f)
         {

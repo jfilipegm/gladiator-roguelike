@@ -93,6 +93,14 @@ namespace Gladiator.UI
         public float bannerQuickRoll = 0.15f;
         public float bannerSwayDegrees = 1.4f;
         public float bannerOvershoot = 0.05f;
+        [Tooltip("P3: the cloth's wave while it drops and settles (it replaced the sway): height as a share of the cloth's height.")]
+        public float bannerWaveAmplitude = 0.07f;
+        [Tooltip("P3: one wave's length as a share of the cloth's width.")]
+        public float bannerWaveLength = 0.55f;
+        [Tooltip("P3: how many waves a second travel across the cloth.")]
+        public float bannerWaveSpeed = 1.8f;
+        [Tooltip("P3: seconds for the wave to fade to a third after the drop ends (0 = it stops with the drop).")]
+        public float bannerWaveDecay = 0.45f;
 
         static UiTheme _current;
 

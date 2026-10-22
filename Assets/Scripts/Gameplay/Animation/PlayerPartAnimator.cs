@@ -3,7 +3,11 @@ using UnityEngine;
 
 namespace Gladiator.Gameplay
 {
-    /// <summary>Drives the player's PartRig from PlayerMotor state (run/idle/air/slide/land + weapon swing).</summary>
+    /// <summary>
+    /// Drives the player's PartRig from PlayerMotor state (run/idle/air/slide/land + weapon swing). R3 hooks, all off by
+    /// default: the weapon can mirror its swing and spin the whole model (the Labyrinth Chain's backswings and whirl), and
+    /// a trait can swell the model, lean the body and drop the head (Asterion's Rage).
+    /// </summary>
     public sealed class PlayerPartAnimator : MonoBehaviour, ITickable
     {
         public PartAnimProfile profile;
@@ -17,12 +21,29 @@ namespace Gladiator.Gameplay
         public Vector3 AttackDirection { get; set; } = Vector3.forward;
         /// <summary>Collapse into the death pose (placeholder until M3.3's proper death animation).</summary>
         public bool Dead { get; set; }
+        /// <summary>The swing goes the other way: the arm's yaw and the body's twist along with it are negated (a sweep
+        /// from left to right). Set by the weapon.</summary>
+        public bool AttackMirror { get; set; }
+        /// <summary>Degrees the whole model turns about Y on top of the rig (a whirl). Set by the weapon; 0 = its bind rotation.</summary>
+        public float AttackSpin { get; set; }
+        /// <summary>Multiplies the model's scale, eased by the pose blend (Asterion swells while Unchained). Set by a trait.</summary>
+        public float ScaleBoost { get; set; } = 1f;
+        /// <summary>Forward body lean added (deg). Set by a trait.</summary>
+        public float ExtraLean { get; set; }
+        /// <summary>The head pitched down (deg); it also cancels the idle head lift. Set by a trait.</summary>
+        public float HeadDrop { get; set; }
 
         PartRig _rig;
         PartPose _pose = PartPose.Identity;
-        float _phase, _time;
+        float _phase, _time, _stillT, _scaleBoost = 1f;
+        Quaternion _rootBind = Quaternion.identity;
+        bool _spun;
 
-        void Awake() => _rig = new PartRig(visualRoot);
+        void Awake()
+        {
+            _rig = new PartRig(visualRoot);
+            if (visualRoot != null) _rootBind = visualRoot.localRotation;
+        }
         void OnEnable() => GameLoop.Register(this, TickGroup.Feedback);
         void OnDisable() => GameLoop.Unregister(this);
 
@@ -34,6 +55,7 @@ namespace Gladiator.Gameplay
             float speed = motor.HorizontalSpeed;
             float run01 = Mathf.Clamp01(speed / p.fullRunSpeed);
             var target = PartPose.Identity;
+            bool still = false;
 
             if (Dead)
             {
@@ -86,8 +108,19 @@ namespace Gladiator.Gameplay
                         target.RootY = b * p.idleBobHeight;
                         target.ArmL = new Vector3(0, 0, -p.idleArmSway * (0.5f + 0.5f * b));
                         target.ArmR = new Vector3(0, 0, p.idleArmSway * (0.5f + 0.5f * b));
+                        still = AttackT < 0f;
                     }
                     break;
+            }
+
+            // Standing still a while, the head lifts (Asterion looks at the sky); a trait's head drop wins.
+            _stillT = still ? _stillT + dt : 0f;
+            if (!Dead && p.idleHeadLift != 0f && HeadDrop <= 0f && _stillT >= p.idleHeadDelay)
+                target.Head += PartPose.Lean(-p.idleHeadLift);
+            if (!Dead)
+            {
+                target.Body += PartPose.Lean(ExtraLean);
+                target.Head += PartPose.Lean(HeadDrop);
             }
 
             // Weapon swing overrides the sword arm (additive body twist sells it).
@@ -95,6 +128,7 @@ namespace Gladiator.Gameplay
             {
                 float k = p.swingCurve.Evaluate(Mathf.Clamp01(AttackT));
                 float yaw = Mathf.Lerp(p.swingYawStart, p.swingYawEnd, k);
+                if (AttackMirror) yaw = -yaw; // the backswing: the same swing the other way
                 float raise = Mathf.Sin(k * Mathf.PI) * 0.4f + 0.6f;
                 target.ArmR = new Vector3(-p.swingRaise * raise, yaw, 0f);
                 if (p.overheadChop)
@@ -107,7 +141,7 @@ namespace Gladiator.Gameplay
                 // Twist the upper body toward the target (the legs keep running where the player steers).
                 Vector3 fwd = transform.forward;
                 float twist = Mathf.Clamp(Vector3.SignedAngle(new Vector3(fwd.x, 0f, fwd.z), AttackDirection, Vector3.up), -80f, 80f);
-                target.Body += new Vector3(0f, twist + yaw * 0.2f, 0f);
+                target.Body += new Vector3(0f, twist + yaw * p.bodyTwistScale, 0f);
             }
 
             float blend = 1f - Mathf.Exp(-p.poseSharpness * dt);
@@ -127,9 +161,14 @@ namespace Gladiator.Gameplay
                 float st = p.jumpStretch * k;
                 scale = new Vector3(1f - st * 0.4f, 1f + st, 1f - st * 0.4f);
             }
+            _scaleBoost = Mathf.LerpUnclamped(_scaleBoost, ScaleBoost, blend);
             var applied = _pose;
-            applied.RootScale = scale;
+            applied.RootScale = scale * _scaleBoost;
             _rig.Apply(applied);
+
+            // A whirl turns the whole model about Y (the rig doesn't touch the root's rotation); back to bind at 0.
+            if (AttackSpin != 0f) { visualRoot.localRotation = _rootBind * Quaternion.Euler(0f, AttackSpin, 0f); _spun = true; }
+            else if (_spun) { visualRoot.localRotation = _rootBind; _spun = false; }
         }
     }
 }

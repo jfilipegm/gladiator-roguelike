@@ -217,7 +217,7 @@ namespace Gladiator.UI
                     _key = key;
                     Layout(mode);
                     if (mode == Mode.Pick) WritePick(lvl);
-                    else { WritePage(); Remap(_text, StatText_Colors, MarbleInks); } // the page's colours, readable on marble
+                    else { WritePage(); Remap(_text, StatColors, MarbleInks); } // the page's colours, readable on marble
                     _body.SetCharArray(_text.Chars, 0, _text.Length);
                     Rewrites++;
                 }
@@ -266,7 +266,7 @@ namespace Gladiator.UI
         }
 
         // StatText's colours are made for a dark page; on marble each becomes a darker ink of its hue (same 7 characters)
-        static readonly string[] StatText_Colors =
+        static readonly string[] StatColors =
         {
             StatText.ValueCol, StatText.CardCol, StatText.Dim, StatText.Head, StatText.Gain, StatText.Loss, StatText.SynergyCol,
             StatText.TraitCol, StatText.TempCol, StatText.AltarCol, StatText.AdminCol, StatText.VowCol, StatText.EdictCol,

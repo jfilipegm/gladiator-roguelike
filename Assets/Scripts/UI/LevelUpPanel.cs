@@ -29,6 +29,8 @@ namespace Gladiator.UI
 
         const int MaxCards = 4, MaxPips = 8;
         const int IdReroll = 10, IdBanish = 11, IdSkip = 12;
+        /// <summary>The buttons' ids for Hover / Click (UiHit; tests click them the way the mouse does).</summary>
+        public const int RerollId = IdReroll, BanishId = IdBanish, SkipId = IdSkip;
         const float CardW = LevelUpLayout.CardW, CardH = LevelUpLayout.CardH;
         // the card (spec §6.2), y from its centre: 9 frame · 40 band · 112 icon · 26 tag · 68 name · 30 pips ·
         // 174 description · 30 key · 24 foot (the frame's)

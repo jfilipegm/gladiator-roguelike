@@ -31,7 +31,16 @@ namespace Gladiator.Gameplay
 
         public int SwarmsStarted { get; private set; }
         public int ElitesSent { get; private set; }
-        public float Clock => RunState.Current != null ? RunState.Current.Elapsed : Time.timeSinceLevelLoad;
+        [Tooltip("The Director's clock runs × this (R7: the Impatient Emperor edict, 1.33): the swarm and elite schedules run on PaceClock, the curves and the spawn table on Clock. The run timer and the boss don't change.")]
+        public float clockScale = 1f;
+        /// <summary>The run clock × clockScale, uncapped: the swarm and elite schedules run on it.</summary>
+        public float PaceClock => (RunState.Current != null ? RunState.Current.Elapsed : Time.timeSinceLevelLoad) * clockScale;
+        /// <summary>
+        /// The clock the curves (TargetAlive, spawns per second, swarm size) and the spawn table read: PaceClock, capped at
+        /// the run's length when the clock runs fast (the minute-8 horde arrives early and holds). Identical to the run
+        /// clock at clockScale 1.
+        /// </summary>
+        public float Clock => clockScale > 1f ? Mathf.Min(PaceClock, RunLength) : PaceClock;
         [Tooltip("This arena's cap on enemies alive (0 = DirectorConfig.hardCap). Set from the arena layout.")]
         public int maxAliveOverride;
         [Tooltip("The arena's ArenaLayoutDef.spawnMaxDistance: ring spawns within this distance of the player when the edge allows it (0 = anywhere).")]
@@ -50,7 +59,9 @@ namespace Gladiator.Gameplay
         public int AliveCap => config != null ? HardCap : 0;
 
         public int TargetAlive => config == null ? 0 : Mathf.Min(HardCap, Mathf.RoundToInt(config.targetAlive.Evaluate(Clock) * Density));
+        /// <summary>When the next swarm starts, in PaceClock seconds (the run clock at clockScale 1).</summary>
         public float NextSwarmAt => _nextSwarm;
+        /// <summary>When the next elite comes, in PaceClock seconds (the run clock at clockScale 1).</summary>
         public float NextEliteAt => _nextElite;
 
         void Awake()
@@ -158,8 +169,8 @@ namespace Gladiator.Gameplay
         }
 
         /// <summary>Admin/tests: start the next swarm / elite now.</summary>
-        public void TriggerSwarmNow() => _nextSwarm = Clock;
-        public void TriggerEliteNow() => _nextElite = Clock;
+        public void TriggerSwarmNow() => _nextSwarm = PaceClock;
+        public void TriggerEliteNow() => _nextElite = PaceClock;
 
         public void Tick(float dt, float unscaledDt)
         {
@@ -170,11 +181,11 @@ namespace Gladiator.Gameplay
             if (dt <= 0f) return;
             if (run != null && run.Ended) { _swarmLeft = 0; return; }
             if (_cam == null && Camera.main != null) _cam = Camera.main.transform;
-            float t = Clock;
+            float t = Clock, pace = PaceClock; // the curves read t; the swarm and elite schedules run on pace
             float runLength = run != null ? run.config.runDuration : 480f;
             // the clock jumped (admin timer, tests): reschedule instead of firing every missed event at once
-            if (t > _nextSwarm + 2f) _nextSwarm = t + config.swarmEvery * 0.5f;
-            if (t > _nextElite + 2f) _nextElite = t + EliteEvery * 0.5f;
+            if (pace > _nextSwarm + 2f) _nextSwarm = pace + config.swarmEvery * 0.5f;
+            if (pace > _nextElite + 2f) _nextElite = pace + EliteEvery * 0.5f;
 
             // steady pressure
             int target = TargetAlive;
@@ -192,9 +203,9 @@ namespace Gladiator.Gameplay
             else _spawnAcc = 0f;
 
             // swarm: a burst from one direction on top of the target
-            if (t >= _nextSwarm)
+            if (pace >= _nextSwarm)
             {
-                _nextSwarm = t + config.swarmEvery;
+                _nextSwarm = pace + config.swarmEvery;
                 BeginSwarm(em, t, runLength, PickGate(em));
             }
             if (_swarmLeft > 0 && _swarmEntry >= 0)
@@ -213,9 +224,9 @@ namespace Gladiator.Gameplay
             }
 
             // elite cadence
-            if (t >= _nextElite)
+            if (pace >= _nextElite)
             {
-                _nextElite = t + EliteEvery;
+                _nextElite = pace + EliteEvery;
                 int k = Pick(em, t, runLength, swarmOnly: false, eliteOnly: true);
                 if (k >= 0 && table.affixes.Length > 0)
                 {

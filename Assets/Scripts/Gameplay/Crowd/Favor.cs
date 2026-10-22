@@ -14,6 +14,8 @@ namespace Gladiator.Gameplay
         public static Favor Instance { get; private set; }
 
         public FavorConfig config;
+        [Tooltip("Favor gained × this (R7: the Fickle Crowd edict).")]
+        public float gainMul = 1f;
 
         const int VarietySlots = 32;
         readonly int[] _typeIds = new int[VarietySlots];
@@ -52,12 +54,14 @@ namespace Gladiator.Gameplay
             if (Instance == this) Instance = null;
         }
 
-        /// <summary>Adds Favor (sources, whims, admin, tests); a full meter throws a gift. Ignored once the run is over.</summary>
+        /// <summary>Adds Favor × gainMul (sources, whims, admin, tests); a full meter throws a gift. Ignored once the run is over.</summary>
         public void Add(float amount)
         {
             if (config == null || amount <= 0f) return;
             var run = RunState.Current;
             if (run != null && run.Ended) return;
+            amount *= gainMul;
+            if (amount <= 0f) return;
             Value += amount;
             TotalEarned += amount;
             while (Value >= Threshold)

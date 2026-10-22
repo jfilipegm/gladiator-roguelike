@@ -27,6 +27,11 @@ namespace Gladiator.Gameplay
         public float DamageTaken { get; private set; }
         /// <summary>Scales regen and Heal (the Blood Knight's Bloodthirst halves it); HealUnscaled ignores it.</summary>
         public float HealingMul { get; set; } = 1f;
+        /// <summary>
+        /// Scales all healing: regen, Heal and HealUnscaled (R7: the No Mercy edict sets 0). Separate from HealingMul, which
+        /// the Blood Knight's trait owns. Never max-HP growth (OnMaxHpChanged), nor the admin's HealFull.
+        /// </summary>
+        public float HealingScale { get; set; } = 1f;
         /// <summary>HP paid on purpose (Spend: the Blood Rite), not counted as damage taken.</summary>
         public float HpSpent { get; private set; }
         /// <summary>Taken off every hit after the arena's multiplier and Armor, never below 1 (the Murder Machine's
@@ -48,14 +53,16 @@ namespace Gladiator.Gameplay
         {
             if (dt <= 0f || IsDead || _stats == null) return;
             float regen = _stats.Get(StatId.HpRegen);
-            if (regen > 0f && Hp < MaxHp) Hp = Mathf.Min(MaxHp, Hp + regen * HealingMul * dt);
+            if (regen > 0f && Hp < MaxHp) Hp = Mathf.Min(MaxHp, Hp + regen * HealingMul * HealingScale * dt);
         }
 
-        /// <summary>Heals `amount` × HealingMul (amphorae, healing cards, admin). Returns the HP actually gained.</summary>
+        /// <summary>Heals `amount` × HealingMul × HealingScale (amphorae, healing cards). Returns the HP actually gained.</summary>
         public float Heal(float amount) => HealUnscaled(amount * HealingMul);
 
-        /// <summary>Heals ignoring HealingMul (a gladiator's own healing, e.g. Bloodthirst). Returns the HP gained.</summary>
-        public float HealUnscaled(float amount)
+        /// <summary>Heals ignoring HealingMul (a gladiator's own healing, e.g. Bloodthirst), still × HealingScale. Returns the HP gained.</summary>
+        public float HealUnscaled(float amount) => Restore(amount * HealingScale);
+
+        float Restore(float amount)
         {
             if (IsDead || amount <= 0f) return 0f;
             float before = Hp;
@@ -76,7 +83,8 @@ namespace Gladiator.Gameplay
             return paid;
         }
 
-        public void HealFull() => HealUnscaled(MaxHp);
+        /// <summary>Back to full (admin, tests): a dev tool, so the edicts' HealingScale doesn't apply.</summary>
+        public void HealFull() => Restore(MaxHp);
 
         /// <summary>Call after an upgrade changed MaxHp: a raise also heals by the same amount, a cut only clamps.</summary>
         public void OnMaxHpChanged(float oldMaxHp)

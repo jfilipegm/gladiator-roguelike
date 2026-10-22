@@ -36,7 +36,8 @@ namespace Gladiator.Gameplay
         }
 
         Slot[] _slots;
-        uint _rng = 0x6A11F7u;
+        const uint RngSalt = 0x6A11F7u;
+        uint _rng = RngSalt;
         PlayerHealth _health;
         WeaponSystem _weapons;
         PlayerBuild _build;
@@ -52,6 +53,9 @@ namespace Gladiator.Gameplay
         void Awake()
         {
             Instance = this;
+            // Q14 (R7): seeded from the run's GameRandom (GameSession seeds it per run), so the gifts change from run to run
+            _rng = GameRandom.NextUInt() ^ RngSalt;
+            if (_rng == 0u) _rng = RngSalt;
             int n = config != null ? Mathf.Max(1, config.maxGifts) : 3;
             _slots = new Slot[n];
             for (int i = 0; i < n; i++)

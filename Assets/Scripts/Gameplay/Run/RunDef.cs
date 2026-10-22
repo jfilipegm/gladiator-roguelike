@@ -69,6 +69,7 @@ namespace Gladiator.Gameplay
             Gladiator = gladiator;
             Run = run;
             ArenaIndex = 0;
+            GameRandom.Seed((int)NextRunSeed()); // Q14 (R7): every run rolls differently (R8 replaces this with seeded streams)
             Load(run != null && run.arenas.Length > 0 ? run.arenas[0].scenePath : null);
         }
 
@@ -76,9 +77,24 @@ namespace Gladiator.Gameplay
         public static void Retry()
         {
             TimeController.ResetForNewRun();
+            GameRandom.Seed((int)NextRunSeed()); // Q14 (R7): a fresh run, fresh rolls
             var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
             if (scene.buildIndex >= 0) UnityEngine.SceneManagement.SceneManager.LoadScene(scene.buildIndex);
             else UnityEngine.SceneManagement.SceneManager.LoadScene(scene.path);
+        }
+
+        static uint _runCounter;
+
+        /// <summary>
+        /// Q14 (R7): a seed for the next run that differs every time (the clock's ticks and a counter, through a 32-bit
+        /// hash; never 0). Runs loaded straight into an arena (bots, tests) don't call it: their rolls stay fixed per launch.
+        /// </summary>
+        static uint NextRunSeed()
+        {
+            ulong ticks = (ulong)System.Diagnostics.Stopwatch.GetTimestamp();
+            uint h = (uint)ticks ^ (uint)(ticks >> 32) ^ (++_runCounter * 0x9E3779B9u);
+            h ^= h >> 16; h *= 0x7FEB352Du; h ^= h >> 15; h *= 0x846CA68Bu; h ^= h >> 16; // lowbias32
+            return h != 0u ? h : 0x9E3779B9u;
         }
 
         /// <summary>Back to the main menu (or quit if it isn't in the build, e.g. a bare arena build).</summary>

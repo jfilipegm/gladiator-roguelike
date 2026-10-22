@@ -23,6 +23,8 @@ namespace Gladiator.Gameplay
         public float openDelay = 0.35f;
         [Tooltip("Real-time beat between using a chest/altar and its cards (s).")]
         public float rewardDelay = 0.3f;
+        [Tooltip("Cards a level-up offers + this, clamped 1–4 (R7: the Meagre Choices edict, -1). Chests, the altar and the boss's reward are unchanged.")]
+        public int levelUpCardDelta;
 
         public bool IsOpen { get; private set; }
         public readonly CardOffer[] Offers = new CardOffer[4];
@@ -115,6 +117,7 @@ namespace Gladiator.Gameplay
             var c = Config;
             _roller.OfferEvolutions = c != null && (source == PickSource.LevelUp ? c.evolutionInLevelUps : c.evolutionInRewards);
             int n = c != null ? c.CardCount(Luck, GameRandom.Value) : 3;
+            if (source == PickSource.LevelUp) n = Mathf.Clamp(n + levelUpCardDelta, 1, 4);
             ChoiceCount = RollAll(n);
             OffersVersion++;
             IsOpen = true;

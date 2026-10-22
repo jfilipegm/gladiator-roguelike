@@ -1,4 +1,4 @@
-# R3 contract — Asterion, the Chained (orchestrator, 2026-10-22 00:10; DRAFT until the design part answers)
+# R3 contract — Asterion, the Chained (FINAL, orchestrator, 2026-10-22 09:45)
 
 **Item branch:** `phase5-asterion`, cut from `main` (v0.19.0). Worker branches merge into it; the orchestrator does every
 merge. **Release:** v0.20.0. **Source:** CLAUDE.md §6.7, the roster's last row: "Asterion, the Chained | Minotaur
@@ -63,3 +63,20 @@ menu scene.
 **Open questions for the orchestrator** (Q1–Q11 in `docs/tracks/R3-design.md`, a recommendation each): Unchained
 automatic or on a slide; Spent kept; the press radius; Gore while calm; shields; the tease in R3 and the full reveal in
 the BACKLOG; the card's tag; Underdog; the first-guess numbers; three parts or two.
+
+## Orchestrator's answers (2026-10-22 09:45): all eleven recommendations accepted
+- **Q1:** Unchained is automatic (`triggerOnSlide` stays as the fallback switch).
+- **Q2:** keep Spent (2 s, 75 % speed).
+- **Q3:** keep the tension: press radius 3.5 m against the stone's 3.8–5.2 m.
+- **Q4:** Gore while calm too.
+- **Q5:** the sideways push (shields that face him miss it); bosses get the radial push, so their fights don't change.
+- **Q6:** the tease line at the Victor's fall in R3; the full visual reveal goes to the BACKLOG.
+- **Q7:** settled by the art (`Chain` empty; the bakes hide it).
+- **Q8:** the chain's card is tagged `Heavy`.
+- **Q9:** noted for *Underdog* (BACKLOG): make it about something other than being crowded.
+- **Q10:** the numbers are first guesses; the bot line and the producer's playtest tune them.
+- **Q11:** three code parts, merged chain → rage → setup. All three start together: rage and setup code against the
+  names above, marking calls to names that don't exist yet `// R3-STUB(chain|rage)` (ccheck may fail only on those).
+
+**Every code worker starts with** `git fetch origin && git merge --ff-only origin/phase5-asterion` (a plain merge if
+the fast-forward fails): the cards start from `main`.

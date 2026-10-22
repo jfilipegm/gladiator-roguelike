@@ -15,11 +15,17 @@ namespace Gladiator.UI
     /// GC: built once; shown/hidden with a CanvasGroup (alpha + raycasts). Not SetActive, and not Canvas.enabled: a
     /// disabled canvas drops its GraphicRegistry set and re-creates it on enable (~8 KB per open, measured). No
     /// Selectable colour tweens; texts are pre-sized and written from char buffers or non-allocating SetText.
-    /// U1 layout A (docs/tracks/U1-design.md §6, §8.3): 300×520 cards centred with the title and the buttons, the stats
-    /// column (StatsPanel, created here) in the right margin; LevelUpLayout says where on every screen shape. Each card
+    /// U1 layout A (docs/tracks/U1-design.md §6, §8.3): 300×520 cards centred with the title and the buttons. Each card
     /// wears its rarity's frame (stone, bronze, silver + meander, gold + a laurel wreath behind the icon) round a dark
     /// inside: the rarity band, the icon on a halo, tag, name, pips, description, key. A Vow's band is split crimson |
     /// gold. Buttons are bronze tabulae ansatae with key chips (UiKit.Plate + UiHit: no Button in a run).
+    /// P3 (docs/tracks/P3-contract.md, the producer's notes 15, 17, 19): layout A is symmetric: "your items"
+    /// (InventoryPanel, built here) on the left mirrors "your stats" (StatsPanel) on the right; the selected card lights
+    /// its upgrade's slot there, or shows a new one as a ghost in the next free slot. Every card label sits inside the
+    /// card frame's ContentRect. The pause is this screen too: PAUSED in the title's place, three ansata plates where
+    /// the cards stand (RESUME · ESC, OPTIONS · O, MAIN MENU · Q; clickable, or up/down + Enter / gamepad South), the
+    /// inventory left and the stats column right, at a three-card level-up's fit so the two screens line up. Clicking
+    /// empty space no longer resumes: the plates are the commands.
     /// </summary>
     public sealed class LevelUpPanel : MonoBehaviour, ITickable, IUiHitTarget
     {
@@ -31,18 +37,28 @@ namespace Gladiator.UI
         const int IdReroll = 10, IdBanish = 11, IdSkip = 12;
         /// <summary>The buttons' ids for Hover / Click (UiHit; tests click them the way the mouse does).</summary>
         public const int RerollId = IdReroll, BanishId = IdBanish, SkipId = IdSkip;
+        /// <summary>P3: the pause's plates (Hover / Click ids).</summary>
+        public const int ResumeId = 20, OptionsId = 21, MenuId = 22;
+        public const int PausePlates = 3;
+        public const string PausedWord = "PAUSED";
+        static readonly string[] PauseWords = { "Resume", "Options", "Main Menu" };
+        static readonly string[] PauseKeys = { "ESC", "O", "Q" };
         const float CardW = LevelUpLayout.CardW, CardH = LevelUpLayout.CardH;
         // the card (spec §6.2), y from its centre: 9 frame · 40 band · 112 icon · 26 tag · 68 name · 30 pips ·
-        // 174 description · 30 key · 24 foot (the frame's)
+        // 168 description · 30 key · 24 foot (the frame's); P3: the key and the description moved up 6 so the key's
+        // glyphs stay inside the frame's ContentRect (UiKit.ContentRect: the padding rule)
         const float Inset = 9f, BandY = 231f, BandH = 40f, IconY = 151f, IconSize = 100f,
             WreathY = 143f, TagY = 82f, TagH = 28f, NameY = 35f, NameH = 68f, PipY = -14f, PipSize = 14f, PipPitch = 20f,
-            DescY = -117f, DescH = 174f, KeyY = -221f, KeyH = 30f;
+            DescY = -114f, DescH = 168f, KeyH = 30f;
         const float SelectedScale = 1.04f, RingOut = 6f, HaloOut = 8f; // producer (2026-10-22): the glow stays clear of the subtitle and the buttons
         // layout A at 1920×1080, in the content's units from the canvas centre: the title's glyphs from y 46, the
         // subtitle at 188, the cards' tops at 262, the buttons at 812 (from the top)
         const float TitleY = 425f, TitleH = 150f, TitleMaxW = 1400f, SubY = 326f, SubH = 50f, CardsY = 18f,
-            ButtonsY = -305f, ButtonPitch = 306f;
+            ButtonsY = -305f, ButtonPitch = 306f, Parked = -5000f;
         static readonly Vector2 ButtonSize = new Vector2(280f, 66f);
+        // P3 the pause's plates: stacked where the cards stand, a key chip wide enough for ESC
+        static readonly Vector2 PausePlateSize = new Vector2(440f, 80f);
+        const float PausePitch = 108f, PauseFont = 32f, PauseKeyWidth = 66f, PauseGrace = 0.15f;
 
         sealed class CardView
         {
@@ -57,6 +73,8 @@ namespace Gladiator.UI
             public readonly CharBuffer Text = new CharBuffer(384); // description + Phase 5.5 hints with colour tags
         }
 
+        enum Face : byte { None, Pick, Pause }
+
         static readonly Color BandInk = new Color32(0x17, 0x12, 0x0F, 0xFF);
         static readonly Color AltarRed = new Color(0.9f, 0.16f, 0.36f); // the altar's blood (today's)
         static readonly Color PipEmpty = new Color(0.26f, 0.29f, 0.34f);
@@ -70,15 +88,19 @@ namespace Gladiator.UI
         CanvasGroup _group;
         RectTransform _content;
         StatsPanel _statsPanel;
+        InventoryPanel _inventory;
         TextMeshProUGUI _title, _sub;
         readonly CardView[] _cards = new CardView[MaxCards];
         UiPlate _reroll, _banish, _skip;
+        readonly UiPlate[] _pause = new UiPlate[PausePlates];
         Color _goldBright, _gold, _crimson, _crimsonLight, _ink;
-        LevelUpLayout.Fit _fit = new LevelUpLayout.Fit { ContentScale = 1f, StatsScale = 1f, Centred = true };
-        bool _shown, _banishMode;
+        LevelUpLayout.Fit _fit = new LevelUpLayout.Fit { ContentScale = 1f, StatsScale = 1f, Centred = true, Cards = LevelUpLayout.PauseCards };
+        Face _face;
+        bool _banishMode;
         int _selected, _hoverAction = -1, _drawnVersion = -1, _shownCount;
         int _drawnRerolls = -1, _drawnBanishes = -1;
-        float _openedAt, _prevStickX;
+        int _pauseFocus;
+        float _openedAt, _prevStickX, _prevStickY;
         bool _drawnBanishMode;
         PickSource _drawnSource = (PickSource)255;
 
@@ -99,10 +121,12 @@ namespace Gladiator.UI
         public Component CardNameLabel(int i) => _cards[i].Title;
         public Component CardDescriptionLabel(int i) => _cards[i].Desc;
         public Component CardKeyLabel(int i) => _cards[i].Key;
-        /// <summary>The cards, title and buttons (centred, or slid left for the stats column: LevelUpLayout).</summary>
+        /// <summary>The cards, title and buttons (always centred since P3: LevelUpLayout).</summary>
         public RectTransform Content => _content;
         public StatsPanel Stats => _statsPanel;
-        /// <summary>The layout of the last redraw, and the stats column's scale in it.</summary>
+        /// <summary>P3: "your items", left of the cards (and of the pause's plates).</summary>
+        public InventoryPanel Inventory => _inventory;
+        /// <summary>The layout of the last redraw, and the columns' scale in it.</summary>
         public LevelUpLayout.Fit Fit => _fit;
         public float StatsScale => _fit.StatsScale;
         /// <summary>Tests: the title's and subtitle's words, the title label, the panel's canvas.</summary>
@@ -115,6 +139,24 @@ namespace Gladiator.UI
         public RectTransform ActionRect(int i) => ActionPlate(i).Root;
         /// <summary>Tests: redraw the offers next tick (after a test edits LevelUpController.Offers, e.g. their rarity).</summary>
         public void ForceRedraw() => _drawnVersion = -1;
+        /// <summary>P3 tests: the pause shows (the plates, the inventory, the stats column), its plates (0 Resume,
+        /// 1 Options, 2 Main Menu), their words and keys, the focused one, and the PAUSED title.</summary>
+        public bool PauseShown => _face == Face.Pause;
+        public UiPlate PausePlate(int i) => _pause[i];
+        public RectTransform PausePlateRect(int i) => _pause[i].Root;
+        public string PauseLabel(int i) => _pause[i].Label.text;
+        public string PauseKey(int i) => _pause[i].Key != null ? _pause[i].Key.text : "";
+        public int PauseFocus => _pauseFocus;
+        public RectTransform PauseTitleRect => _title.rectTransform;
+        public float PauseTitleWidth => _title.GetPreferredValues(PausedWord).x;
+        public int PauseTitleLines
+        {
+            get
+            {
+                _title.ForceMeshUpdate();
+                return _title.textInfo.lineCount;
+            }
+        }
 
         void Awake()
         {
@@ -133,24 +175,28 @@ namespace Gladiator.UI
             UiFactory.Stretch(dim.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             dim.raycastTarget = true; // eat clicks meant for the world
             _content = UiFactory.Rect("Content", root, mid, mid, Vector2.zero, Vector2.zero);
-            root = _content;
-            _title = UiKit.Text("Title", root, "LEVEL UP!", TextRole.Shout, 132f, _goldBright, TextAlignmentOptions.Center, mid, mid,
+            var content = _content;
+            _title = UiKit.Text("Title", content, "LEVEL UP!", TextRole.Shout, 132f, _goldBright, TextAlignmentOptions.Center, mid, mid,
                 new Vector2(0f, TitleY), new Vector2(TitleMaxW, TitleH), TextLook.Outline);
             AutoSize(_title, 72f, 132f); // SPOILS OF VICTORY at 4:3
-            _sub = UiKit.Text("Sub", root, "choose one", TextRole.Body, 34f, _ink, TextAlignmentOptions.Center, mid, mid,
+            _sub = UiKit.Text("Sub", content, "choose one", TextRole.Body, 34f, _ink, TextAlignmentOptions.Center, mid, mid,
                 new Vector2(0f, SubY), new Vector2(TitleMaxW, SubH), TextLook.Outline);
             AutoSize(_sub, 22f, 34f);
 
-            for (int i = 0; i < MaxCards; i++) _cards[i] = BuildCard(root, i);
+            for (int i = 0; i < MaxCards; i++) _cards[i] = BuildCard(content, i);
 
-            _reroll = BuildAction(root, IdReroll, "R", -ButtonPitch);
-            _banish = BuildAction(root, IdBanish, "B", 0f);
-            _skip = BuildAction(root, IdSkip, "X", ButtonPitch);
+            _reroll = BuildAction(content, IdReroll, "R", -ButtonPitch);
+            _banish = BuildAction(content, IdBanish, "B", 0f);
+            _skip = BuildAction(content, IdSkip, "X", ButtonPitch);
+            for (int i = 0; i < PausePlates; i++) _pause[i] = BuildPausePlate(content, i);
 
             Presize();
             _skip.Label.SetText("Skip");
+            // P3: "your items" (and its tooltip) over the dim, beside the content; the stats column is StatsPanel's
+            _inventory = new InventoryPanel(root);
             _group = _canvas.gameObject.AddComponent<CanvasGroup>();
             SetVisible(false);
+            ParkPause();
             EnsureStatsPanel();
         }
 
@@ -181,23 +227,25 @@ namespace Gladiator.UI
         Vector2 _laidOutFor; // the canvas size LayoutContent last fitted
 
         /// <summary>
-        /// Layout A on this canvas (LevelUpLayout): the content's scale and x, the title's room (it may not run off either
-        /// edge), and the stats column's scale. On a redraw (open, reroll, banish) and when the canvas changes size.
+        /// Layout A on this canvas (LevelUpLayout) for a row of `cards` (at least three, so the columns stay put: the
+        /// pause uses three): the content's scale (always centred), the title's room (the row's span, so it never runs
+        /// over a column), and the inventory column (the stats column places itself the same way). On a redraw (open,
+        /// reroll, banish), on entering the pause and when the canvas changes size.
         /// </summary>
-        void LayoutContent()
+        void LayoutContent(int cards)
         {
             var size = ((RectTransform)_canvas.transform).rect.size;
             _laidOutFor = size;
             if (size.x < 1f || size.y < 1f) size = MenuLayout.Reference;
-            _fit = LevelUpLayout.For(size, _shownCount);
+            int fitCards = Mathf.Max(LevelUpLayout.PauseCards, cards);
+            _fit = LevelUpLayout.For(size, fitCards);
             float s = _fit.ContentScale;
             _content.localScale = new Vector3(s, s, 1f);
             _content.anchoredPosition = new Vector2(_fit.ContentX, 0f);
-            float cx = size.x * 0.5f + _fit.ContentX;
-            float titleW = Mathf.Min(TitleMaxW, 2f * Mathf.Min(cx - LevelUpLayout.Edge, size.x - LevelUpLayout.Edge - cx) / s);
+            float titleW = Mathf.Min(TitleMaxW, LevelUpLayout.RowWidth(fitCards));
             _title.rectTransform.sizeDelta = new Vector2(titleW, TitleH);
             _sub.rectTransform.sizeDelta = new Vector2(titleW, SubH);
-            if (_statsPanel != null) _statsPanel.SetPickScale(_fit.StatsScale);
+            _inventory.Place(size, _fit);
         }
 
         void SetVisible(bool on)
@@ -212,6 +260,9 @@ namespace Gladiator.UI
             var mid = new Vector2(0.5f, 0.5f);
             var th = UiTheme.Current;
             float innerW = CardW - 2f * Inset;
+            // P3: every label inside the stone frame's ContentRect (the four card frames share their insets)
+            var cr = UiKit.ContentRect(FrameKind.CardStone, new Vector2(CardW, CardH));
+            float textW = cr.width, keyY = cr.yMin + KeyH * 0.5f;
             var v = new CardView();
             v.Root = UiFactory.Rect("Card" + index, parent, mid, mid, Vector2.zero, new Vector2(CardW, CardH));
             // back to front: the selected card's halo, the dark inside, the rarity frame, the focus ring
@@ -224,30 +275,30 @@ namespace Gladiator.UI
             v.Focus = UiKit.Frame("Focus", v.Root, FrameKind.Focus, mid, mid, Vector2.zero, new Vector2(CardW + 2f * RingOut, CardH + 2f * RingOut), Color.clear);
             v.Band = UiFactory.Image("Band", v.Root, Color.white, mid, mid, new Vector2(0f, BandY), new Vector2(innerW, BandH), PixelIcons.White);
             v.VowHalf = UiFactory.Image("VowHalf", v.Root, Color.clear, mid, mid, new Vector2(-innerW * 0.25f, BandY), new Vector2(innerW * 0.5f, BandH), PixelIcons.White);
-            v.Rarity = UiKit.Text("Rarity", v.Root, "COMMON", TextRole.Title, 24f, BandInk, TextAlignmentOptions.Center, mid, mid,
-                new Vector2(0f, BandY), new Vector2(innerW - 8f, BandH));
+            v.Rarity = UiKit.Text("Rarity", v.Root, "COMMON", TextRole.Title, 24f, BandInk, TextAlignmentOptions.Midline, mid, mid,
+                new Vector2(0f, BandY), new Vector2(textW, BandH));
             v.Rarity.characterSpacing = 12f; // the band's letter-spacing (spec §2.2)
             // the animated 8-bit icon with its own rarity aura (no square behind it: producer, 2026-10-22); a Legendary's laurel wreath behind it
             v.Wreath = UiKit.Frame("Wreath", v.Root, FrameKind.LaurelWreath, mid, mid, new Vector2(0f, WreathY), UiFrames.NativeSize(FrameKind.LaurelWreath), Color.clear);
             v.Icon = new UpgradeIconView(v.Root, "Icon", mid, new Vector2(0f, IconY), IconSize, lively: true);
             v.Kind = UiKit.Text("Kind", v.Root, "NEW!", TextRole.Title, 21f, NewGold, TextAlignmentOptions.Center, mid, mid,
-                new Vector2(0f, TagY), new Vector2(innerW - 8f, TagH));
+                new Vector2(0f, TagY), new Vector2(textW, TagH));
             v.Title = UiKit.Text("Title", v.Root, "Title", TextRole.Title, 32f, _ink, TextAlignmentOptions.Center, mid, mid,
-                new Vector2(0f, NameY), new Vector2(innerW - 12f, NameH));
+                new Vector2(0f, NameY), new Vector2(textW, NameH));
             v.Title.textWrappingMode = TextWrappingModes.Normal; // two lines, then smaller
             AutoSize(v.Title, 26f, 32f);
             v.Pips = new Image[MaxPips];
             for (int p = 0; p < MaxPips; p++)
                 v.Pips[p] = UiFactory.Image("Pip" + p, v.Root, PipEmpty, mid, mid, new Vector2(0f, PipY), new Vector2(PipSize, PipSize), PixelIcons.White);
             v.Desc = UiKit.Text("Desc", v.Root, "Desc", TextRole.Body, 24f, _ink, TextAlignmentOptions.Top, mid, mid,
-                new Vector2(0f, DescY), new Vector2(innerW - 12f, DescH));
+                new Vector2(0f, DescY), new Vector2(textW, DescH));
             v.Desc.textWrappingMode = TextWrappingModes.Normal;
             v.Desc.richText = true;
             AutoSize(v.Desc, 18f, 24f); // evolutions and tag hints run longer: shrink to fit, never below the 18 floor
             var keyColor = _ink;
             keyColor.a = 0.5f;
-            v.Key = UiKit.Text("Key", v.Root, "[" + (index + 1) + "]", TextRole.Number, 26f, keyColor, TextAlignmentOptions.Center, mid, mid,
-                new Vector2(0f, KeyY), new Vector2(innerW, KeyH));
+            v.Key = UiKit.Text("Key", v.Root, "[" + (index + 1) + "]", TextRole.Number, 26f, keyColor, TextAlignmentOptions.Midline, mid, mid,
+                new Vector2(0f, keyY), new Vector2(textW, KeyH));
             return v;
         }
 
@@ -261,6 +312,37 @@ namespace Gladiator.UI
             hit.Target = this; hit.Id = id;
             AutoSize(plate.Label, 20f, 30f); // "Banish (1)" never truncates, whatever room the key chip leaves
             return plate;
+        }
+
+        /// <summary>P3: RESUME (bronze: the screen's main action), OPTIONS and MAIN MENU (marble), with their keys.</summary>
+        UiPlate BuildPausePlate(Transform parent, int i)
+        {
+            var mid = new Vector2(0.5f, 0.5f);
+            var plate = UiKit.Plate("Pause" + i, parent, PauseWords[i], i == 0 ? ButtonStyle.Primary : ButtonStyle.Secondary, mid, mid,
+                new Vector2(0f, CardsY + (1 - i) * PausePitch), PausePlateSize, PauseFont, PauseKeys[i]);
+            plate.Frame.raycastTarget = true;
+            var hit = plate.Frame.gameObject.AddComponent<UiHit>();
+            hit.Target = this; hit.Id = ResumeId + i;
+            WidenKey(plate, PauseKeyWidth); // every chip as wide as ESC's, so the three labels line up
+            return plate;
+        }
+
+        /// <summary>Widens a plate's key chip to `width` (growing right) and moves the label's left edge with it.</summary>
+        static void WidenKey(UiPlate plate, float width)
+        {
+            if (plate.KeyChip == null || plate.Key == null) return;
+            var chip = plate.KeyChip.rectTransform;
+            float grow = width - chip.sizeDelta.x;
+            if (grow <= 0f) return;
+            chip.sizeDelta = new Vector2(width, chip.sizeDelta.y);
+            chip.anchoredPosition += new Vector2(grow * 0.5f, 0f);
+            var key = plate.Key.rectTransform;
+            key.sizeDelta = new Vector2(width, key.sizeDelta.y);
+            var label = plate.Label.rectTransform;
+            float right = label.anchoredPosition.x + label.sizeDelta.x * 0.5f;
+            float left = label.anchoredPosition.x - label.sizeDelta.x * 0.5f + grow;
+            label.sizeDelta = new Vector2(Mathf.Max(10f, right - left), label.sizeDelta.y);
+            label.anchoredPosition = new Vector2((left + right) * 0.5f, label.anchoredPosition.y);
         }
 
         /// <summary>
@@ -307,12 +389,18 @@ namespace Gladiator.UI
 
         public void Hover(int id)
         {
+            if (id >= ResumeId && id < ResumeId + PausePlates) { if (_face == Face.Pause) _pauseFocus = id - ResumeId; return; }
             if (id < MaxCards) { if (id < _shownCount) _selected = id; _hoverAction = -1; }
             else _hoverAction = id;
         }
 
         public void Click(int id)
         {
+            if (id >= ResumeId && id < ResumeId + PausePlates)
+            {
+                if (_face == Face.Pause && Time.unscaledTime - _openedAt >= PauseGrace) ActivatePause(id - ResumeId);
+                return;
+            }
             if (InGrace) return;
             if (id < MaxCards) Activate(id);
             else if (id == IdReroll) Reroll();
@@ -341,28 +429,152 @@ namespace Gladiator.UI
             _banishMode = !_banishMode;
         }
 
+        /// <summary>The pause shows while the player has paused a live run (not under the options or the admin menu).</summary>
+        static bool PauseWanted()
+        {
+            var p = Player.Main;
+            var run = RunState.Current;
+            return p != null && p.IsPaused && run != null && !run.Ended && !RunState.CombatOver && !OptionsPanel.IsOpen &&
+                   (AdminController.Instance == null || !AdminController.Instance.IsOpen);
+        }
+
         public void Tick(float dt, float unscaledDt)
         {
             var c = Ctl;
             bool open = c != null && c.IsOpen;
-            if (open != _shown)
-            {
-                _shown = open;
-                SetVisible(open);
-                _banishMode = false;
-                _hoverAction = -1;
-                if (open) { _openedAt = Time.unscaledTime; _selected = 0; _drawnVersion = -1; }
-            }
-            if (!open) return;
+            var face = open ? Face.Pick : PauseWanted() ? Face.Pause : Face.None;
+            if (face != _face) SwitchFace(face);
+            if (face == Face.None) return;
             float now = Time.unscaledTime;
+            if (face == Face.Pause)
+            {
+                if (((RectTransform)_canvas.transform).rect.size != _laidOutFor) LayoutContent(LevelUpLayout.PauseCards);
+                _inventory.Tick(now, false, default);
+                if (now - _openedAt >= PauseGrace) ReadPauseInput();
+                RefreshPause();
+                return;
+            }
             for (int i = 0; i < _shownCount; i++) _cards[i].Icon.Tick(now);
             if (!InGrace) ReadInput(c);
             if (!c.IsOpen) return;
             if (c.OffersVersion != _drawnVersion) Redraw(c);
-            else if (((RectTransform)_canvas.transform).rect.size != _laidOutFor) LayoutContent(); // the window changed size mid-pick
+            else if (((RectTransform)_canvas.transform).rect.size != _laidOutFor) LayoutContent(_shownCount); // the window changed size mid-pick
             if (_selected >= _shownCount) _selected = Mathf.Max(0, _shownCount - 1);
             RefreshDynamic(c);
+            bool has = _selected < c.ChoiceCount;
+            _inventory.Tick(now, has, has ? c.Offers[_selected] : default);
         }
+
+        void SwitchFace(Face face)
+        {
+            _face = face;
+            SetVisible(face != Face.None);
+            _inventory.SetVisible(face != Face.None);
+            _banishMode = false;
+            _hoverAction = -1;
+            _openedAt = Time.unscaledTime;
+            if (face == Face.Pick)
+            {
+                _selected = 0;
+                _drawnVersion = -1;
+                ParkPause();
+                PlaceActions(true);
+            }
+            else if (face == Face.Pause) EnterPause();
+            else ParkPause();
+        }
+
+        // ---------- the pause (P3) ----------
+
+        void EnterPause()
+        {
+            LayoutContent(LevelUpLayout.PauseCards);
+            for (int i = 0; i < MaxCards; i++) _cards[i].Root.anchoredPosition = new Vector2(0f, Parked);
+            _shownCount = 0;
+            PlaceActions(false);
+            for (int i = 0; i < PausePlates; i++)
+            {
+                _pause[i].Root.anchoredPosition = new Vector2(0f, CardsY + (1 - i) * PausePitch);
+                if (_pause[i].State != UiState.Normal) _pause[i].SetState(UiState.Normal);
+            }
+            _pauseFocus = 0;
+            _title.text = PausedWord;
+            _title.color = Color.white;
+            _sub.text = "";
+            _drawnBanishMode = !_banishMode; // the next pick redraws its title
+            _drawnSource = (PickSource)255;
+        }
+
+        void ParkPause()
+        {
+            for (int i = 0; i < PausePlates; i++) _pause[i].Root.anchoredPosition = new Vector2(0f, Parked);
+        }
+
+        void PlaceActions(bool on)
+        {
+            _reroll.Root.anchoredPosition = new Vector2(-ButtonPitch, on ? ButtonsY : Parked);
+            _banish.Root.anchoredPosition = new Vector2(0f, on ? ButtonsY : Parked);
+            _skip.Root.anchoredPosition = new Vector2(ButtonPitch, on ? ButtonsY : Parked);
+        }
+
+        void ReadPauseInput()
+        {
+            var kb = Keyboard.current;
+            if (kb != null)
+            {
+                if (kb.qKey.wasPressedThisFrame) { ActivatePause(2); return; }
+                if (kb.oKey.wasPressedThisFrame) { ActivatePause(1); return; }
+                if (kb.upArrowKey.wasPressedThisFrame || kb.wKey.wasPressedThisFrame) MovePause(-1);
+                if (kb.downArrowKey.wasPressedThisFrame || kb.sKey.wasPressedThisFrame) MovePause(1);
+                if (kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame)
+                {
+                    ActivatePause(_pauseFocus);
+                    return;
+                }
+            }
+            var pad = Gamepad.current;
+            if (pad != null)
+            {
+                if (pad.dpad.up.wasPressedThisFrame) MovePause(-1);
+                if (pad.dpad.down.wasPressedThisFrame) MovePause(1);
+                float y = pad.leftStick.y.ReadValue();
+                if (y > 0.5f && _prevStickY <= 0.5f) MovePause(-1);
+                if (y < -0.5f && _prevStickY >= -0.5f) MovePause(1);
+                _prevStickY = y;
+                if (pad.buttonSouth.wasPressedThisFrame) { ActivatePause(_pauseFocus); return; }
+                if (pad.buttonEast.wasPressedThisFrame) ActivatePause(0);
+            }
+        }
+
+        void MovePause(int d) => _pauseFocus = (_pauseFocus + d + PausePlates) % PausePlates;
+
+        /// <summary>0 RESUME, 1 OPTIONS (over the pause), 2 MAIN MENU.</summary>
+        void ActivatePause(int i)
+        {
+            var p = Player.Main;
+            switch (i)
+            {
+                case 0:
+                    if (p != null) p.SetPaused(false);
+                    break;
+                case 1:
+                    if (OptionsPanel.Instance == null) break;
+                    if (p != null && !p.IsPaused) p.SetPaused(true); // a click may have resumed first (Player's click-to-resume)
+                    OptionsPanel.Instance.Open();
+                    break;
+                case 2:
+                    GameSession.ToMenu();
+                    break;
+            }
+        }
+
+        /// <summary>Colours only, and only when they change: the focused plate glows.</summary>
+        void RefreshPause()
+        {
+            for (int i = 0; i < PausePlates; i++) SetState(_pause[i], i == _pauseFocus ? UiState.Focused : UiState.Normal);
+        }
+
+        // ---------- the cards ----------
 
         void ReadInput(LevelUpController c)
         {
@@ -409,13 +621,13 @@ namespace Gladiator.UI
             _drawnVersion = c.OffersVersion;
             _shownCount = c.ChoiceCount;
             var cfg = c.Config;
-            LayoutContent();
+            LayoutContent(_shownCount);
             for (int i = 0; i < MaxCards; i++)
             {
                 var v = _cards[i];
                 bool on = i < _shownCount;
                 // unused cards park off-screen instead of being deactivated
-                v.Root.anchoredPosition = on ? new Vector2(LevelUpLayout.CardX(i, _shownCount), CardsY) : new Vector2(0f, -5000f);
+                v.Root.anchoredPosition = on ? new Vector2(LevelUpLayout.CardX(i, _shownCount), CardsY) : new Vector2(0f, Parked);
                 if (!on) continue;
                 var o = c.Offers[i];
                 var col = cfg.RarityColor(o.Rarity);

@@ -7,22 +7,24 @@ using UnityEngine.UI;
 namespace Gladiator.UI
 {
     /// <summary>
-    /// P1 stats page (findings 10, 10b). Three faces, one panel:
-    /// - Pause: on the right, every stat's total and where it comes from (base, each card, synergies, traits and their
-    ///   live bonuses, the admin layer in dev builds), the gladiator's traits and their weapons' numbers.
-    /// - Pick (level-up, chest, altar, boss cards): a narrower "your stats" column beside the cards; the selected card
-    ///   (mouse hover, keys or gamepad) previews each stat it changes, "Damage 117% → 134%", gains green, losses red.
+    /// P1 stats page (findings 10, 10b), one column, three faces:
+    /// - Pick (level-up, chest, altar, boss cards): "your stats" beside the cards; the selected card (mouse hover, keys or
+    ///   gamepad) previews each stat it changes, "Damage 117% → 134%", gains green, losses red.
+    /// - Pause: the same column (P3, the producer's note 17: the pause looks like the level-up): the gladiator's name, the
+    ///   run's seed, every stat's total; hovering a stat row shows where it comes from (base, each card, synergies,
+    ///   traits and their live bonuses, edicts, the admin layer in dev builds) in a UiTooltip left of the column, and
+    ///   hovering the name shows the gladiator's traits.
     /// - Prompt: walking up to the Blood Altar or an Armory Chest shows what it costs ("Max HP 120 → 102").
-    /// Created by LevelUpPanel (so every arena scene has one without a scene rebuild). Built once; the text is rewritten
-    /// only when what it shows changes (stats, offers, selection) into a char buffer handed to TMP: no allocation per
-    /// frame. Hidden with a CanvasGroup, never SetActive (LevelUpPanel's note on canvas rebuilds).
-    /// R8: the Pause face's header names the run's seed ("SEED 7F3A-91C2"), written digit by digit (no allocation).
-    /// U1: the Pick and Prompt faces sit on riveted bronze, the Pause face on carved marble (UiFrames, one Image whose
-    /// frame changes with the face). The page is one Body (Marcellus) label; on marble its colour tags are swapped in
-    /// place for darker inks of the same hues (MarbleInks: same length, no allocation), the text itself unchanged.
-    /// Layout A: the Pick column is 410 wide, hangs from LevelUpLayout.ColumnTop and scales by SetPickScale.
+    /// P3 (notes 15, 17, 19): the column sits on riveted bronze in both faces, right of the cards at LevelUpLayout's
+    /// symmetric fit (InventoryPanel mirrors it on the left). Its rows are fixed: a title, one line under it, three
+    /// sections and one row per stat, each a label at its own place, so nothing moves while you go from card to card;
+    /// only the numbers change. The weapons' numbers left the page (the inventory's tooltips have them).
+    /// Created by LevelUpPanel (so every arena scene has one without a scene rebuild). Built once; the words are
+    /// rewritten only when what they show changes (stats, offers, selection) into one char buffer whose slices are handed
+    /// to the labels: no allocation per frame. Hidden with a CanvasGroup, never SetActive (LevelUpPanel's note on canvas
+    /// rebuilds). R8: the Pause face names the run's seed ("SEED 7F3A-91C2"), written digit by digit.
     /// </summary>
-    public sealed class StatsPanel : MonoBehaviour, ITickable
+    public sealed class StatsPanel : MonoBehaviour, ITickable, IUiHoverTarget
     {
         public enum Mode : byte { Hidden, Pause, Pick }
 
@@ -33,21 +35,41 @@ namespace Gladiator.UI
         [Tooltip("The level-up cards whose selection this previews (LevelUpPanel sets itself).")]
         public LevelUpPanel cards;
 
-        public const float PageWidth = 560f, PickWidth = LevelUpLayout.StatsW, Margin = 24f;
-        const float PageHeight = 920f, PromptWidth = 680f, PromptHeight = 60f;
-        // the text's insets inside the frame, at least (left, bottom, right, top); the frame's padding wins if larger
-        static readonly Vector4 MinInset = new Vector4(20f, 16f, 18f, 16f);
+        /// <summary>Both faces show the 410-wide column since P3 (the pause's 560-wide marble page is gone).</summary>
+        public const float PageWidth = LevelUpLayout.StatsW, PickWidth = LevelUpLayout.StatsW, Margin = LevelUpLayout.Edge;
+        const float PromptWidth = 680f, PromptHeight = 88f; // P3: tall enough for its words inside the bronze's ContentRect
+        /// <summary>A stat row's height and font size, and the gap before each section (scale 1).</summary>
+        public const float RowH = 24f, RowSize = 20f, SectionGap = 8f;
+        const float ValueShare = 0.52f, ValueGap = 5f, TipGap = 12f, MinRowSize = 16f;
+        /// <summary>The hover id of the title row (the pause: the gladiator's traits).</summary>
+        public const int TitleHover = 100;
+        const string PickTitle = "YOUR STATS", NoChange = "no stat changes (its effect is on the card)", HoverHint = " · hover for sources";
 
         Canvas _canvas;
         CanvasGroup _group, _promptGroup;
         RectTransform _box, _promptBox;
-        Image _frame, _promptFrame;
-        TextMeshProUGUI _body, _prompt;
-        Color _ink, _marbleInk;
+        Image _frame, _promptFrame, _rowLit;
+        TextMeshProUGUI _title, _sub, _prompt;
+        TextMeshProUGUI[] _heads, _names, _values;
+        float[] _rowTop; // each stat row's top below the column's top, scale 1
+        float _titleTop;
+        int _rows;
+        Color _headC, _dimC, _cardC, _valueC;
         float _pickScale = 1f;
-        readonly CharBuffer _text = new CharBuffer(6144);
+        readonly CharBuffer _text = new CharBuffer(4096);
         readonly CharBuffer _promptText = new CharBuffer(160);
         readonly StatShare[] _shares = new StatShare[24];
+        // slices of _text: 0 the title, 1 the line under it, 2-4 the section heads, then each row's name and value
+        int[] _start, _len;
+        const int SliceTitle = 0, SliceSub = 1, SliceHead = 2;
+        static int SliceName(int row) => 5 + 2 * row;
+        static int SliceValue(int row) => 6 + 2 * row;
+
+        UiTooltip _tip;
+        int _hover = -1, _tipKey = int.MinValue;
+        LevelUpLayout.Fit _fit;
+        Vector2 _laidOutFor;
+        int _laidCards = -1;
 
         /// <summary>The preview the Pick face shows (tests read it before and after a pick).</summary>
         public StatPreview Preview { get; } = new StatPreview();
@@ -55,33 +77,32 @@ namespace Gladiator.UI
         public StatPreview PromptPreview { get; } = new StatPreview();
         public Mode Current { get; private set; }
         public bool PromptShown { get; private set; }
-        /// <summary>Tests: the page's text and the prompt's, as shown.</summary>
+        /// <summary>Tests: the page's words (title, line under it, section heads, each row's name and value, one per line)
+        /// and the prompt's, as shown.</summary>
         public string Text => _text.ToString();
         public string PromptText => _promptText.ToString();
         /// <summary>How many times the page's text has been rewritten (tests: it must not rewrite every frame).</summary>
         public int Rewrites { get; private set; }
-        /// <summary>The page's box (tests: the cards never run under it).</summary>
+        /// <summary>The column's box (tests: the cards never run under it).</summary>
         public RectTransform Page => _box;
-        /// <summary>The width the Pick face takes from the right of the screen at its current scale.</summary>
+        /// <summary>The width the column takes beside the cards at its current scale, with its gap.</summary>
         public float PickReserve => PickWidth * _pickScale + Margin;
-        /// <summary>The Pick face's scale (LevelUpLayout: 0.7-1).</summary>
+        /// <summary>The column's scale (LevelUpLayout: both faces).</summary>
         public float PickScale => _pickScale;
-        /// <summary>Tests: the FrameKind the page shows (Bronze for Pick, Marble for Pause; UiFrames.KindOf), and the prompt's.</summary>
+        /// <summary>Tests: the FrameKind the page shows (Bronze, both faces since P3; UiFrames.KindOf), and the prompt's.</summary>
         public int FrameShown => UiFrames.KindOf(_frame);
         public int PromptFrameShown => UiFrames.KindOf(_promptFrame);
-        public Component BodyLabel => _body;
+        /// <summary>A stat row's value label (role checks: Body).</summary>
+        public Component BodyLabel => _values != null && _values.Length > 0 ? _values[0] : null;
+        public Component TitleLabel => _title;
 
-        /// <summary>Layout A: the level-up scales the Pick face to fit the right margin (it hangs from its top-right corner).</summary>
-        public void SetPickScale(float k)
-        {
-            _pickScale = Mathf.Clamp(k, 0.1f, 1f);
-            if (_layoutMode != Mode.Pick) return;
-            _box.localScale = new Vector3(_pickScale, _pickScale, 1f);
-            _box.anchoredPosition = new Vector2(-Margin, LevelUpLayout.ColumnTop(((RectTransform)_canvas.transform).rect.height)); // the canvas may have changed size
-        }
+        /// <summary>
+        /// Since P3 the column places itself from LevelUpLayout (the same fit LevelUpPanel uses); this only asks it to
+        /// re-place (kept for callers of the U1 API).
+        /// </summary>
+        public void SetPickScale(float k) => _laidCards = -1;
 
         int _key = int.MinValue, _promptKey = int.MinValue;
-        Mode _layoutMode = (Mode)255;
 
         PlayerStats _stats;
         PlayerBuild _build;
@@ -93,77 +114,150 @@ namespace Gladiator.UI
         {
             Instance = this;
             var th = UiTheme.Current;
-            _ink = th.ink;
-            _marbleInk = th.marbleInk;
+            ColorUtility.TryParseHtmlString(StatText.Head, out _headC);
+            ColorUtility.TryParseHtmlString(StatText.Dim, out _dimC);
+            ColorUtility.TryParseHtmlString(StatText.CardCol, out _cardC);
+            ColorUtility.TryParseHtmlString(StatText.ValueCol, out _valueC);
             _canvas = UiFactory.Canvas("StatsCanvas", transform, UiSortOrder.LevelUp + 1); // over the card dim, under menus
             var root = _canvas.transform;
-            var right = new Vector2(1f, 0.5f);
+            var left = new Vector2(0f, 0.5f);
+            var tl = new Vector2(0f, 1f);
             var mid = new Vector2(0.5f, 0.5f);
-            _box = UiFactory.Rect("Page", root, right, right, new Vector2(-Margin, -16f), new Vector2(PageWidth, PageHeight));
+            _box = UiFactory.Rect("Page", root, left, tl, Vector2.zero, new Vector2(PickWidth, LevelUpLayout.StatsH));
             _frame = UiKit.Frame("Frame", _box, FrameKind.Bronze, mid, mid, Vector2.zero, Vector2.zero, Color.white);
             UiFactory.Stretch(_frame.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            _body = UiKit.Text("Body", _box, "", TextRole.Body, 21f, _ink, TextAlignmentOptions.TopLeft, mid, mid, Vector2.zero, Vector2.zero);
-            StyleBody(TextLook.Flat);
-            Inset(_body.rectTransform, FrameKind.Bronze);
             _group = _box.gameObject.AddComponent<CanvasGroup>();
+            BuildRows(tl);
 
             var bottom = new Vector2(0.5f, 0f);
             _promptBox = UiFactory.Rect("Prompt", root, bottom, bottom, new Vector2(0f, 196f), new Vector2(PromptWidth, PromptHeight));
             _promptFrame = UiKit.Frame("Frame", _promptBox, FrameKind.Bronze, mid, mid, Vector2.zero, Vector2.zero, Color.white);
             UiFactory.Stretch(_promptFrame.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            _prompt = UiKit.Text("Text", _promptBox, "", TextRole.Body, 28f, _ink, TextAlignmentOptions.Center, mid, mid, Vector2.zero, Vector2.zero);
-            UiFactory.Stretch(_prompt.rectTransform, Vector2.zero, Vector2.one, new Vector2(18f, 0f), new Vector2(-18f, 0f));
+            // the prompt's words inside the bronze's ContentRect (the padding rule)
+            var pc = UiKit.ContentRect(FrameKind.Bronze, new Vector2(PromptWidth, PromptHeight));
+            _prompt = UiKit.Text("Text", _promptBox, "", TextRole.Body, 28f, th.ink, TextAlignmentOptions.Midline, mid, mid,
+                pc.center, pc.size);
             _prompt.richText = true;
             _prompt.enableAutoSizing = true; // "BLOOD ALTAR   Max HP 120 → 102" in Marcellus: shrink before it's cut
             _prompt.fontSizeMin = 20f;
             _prompt.fontSizeMax = 28f;
             _promptGroup = _promptBox.gameObject.AddComponent<CanvasGroup>();
+            _promptGroup.blocksRaycasts = false;
+            _promptGroup.interactable = false;
 
-            foreach (var g in new[] { _group, _promptGroup }) { g.blocksRaycasts = false; g.interactable = false; }
+            _tip = new UiTooltip(root, "StatTip");
+            _group.blocksRaycasts = false;
+            _group.interactable = false;
             Presize();
             Show(_group, false);
             Show(_promptGroup, false);
         }
 
-        /// <summary>The page's look (Flat on bronze, Engraved on marble), then its own rules back (UiKit.Style sets NoWrap).</summary>
-        void StyleBody(TextLook look)
+        /// <summary>The fixed rows (scale 1, from the bronze's ContentRect): title, the line under it, then per section
+        /// a gap, its head and one row per stat. Each stat row takes the pointer (the pause's tooltips).</summary>
+        void BuildRows(Vector2 tl)
         {
-            UiKit.Style(_body, TextRole.Body, look);
-            _body.richText = true;
-            _body.textWrappingMode = TextWrappingModes.Normal;
-            _body.overflowMode = TextOverflowModes.Truncate;
-            _body.enableAutoSizing = true; // a late-run build has many sources: shrink to fit, never below 13 (a dense data page)
-            _body.fontSizeMin = 13f;
-            _body.fontSizeMax = 21f;
+            var pad = UiFrames.Padding(FrameKind.Bronze);
+            float p = UiKit.ContentPad;
+            float left = pad.x + p, top = pad.w + p, inner = PickWidth - left - pad.z - p;
+            float nameW = inner * ValueShare - ValueGap, valueX = left + inner * ValueShare, valueW = inner * (1f - ValueShare);
+            _rows = StatText.Order.Length;
+            int sections = StatText.SectionStart.Length;
+            _start = new int[SliceValue(_rows - 1) + 1];
+            _len = new int[_start.Length];
+            _names = new TextMeshProUGUI[_rows];
+            _values = new TextMeshProUGUI[_rows];
+            _heads = new TextMeshProUGUI[sections];
+            _rowTop = new float[_rows];
+
+            _titleTop = top;
+            _title = UiKit.Text("Title", _box, PickTitle, TextRole.Body, InventoryPanel.TitleSize, _headC, TextAlignmentOptions.MidlineLeft, tl, tl,
+                new Vector2(left, -top), new Vector2(inner, InventoryPanel.TitleH));
+            _title.richText = true;
+            _sub = UiKit.Text("Sub", _box, "", TextRole.Body, InventoryPanel.SubSize, _dimC, TextAlignmentOptions.MidlineLeft, tl, tl,
+                new Vector2(left, -top - InventoryPanel.TitleH), new Vector2(inner, InventoryPanel.SubH));
+            _sub.richText = true;
+            AutoSize(_sub, 13f, InventoryPanel.SubSize); // "if you take Gilded Mercenary's Purse: HP 54 → 100"
+            // the title takes the pointer too (the pause: the gladiator's traits)
+            Hit(_box, new Vector2(left, -top), new Vector2(inner, InventoryPanel.TitleH), TitleHover);
+
+            _rowLit = UiFactory.Image("Lit", _box, new Color(1f, 1f, 1f, 0f), tl, tl, new Vector2(left - 4f, -top), new Vector2(inner + 8f, RowH), PixelIcons.White);
+            _rowLit.raycastTarget = false;
+
+            float y = top + InventoryPanel.TitleH + InventoryPanel.SubH;
+            for (int sct = 0; sct < sections; sct++)
+            {
+                int from = StatText.SectionStart[sct], to = sct + 1 < sections ? StatText.SectionStart[sct + 1] : _rows;
+                y += SectionGap;
+                _heads[sct] = UiKit.Text("Head" + sct, _box, StatText.SectionTitle[sct], TextRole.Body, InventoryPanel.HeadSize, _headC,
+                    TextAlignmentOptions.MidlineLeft, tl, tl, new Vector2(left, -y), new Vector2(inner, InventoryPanel.HeadH));
+                y += InventoryPanel.HeadH;
+                for (int i = from; i < to; i++)
+                {
+                    _rowTop[i] = y;
+                    var s = StatText.Order[i];
+                    _names[i] = UiKit.Text("Name_" + s, _box, StatInfo.Name(s), TextRole.Body, RowSize, _cardC, TextAlignmentOptions.MidlineLeft, tl, tl,
+                        new Vector2(left, -y), new Vector2(nameW, RowH));
+                    AutoSize(_names[i], MinRowSize, RowSize);
+                    _values[i] = UiKit.Text("Value_" + s, _box, "", TextRole.Body, RowSize, _valueC, TextAlignmentOptions.MidlineLeft, tl, tl,
+                        new Vector2(valueX, -y), new Vector2(valueW, RowH));
+                    _values[i].richText = true;
+                    AutoSize(_values[i], MinRowSize, RowSize); // "+100% → +125%" shrinks before it's cut
+                    Hit(_box, new Vector2(left, -y), new Vector2(inner, RowH), i);
+                    y += RowH;
+                }
+            }
         }
 
-        /// <summary>Stretch `rt` over its parent, inset by the frame's padding (at least MinInset).</summary>
-        static void Inset(RectTransform rt, FrameKind kind)
+        static void AutoSize(TMP_Text t, float min, float max)
         {
-            var pad = UiFrames.Padding(kind);
-            UiFactory.Stretch(rt, Vector2.zero, Vector2.one,
-                new Vector2(Mathf.Max(pad.x, MinInset.x), Mathf.Max(pad.y, MinInset.y)),
-                new Vector2(-Mathf.Max(pad.z, MinInset.z), -Mathf.Max(pad.w, MinInset.w)));
+            t.enableAutoSizing = true;
+            t.fontSizeMin = min;
+            t.fontSizeMax = max;
+        }
+
+        /// <summary>A clear pointer area forwarding enter/exit with `id` (UiHover).</summary>
+        void Hit(Transform parent, Vector2 pos, Vector2 size, int id)
+        {
+            var tl = new Vector2(0f, 1f);
+            var img = UiFactory.Image("Hit" + id, parent, Color.clear, tl, tl, pos, size, PixelIcons.White);
+            img.raycastTarget = true;
+            var h = img.gameObject.AddComponent<UiHover>();
+            h.Target = this;
+            h.Id = id;
         }
 
         static void Show(CanvasGroup g, bool on) { if (g.alpha != (on ? 1f : 0f)) g.alpha = on ? 1f : 0f; }
 
         /// <summary>
-        /// Grow the TMP buffers once past the longest page, with every glyph the page uses (→ and − come from the
+        /// Grow the TMP buffers once past the longest words, with every glyph the page uses (→ and − come from the
         /// dynamic fallback font: adding them now keeps the first preview from growing its atlas mid-run).
         /// </summary>
         void Presize()
         {
-            const string Glyphs = "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 0123456789 +-−→×·%/()[]:'’!?.,&—";
-            var sb = new System.Text.StringBuilder(_text.Chars.Length + 64);
-            while (sb.Length < _text.Chars.Length) sb.Append(Glyphs).Append('\n');
-            _body.SetText(sb.ToString());
-            _body.ForceMeshUpdate(true, true);
+            const string Glyphs = "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 0123456789 +-−→×·%/()[]:'’!?.,&—<>=#";
+            var sb = new System.Text.StringBuilder(256);
+            while (sb.Length < 200) sb.Append(Glyphs);
+            string line = sb.ToString(0, 200);
+            foreach (var t in new[] { _title, _sub })
+            {
+                t.SetText(line);
+                t.ForceMeshUpdate(true, true);
+            }
+            for (int i = 0; i < _rows; i++)
+                foreach (var t in new[] { _names[i], _values[i] })
+                {
+                    string keep = t.text;
+                    t.SetText(line);
+                    t.ForceMeshUpdate(true, true);
+                    t.SetText(keep);
+                }
             sb.Length = 0;
             while (sb.Length < _promptText.Chars.Length) sb.Append(Glyphs);
             _prompt.SetText(sb.ToString());
             _prompt.ForceMeshUpdate(true, true);
-            _body.SetText("");
+            _title.SetText(PickTitle);
+            _sub.SetText("");
             _prompt.SetText("");
         }
 
@@ -188,9 +282,15 @@ namespace Gladiator.UI
                 _build = p.GetComponent<PlayerBuild>();
                 _health = p.GetComponent<PlayerHealth>();
                 _weapons = p.GetComponent<WeaponSystem>();
-                _key = _promptKey = int.MinValue;
+                _key = _promptKey = _tipKey = int.MinValue;
             }
             return _stats != null;
+        }
+
+        public void Hover(int id, bool on)
+        {
+            if (on) _hover = id;
+            else if (_hover == id) _hover = -1;
         }
 
         public void Tick(float dt, float unscaledDt)
@@ -208,26 +308,46 @@ namespace Gladiator.UI
             {
                 Current = mode;
                 Show(_group, mode != Mode.Hidden);
+                _group.blocksRaycasts = mode == Mode.Pause; // the stat rows' tooltips: the pause only
                 _key = int.MinValue;
+                _hover = -1;
+                _tipKey = int.MinValue;
                 if (mode != Mode.Pick) Preview.Clear();
             }
             if (mode != Mode.Hidden)
             {
+                Place(mode == Mode.Pick ? Mathf.Max(LevelUpLayout.PauseCards, lvl.ChoiceCount) : LevelUpLayout.PauseCards);
                 int key = Key(mode, lvl);
                 if (key != _key)
                 {
                     _key = key;
-                    Layout(mode);
                     if (mode == Mode.Pick) WritePick(lvl);
-                    else { WritePage(); Remap(_text, StatColors, MarbleInks); } // the page's colours, readable on marble
-                    _body.SetCharArray(_text.Chars, 0, _text.Length);
+                    else WritePause();
+                    Push(mode);
                     Rewrites++;
                 }
             }
+            DrawTip(mode);
             DrawPrompt(live && mode == Mode.Hidden && !TimeController.IsPaused, run);
         }
 
-        /// <summary>Everything the text depends on, folded into one number: it's rewritten only when this changes.</summary>
+        /// <summary>Layout A's fit for `cards` (the pause: a three-card level-up's): right of the row, hanging from
+        /// ColumnTop at the columns' scale. Only when the canvas or the card count changes.</summary>
+        void Place(int cardCount)
+        {
+            var size = ((RectTransform)_canvas.transform).rect.size;
+            if (size == _laidOutFor && cardCount == _laidCards) return;
+            _laidOutFor = size;
+            _laidCards = cardCount;
+            if (size.x < 1f || size.y < 1f) size = MenuLayout.Reference;
+            _fit = LevelUpLayout.For(size, cardCount);
+            _pickScale = _fit.StatsScale;
+            _box.localScale = new Vector3(_pickScale, _pickScale, 1f);
+            _box.anchoredPosition = new Vector2(LevelUpLayout.ColumnLeft(size, _fit), LevelUpLayout.ColumnTop(size.y));
+            _tipKey = int.MinValue; // re-place the tooltip
+        }
+
+        /// <summary>Everything the words depend on, folded into one number: they're rewritten only when this changes.</summary>
         int Key(Mode mode, LevelUpController lvl)
         {
             int k = (int)mode;
@@ -238,46 +358,230 @@ namespace Gladiator.UI
                 k = k * 31 + lvl.OffersVersion;
                 k = k * 31 + (cards != null ? cards.Selected : 0);
             }
-            k = k * 31 + (DevSettings.AnyBuff ? Mathf.RoundToInt(DevSettings.DamagePct + 3f * DevSettings.AttackSpeedPct + 7f * DevSettings.RangePct +
-                                                                  11f * DevSettings.MaxHpPct + 13f * DevSettings.MoveSpeedPct + 17f * DevSettings.PickupRangePct + 19f * DevSettings.CritPct) : 0);
-            if (_weapons != null) k = k * 31 + _weapons.Weapons.Count + (_weapons.Temporary != null ? 100 + Mathf.CeilToInt(_weapons.TemporaryLeft) : 0);
+            k = k * 31 + AdminKey();
             return k;
         }
 
-        /// <summary>
-        /// Pick: the 410-wide bronze column hanging from LevelUpLayout.ColumnTop at the Pick scale. Pause: the 560-wide
-        /// marble page, centred on the right edge. Only when the face changes.
-        /// </summary>
-        void Layout(Mode mode)
+        static int AdminKey() => DevSettings.AnyBuff
+            ? Mathf.RoundToInt(DevSettings.DamagePct + 3f * DevSettings.AttackSpeedPct + 7f * DevSettings.RangePct + 11f * DevSettings.MaxHpPct +
+                               13f * DevSettings.MoveSpeedPct + 17f * DevSettings.PickupRangePct + 19f * DevSettings.CritPct)
+            : 0;
+
+        // ---------- the words: one buffer, a slice per label ----------
+
+        void Begin(int slice) => _start[slice] = _text.Length;
+
+        void End(int slice)
         {
-            if (mode == _layoutMode) return;
-            _layoutMode = mode;
-            bool pick = mode == Mode.Pick;
-            var kind = pick ? FrameKind.Bronze : FrameKind.Marble;
-            UiFrames.Apply(_frame, kind);
-            Inset(_body.rectTransform, kind);
-            StyleBody(pick ? TextLook.Flat : TextLook.Engraved);
-            _body.color = pick ? _ink : _marbleInk;
-            float h = ((RectTransform)_canvas.transform).rect.height;
-            _box.pivot = pick ? new Vector2(1f, 1f) : new Vector2(1f, 0.5f);
-            _box.sizeDelta = pick ? new Vector2(PickWidth, LevelUpLayout.StatsH) : new Vector2(PageWidth, PageHeight);
-            _box.anchoredPosition = pick ? new Vector2(-Margin, LevelUpLayout.ColumnTop(h)) : new Vector2(-Margin, -16f);
-            float k = pick ? _pickScale : 1f;
-            _box.localScale = new Vector3(k, k, 1f);
-            _body.fontSizeMax = pick ? 22f : 21f;
+            _len[slice] = _text.Length - _start[slice];
+            _text.Append('\n');
         }
 
-        // StatText's colours are made for a dark page; on marble each becomes a darker ink of its hue (same 7 characters)
-        static readonly string[] StatColors =
+        /// <summary>Hands each label its slice of the buffer (and the names their colours).</summary>
+        void Push(Mode mode)
         {
-            StatText.ValueCol, StatText.CardCol, StatText.Dim, StatText.Head, StatText.Gain, StatText.Loss, StatText.SynergyCol,
-            StatText.TraitCol, StatText.TempCol, StatText.AltarCol, StatText.AdminCol, StatText.VowCol, StatText.EdictCol,
-        };
-        static readonly string[] MarbleInks =
+            var c = _text.Chars;
+            _title.SetCharArray(c, _start[SliceTitle], _len[SliceTitle]);
+            _sub.SetCharArray(c, _start[SliceSub], _len[SliceSub]);
+            for (int i = 0; i < _rows; i++)
+            {
+                _names[i].SetCharArray(c, _start[SliceName(i)], _len[SliceName(i)]);
+                _values[i].SetCharArray(c, _start[SliceValue(i)], _len[SliceValue(i)]);
+                bool previewing = mode == Mode.Pick && Preview.Active;
+                var nameColor = !previewing ? _cardC : Preview.Changed(StatText.Order[i]) ? _valueC : _dimC;
+                if (_names[i].color != nameColor) _names[i].color = nameColor;
+            }
+        }
+
+        void WriteHeadsAndNames()
         {
-            "#3D342B", "#3D342B", "#6E6253", "#5A3A1B", "#2F7A3A", "#A8321F", "#1D6A78",
-            "#8A5A10", "#9A4A0E", "#9B2E4E", "#8E2A80", "#9B3A26", "#C23A1E", // edicts stay orange-red: they hurt you
-        };
+            int sections = StatText.SectionStart.Length;
+            for (int sct = 0; sct < sections; sct++)
+            {
+                Begin(SliceHead + sct);
+                _text.Append(StatText.SectionTitle[sct]);
+                End(SliceHead + sct);
+            }
+        }
+
+        // ---------- the Pick face: "your stats" with the selected card's preview ----------
+
+        void WritePick(LevelUpController lvl)
+        {
+            var t = _text.Clear();
+            int sel = cards != null ? cards.Selected : 0;
+            if (sel >= 0 && sel < lvl.ChoiceCount)
+                Preview.ForCard(lvl.Offers[sel], _stats, _build != null ? _build.State : null, _build != null ? _build.catalog : null,
+                    lvl.Config, _weapons, _health, RunState.Current);
+            else Preview.Clear();
+
+            Begin(SliceTitle);
+            t.Append(PickTitle);
+            End(SliceTitle);
+            Begin(SliceSub);
+            int extra = FirstSupplyLine();
+            if (Preview.Active && Preview.ChangedCount > 0) t.Append("if you take ").Append(lvl.Offers[sel].Def.displayName);
+            else if (extra >= 0)
+            {
+                t.Append("if you take ").Append(lvl.Offers[sel].Def.displayName).Append(": ");
+                StatPreview.LineText(t, Preview.Lines[extra]);
+            }
+            else t.Append(NoChange);
+            End(SliceSub);
+            WriteHeadsAndNames();
+            for (int i = 0; i < _rows; i++)
+            {
+                var s = StatText.Order[i];
+                bool previewing = Preview.Active;
+                bool changed = previewing && Preview.Changed(s);
+                Begin(SliceName(i));
+                t.Append(StatInfo.Name(s));
+                End(SliceName(i));
+                Begin(SliceValue(i));
+                if (changed) StatText.Change(t, s, Preview.Before[(int)s], Preview.After[(int)s]);
+                else
+                {
+                    t.Append("<color=").Append(previewing ? StatText.Dim : StatText.ValueCol).Append('>');
+                    StatText.Value(t, s, _stats.Get(s)).Append("</color>");
+                }
+                End(SliceValue(i));
+            }
+        }
+
+        /// <summary>A supplies card's line (HP after the heal, gold after the purse): the line under the title shows it,
+        /// so the rows never move. Weapon lines are left out (the inventory's ghost and tooltips show weapons).</summary>
+        int FirstSupplyLine()
+        {
+            for (int i = 0; i < Preview.LineCount; i++)
+            {
+                var m = Preview.Lines[i].Metric;
+                if (m == PreviewMetric.Hp || m == PreviewMetric.Gold) return i;
+            }
+            return -1;
+        }
+
+        // ---------- the Pause face: the gladiator, the seed, every stat's total ----------
+
+        void WritePause()
+        {
+            var t = _text.Clear();
+            var g = _stats.gladiator;
+            Begin(SliceTitle);
+            t.Append("<uppercase>").Append(g != null ? g.displayName : "Stats").Append("</uppercase>");
+            End(SliceTitle);
+            Begin(SliceSub);
+            AppendSeed(t, GameRandom.RunSeed);
+            t.Append(HoverHint);
+            End(SliceSub);
+            WriteHeadsAndNames();
+            for (int i = 0; i < _rows; i++)
+            {
+                var s = StatText.Order[i];
+                Begin(SliceName(i));
+                t.Append(StatInfo.Name(s));
+                End(SliceName(i));
+                Begin(SliceValue(i));
+                t.Append("<color=").Append(StatText.ValueCol).Append('>');
+                StatText.Value(t, s, _stats.Get(s)).Append("</color>");
+                End(SliceValue(i));
+            }
+        }
+
+        /// <summary>"SEED 7F3A-91C2" (GameRandom.SeedText's words, built in the buffer).</summary>
+        public static void AppendSeed(CharBuffer t, uint seed)
+        {
+            t.Append("SEED ");
+            for (int i = 7; i >= 0; i--)
+            {
+                int d = (int)(seed >> (i * 4)) & 0xF;
+                t.Append((char)(d < 10 ? '0' + d : 'A' + d - 10));
+                if (i == 4) t.Append('-');
+            }
+        }
+
+        // ---------- the pause's tooltips: where a stat comes from, the gladiator's traits ----------
+
+        void DrawTip(Mode mode)
+        {
+            int hover = mode == Mode.Pause ? _hover : -1;
+            int key = hover < 0 ? -1 : hover * 7919 + _stats.Block.Version * 31 + AdminKey() + (_build != null ? _build.State.Version * 131 : 0);
+            if (key == _tipKey) return;
+            _tipKey = key;
+            if (hover < 0 || (hover != TitleHover && hover >= _rows))
+            {
+                _tip.Hide();
+                _rowLit.color = new Color(1f, 1f, 1f, 0f);
+                return;
+            }
+            float rowTop;
+            if (hover == TitleHover)
+            {
+                if (!WriteTraits()) { _tip.Hide(); _rowLit.color = new Color(1f, 1f, 1f, 0f); return; }
+                rowTop = _titleTop;
+                _rowLit.rectTransform.anchoredPosition = new Vector2(_rowLit.rectTransform.anchoredPosition.x, -_titleTop);
+                _rowLit.rectTransform.sizeDelta = new Vector2(_rowLit.rectTransform.sizeDelta.x, InventoryPanel.TitleH);
+            }
+            else
+            {
+                WriteSources(StatText.Order[hover]);
+                rowTop = _rowTop[hover];
+                _rowLit.rectTransform.anchoredPosition = new Vector2(_rowLit.rectTransform.anchoredPosition.x, -rowTop);
+                _rowLit.rectTransform.sizeDelta = new Vector2(_rowLit.rectTransform.sizeDelta.x, RowH);
+            }
+            _rowLit.color = new Color(1f, 1f, 1f, 0.09f);
+            _tip.Apply();
+            // left of the column, its top level with the row (clamped on the screen)
+            var size = _laidOutFor.x > 1f ? _laidOutFor : MenuLayout.Reference;
+            float colLeft = LevelUpLayout.ColumnLeft(size, _fit) - size.x * 0.5f;
+            float y = LevelUpLayout.ColumnTop(size.y) - rowTop * _pickScale;
+            _tip.Place(new Vector2(colLeft - TipGap * _pickScale, y), new Vector2(1f, 1f), _pickScale, size);
+        }
+
+        /// <summary>The stat's total, then one line per source: "Base 100", "Thick Skin ×2 +40", "Blood Altar −21".</summary>
+        void WriteSources(StatId s)
+        {
+            _tip.Title.Clear().Append(StatInfo.Name(s));
+            StatText.Value(_tip.Sub.Clear().Append("total "), s, _stats.Get(s));
+            var t = _tip.Body.Clear();
+            int n = _stats.Breakdown(s, _shares);
+            int lines = 0;
+            for (int i = 0; i < n; i++)
+            {
+                var sh = _shares[i];
+                if (i > 0 && !StatText.Differs(s, sh.Amount, 0f)) continue;
+                if (sh.Source.Kind == StatSourceKind.Admin && !StatText.AdminVisible) continue;
+                if (lines++ > 0) t.Append('\n');
+                t.Append("<color=").Append(StatText.SourceColor(sh.Source)).Append('>').Append(StatText.SourceName(sh.Source, _stats.gladiator));
+                if (sh.Source.Kind == StatSourceKind.Card && sh.Count > 1) t.Append(" ×").Append(sh.Count, 0);
+                t.Append("</color>  ");
+                if (i == 0) StatText.Value(t, s, sh.Amount);
+                else StatText.Delta(t, s, sh.Amount);
+            }
+            if (lines <= 1)
+            {
+                if (lines > 0) t.Append('\n');
+                t.Append("<color=").Append(StatText.Dim).Append(">nothing else changes it yet</color>");
+            }
+        }
+
+        /// <summary>The gladiator's traits, each name then what it does. False if there are none.</summary>
+        bool WriteTraits()
+        {
+            var g = _stats.gladiator;
+            if (g == null || g.traits == null || g.traits.Length == 0) return false;
+            _tip.Title.Clear().Append(g.displayName);
+            _tip.Sub.Clear().Append("TRAITS");
+            var t = _tip.Body.Clear();
+            for (int i = 0; i < g.traits.Length; i++)
+            {
+                var tr = g.traits[i];
+                if (tr == null) continue;
+                if (t.Length > 0) t.Append('\n');
+                t.Append("<color=").Append(StatText.TraitCol).Append('>').Append(tr.displayName).Append("</color>");
+                if (!string.IsNullOrEmpty(tr.description)) t.Append('\n').Append(tr.description);
+            }
+            return true;
+        }
 
         /// <summary>Swaps every "&lt;color=#RRGGBB" whose hex is in `from` for the same-index `to`, in place (no allocation).</summary>
         public static void Remap(CharBuffer t, string[] from, string[] to)
@@ -299,126 +603,6 @@ namespace Gladiator.UI
                 }
                 i += 6;
             }
-        }
-
-        // ---------- the Pick face: a "your stats" column with the selected card's preview ----------
-
-        void WritePick(LevelUpController lvl)
-        {
-            var t = _text.Clear();
-            int sel = cards != null ? cards.Selected : 0;
-            if (sel >= 0 && sel < lvl.ChoiceCount)
-                Preview.ForCard(lvl.Offers[sel], _stats, _build != null ? _build.State : null, _build != null ? _build.catalog : null,
-                    lvl.Config, _weapons, _health, RunState.Current);
-            else Preview.Clear();
-
-            t.Append("<size=127%><color=").Append(StatText.Head).Append(">YOUR STATS</color></size>\n");
-            t.Append("<size=77%><color=").Append(StatText.Dim).Append('>');
-            if (Preview.Active && (Preview.ChangedCount > 0 || Preview.LineCount > 0)) t.Append("if you take ").Append(lvl.Offers[sel].Def.displayName);
-            else t.Append("no stat changes (its effect is on the card)");
-            t.Append("</color></size>\n");
-            for (int i = 0; i < Preview.LineCount; i++)
-            {
-                t.Append("<size=86%>");
-                StatPreview.LineText(t, Preview.Lines[i]);
-                t.Append("</size>\n");
-            }
-            for (int sct = 0; sct < StatText.SectionStart.Length; sct++)
-            {
-                int from = StatText.SectionStart[sct], to = sct + 1 < StatText.SectionStart.Length ? StatText.SectionStart[sct + 1] : StatText.Order.Length;
-                t.Append("<size=36%>\n</size><size=77%><color=").Append(StatText.Head).Append('>').Append(StatText.SectionTitle[sct]).Append("</color></size>\n");
-                for (int i = from; i < to; i++)
-                {
-                    StatText.StatLine(t, _stats, StatText.Order[i], Preview, false, _shares, "52%");
-                    t.Append('\n');
-                }
-            }
-        }
-
-        // ---------- the Pause face: every stat and its sources ----------
-
-        void WritePage()
-        {
-            var t = _text.Clear();
-            var g = _stats.gladiator;
-            t.Append("<size=143%><color=").Append(StatText.Head).Append('>').Append("<uppercase>").Append(g != null ? g.displayName : "Stats").Append("</uppercase></color></size>\n");
-            t.Append("<size=81%><color=").Append(StatText.Dim).Append(">every stat, then where it comes from<pos=68%>");
-            AppendSeed(t, GameRandom.RunSeed);
-            t.Append("</color></size>\n");
-            if (g != null && g.traits != null && g.traits.Length > 0)
-            {
-                t.Append("<size=86%><color=").Append(StatText.TraitCol).Append(">Traits: ");
-                for (int i = 0; i < g.traits.Length; i++)
-                {
-                    if (g.traits[i] == null) continue;
-                    if (i > 0) t.Append(" · ");
-                    t.Append(g.traits[i].displayName);
-                }
-                t.Append("</color></size>\n");
-            }
-            WriteWeapons(t);
-            for (int sct = 0; sct < StatText.SectionStart.Length; sct++)
-            {
-                int from = StatText.SectionStart[sct], to = sct + 1 < StatText.SectionStart.Length ? StatText.SectionStart[sct + 1] : StatText.Order.Length;
-                t.Append("<size=38%>\n</size><size=90%><color=").Append(StatText.Head).Append('>').Append(StatText.SectionTitle[sct]).Append("</color></size>\n");
-                for (int i = from; i < to; i++)
-                {
-                    StatText.StatLine(t, _stats, StatText.Order[i], null, true, _shares, "62%");
-                    t.Append('\n');
-                }
-            }
-            if (DevSettings.AnyBuff && StatText.AdminVisible)
-                t.Append("<size=76%><color=").Append(StatText.AdminCol).Append(">ADMIN buffs (F1) are on: they're the pink shares.</color></size>");
-        }
-
-        /// <summary>"SEED 7F3A-91C2" (GameRandom.SeedText's words, built in the buffer).</summary>
-        public static void AppendSeed(CharBuffer t, uint seed)
-        {
-            t.Append("SEED ");
-            for (int i = 7; i >= 0; i--)
-            {
-                int d = (int)(seed >> (i * 4)) & 0xF;
-                t.Append((char)(d < 10 ? '0' + d : 'A' + d - 10));
-                if (i == 4) t.Append('-');
-            }
-        }
-
-        void WriteWeapons(CharBuffer t)
-        {
-            if (_weapons == null) return;
-            var list = _weapons.Weapons;
-            if (list.Count == 0 && _weapons.Temporary == null) return;
-            t.Append("<size=38%>\n</size><size=90%><color=").Append(StatText.Head).Append(">WEAPONS</color></size>\n<size=86%>");
-            for (int i = 0; i < list.Count; i++) Weapon(t, list[i], false);
-            var loan = _weapons.Temporary;
-            if (loan != null) Weapon(t, loan, true);
-            t.Append("</size>");
-        }
-
-        void Weapon(CharBuffer t, WeaponInstance w, bool loan)
-        {
-            if (w == null || w.Def == null) return;
-            bool evo = IsEvolution(w.Def);
-            t.Append("<color=").Append(evo ? StatText.TraitCol : StatText.CardCol).Append('>').Append(w.Def.displayName).Append("</color><pos=50%>");
-            if (loan) t.Append("<color=").Append(StatText.TempCol).Append(">gift ").Append(Mathf.Ceil(_weapons.TemporaryLeft), 0).Append(" s</color>");
-            else if (evo) t.Append("<color=").Append(StatText.TraitCol).Append(">EVOLVED</color>");
-            else t.Append("Lv ").Append(w.Level, 0);
-            t.Append("<pos=72%>");
-            float hit = _weapons.Damage(w);
-            if (hit > 0f) t.Append(hit, hit >= 10f ? 0 : 1).Append(" · ");
-            t.Append(1f / Mathf.Max(0.01f, _weapons.CooldownOf(w)), 2).Append("/s\n");
-        }
-
-        bool IsEvolution(WeaponDef def)
-        {
-            if (_build == null) return false;
-            var s = _build.State;
-            for (int i = 0; i < s.OwnedCount; i++)
-            {
-                var d = s.GetOwned(i).Def;
-                if (d != null && d.evolvesFrom != null && d.weapon == def) return true;
-            }
-            return false;
         }
 
         // ---------- the Prompt face: the altar's and chests' cost ----------
@@ -455,5 +639,33 @@ namespace Gladiator.UI
             }
             _prompt.SetCharArray(t.Chars, 0, t.Length);
         }
+
+        // ---------- tests ----------
+
+        /// <summary>Tests: the title's and the line-under-it's words, a stat row's value words and its label.</summary>
+        public string TitleText => _len != null ? new string(_text.Chars, _start[SliceTitle], _len[SliceTitle]) : "";
+        public string SubText => _len != null ? new string(_text.Chars, _start[SliceSub], _len[SliceSub]) : "";
+        public string ValueText(StatId s)
+        {
+            int i = RowOf(s);
+            return i < 0 ? "" : new string(_text.Chars, _start[SliceValue(i)], _len[SliceValue(i)]);
+        }
+        /// <summary>Tests: stat `s`'s row (its name label's rect: fixed, whatever the card).</summary>
+        public RectTransform RowRect(StatId s)
+        {
+            int i = RowOf(s);
+            return i < 0 ? null : _names[i].rectTransform;
+        }
+        public static int RowOf(StatId s)
+        {
+            for (int i = 0; i < StatText.Order.Length; i++) if (StatText.Order[i] == s) return i;
+            return -1;
+        }
+        /// <summary>Tests: as the mouse entering (on) or leaving stat `s`'s row (the pause's tooltips).</summary>
+        public void HoverRow(StatId s, bool on) => Hover(RowOf(s), on);
+        public void HoverTitle(bool on) => Hover(TitleHover, on);
+        public UiTooltip Tooltip => _tip;
+        public bool TooltipShown => _tip != null && _tip.Shown;
+        public string TooltipText => _tip != null ? _tip.Text : "";
     }
 }

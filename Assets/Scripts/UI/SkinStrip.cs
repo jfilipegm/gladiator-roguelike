@@ -17,16 +17,19 @@ namespace Gladiator.UI
     /// it. Hidden when the gladiator has no skins. Menu-only UI: it allocates when it's shown, never per frame.
     /// U1: a riveted `Bronze` plate; the arrows small marble plates, BUY a bronze one (dimmed while it's out of reach);
     /// the name in Title 26, the status in Body 20.
+    /// P3 (the producer's note 11): the arrows are bronze pilum tips (`ArrowLeft` / `ArrowRight`) with no plate behind,
+    /// brighter when hovered; the strip is taller so both lines sit inside its content rect (note 4).
     /// </summary>
     public sealed class SkinStrip
     {
         /// <summary>The strip's box in canvas units (its pivot is its bottom centre).</summary>
-        public static readonly Vector2 Size = new Vector2(680f, 104f);
+        public static readonly Vector2 Size = new Vector2(680f, 120f);
         /// <summary>The name slot 0 shows: the gladiator's own colours.</summary>
         public const string ClassicName = "CLASSIC";
 
-        const float ArrowX = 302f, ContentW = 536f, ChipEdge = 18f, ChipGap = 4f, ChipsToName = 12f, NameY = 22f, StatusY = -26f;
-        const float BuyW = 420f, BuyX = -40f;
+        const float ArrowX = 302f, ContentW = 536f, ChipEdge = 18f, ChipGap = 4f, ChipsToName = 12f, NameY = 21f, StatusY = -21f;
+        const float BuyW = 420f, BuyX = -40f, BuyH = 44f;
+        static readonly Vector2 ArrowHit = new Vector2(64f, 96f);
 
         static readonly Color ChipRim = new Color(0.89f, 0.84f, 0.74f, 0.85f); // bone: a black chip still reads on the plate
 
@@ -75,6 +78,9 @@ namespace Gladiator.UI
         public RectTransform PrevRect => (RectTransform)_prev.transform;
         public RectTransform NextRect => (RectTransform)_next.transform;
         public RectTransform BuyRect => (RectTransform)_buy.transform;
+        /// <summary>Tests (P3): the arrows' pictures (`ArrowLeft`, `ArrowRight`).</summary>
+        public Component PrevArrow => _prev.targetGraphic;
+        public Component NextArrow => _next.targetGraphic;
         public int ChipCount { get { int n = 0; foreach (var c in _chips) if (c.transform.parent.gameObject.activeSelf) n++; return n; } }
         public Color Chip(int i) => _chips[i].color;
         /// <summary>Tests (U1): the plate the strip is drawn on (`FrameKind.Bronze`), BUY's plate, the name label.</summary>
@@ -92,8 +98,8 @@ namespace Gladiator.UI
             _root = plate.rectTransform;
             var t = _root.transform;
 
-            _prev = Arrow("SkinPrev", t, -ArrowX, 90f, () => Cycle(-1));
-            _next = Arrow("SkinNext", t, ArrowX, -90f, () => Cycle(1));
+            _prev = UiKit.Arrow("SkinPrev", t, false, mid, mid, new Vector2(-ArrowX, 0f), ArrowHit, () => Cycle(-1));
+            _next = UiKit.Arrow("SkinNext", t, true, mid, mid, new Vector2(ArrowX, 0f), ArrowHit, () => Cycle(1));
 
             _chipRow = UiFactory.Rect("Chips", t, mid, new Vector2(0f, 0.5f), new Vector2(0f, NameY), new Vector2(3f * ChipEdge + 2f * ChipGap, ChipEdge + 4f));
             _chips = new Image[3];
@@ -104,33 +110,23 @@ namespace Gladiator.UI
                 _chips[i] = UiFactory.Image("Colour", rim.transform, Color.white, mid, mid, Vector2.zero, new Vector2(ChipEdge, ChipEdge), PixelIcons.White);
             }
 
-            _name = UiKit.Text("Name", t, "", TextRole.Title, 26f, th.ink, TextAlignmentOptions.Center, mid, mid, new Vector2(0f, NameY), new Vector2(ContentW, 40f));
+            _name = UiKit.Text("Name", t, "", TextRole.Title, 26f, th.ink, TextAlignmentOptions.Midline, mid, mid, new Vector2(0f, NameY), new Vector2(ContentW, 40f));
             _name.enableAutoSizing = true; _name.fontSizeMin = 18f; _name.fontSizeMax = 26f;
             _name.overflowMode = TextOverflowModes.Truncate; // never Ellipsis
 
-            _status = UiKit.Text("Status", t, "", TextRole.Body, 20f, th.ink, TextAlignmentOptions.Center, mid, mid, new Vector2(0f, StatusY), new Vector2(ContentW, 30f));
+            _status = UiKit.Text("Status", t, "", TextRole.Body, 20f, th.ink, TextAlignmentOptions.Midline, mid, mid, new Vector2(0f, StatusY), new Vector2(ContentW, 30f));
             _status.enableAutoSizing = true; _status.fontSizeMin = 18f; _status.fontSizeMax = 20f;
             _status.overflowMode = TextOverflowModes.Truncate;
 
-            _buyPlate = UiKit.Button("SkinBuy", t, "", ButtonStyle.Primary, mid, mid, new Vector2(BuyX, StatusY), new Vector2(BuyW, 40f), () => Buy(), 22f);
+            _buyPlate = UiKit.Button("SkinBuy", t, "", ButtonStyle.Primary, mid, mid, new Vector2(BuyX, StatusY), new Vector2(BuyW, BuyH), () => Buy(), 22f);
             _buy = _buyPlate.Button;
             _buyLabel = UiFactory.Label(_buy);
             _buyLabel.enableAutoSizing = true; _buyLabel.fontSizeMin = 18f; _buyLabel.fontSizeMax = 22f;
             _buyLabel.overflowMode = TextOverflowModes.Truncate;
-            _buyKey = UiKit.Text("BuyKey", t, "F / Y", TextRole.Body, 20f, th.dust, TextAlignmentOptions.Left, mid, mid,
+            _buyKey = UiKit.Text("BuyKey", t, "F / Y", TextRole.Body, 20f, th.dust, TextAlignmentOptions.MidlineLeft, mid, mid,
                 new Vector2(BuyX + BuyW * 0.5f + 8f + 36f, StatusY), new Vector2(72f, 30f));
 
             _root.gameObject.SetActive(false);
-        }
-
-        /// <summary>A small marble plate (60 × 88: the old hit area) with the chevron turned left or right.</summary>
-        Button Arrow(string name, Transform parent, float x, float angle, UnityEngine.Events.UnityAction onClick)
-        {
-            var mid = new Vector2(0.5f, 0.5f);
-            var b = UiKit.Button(name, parent, "", ButtonStyle.Secondary, mid, mid, new Vector2(x, 0f), new Vector2(60f, 88f), onClick, 24f).Button;
-            var glyph = UiFactory.Image("Chevron", b.transform, UiTheme.Current.marbleInk, mid, mid, Vector2.zero, new Vector2(30f, 24f), PixelIcons.Chevron);
-            glyph.rectTransform.localEulerAngles = new Vector3(0f, 0f, angle); // the chevron points up: turn it left / right
-            return b;
         }
 
         /// <summary>The strip for `g`, opened on his equipped skin (the classic look when none). Hidden when he has none.</summary>

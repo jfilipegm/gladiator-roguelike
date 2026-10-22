@@ -305,6 +305,9 @@ namespace Gladiator.Tests
             Assert.IsTrue(p.IsOn(0));
             p.HandleInput(false, true, false, false, false, false, false); // right
             Assert.AreEqual(1, p.Focus);
+            // P3: the focus is a brighter, lifted card (no gold ring)
+            Assert.IsTrue(p.CardBright(1) && p.CardLifted(1), "the focused card brightens and lifts");
+            Assert.IsFalse(p.CardLifted(0), "the card it left settles");
             p.HandleInput(false, false, false, true, false, false, false); // down
             Assert.AreEqual(1 + EdictsPanel.Columns, p.Focus);
             p.HandleInput(false, false, true, false, false, false, false); // up
@@ -348,6 +351,16 @@ namespace Gladiator.Tests
             int foes = p.IndexOf("swift_foes"), iron = p.IndexOf("iron_hides");
             Assert.IsTrue(p.IsOn(foes));
             Assert.IsFalse(p.IsOn(iron));
+            // P3 (the producer's note 5): nothing to press on the read-only page
+            Assert.AreEqual(EdictsPanel.TodaysEdict, p.CardState(foes), "the day's edicts say so");
+            Assert.IsTrue(p.OnRingShown(foes), "and keep their orange-red ring");
+            for (int i = 0; i < p.Count; i++)
+            {
+                Assert.IsFalse(p.ChipShown(i), p.Def(i).id + ": no ON chip on the read-only page");
+                Assert.IsFalse(p.PadlockShown(i), p.Def(i).id + ": no padlock");
+                if (!p.IsOn(i)) Assert.AreEqual("", p.CardState(i), p.Def(i).id + ": no OFF / LOCKED / progress");
+                Assert.IsFalse(p.CardLifted(i), "no focus on the read-only page");
+            }
             Assert.IsFalse(p.Toggle(iron), "read-only: nothing toggles on");
             Assert.IsFalse(p.Toggle(foes), "read-only: nothing toggles off");
             p.ClearAll();

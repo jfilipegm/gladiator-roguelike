@@ -32,6 +32,10 @@ namespace Gladiator.UI
         /// <summary>The smallest text on a tablet (spec §8.2: 12 px at 720p).</summary>
         public const float Floor = 18f;
 
+        /// <summary>P3 (the producer's note 4, "Starts with …" on the frame's edge): how far inside the wax every word stays,
+        /// the `Wax` frame's padding + UiKit.ContentPad less the wooden rim (the wax's coordinates start inside the rim).</summary>
+        public static float Inset => Mathf.Max(0f, UiFrames.Padding(FrameKind.Wax).y + UiKit.ContentPad - Rim);
+
         public static Vector2 WaxSize => MenuLayout.Tablet - new Vector2(Rim * 2f, Rim * 2f);
 
         // the theme's tablet colours (spec §3)
@@ -151,8 +155,10 @@ namespace Gladiator.UI
     {
         const int MaxTraits = 3;
         const float Portrait = 192f, M = 14f, Indent = 58f, Gap = 6f, TradeoffY = 212f, RuleY = 268f, FlowTop = 276f;
-        /// <summary>The flowing rows may run to 6 units above the wax's bottom edge (the wooden rim is outside it).</summary>
+        /// <summary>The flowing rows may run to 6 units above the wax's bottom edge (the wooden rim is outside it), and never
+        /// past the tablet's content rect (LanistaTablet.Inset).</summary>
         const float BottomMargin = 6f;
+        static float Bottom => LanistaTablet.WaxSize.y - Mathf.Max(BottomMargin, LanistaTablet.Inset);
 
         CodexConfig _codex;
         RawImage _portrait, _weaponIcon;
@@ -290,7 +296,7 @@ namespace Gladiator.UI
 
         bool Lay(int traits, float size, bool clamp)
         {
-            float w = LanistaTablet.WaxSize.x, inner = w - 2f * M, bottom = LanistaTablet.WaxSize.y - BottomMargin;
+            float w = LanistaTablet.WaxSize.x, inner = w - 2f * M, bottom = Bottom;
             float y = FlowTop;
             float h = LanistaTablet.Height(_desc, size, inner);
             if (clamp) h = Mathf.Min(h, Mathf.Max(0f, bottom - y));

@@ -337,7 +337,7 @@ namespace Gladiator.UI
             if (_meta == null || _meta.unlocks == null) return;
             foreach (var u in _meta.unlocks)
             {
-                if (u == null) continue;
+                if (u == null || SkinOfLockedGladiator(u)) continue;
                 bool open = _save.IsUnlocked(u.id);
                 var reward = Reward(u);
                 switch (u.category)
@@ -460,6 +460,17 @@ namespace Gladiator.UI
         }
 
         /// <summary>The baked portrait of the first skin `u` gives, or null (R6).</summary>
+        /// <summary>A skin's unlock stays out of the Codex until its gladiator is earned: its Market card and its challenge
+        /// would show a secret gladiator's name and look, which the roster keeps as a silhouette.</summary>
+        bool SkinOfLockedGladiator(UnlockDef u)
+        {
+            if (_meta == null || _meta.skins == null) return false;
+            foreach (var s in _meta.skins)
+                if (s != null && s.unlock == u && s.gladiator != null && s.gladiator.unlock != null && !_save.IsUnlocked(s.gladiator.unlock.id))
+                    return true;
+            return false;
+        }
+
         Sprite SkinPicture(UnlockDef u)
         {
             if (_meta == null || _meta.skins == null || u == null) return null;

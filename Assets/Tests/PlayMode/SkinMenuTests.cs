@@ -441,5 +441,24 @@ namespace Gladiator.Tests
             yield return null;
             LogAssert.NoUnexpectedReceived();
         }
+
+        [UnityTest]
+        public IEnumerator TheCodex_HidesTheSkinsOfALockedGladiator()
+        {
+            GladiatorDef locked = null;
+            foreach (var s in Meta.skins)
+                if (s != null && s.gladiator != null && s.gladiator.unlock != null) { locked = s.gladiator; break; }
+            Assert.IsNotNull(locked, "a gladiator who must be earned has skins");
+            yield return Boot(); // a fresh save: only the Nobody is earned
+            var codex = _menu.Codex;
+            var names = new List<string>();
+            foreach (var tab in new[] { CodexPanel.Tab.Market, CodexPanel.Tab.Challenges })
+                for (int i = 0; i < codex.EntryCount(tab); i++)
+                    if (codex.TryEntry(tab, i, out string title, out _, out _)) names.Add(title);
+            foreach (var s in SkinsOf(locked))
+                CollectionAssert.DoesNotContain(names, s.unlock.displayName, s.id + " stays hidden while " + locked.id + " is locked");
+            CollectionAssert.Contains(names, MarketSkin().unlock.displayName, "the Nobody's skins are listed");
+            LogAssert.NoUnexpectedReceived();
+        }
     }
 }

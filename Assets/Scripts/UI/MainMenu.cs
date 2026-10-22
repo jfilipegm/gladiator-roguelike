@@ -89,7 +89,7 @@ namespace Gladiator.UI
         string _edictsButtonText = "";
         RunModifierDef[] _chosenEdicts = Array.Empty<RunModifierDef>();
         bool _edictsShown;
-        TextMeshProUGUI _menuRenown;
+        TextMeshProUGUI _menuRenown, _arenaKeys;
 
         /// <summary>Earned: no unlock, or its unlock is in the save.</summary>
         public static bool IsAvailable(GladiatorDef g) => g != null && (g.unlock == null || MetaProgress.IsUnlocked(g.unlock));
@@ -172,6 +172,8 @@ namespace Gladiator.UI
         public bool EdictsButtonShown => _edictsButton != null && _edictsButton.gameObject.activeSelf;
         /// <summary>The button's words without colour tags ("EDICTS · RENOWN ×1.45").</summary>
         public string EdictsButtonText => _edictsButtonText;
+        /// <summary>The arena screen's key line (tests).</summary>
+        public string ArenaKeysText => _arenaKeys != null ? _arenaKeys.text : "";
 
         /// <summary>Opens the Edicts page over the current screen (the EDICTS button, E, gamepad North).</summary>
         public void OpenEdicts()
@@ -181,7 +183,8 @@ namespace Gladiator.UI
             Edicts.Open();
         }
 
-        /// <summary>The edicts FIGHT! starts under: `-edicts a,b` (bot / perf runs: any, earned or not), else the saved choice.</summary>
+        /// <summary>The edicts FIGHT! starts under: `-edicts a,b` (bot / perf runs: any, earned or not), else the saved choice.
+        /// A bot or perf run without `-edicts` fights under none, whatever the save chose (its numbers stay comparable).</summary>
         public RunModifierDef[] EdictsForLaunch()
         {
             string wanted = CommandLine.Get("-edicts");
@@ -200,6 +203,7 @@ namespace Gladiator.UI
                 }
                 return list.ToArray();
             }
+            if (CommandLine.Has("-bot") || CommandLine.Has("-stress")) return Array.Empty<RunModifierDef>();
             return _edictsShown ? MetaProgress.ChosenEdicts(meta) : Array.Empty<RunModifierDef>(); // R7-STUB(b)
         }
 
@@ -375,6 +379,7 @@ namespace Gladiator.UI
             _arenaFight = Chrome(root, "CHOOSE YOUR ARENA", _edictsShown
                 ? "Up / Down: climb     Enter / A: fight     E / Y: edicts     Esc / B: back"
                 : "Up / Down: climb     Enter / A: fight     Esc / B: back", Launch, BackToSelect);
+            _arenaKeys = root.Find("Keys").GetComponent<TextMeshProUGUI>();
             // R7: between BACK and FIGHT!, only once the Edicts are earned
             var bottom = new Vector2(0.5f, 0f);
             _edictsButton = UiFactory.Button("Edicts", root, "EDICTS", bottom, bottom, new Vector2(0, 40), new Vector2(520, 76), font, fontMaterial, OpenEdicts, 34f);

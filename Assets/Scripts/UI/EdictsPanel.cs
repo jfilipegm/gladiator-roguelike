@@ -134,10 +134,6 @@ namespace Gladiator.UI
         /// <summary>The arena screen's button: "EDICTS" with none on, else "EDICTS · RENOWN ×1.65".</summary>
         public static string ButtonText(int count, float mul) => count <= 0 ? "EDICTS" : "EDICTS · RENOWN " + MulText(mul);
 
-        /// <summary>"3 EDICTS · RENOWN ×1.65", "1 EDICT · …", or "NO EDICTS · RENOWN ×1" (plain text).</summary>
-        public static string Total(int count, float mul) =>
-            (count <= 0 ? "NO EDICTS" : count + (count == 1 ? " EDICT" : " EDICTS")) + " · RENOWN " + MulText(count <= 0 ? 1f : mul);
-
         /// <summary>"+25 % RENOWN": an edict's share.</summary>
         public static string Share(RunModifierDef d) => "+" + Mathf.RoundToInt(Mathf.Max(0f, d.renownBonus) * 100f) + " % RENOWN";
 
@@ -226,10 +222,10 @@ namespace Gladiator.UI
 
             // the words: name and effect line in the middle, the Renown share and the state on the right
             float x0 = -half + 96f, x1 = half - 206f, cx = (x0 + x1) * 0.5f, w = x1 - x0;
-            v.Name = Text(c, d.displayName, 26, Color.white, new Vector2(cx, 25f), new Vector2(w, 34f), TextAlignmentOptions.Left, FontStyles.Bold);
+            v.Name = Text(c, d.displayName, 26, Color.white, new Vector2(cx, 27f), new Vector2(w, 30f), TextAlignmentOptions.Left, FontStyles.Bold);
             v.Name.textWrappingMode = TextWrappingModes.NoWrap;
             AutoSize(v.Name, 18f, 26f);
-            v.Line = Text(c, "", 19, Soft, new Vector2(cx, -15f), new Vector2(w, 50f), TextAlignmentOptions.TopLeft, FontStyles.Normal);
+            v.Line = Text(c, "", 19, Soft, new Vector2(cx, -17f), new Vector2(w, 54f), TextAlignmentOptions.TopLeft, FontStyles.Normal);
             AutoSize(v.Line, 13f, 19f);
             float rx = half - 104f, rw = 184f;
             v.Renown = Text(c, Share(d), 20, Gold, new Vector2(rx, 25f), new Vector2(rw, 28f), TextAlignmentOptions.Right, FontStyles.Bold);

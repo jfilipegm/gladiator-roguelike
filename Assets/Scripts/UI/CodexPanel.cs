@@ -77,6 +77,7 @@ namespace Gladiator.UI
         GladiatorTablet _rosterTablet;
         RectTransform _rosterRoot;
         int _rosterFocus;
+        readonly Dictionary<string, string> _records = new Dictionary<string, string>(); // RECORDS: label → value (tests)
 
         public CodexPanel(TMP_FontAsset font, Material fontMat)
         {
@@ -634,6 +635,8 @@ namespace Gladiator.UI
                 ("Most edicts in a win", s.bestEdictWin.ToString()), // R7-STUB(b)
             };
             // two columns; the rows close up when there are more than eight of them (the page is 660 tall)
+            _records.Clear();
+            foreach (var row in rows) _records[row.Item1] = row.Item2;
             int lines = (rows.Length + 1) / 2;
             float pitch = Mathf.Min(76f, 548f / Mathf.Max(1, lines - 1)), rowH = Mathf.Min(64f, pitch - 4f);
             for (int i = 0; i < rows.Length; i++)
@@ -645,6 +648,9 @@ namespace Gladiator.UI
                 Text(_content, rows[i].Item2, 32, Color.white, new Vector2(x + 210f, y), new Vector2(280, 50), TextAlignmentOptions.Right).fontStyle = FontStyles.Bold;
             }
         }
+
+        /// <summary>Tests: the value the last RECORDS page drawn shows beside `label` ("" when there's no such row).</summary>
+        public string RecordValue(string label) => _records.TryGetValue(label, out var v) ? v : "";
 
         static string Clock(float t) => Mathf.FloorToInt(t / 60f) + ":" + Mathf.FloorToInt(t % 60f).ToString("00");
 

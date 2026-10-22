@@ -69,7 +69,7 @@ namespace Gladiator.Tests
             _chain = Make<WeaponDef>();
             _chain.id = "test_labyrinth_chain";
             _chain.displayName = "Labyrinth Chain (test)";
-            _chain.pattern = WeaponPattern.Sweep; // R3-STUB(chain)
+            _chain.pattern = WeaponPattern.Sweep;
             _chain.damage = 15f; _chain.critChance = 0.05f; _chain.critMultiplier = 2f; _chain.knockback = 7f;
             _chain.cooldown = 1.6f; _chain.swingDuration = 0.8f; _chain.windup = 0.32f;
             _chain.range = 5.2f; _chain.arcDegrees = 240f; _chain.width = 0.5f; _chain.acquireRange = 5.6f;
@@ -346,8 +346,9 @@ namespace Gladiator.Tests
             int far = SpawnAt(held, new Vector3(-6f, 0f, 0f));
             Vector3 nearAt = _em.GetPosition(near);
             Assert.AreEqual(1f, _motor.KnockbackTakenMul, 1e-3f, "calm: knockback lands");
-            Assert.IsFalse(_weapons.WhirlSweeps); // R3-STUB(chain)
+            Assert.IsFalse(_weapons.WhirlSweeps);
             int waves = PlayerProjectiles.Instance.Shockwaves;
+            yield return null; // what a tick spawns joins the spatial grid on the next tick: the bellow finds them there
 
             _rage.Fill();
             yield return null;
@@ -363,9 +364,9 @@ namespace Gladiator.Tests
             Assert.AreEqual(_baseAttack * 1.3f, _stats.AttackSpeed, 1e-3f, "×1.3 attack speed");
             Assert.AreEqual(_baseMove * 1.2f, _stats.MoveSpeed, 1e-3f, "×1.2 move speed");
             Assert.AreEqual(0f, _motor.KnockbackTakenMul, 1e-3f, "nothing knocks him back");
-            Assert.IsTrue(_weapons.WhirlSweeps, "the chain whirls"); // R3-STUB(chain)
-            Assert.AreEqual(1.1f, _animator.ScaleBoost, 1e-3f, "he swells"); // R3-STUB(chain)
-            Assert.AreEqual(14f, _animator.ExtraLean, 1e-3f, "horns down"); // R3-STUB(chain)
+            Assert.IsTrue(_weapons.WhirlSweeps, "the chain whirls");
+            Assert.AreEqual(1.1f, _animator.ScaleBoost, 1e-3f, "he swells");
+            Assert.AreEqual(14f, _animator.ExtraLean, 1e-3f, "horns down");
             yield return new WaitForSeconds(0.5f);
             Assert.Greater(Flat(_em.GetPosition(near) - PlayerPos).magnitude - Flat(nearAt - PlayerPos).magnitude, 0.5f, "thrown back");
             Assert.AreEqual("UNCHAINED", Hud.BloodLabel);
@@ -383,10 +384,10 @@ namespace Gladiator.Tests
             Assert.AreEqual(_baseMove * 0.75f, _stats.MoveSpeed, 1e-3f, "×0.75 move speed");
             Assert.AreEqual(_baseAttack, _stats.AttackSpeed, 1e-3f, "attack speed back");
             Assert.AreEqual(1f, _motor.KnockbackTakenMul, 1e-3f, "knockback lands again");
-            Assert.IsFalse(_weapons.WhirlSweeps, "no more whirl"); // R3-STUB(chain)
-            Assert.AreEqual(1f, _animator.ScaleBoost, 1e-3f); // R3-STUB(chain)
-            Assert.AreEqual(0f, _animator.ExtraLean, 1e-3f); // R3-STUB(chain)
-            Assert.AreEqual(30f, _animator.HeadDrop, 1e-3f, "head bowed"); // R3-STUB(chain)
+            Assert.IsFalse(_weapons.WhirlSweeps, "no more whirl");
+            Assert.AreEqual(1f, _animator.ScaleBoost, 1e-3f);
+            Assert.AreEqual(0f, _animator.ExtraLean, 1e-3f);
+            Assert.AreEqual(30f, _animator.HeadDrop, 1e-3f, "head bowed");
             Assert.AreEqual(0f, _rage.Value, 1e-3f, "empty");
             yield return new WaitForSeconds(1f);
             Assert.AreEqual(0f, _rage.Value, 1e-3f, "Spent: the press fills nothing");
@@ -398,7 +399,7 @@ namespace Gladiator.Tests
             Assert.AreEqual(1f, Time.time - t1, 0.25f, "2 s after Spent began");
             Assert.AreEqual(_baseMove, _stats.MoveSpeed, 1e-3f, "every stat back to its base");
             Assert.AreEqual(_baseAttack, _stats.AttackSpeed, 1e-3f);
-            Assert.AreEqual(0f, _animator.HeadDrop, 1e-3f); // R3-STUB(chain)
+            Assert.AreEqual(0f, _animator.HeadDrop, 1e-3f);
             yield return new WaitForSeconds(0.5f);
             Assert.Greater(_rage.Value, 0f, "calm, the press fills it again");
         }
@@ -434,9 +435,9 @@ namespace Gladiator.Tests
             Assert.AreEqual(_baseMove, _stats.MoveSpeed, 1e-3f, "move speed back");
             Assert.AreEqual(_baseAttack, _stats.AttackSpeed, 1e-3f, "attack speed back");
             Assert.AreEqual(1f, _motor.KnockbackTakenMul, 1e-3f);
-            Assert.IsFalse(_weapons.WhirlSweeps); // R3-STUB(chain)
-            Assert.AreEqual(1f, _animator.ScaleBoost, 1e-3f); // R3-STUB(chain)
-            Assert.AreEqual(0f, _animator.ExtraLean, 1e-3f); // R3-STUB(chain)
+            Assert.IsFalse(_weapons.WhirlSweeps);
+            Assert.AreEqual(1f, _animator.ScaleBoost, 1e-3f);
+            Assert.AreEqual(0f, _animator.ExtraLean, 1e-3f);
             Assert.IsFalse(_rage.Unchain(), "no rampage once he's down");
             _rage.Fill();
             yield return null;
@@ -457,7 +458,7 @@ namespace Gladiator.Tests
             yield return null;
             Assert.AreEqual(Rage.Mode.Calm, _rage.Current, "halted with the run");
             Assert.AreEqual(_baseMove, _stats.MoveSpeed, 1e-3f);
-            Assert.AreEqual(0f, _animator.HeadDrop, 1e-3f); // R3-STUB(chain)
+            Assert.AreEqual(0f, _animator.HeadDrop, 1e-3f);
         }
 
         [UnityTest, Timeout(60000)]
@@ -465,22 +466,22 @@ namespace Gladiator.Tests
         {
             yield return Boot(keepChain: true);
             Assert.AreEqual(1, _weapons.Weapons.Count);
-            Assert.AreEqual(WeaponPattern.Sweep, _weapons.Weapons[0].Def.pattern); // R3-STUB(chain)
+            Assert.AreEqual(WeaponPattern.Sweep, _weapons.Weapons[0].Def.pattern);
             var still = Held("test_rage_still", 0f);
             int front = SpawnAt(still, new Vector3(0f, 0f, 2.5f));  // the nearest: the chain aims at it
             int behind = SpawnAt(still, new Vector3(0f, 0f, -4.6f)); // straight behind, past the bellow (4 m)
-            int sweeps = _weapons.Sweeps; // R3-STUB(chain)
-            yield return Until(() => _weapons.Sweeps > sweeps, 4f); // R3-STUB(chain)
-            Assert.Greater(_weapons.Sweeps, sweeps, "calm, the chain sweeps"); // R3-STUB(chain)
+            int sweeps = _weapons.Sweeps;
+            yield return Until(() => _weapons.Sweeps > sweeps, 4f);
+            Assert.Greater(_weapons.Sweeps, sweeps, "calm, the chain sweeps");
             yield return new WaitForSeconds(0.6f);
             Assert.Less(_em.GetHp(front), _em.GetMaxHp(front), "the one it aims at is hit");
             Assert.AreEqual(_em.GetMaxHp(behind), _em.GetHp(behind), 0.01f, "240°: the one behind him isn't");
 
-            int whirls = _weapons.Whirls; // R3-STUB(chain)
+            int whirls = _weapons.Whirls;
             Assert.IsTrue(_rage.Unchain());
             Assert.AreEqual(_em.GetMaxHp(behind), _em.GetHp(behind), 0.01f, "the bellow doesn't reach it");
-            yield return Until(() => _weapons.Whirls > whirls, 4f); // R3-STUB(chain)
-            Assert.Greater(_weapons.Whirls, whirls, "Unchained, every sweep is a whirl"); // R3-STUB(chain)
+            yield return Until(() => _weapons.Whirls > whirls, 4f);
+            Assert.Greater(_weapons.Whirls, whirls, "Unchained, every sweep is a whirl");
             yield return new WaitForSeconds(0.8f);
             Assert.Less(_em.GetHp(behind), _em.GetMaxHp(behind), "360°: now the one behind him is hit too");
         }

@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0ea0c2151f44fc41b534863b8707d7a, type: 3}
+  m_Name: UL_Asterion
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.UnlockDef
+  id: asterion
+  displayName: Asterion, the Chained
+  description: The Eternal Victor is dust, and the chain he kept under the stage for four hundred years has snapped. Asterion can be chosen, and his Labyrinth Chain joins the level-up pool.
+  hint: Something has been chained under the Colosseum since its first games. Its jailer is the Eternal Victor.
+  conditions:
+  - kind: 0
+    id: eternal_victor
+    amount: 1
+  category: 0
+  renownCost: 0
+  renownBounty: 0
+  addsToPool:
+  - {fileID: 11400000, guid: 7ce5e5f180d7b3f42ba767e851986738, type: 2}

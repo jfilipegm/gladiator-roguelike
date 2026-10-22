@@ -38,7 +38,7 @@ namespace Gladiator.EditorTools
         static readonly Quaternion ArenaView = Quaternion.Euler(38f, 25f, 0f);
         static readonly Color32 Ink = new Color32(0x1E, 0x1B, 0x19, 0xFF);
         /// <summary>Model parts the bakes hide (R3: Asterion's trailing chain would shrink his full-body Codex picture to
-        /// ~60 %, and it isn't his face). A model with none of these bakes as before.</summary>
+        /// ~60 %, and it isn't his face). Matched only on the parts hanging off the model. A model with none bakes as before.</summary>
         public static readonly string[] PortraitHidden = { "Chain" };
 
         [MenuItem("Gladiator/Setup/UI/Bake Portraits")]
@@ -206,12 +206,18 @@ namespace Gladiator.EditorTools
             return b;
         }
 
-        /// <summary>Sets every part named in PortraitHidden inactive under `root`; true if any was.</summary>
+        /// <summary>Sets every part named in PortraitHidden that hangs off the model (the FBX root or the body root under
+        /// it) inactive; true if any was. Not deeper: the Ashen Oracle's censer has a "Chain" of its own, inside
+        /// CenserStaff, and it stays in her picture.</summary>
         static bool HideParts(Transform root)
         {
             bool any = false;
             foreach (var t in root.GetComponentsInChildren<Transform>(true))
-                if (t != root && Array.IndexOf(PortraitHidden, t.name) >= 0) { t.gameObject.SetActive(false); any = true; }
+                if (t != root && (t.parent == root || t.parent.parent == root) && Array.IndexOf(PortraitHidden, t.name) >= 0)
+                {
+                    t.gameObject.SetActive(false);
+                    any = true;
+                }
             return any;
         }
 

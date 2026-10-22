@@ -112,7 +112,7 @@ namespace Gladiator.Tests
             var w = g.startingWeapon;
             Assert.AreSame(Chain, w, "the Labyrinth Chain");
             Assert.AreEqual("labyrinth_chain", w.id);
-            Assert.AreEqual(WeaponPattern.Sweep, w.pattern); // R3-STUB(chain)
+            Assert.AreEqual(WeaponPattern.Sweep, w.pattern);
             Assert.AreEqual(5.2f, w.range, 1e-3f);
             Assert.AreEqual(240f, w.arcDegrees, 1e-3f);
             Assert.AreEqual(1.4f, w.tipLength, 1e-3f, "the stone");
@@ -121,14 +121,14 @@ namespace Gladiator.Tests
             Assert.AreEqual(8, w.MaxLevel);
             Assert.IsNotNull(w.mesh, "the stone: WP_LabyrinthChain's Weight");
             Assert.AreEqual("Weight", w.mesh.name);
-            Assert.IsNotNull(w.linkMesh, "the links: WP_LabyrinthChain's Link"); // R3-STUB(chain)
-            Assert.AreEqual("Link", w.linkMesh.name); // R3-STUB(chain)
-            Assert.AreEqual("Chain", w.modelPart, "it swings his model's chain"); // R3-STUB(chain)
+            Assert.IsNotNull(w.linkMesh, "the links: WP_LabyrinthChain's Link");
+            Assert.AreEqual("Link", w.linkMesh.name);
+            Assert.AreEqual("Chain", w.modelPart, "it swings his model's chain");
 
             Assert.IsNotNull(g.traits);
             Assert.AreEqual(2, g.traits.Length);
-            Assert.IsInstanceOf<GoreTrait>(g.traits[0]); // R3-STUB(rage)
-            Assert.IsInstanceOf<RageTrait>(g.traits[1]); // R3-STUB(rage)
+            Assert.IsInstanceOf<GoreTrait>(g.traits[0]);
+            Assert.IsInstanceOf<RageTrait>(g.traits[1]);
 
             Assert.AreSame(Unlock, g.unlock);
             var all = AllGladiators();
@@ -210,13 +210,23 @@ namespace Gladiator.Tests
             Assert.IsNotNull(t, "PortraitBaker (Gladiator.Editor)");
             var hidden = (string[])t.GetField("PortraitHidden").GetValue(null);
             Assert.Contains("Chain", hidden);
+            // the bakes hide parts by these names hanging off the model (the FBX root or the body root under it); the Ashen
+            // Oracle's censer chain is deeper and stays
             int parts = 0;
-            foreach (var name in hidden) if (FindDeep(Asterion.model.transform, name) != null) parts++;
+            foreach (var name in hidden) if (TopPart(Asterion.model.transform, name) != null) parts++;
             Assert.AreEqual(1, parts, "his model's chain is the part they hide");
             foreach (var g in AllGladiators())
                 if (g != Asterion && g.model != null)
                     foreach (var name in hidden)
-                        Assert.IsNull(FindDeep(g.model.transform, name), g.id + " has no such part: it bakes as before");
+                        Assert.IsTrue(TopPart(g.model.transform, name) == null, g.id + " has no such part at its root: it bakes as before");
+        }
+
+        /// <summary>A child of `root`, or of one of its children, named `name` (the parts PortraitBaker.HideParts sees).</summary>
+        static Transform TopPart(Transform root, string name)
+        {
+            var t = root.Find(name);
+            for (int i = 0; t == null && i < root.childCount; i++) t = root.GetChild(i).Find(name);
+            return t;
         }
 
         static GladiatorDef[] AllGladiators()
@@ -260,8 +270,8 @@ namespace Gladiator.Tests
             Assert.AreEqual(0.95f, p.GetComponent<PlayerStats>().Get(StatId.MoveSpeed), 1e-3f);
             Assert.AreEqual(1, _weapons.Weapons.Count);
             Assert.AreSame(Chain, _weapons.Weapons[0].Def);
-            Assert.IsNotNull(p.GetComponent<Gore>(), "Gore"); // R3-STUB(rage)
-            Assert.IsNotNull(p.GetComponent<Rage>(), "Rage"); // R3-STUB(rage)
+            Assert.IsNotNull(p.GetComponent<Gore>(), "Gore");
+            Assert.IsNotNull(p.GetComponent<Rage>(), "Rage");
             var build = p.GetComponent<PlayerBuild>();
             var card = build.FindWeaponCard(_weapons.Weapons[0].Def);
             Assert.AreSame(ChainCard, card);
@@ -273,13 +283,13 @@ namespace Gladiator.Tests
             float hp = _em.GetHp(b);
             bool sawHidden = false;
             float end = Time.time + 4f;
-            while (Time.time < end && (_weapons.Sweeps == 0 || _em.GetHp(b) >= hp)) // R3-STUB(chain)
+            while (Time.time < end && (_weapons.Sweeps == 0 || _em.GetHp(b) >= hp))
             {
                 if (_em.IsAlive(b)) _em.ApplyStatus(b, Root, 0f);
-                if (_weapons.Sweeps > 0 && !chain.gameObject.activeSelf) sawHidden = true; // R3-STUB(chain)
+                if (_weapons.Sweeps > 0 && !chain.gameObject.activeSelf) sawHidden = true;
                 yield return null;
             }
-            Assert.GreaterOrEqual(_weapons.Sweeps, 1, "the chain swept"); // R3-STUB(chain)
+            Assert.GreaterOrEqual(_weapons.Sweeps, 1, "the chain swept");
             Assert.Less(_em.GetHp(b), hp, "and hit the brute");
             end = Time.time + 0.6f; // the sweep is 0.3 s; the next one is a cooldown away
             while (Time.time < end)

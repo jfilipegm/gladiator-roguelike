@@ -315,11 +315,11 @@ namespace Gladiator.Gameplay
                 _motor.KnockbackTakenMul = 0f;
                 _knockHeld = true;
             }
-            if (_weapons != null) _weapons.WhirlSweeps = true; // R3-STUB(chain)
+            if (_weapons != null) _weapons.WhirlSweeps = true;
             if (_animator != null)
             {
-                _animator.ScaleBoost = trait.scale; // R3-STUB(chain)
-                _animator.ExtraLean = trait.lean;   // R3-STUB(chain)
+                _animator.ScaleBoost = trait.scale;
+                _animator.ExtraLean = trait.lean;
                 _posed = true;
             }
             Bellow();
@@ -381,7 +381,7 @@ namespace Gladiator.Gameplay
             }
             if (_animator != null)
             {
-                _animator.HeadDrop = trait.spentHeadDrop; // R3-STUB(chain)
+                _animator.HeadDrop = trait.spentHeadDrop;
                 _posed = true;
             }
         }
@@ -407,11 +407,11 @@ namespace Gladiator.Gameplay
             _unchainedMods = false;
             if (_knockHeld && _motor != null) _motor.KnockbackTakenMul = _savedKnock;
             _knockHeld = false;
-            if (_weapons != null) _weapons.WhirlSweeps = false; // R3-STUB(chain)
+            if (_weapons != null) _weapons.WhirlSweeps = false;
             if (_animator != null && _posed)
             {
-                _animator.ScaleBoost = 1f; // R3-STUB(chain)
-                _animator.ExtraLean = 0f;  // R3-STUB(chain)
+                _animator.ScaleBoost = 1f;
+                _animator.ExtraLean = 0f;
             }
         }
 
@@ -421,7 +421,7 @@ namespace Gladiator.Gameplay
             _spentMod = false;
             if (_animator != null && _posed)
             {
-                _animator.HeadDrop = 0f; // R3-STUB(chain)
+                _animator.HeadDrop = 0f;
                 _posed = false;
             }
         }

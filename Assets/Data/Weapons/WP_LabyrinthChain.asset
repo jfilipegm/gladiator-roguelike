@@ -1,0 +1,94 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 39f0cecc993934a19800cd9b6e8df985, type: 3}
+  m_Name: WP_LabyrinthChain
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.WeaponDef
+  id: labyrinth_chain
+  displayName: Labyrinth Chain
+  description: 'A heavy chain with a block of the labyrinth''s wall at its end, swept round you in a wide arc. Everything it passes is shoved aside; the stone always crits: fight at the chain''s length.'
+  pattern: 10
+  damage: 15
+  critChance: 0.05
+  critMultiplier: 2
+  knockback: 7
+  onHitStatus: {fileID: 0}
+  onHitStatusPower: 0.1
+  onHitStacks: 1
+  cooldown: 1.6
+  swingDuration: 0.8
+  windup: 0.32
+  range: 5.2
+  arcDegrees: 240
+  width: 0.5
+  acquireRange: 5.6
+  amount: 1
+  speed: 16
+  pierce: 0
+  mesh: {fileID: -5541781841659588262, guid: cf577eb9ff2547df9921c5291204942b, type: 3}
+  meshScale: 1
+  flightTime: 0.6
+  fuse: 0.4
+  arcHeight: 2.2
+  echoDelay: 0
+  echoAngle: 180
+  echoScale: 1
+  targetFarthest: 0
+  tipLength: 1.4
+  spreadStrikes: 0
+  prongs: 3
+  prongInterval: 0.07
+  summon: {fileID: 0}
+  sweepTime: 0.3
+  whirlTimeMul: 1.5
+  sweepOutward: 0.35
+  tipKnockbackMul: 1.6
+  linkMesh: {fileID: -8022303170340687050, guid: cf577eb9ff2547df9921c5291204942b, type: 3}
+  linkLength: 0.6
+  chainHeight: {x: 1.05, y: 0.55}
+  weightOffset: 0.33
+  modelPart: Chain
+  hitEffects: []
+  levels:
+  - mods:
+    - stat: 4
+      op: 1
+      value: 0.2
+  - mods:
+    - stat: 8
+      op: 1
+      value: 0.15
+  - mods:
+    - stat: 9
+      op: 0
+      value: 1
+  - mods:
+    - stat: 5
+      op: 1
+      value: 0.15
+  - mods:
+    - stat: 4
+      op: 1
+      value: 0.25
+    - stat: 12
+      op: 1
+      value: 0.2
+  - mods:
+    - stat: 8
+      op: 1
+      value: 0.15
+  - mods:
+    - stat: 9
+      op: 0
+      value: 1
+    - stat: 4
+      op: 1
+      value: 0.15

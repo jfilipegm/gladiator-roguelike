@@ -60,15 +60,15 @@ namespace Gladiator.EditorTools
                 a.swingYawStart = 120f; // the chain's 240° sweep (mirrored on the way back)
                 a.swingYawEnd = -120f;
                 a.swingRaise = 20f;
-                a.bodyTwistScale = 0.5f; // R3-STUB(chain)
-                a.idleHeadLift = 18f;    // R3-STUB(chain): standing still, he looks at the sky
+                a.bodyTwistScale = 0.5f;
+                a.idleHeadLift = 18f;
                 // the pull (windup 0.32 of 0.8 s), then the sweep (0.3 s)
                 a.swingCurve = new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(0.4f, 0.04f), new Keyframe(0.78f, 1f), new Keyframe(1f, 1f));
                 a.poseSharpness = 24f;
             });
-            var gore = Trait<GoreTrait>(GorePath, "gore", "Gore", // R3-STUB(rage)
+            var gore = Trait<GoreTrait>(GorePath, "gore", "Gore",
                 "Run into enemies head-first and you gore them: they're hurt and tossed out of your way.");
-            var rage = Trait<RageTrait>(RagePath, "rage", "Rage", // R3-STUB(rage)
+            var rage = Trait<RageTrait>(RagePath, "rage", "Rage",
                 "The crowd pressing round you fills your Rage, and so do hits. Full, you're Unchained for 8 s: the chain whirls all round, you're faster and gore everything you touch. Then you're Spent for 2 s.");
 
             var g = AssetDatabase.LoadAssetAtPath<GladiatorDef>(AsterionPath);
@@ -104,14 +104,14 @@ namespace Gladiator.EditorTools
                 w = PlayerSetup.EnsureAsset<WeaponDef>(ChainPath);
                 w.id = "labyrinth_chain"; w.displayName = "Labyrinth Chain";
                 w.description = "A heavy chain with a block of the labyrinth's wall at its end, swept round you in a wide arc. Everything it passes is shoved aside; the stone always crits: fight at the chain's length.";
-                w.pattern = WeaponPattern.Sweep; // R3-STUB(chain)
+                w.pattern = WeaponPattern.Sweep;
                 // range = the chain's reach, arcDegrees = the sweep, tipLength = the stone (always crits), width = the
                 // chain's thickness, amount = sweeps per trigger (the backswings)
                 w.damage = 15f; w.critChance = 0.05f; w.critMultiplier = 2f; w.knockback = 7f;
                 w.cooldown = 1.6f; w.swingDuration = 0.8f; w.windup = 0.32f;
                 w.range = 5.2f; w.arcDegrees = 240f; w.width = 0.5f; w.acquireRange = 5.6f; w.amount = 1; w.tipLength = 1.4f;
                 w.meshScale = 1f;
-                Sweep(w); // R3-STUB(chain)
+                Sweep(w);
                 w.levels = new[]
                 {
                     L(Pct(StatId.Damage, 0.2f)), L(Pct(StatId.Area, 0.15f)), L(Add(StatId.Amount, 1f)), L(Pct(StatId.AttackSpeed, 0.15f)),
@@ -119,7 +119,7 @@ namespace Gladiator.EditorTools
                 };
             }
             if (w.mesh == null) w.mesh = MeshNamed(ChainModel, "Weight"); // the stone
-            if (w.linkMesh == null) w.linkMesh = MeshNamed(ChainModel, "Link"); // R3-STUB(chain)
+            if (w.linkMesh == null) w.linkMesh = MeshNamed(ChainModel, "Link");
             if (w.mesh == null) Debug.LogWarning("[AsterionSetup] " + ChainModel + " has no Weight mesh: the chain won't draw (export it, then run this again)");
             EditorUtility.SetDirty(w);
             return w;
@@ -128,7 +128,7 @@ namespace Gladiator.EditorTools
         /// <summary>The Sweep's own numbers (WeaponDef's "Sweep" header).</summary>
         static void Sweep(WeaponDef w)
         {
-            // R3-STUB(chain): every field below
+
             w.sweepTime = 0.3f;
             w.whirlTimeMul = 1.5f;
             w.sweepOutward = 0.35f;

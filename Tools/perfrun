@@ -10,6 +10,8 @@ if [ "$mode" = "stress" ]; then count="${1:-300}"; shift; args+=(-stress -stress
 secs="${1:-45}"; shift
 # ~800 fps headroom so an uncapped run never fills the frame recorder before the end
 args+=(-botSeconds "$secs" -profileFrames $(( (secs + 15) * 800 )) "$@")
+# R8: runs draw from a seed; a fixed one keeps perf runs comparable unless the caller passes its own -runSeed.
+case " $* " in *" -runSeed "*) ;; *) args+=(-runSeed 0C0FFEE5) ;; esac
 log="$ROOT/Profiling/player_${mode}.log"
 timeout -s KILL $((secs + 90)) gamescope --backend headless -W 1920 -H 1080 -w 1920 -h 1080 -- \
   "$ROOT/Builds/LinuxDev/Gladiator.x86_64" "${args[@]}" -logFile "$log" > "$ROOT/Profiling/gamescope_out.txt" 2>&1

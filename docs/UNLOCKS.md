@@ -132,3 +132,7 @@ Both are new components in the RattlingCrate mould: spots from `ArenaLayoutDef.s
 - **The Editor Takes Notice** (beat Gorm): opens the Edicts with Iron Hides, The Hungry Horde and Blood Sport.
 - **Market, 150 Renown each:** Glass Jaw, Swift Foes, Empty Purses, A Fickle Crowd.
 - **Challenges:** Under the Editor's Eye (win a run under 2 edicts: Meagre Choices, The Impatient Emperor), A Day of Champions (reach the Grand Arena: Champions' Day), The Emperor's Pleasure (win a run under 4 edicts: No Mercy). Condition `WinWithEdicts` (index 15).
+
+## The Daily Games (R8, v0.22.0)
+- **UL_Daily** (beat Gorm, with the Edicts): the DAILY button opens.
+- **Challenges:** Daily Bread (play 3 scored dailies, `DailiesPlayed 3`, +100 Renown), Champion of the Day (win a scored daily, `DailiesWon 1`, +150).

@@ -9,7 +9,7 @@ namespace Gladiator.UI
 {
     /// <summary>
     /// In-run HUD (M1.3): XP bar (top), run timer (top centre), level (top right), HP bar + gold + kills (top left),
-    /// build strip (owned weapons, then Boons below, each with its level, under the gold), LEVEL UP toast, pause overlay, F3 debug line. Built in
+    /// build strip (owned weapons, then Boons below, each with its level, under the gold), LEVEL UP toast, F3 debug line. Built in
     /// code; texts only change when values change and use allocation-free TMP calls.
     /// R7: the run's edicts as a row of small icons under the timer, built once at Start (nothing per frame); the boss's
     /// name and bar take that space during the fight, so the row steps aside while they show.
@@ -21,6 +21,10 @@ namespace Gladiator.UI
     /// Dressing (Shout). The announcer splits in two: swarms, elites and whims drop a crimson vexillum banner, the boss's
     /// beats a purple one (purple outranks crimson; a lower one waits in one slot); every other line is a one-line
     /// callout under it (today's pop-and-fade and chatter rule). The debug line and dev tags stay Plain (UiFactory).
+    /// P3 (the producer's notes 13, 14, 18): each plate's rows are laid out from its ContentRect (the padding rule), the
+    /// heart, aureus and skull-in-a-galea are the 16 px art at 32×32 centred on their trough or number; the level plate
+    /// reads LevelWord ("LEVEL 3") and is as wide as "LEVEL 88" needs; the XP bar is 21 tall. The pause moved to
+    /// LevelUpPanel (PAUSED, its plates and keys, the inventory and the stats column).
     /// </summary>
     public sealed class Hud : MonoBehaviour, ITickable
     {
@@ -36,8 +40,9 @@ namespace Gladiator.UI
         // their trough or number (numbers use Midline: their glyphs, not their line box, are centred)
         const float XpH = 21f, Top = -(XpH + 4f);
         const float PlateX = 12f, PlateW = 456f, HpRowH = 32f, BloodRowH = 22f, GoldRowH = 32f, RowGap = 6f, IconPx = 32f, IconGap = 8f;
+        const float GoldSize = 32f, BloodSize = 20f, LevelSize = 50f, LabelSlack = 8f;
         const float BloodBarW = 220f, BloodBarH = 12f, KillsX = 219f;
-        const float LevelRowH = 44f, LevelBoxH = 62f, FavorRowH = 26f, LevelGap = 10f, LevelMinW = 220f, GoldTextW = 130f;
+        const float LevelRowH = 44f, FavorRowH = 26f, LevelGap = 10f, LevelMinW = 220f, GoldTextW = 130f;
         static readonly Vector2 FavorIconSize = new Vector2(30f, 26f);
         /// <summary>The level plate's word (P3, the producer's note 14: "LV" or "LEVEL"); read once at Awake.</summary>
         public static string LevelWord = "LEVEL";
@@ -222,15 +227,19 @@ namespace Gladiator.UI
             var pad = UiFrames.Padding(FrameKind.Bronze);
             float p = UiKit.ContentPad;
             float top = pad.w + p, bottom = pad.y + p, left = PlateX + pad.x + p, right = PlateX + PlateW - pad.z - p;
-            float h = top + HpRowH + RowGap + BloodRowH + RowGap + GoldRowH + bottom;
+            // the numbers' rows as tall as their textBounds with the theme's font, glyphs centred (TextBox.MidlineRow);
+            // the HP number sits on its trough by design (a 32-tall trough has no room for the padding rule)
+            float bloodRow = Mathf.Max(BloodRowH, Mathf.Ceil(TextBox.MidlineRow(TextRole.Number, BloodSize)));
+            float goldRow = Mathf.Max(GoldRowH, Mathf.Ceil(TextBox.MidlineRow(TextRole.Number, GoldSize)));
+            float h = top + HpRowH + RowGap + bloodRow + RowGap + goldRow + bottom;
             _statusPlate = UiKit.Frame("StatusPlate", canvas, FrameKind.Bronze, tl, tl, new Vector2(PlateX, Top), new Vector2(PlateW, h), Color.white).rectTransform;
             _statusBottom = Top - h;
             _weaponRowY = _statusBottom - StripGap;
             _boonRowY = _weaponRowY - TilePitch;
             _chipTop = _boonRowY - TileSize - 8f;
             float hpY = Top - top - HpRowH * 0.5f;
-            float bloodY = hpY - HpRowH * 0.5f - RowGap - BloodRowH * 0.5f;
-            float goldY = bloodY - BloodRowH * 0.5f - RowGap - GoldRowH * 0.5f;
+            float bloodY = hpY - HpRowH * 0.5f - RowGap - bloodRow * 0.5f;
+            float goldY = bloodY - bloodRow * 0.5f - RowGap - goldRow * 0.5f;
             float barLeft = left + IconPx + IconGap;
 
             _hpIcon = UiKit.Frame("HpIcon", canvas, FrameKind.IconHeart, tl, mid, new Vector2(left + IconPx * 0.5f, hpY), new Vector2(IconPx, IconPx), Color.white);
@@ -242,21 +251,21 @@ namespace Gladiator.UI
             _bloodFill.fillAmount = 0f;
             _bloodRoot = _bloodFill.transform.parent.gameObject;
             float bloodTextLeft = barLeft + BloodBarW + IconGap;
-            _bloodText = AutoSize(UiKit.Text("BloodText", canvas, "", TextRole.Number, 20f, BloodColor, TextAlignmentOptions.MidlineLeft, tl, ml,
-                new Vector2(bloodTextLeft, bloodY), new Vector2(right - bloodTextLeft, BloodRowH + 4f), TextLook.Outline), 16f, 20f);
+            _bloodText = AutoSize(UiKit.Text("BloodText", canvas, "", TextRole.Number, BloodSize, BloodColor, TextAlignmentOptions.MidlineLeft, tl, ml,
+                new Vector2(bloodTextLeft, bloodY), new Vector2(right - bloodTextLeft, bloodRow + LabelSlack), TextLook.Outline), 16f, BloodSize);
             PreSize(_bloodText, "+100% DMG");
             PreSize(_bloodText, "UNCHAINED");
             _bloodRoot.SetActive(false);
             _bloodText.gameObject.SetActive(false);
 
             _goldIcon = UiKit.Frame("GoldIcon", canvas, FrameKind.IconAureus, tl, mid, new Vector2(left + IconPx * 0.5f, goldY), new Vector2(IconPx, IconPx), Color.white);
-            _gold = AutoSize(UiKit.Text("Gold", canvas, "0", TextRole.Number, 32f, _coin, TextAlignmentOptions.MidlineLeft, tl, ml,
-                new Vector2(barLeft, goldY), new Vector2(GoldTextW, GoldRowH + 4f), TextLook.Outline), 20f, 32f);
+            _gold = AutoSize(UiKit.Text("Gold", canvas, "0", TextRole.Number, GoldSize, _coin, TextAlignmentOptions.MidlineLeft, tl, ml,
+                new Vector2(barLeft, goldY), new Vector2(GoldTextW, goldRow + LabelSlack), TextLook.Outline), 20f, GoldSize);
             float killIconLeft = barLeft + GoldTextW + IconGap;
             _killIcon = UiKit.Frame("KillIcon", canvas, FrameKind.IconSkullGalea, tl, mid, new Vector2(killIconLeft + IconPx * 0.5f, goldY), new Vector2(IconPx, IconPx), Color.white);
             float killsLeft = killIconLeft + IconPx + IconGap;
-            _kills = AutoSize(UiKit.Text("Kills", canvas, "0", TextRole.Number, 32f, Color.white, TextAlignmentOptions.MidlineLeft, tl, ml,
-                new Vector2(killsLeft, goldY), new Vector2(right - killsLeft, GoldRowH + 4f), TextLook.Outline), 20f, 32f);
+            _kills = AutoSize(UiKit.Text("Kills", canvas, "0", TextRole.Number, GoldSize, Color.white, TextAlignmentOptions.MidlineLeft, tl, ml,
+                new Vector2(killsLeft, goldY), new Vector2(right - killsLeft, goldRow + LabelSlack), TextLook.Outline), 20f, GoldSize);
         }
 
         /// <summary>
@@ -274,19 +283,20 @@ namespace Gladiator.UI
             var pad = UiFrames.Padding(FrameKind.Bronze);
             float p = UiKit.ContentPad;
             float t = pad.w + p, b = pad.y + p, l = pad.x + p, r = pad.z + p;
-            float h = t + LevelRowH + LevelGap + FavorRowH + b;
+            float levelRow = Mathf.Max(LevelRowH, Mathf.Ceil(TextBox.MidlineRow(TextRole.Number, LevelSize)));
+            float h = t + levelRow + LevelGap + FavorRowH + b;
             _levelPlate = UiKit.Frame("LevelPlate", canvas, FrameKind.Bronze, tr, tr, new Vector2(-PlateX, Top), new Vector2(LevelMinW, h), Color.white).rectTransform;
             string word = string.IsNullOrEmpty(LevelWord) ? "LV" : LevelWord;
             _levelFormat = word + " {0}";
-            _level = UiKit.Text("Level", _levelPlate, word + " 1", TextRole.Number, 50f, Color.white, TextAlignmentOptions.Midline, top, mid,
-                Vector2.zero, new Vector2(600f, LevelBoxH), TextLook.Outline);
+            _level = UiKit.Text("Level", _levelPlate, word + " 1", TextRole.Number, LevelSize, Color.white, TextAlignmentOptions.Midline, top, mid,
+                Vector2.zero, new Vector2(600f, levelRow + LabelSlack), TextLook.Outline);
             float need = Mathf.Ceil(_level.GetPreferredValues(word + " 88").x);
             float w = Mathf.Max(LevelMinW, need + l + r);
             _levelPlate.sizeDelta = new Vector2(w, h);
-            _level.rectTransform.anchoredPosition = new Vector2((l - r) * 0.5f, -t - LevelRowH * 0.5f);
-            _level.rectTransform.sizeDelta = new Vector2(w - l - r, LevelBoxH);
-            AutoSize(_level, 36f, 50f); // "LEVEL 100" in a long run shrinks before it's cut
-            float favorY = -t - LevelRowH - LevelGap - FavorRowH * 0.5f;
+            _level.rectTransform.anchoredPosition = new Vector2((l - r) * 0.5f, -t - levelRow * 0.5f);
+            _level.rectTransform.sizeDelta = new Vector2(w - l - r, levelRow + LabelSlack);
+            AutoSize(_level, 36f, LevelSize); // "LEVEL 100" in a long run shrinks before it's cut
+            float favorY = -t - levelRow - LevelGap - FavorRowH * 0.5f;
             _favorIcon = UiFactory.Image("FavorIcon", _levelPlate, Color.white, tl, mid, new Vector2(l + FavorIconSize.x * 0.5f, favorY), FavorIconSize, PixelIcons.Laurel);
             float barLeft = l + FavorIconSize.x + IconGap;
             _favorFill = Trough("FavorBar", _levelPlate, th.favor, tl, ml, new Vector2(barLeft, favorY), new Vector2(w - r - barLeft, 18f));

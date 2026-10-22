@@ -23,9 +23,12 @@ namespace Gladiator.UI
     {
         public const int WeaponSlots = 4, BoonSlots = 6, Slots = WeaponSlots + BoonSlots;
         public const float Width = LevelUpLayout.StatsW;
-        /// <summary>The two columns' shared header (StatsPanel uses them too, so the titles line up): heights from the
-        /// top of the frame's ContentRect, and font sizes.</summary>
+        /// <summary>The two columns' shared header (StatsPanel uses them too, so the titles line up): the least heights
+        /// and the font sizes; the rows grow to their textBounds (Row) with the theme's real fonts.</summary>
         public const float TitleH = 34f, SubH = 24f, TitleSize = 28f, SubSize = 17f, HeadH = 22f, HeadSize = 17f;
+
+        /// <summary>A Body row of `size` at least `min` tall, as tall as its textBounds (TextBox: the padding rule).</summary>
+        public static float Row(float min, float size) => Mathf.Max(min, Mathf.Ceil(TextBox.Height(TextRole.Body, size)));
         public const float SlotSize = 76f, SlotGap = 16f, IconSize = 60f;
         const float GapAfterSub = 6f, GapAfterHead = 6f, GapBetweenSections = 14f, TipGap = 12f, HaloOut = 10f;
         const float LineInset = 4f, InnerInset = 6f, BadgeSize = 20f;
@@ -87,10 +90,11 @@ namespace Gladiator.UI
             var mid = new Vector2(0.5f, 0.5f);
 
             // the content's rows from its top (the frame's ContentRect: padding + UiKit.ContentPad)
-            float yWeaponsHead = TitleH + SubH + GapAfterSub;
-            float yWeapons = yWeaponsHead + HeadH + GapAfterHead;
+            float titleH = Row(TitleH, TitleSize), subH = Row(SubH, SubSize), headH = Row(HeadH, HeadSize);
+            float yWeaponsHead = titleH + subH + GapAfterSub;
+            float yWeapons = yWeaponsHead + headH + GapAfterHead;
             float yBoonsHead = yWeapons + SlotSize + GapBetweenSections;
-            float yBoons = yBoonsHead + HeadH + GapAfterHead;
+            float yBoons = yBoonsHead + headH + GapAfterHead;
             float contentH = yBoons + 2f * SlotSize + SlotGap;
             var pad = UiFrames.Padding(FrameKind.Bronze);
             float p = UiKit.ContentPad;
@@ -102,18 +106,19 @@ namespace Gladiator.UI
             var frame = UiKit.Frame("Frame", _root, FrameKind.Bronze, mid, mid, Vector2.zero, Vector2.zero, Color.white);
             UiFactory.Stretch(frame.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
 
-            _title = UiKit.Text("Title", _root, TitleWord, TextRole.Body, TitleSize, _head, TextAlignmentOptions.MidlineLeft, tl, tl,
-                new Vector2(left, -top), new Vector2(inner, TitleH));
-            _sub = UiKit.Text("Sub", _root, HintWord, TextRole.Body, SubSize, _dim, TextAlignmentOptions.MidlineLeft, tl, tl,
-                new Vector2(left, -top - TitleH), new Vector2(inner, SubH));
-            _weaponsHead = UiKit.Text("WeaponsHead", _root, WeaponsWord, TextRole.Body, HeadSize, _head, TextAlignmentOptions.MidlineLeft, tl, tl,
-                new Vector2(left, -top - yWeaponsHead), new Vector2(inner, HeadH));
-            _weaponsCount = UiKit.Text("WeaponsCount", _root, "0/4", TextRole.Body, HeadSize, _dim, TextAlignmentOptions.MidlineRight, tl, tl,
-                new Vector2(left, -top - yWeaponsHead), new Vector2(inner, HeadH));
-            _boonsHead = UiKit.Text("BoonsHead", _root, BoonsWord, TextRole.Body, HeadSize, _head, TextAlignmentOptions.MidlineLeft, tl, tl,
-                new Vector2(left, -top - yBoonsHead), new Vector2(inner, HeadH));
-            _boonsCount = UiKit.Text("BoonsCount", _root, "0/6", TextRole.Body, HeadSize, _dim, TextAlignmentOptions.MidlineRight, tl, tl,
-                new Vector2(left, -top - yBoonsHead), new Vector2(inner, HeadH));
+            // Left / Right (vertically Middle): each label's textBounds box centred in its row
+            _title = UiKit.Text("Title", _root, TitleWord, TextRole.Body, TitleSize, _head, TextAlignmentOptions.Left, tl, tl,
+                new Vector2(left, -top), new Vector2(inner, titleH));
+            _sub = UiKit.Text("Sub", _root, HintWord, TextRole.Body, SubSize, _dim, TextAlignmentOptions.Left, tl, tl,
+                new Vector2(left, -top - titleH), new Vector2(inner, subH));
+            _weaponsHead = UiKit.Text("WeaponsHead", _root, WeaponsWord, TextRole.Body, HeadSize, _head, TextAlignmentOptions.Left, tl, tl,
+                new Vector2(left, -top - yWeaponsHead), new Vector2(inner, headH));
+            _weaponsCount = UiKit.Text("WeaponsCount", _root, "0/4", TextRole.Body, HeadSize, _dim, TextAlignmentOptions.Right, tl, tl,
+                new Vector2(left, -top - yWeaponsHead), new Vector2(inner, headH));
+            _boonsHead = UiKit.Text("BoonsHead", _root, BoonsWord, TextRole.Body, HeadSize, _head, TextAlignmentOptions.Left, tl, tl,
+                new Vector2(left, -top - yBoonsHead), new Vector2(inner, headH));
+            _boonsCount = UiKit.Text("BoonsCount", _root, "0/6", TextRole.Body, HeadSize, _dim, TextAlignmentOptions.Right, tl, tl,
+                new Vector2(left, -top - yBoonsHead), new Vector2(inner, headH));
 
             // the lit slot's glow, behind every slot (moved to the one it lights)
             _halo = UiKit.Frame("Lit", _root, FrameKind.Halo, mid, mid, Vector2.zero, new Vector2(SlotSize + 2f * HaloOut, SlotSize + 2f * HaloOut), Color.clear);

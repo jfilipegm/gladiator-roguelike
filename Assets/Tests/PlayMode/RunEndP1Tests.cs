@@ -259,37 +259,49 @@ namespace Gladiator.Tests
             Assert.AreEqual(1f, sfx.CrowdDuck, 1e-3f, "the crowd isn't ducked under the title card");
         }
 
-        /// <summary>The stats page opens on the right with the pause menu: PAUSED and its hint are centred in the space
-        /// left of it, and nothing wraps. At 16:9 (1920×1080 and 1280×720 alike) the canvas is the 1920×1080 reference,
-        /// so the free width there is checked in reference units too.</summary>
+        /// <summary>P3 (the producer's note 17): the pause is the level-up's frame: PAUSED (one line, in the title's place),
+        /// three plates where the cards stand, the inventory left and the stats column right, as a three-card level-up
+        /// lays them out; the old hint text is gone (the plates are the commands).</summary>
         [UnityTest, Timeout(60000)]
-        public IEnumerator Paused_SitsLeftOfTheStatsPage_WithoutWrapping()
+        public IEnumerator Paused_IsTheLevelUpsFrame_PlatesBetweenTheColumns()
         {
             yield return Boot(SlavePit);
             var hud = Object.FindAnyObjectByType<Hud>();
-            var pause = hud.PauseRect;
-            float fullWidth = pause.rect.width;
+            var cards = Object.FindAnyObjectByType<LevelUpPanel>();
+            Assert.IsNotNull(cards, "every arena has the level-up panel (it hosts the pause)");
             _player.SetPaused(true);
             yield return null;
             yield return null;
             var page = StatsPanel.Instance;
             Assert.IsNotNull(page, "every arena has the stats page");
-            Assert.AreEqual(StatsPanel.Mode.Pause, page.Current, "the stats page is up beside the pause menu");
+            Assert.AreEqual(StatsPanel.Mode.Pause, page.Current, "the stats column is up beside the pause");
+            Assert.IsTrue(cards.PauseShown);
+            Assert.AreEqual(LevelUpPanel.PausedWord, cards.TitleText);
+            Assert.AreEqual("", cards.SubtitleText, "no hint text: the plates are the commands");
+            var pause = hud.PauseRect;
+            Assert.IsNotNull(pause, "the HUD's hook finds the PAUSED title");
+            Assert.AreEqual(1, hud.PauseLineCount, "PAUSED on one line");
+            Assert.LessOrEqual(hud.PauseTextWidth, pause.rect.width, "PAUSED fits its box");
+            var fit = cards.Fit;
+            Assert.AreEqual(LevelUpLayout.PauseCards, fit.Cards, "a three-card level-up's fit");
             var pc = new Vector3[4];
             var sc = new Vector3[4];
-            pause.GetWorldCorners(pc);
+            var ic = new Vector3[4];
             page.Page.GetWorldCorners(sc);
-            Debug.Log($"[P1] screen {Screen.width}x{Screen.height}: pause box x {pc[0].x:0}-{pc[2].x:0}, page from x {sc[0].x:0}; text needs {hud.PauseTextWidth:0} of {pause.rect.width:0} units");
-            Assert.Less(pause.rect.width, fullWidth, "the pause box makes room for the page");
-            Assert.LessOrEqual(pc[2].x, sc[0].x, "and ends left of it");
-            Assert.LessOrEqual(hud.PauseTextWidth, pause.rect.width, "PAUSED and both hint lines fit their box");
-            Assert.AreEqual(3, hud.PauseLineCount, "PAUSED, then the hint on two lines: nothing wraps");
-            float free16x9 = 1920f - StatsPanel.PageWidth - StatsPanel.Margin - 80f; // 40 units clear on each side
-            Assert.LessOrEqual(hud.PauseTextWidth, free16x9, "fits at 1920x1080 and 1280x720");
+            cards.Inventory.Root.GetWorldCorners(ic);
+            for (int i = 0; i < LevelUpPanel.PausePlates; i++)
+            {
+                cards.PausePlateRect(i).GetWorldCorners(pc);
+                Debug.Log($"[P3] screen {Screen.width}x{Screen.height}: plate {i} x {pc[0].x:0}-{pc[2].x:0}; inventory to x {ic[2].x:0}, stats from x {sc[0].x:0}");
+                Assert.Less(ic[2].x, pc[0].x, "plate " + i + " clears the inventory");
+                Assert.Less(pc[2].x, sc[0].x, "plate " + i + " clears the stats column");
+            }
 
             _player.SetPaused(false);
             yield return null;
-            Assert.AreEqual(fullWidth, hud.PauseRect.rect.width, 0.5f, "unpaused: back to the full width");
+            yield return null;
+            Assert.IsFalse(cards.PauseShown, "resumed: the pause goes");
+            Assert.AreEqual(StatsPanel.Mode.Hidden, page.Current);
         }
 
         [UnityTest, Timeout(60000)]
@@ -353,7 +365,7 @@ namespace Gladiator.Tests
                 Assert.GreaterOrEqual(name.sizeDelta.x + 0.5f, need, label + ": the name's box fits it");
                 Assert.GreaterOrEqual(chip.sizeDelta.x + 0.5f, name.anchoredPosition.x + need, label + ": the chip fits its name");
                 Assert.LessOrEqual(chip.sizeDelta.x, name.anchoredPosition.x + need + 16f, label + ": and is no wider than it needs");
-                Assert.LessOrEqual(chip.anchoredPosition.y, -236f, label + ": a gap under the Boon row (its tiles end at -232)");
+                Assert.LessOrEqual(chip.anchoredPosition.y, hud.BoonRowBottom - 4f, label + ": a gap under the Boon row");
                 var a = new Rect(chip.anchoredPosition.x, chip.anchoredPosition.y - chip.sizeDelta.y, chip.sizeDelta.x, chip.sizeDelta.y);
                 for (int i = 0; i < j; i++)
                 {

@@ -18,12 +18,12 @@ namespace Gladiator.UI
         public const float DefaultWidth = 410f;
         /// <summary>The body's tallest (canvas units at scale 1): longer text is cut, never the frame off the screen.</summary>
         public const float MaxBodyHeight = 420f;
-        const float TitleSize = 26f, SubSize = 18f, BodySize = 20f, TitleH = 32f, SubH = 24f, Gap = 6f, ScreenGap = 8f;
+        const float TitleSize = 26f, SubSize = 18f, BodySize = 20f, Gap = 6f, ScreenGap = 8f;
 
         readonly CanvasGroup _group;
         readonly TextMeshProUGUI _title, _sub, _body;
         readonly Vector4 _inset; // the wax's padding + ContentPad (left, bottom, right, top)
-        readonly float _width;
+        readonly float _width, _titleH, _subH;
         float _height;
 
         /// <summary>The words: fill these, then call Apply.</summary>
@@ -56,17 +56,20 @@ namespace Gladiator.UI
             float p = UiKit.ContentPad;
             _inset = new Vector4(pad.x + p, pad.y + p, pad.z + p, pad.w + p);
             float inner = width - _inset.x - _inset.z;
+            // each line as tall as its textBounds (TextBox): the padding rule holds for the real fonts
+            _titleH = Mathf.Ceil(TextBox.Height(TextRole.Title, TitleSize));
+            _subH = Mathf.Ceil(TextBox.Height(TextRole.Body, SubSize));
             // the wax is dark: light inks (the surface rule, P3-contract "Surfaces and contrast")
-            _title = UiKit.Text("Title", Root, "", TextRole.Title, TitleSize, th.goldBright, TextAlignmentOptions.MidlineLeft, tl, tl,
-                new Vector2(_inset.x, -_inset.w), new Vector2(inner, TitleH));
+            _title = UiKit.Text("Title", Root, "", TextRole.Title, TitleSize, th.goldBright, TextAlignmentOptions.Left, tl, tl,
+                new Vector2(_inset.x, -_inset.w), new Vector2(inner, _titleH));
             _title.enableAutoSizing = true; // "Gilded Mercenary's Purse" shrinks before it is cut
             _title.fontSizeMin = 18f;
             _title.fontSizeMax = TitleSize;
-            _sub = UiKit.Text("Sub", Root, "", TextRole.Body, SubSize, th.dust, TextAlignmentOptions.MidlineLeft, tl, tl,
-                new Vector2(_inset.x, -_inset.w - TitleH), new Vector2(inner, SubH));
+            _sub = UiKit.Text("Sub", Root, "", TextRole.Body, SubSize, th.dust, TextAlignmentOptions.Left, tl, tl,
+                new Vector2(_inset.x, -_inset.w - _titleH), new Vector2(inner, _subH));
             _sub.richText = true;
             _body = UiKit.Text("Body", Root, "", TextRole.Body, BodySize, th.ink, TextAlignmentOptions.TopLeft, tl, tl,
-                new Vector2(_inset.x, -_inset.w - TitleH - SubH - Gap), new Vector2(inner, 60f));
+                new Vector2(_inset.x, -_inset.w - _titleH - _subH - Gap), new Vector2(inner, 60f));
             _body.richText = true;
             _body.textWrappingMode = TextWrappingModes.Normal;
             Presize();
@@ -104,7 +107,7 @@ namespace Gladiator.UI
             float inner = _width - _inset.x - _inset.z;
             float bodyH = Body.Length > 0 ? Mathf.Min(MaxBodyHeight, Mathf.Ceil(_body.GetPreferredValues(inner, 32767f).y) + 2f) : 0f;
             _body.rectTransform.sizeDelta = new Vector2(inner, Mathf.Max(1f, bodyH));
-            _height = _inset.w + TitleH + SubH + (bodyH > 0f ? Gap + bodyH : 0f) + _inset.y;
+            _height = _inset.w + _titleH + _subH + (bodyH > 0f ? Gap + bodyH : 0f) + _inset.y;
             Root.sizeDelta = new Vector2(_width, _height);
         }
 
@@ -148,5 +151,48 @@ namespace Gladiator.UI
                 return new Rect(p.x, p.y - _height * s, _width * s, _height * s);
             }
         }
+    }
+}
+
+namespace Gladiator.UI
+{
+    /// <summary>
+    /// P3: how tall a one-line label's TMP textBounds is (the padding rule measures it): TMP spans every visible
+    /// character from its font's ascent line to its descent line (TMP_Text.GetTextBounds), scaled by size / pointSize ×
+    /// faceInfo.scale, whatever the glyphs. In-run layouts size their rows from this at build time, so they follow the
+    /// theme's real fonts. With no font yet it guesses 1.3 em (the theme's fonts sit between 1.2 and 1.4).
+    /// </summary>
+    public static class TextBox
+    {
+        const float Guess = 1.3f, CapGuess = 0.7f;
+
+        static bool Face(TextRole role, out UnityEngine.TextCore.FaceInfo face)
+        {
+            face = default;
+            var font = UiTheme.Current.FontFor(role);
+            if (font == null) return false;
+            face = font.faceInfo;
+            return face.pointSize > 0f && face.ascentLine > face.descentLine;
+        }
+
+        static float Scale(in UnityEngine.TextCore.FaceInfo face, float size) => size / face.pointSize * (face.scale > 0f ? face.scale : 1f);
+
+        /// <summary>One line's textBounds height for `role` at `size`.</summary>
+        public static float Height(TextRole role, float size) =>
+            Face(role, out var f) ? (f.ascentLine - f.descentLine) * Scale(f, size) : Guess * size;
+
+        /// <summary>
+        /// How far above the capitals' middle the textBounds box's middle sits. A Midline (Geometry) label centres its
+        /// glyphs (numbers, capitals) on its rect, so its box is shifted by this much.
+        /// </summary>
+        public static float MidlineShift(TextRole role, float size)
+        {
+            if (!Face(role, out var f)) return (Guess - 1f - CapGuess) * 0.5f * size;
+            float cap = f.capLine > 0f ? f.capLine : CapGuess * (f.ascentLine - f.descentLine);
+            return (f.ascentLine + f.descentLine - cap) * 0.5f * Scale(f, size);
+        }
+
+        /// <summary>The row a Midline label needs so its whole box stays inside the row (its glyphs centred on it).</summary>
+        public static float MidlineRow(TextRole role, float size) => Height(role, size) + 2f * Mathf.Abs(MidlineShift(role, size));
     }
 }

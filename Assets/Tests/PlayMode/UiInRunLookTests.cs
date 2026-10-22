@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Gladiator.Core;
@@ -7,6 +8,7 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
+using Object = UnityEngine.Object;
 
 namespace Gladiator.Tests
 {
@@ -18,6 +20,10 @@ namespace Gladiator.Tests
     /// centred with the buttons (layout A); banish and the boss reward retitle the panel; nothing is cut off on the HUD or
     /// on the longest card; death holds the crimson banner, a survived run gets laurels, the stats sit on wax. Inspected
     /// through UiKit.HasRole / UiFrames.KindOf / UiKit.TruncatedLabels (this assembly has no TMP or UGUI reference).
+    /// P3 (docs/tracks/P3-contract.md, P3-B): the HUD's labels and bars inside their plates' ContentRects, each icon
+    /// centred on its trough or number, the level plate's LEVEL word, the 21-tall XP bar; the card labels inside the card
+    /// frame's ContentRect; the run end's rows inside the tablet's; a banner never rotates and a second one's drop and
+    /// wave allocate nothing per frame.
     /// </summary>
     public class UiInRunLookTests
     {
@@ -322,5 +328,153 @@ namespace Gladiator.Tests
             GameLoop.TrackHeapPerSystem = false;
             Assert.IsTrue(_hud.Banner.Visible || _hud.PendingBanner != null || _hud.Banner.Phase == BannerPhase.Hidden, "the banner ran");
         }
-    }
+    
+        // ---------- P3 ----------
+
+        static Rect World(RectTransform rt)
+        {
+            var c = new Vector3[4];
+            rt.GetWorldCorners(c);
+            return Rect.MinMaxRect(c[0].x, c[0].y, c[2].x, c[2].y);
+        }
+
+        static void AssertInside(Rect outer, Rect inner, float tolerance, string what)
+        {
+            Assert.GreaterOrEqual(inner.xMin, outer.xMin - tolerance, what + ": left");
+            Assert.LessOrEqual(inner.xMax, outer.xMax + tolerance, what + ": right");
+            Assert.GreaterOrEqual(inner.yMin, outer.yMin - tolerance, what + ": bottom");
+            Assert.LessOrEqual(inner.yMax, outer.yMax + tolerance, what + ": top");
+        }
+
+        /// <summary>Notes 13, 14, 18: the HUD's labels and bars sit inside their plates' ContentRects, the HP trough as far
+        /// from the plate's top as the last row from its bottom, each icon centred on its trough or number, the level plate
+        /// reads LEVEL, the XP bar is 21 tall, and the icons are the new 16 px art.</summary>
+        [UnityTest, Timeout(60000)]
+        public IEnumerator Hud_LabelsInsideTheirPlates_IconsCentred_LevelWord()
+        {
+            yield return Boot();
+            _run.AddGold(1234);
+            yield return Frames(2);
+            Canvas.ForceUpdateCanvases();
+            float unit = _hud.CanvasRect.lossyScale.x; // screen pixels per canvas unit
+            float tol = unit + 0.5f;
+            var status = Hud.ContentWorldRect(_hud.StatusPlateRect, FrameKind.Bronze);
+            var level = Hud.ContentWorldRect(_hud.LevelPlateRect, FrameKind.Bronze);
+            AssertInside(status, World(_hud.HpBarRect), tol, "the HP trough");
+            AssertInside(status, World(_hud.HpIconRect), tol, "the heart");
+            AssertInside(status, Hud.TextWorldRect(_hud.GoldLabel), tol, "the gold");
+            AssertInside(status, Hud.TextWorldRect(_hud.KillsLabel), tol, "the kills");
+            AssertInside(status, World(_hud.GoldIconRect), tol, "the aureus");
+            AssertInside(status, World(_hud.KillIconRect), tol, "the skull");
+            AssertInside(level, Hud.TextWorldRect(_hud.LevelLabel), tol, "the level");
+            AssertInside(level, World(_hud.FavorBarRect), tol, "the Favor trough");
+            AssertInside(level, World(_hud.FavorIconRect), tol, "the laurel");
+            var plate = World(_hud.StatusPlateRect);
+            float topGap = plate.yMax - World(_hud.HpBarRect).yMax;
+            float lowest = Mathf.Min(World(_hud.GoldIconRect).yMin, Hud.TextWorldRect(_hud.GoldLabel).yMin);
+            Debug.Log($"[P3] HUD at {Screen.width}x{Screen.height}: HP trough {topGap:0.#} px under the plate's top, the gold row's lowest pixel {lowest - plate.yMin:0.#} px over its bottom");
+            Assert.AreEqual(status.yMax, World(_hud.HpBarRect).yMax, tol, "the HP trough starts at the ContentRect's top: the same inset as at its bottom");
+            Assert.LessOrEqual(lowest - status.yMin, 12f * unit, "and the last row ends near the ContentRect's bottom (no empty band)");
+            // icons on their trough's or number's centre line (±1 unit)
+            Assert.AreEqual(World(_hud.HpBarRect).center.y, World(_hud.HpIconRect).center.y, tol, "the heart on the HP trough's centre line");
+            Assert.AreEqual(Hud.TextWorldRect(_hud.GoldLabel).center.y, World(_hud.GoldIconRect).center.y, tol, "the aureus on the gold's");
+            Assert.AreEqual(Hud.TextWorldRect(_hud.KillsLabel).center.y, World(_hud.KillIconRect).center.y, tol, "the skull on the kills'");
+            Assert.AreEqual(new Vector2(32f, 32f), _hud.HpIconRect.rect.size, "32×32: 2 units per art pixel");
+            Assert.AreEqual((int)FrameKind.IconHeart, _hud.HpIconFrame);
+            Assert.AreEqual((int)FrameKind.IconAureus, _hud.GoldIconFrame);
+            Assert.AreEqual((int)FrameKind.IconSkullGalea, _hud.KillIconFrame);
+            Assert.AreEqual((int)FrameKind.IconAureus, _hud.PriceTagIconFrame, "the price tags' coin too");
+            Assert.AreEqual(21f, _hud.XpBarRect.rect.height, 0.01f, "the XP bar 18 → 21");
+            StringAssert.StartsWith(Hud.LevelWord + " ", _hud.LevelText, "the level plate's word");
+            Assert.IsTrue(UiKit.HasRole(_hud.LevelLabel, TextRole.Number));
+        }
+
+        /// <summary>The padding rule on the cards: every label's glyphs inside the card frame's ContentRect.</summary>
+        [UnityTest, Timeout(60000)]
+        public IEnumerator Cards_EveryLabelInsideTheFramesContentRect()
+        {
+            yield return Boot();
+            yield return OpenCards();
+            Canvas.ForceUpdateCanvases();
+            float tol = _panel.CanvasRect.lossyScale.x + 0.5f;
+            for (int i = 0; i < _lvl.ChoiceCount; i++)
+            {
+                var content = Hud.ContentWorldRect(_panel.CardRect(i), FrameKind.CardStone);
+                foreach (var label in new[] { _panel.CardNameLabel(i), _panel.CardDescriptionLabel(i), _panel.CardKeyLabel(i) })
+                {
+                    var r = Hud.TextWorldRect(label);
+                    if (r.width <= 0f) continue;
+                    AssertInside(content, r, tol, "card " + i + " " + label.name);
+                }
+            }
+            Assert.IsTrue(_panel.Inventory.Visible, "P3: the inventory shows with the cards");
+            _lvl.Choose(0);
+        }
+
+        /// <summary>The run end's seven rows inside the wax tablet's ContentRect.</summary>
+        [UnityTest, Timeout(60000)]
+        public IEnumerator RunEnd_RowsInsideTheTablet()
+        {
+            yield return Boot();
+            var end = RunEndController.Instance;
+            _run.End(RunOutcome.Survived);
+            yield return WaitRealtime(() => end.ScreenShown, 8f);
+            Assert.IsTrue(end.ScreenShown);
+            yield return Frames(2);
+            var panel = Object.FindAnyObjectByType<RunEndPanel>();
+            Canvas.ForceUpdateCanvases();
+            float tol = panel.CanvasRect.lossyScale.x + 0.5f;
+            var content = Hud.ContentWorldRect(panel.StatsRect, FrameKind.Wax);
+            int checkedRows = 0;
+            foreach (var t in panel.StatsRect.GetComponentsInChildren<Transform>())
+            {
+                var label = t.GetComponent("TextMeshProUGUI");
+                if (label == null) continue;
+                var r = Hud.TextWorldRect(label);
+                if (r.width <= 0f) continue;
+                AssertInside(content, r, tol, t.name);
+                checkedRows++;
+            }
+            Assert.GreaterOrEqual(checkedRows, 14, "seven names and seven values");
+        }
+
+        /// <summary>Note 16: a banner never rotates; after the first banner has grown every buffer, a second banner's
+        /// drop and wave allocate nothing per frame (its own canvas, ticked and rebuilt here, so nothing else counts).</summary>
+        [UnityTest, Timeout(60000)]
+        public IEnumerator Banner_ASecondDrop_AllocatesNothingPerFrame_AndNeverRotates()
+        {
+            var canvas = UiFactory.Canvas("P3BannerCanvas", null, 0);
+            var b = new VexillumBanner(canvas.transform, new Vector2(0.5f, 1f), new Vector2(0f, -207f));
+            yield return null;
+            const float dt = 1f / 60f;
+            b.Show("SWARM INCOMING!", BannerCloth.Crimson);
+            for (int i = 0; i < 600 && b.Visible; i++)
+            {
+                b.Tick(dt);
+                Canvas.ForceUpdateCanvases();
+                Assert.AreEqual(0f, b.SwayDegrees, "no rotation");
+            }
+            Assert.IsFalse(b.Visible, "the first banner ran its course");
+
+            long start = GC.GetAllocatedBytesForCurrentThread();
+            b.Show("AN ELITE ENTERS!", BannerCloth.Crimson); // new words: laid out once, on the next tick
+            b.Tick(dt);
+            Canvas.ForceUpdateCanvases();
+            long showing = GC.GetAllocatedBytesForCurrentThread() - start;
+            float peak = 0f;
+            long before = GC.GetAllocatedBytesForCurrentThread();
+            for (int i = 0; i < 600 && b.Visible; i++)
+            {
+                b.Tick(dt);
+                Canvas.ForceUpdateCanvases();
+                peak = Mathf.Max(peak, b.WaveAmplitude);
+            }
+            long perFrames = GC.GetAllocatedBytesForCurrentThread() - before;
+            Debug.Log($"[P3] the second banner: {showing} B to show it and lay its words out, then {perFrames} B over its drop, wave, hold and roll (wave peak {peak:0.#} units)");
+            Assert.IsFalse(b.Visible);
+            Assert.Greater(peak, 0f, "it waved");
+            Assert.AreEqual(0, perFrames, "the drop and the wave allocated");
+            Object.Destroy(canvas.gameObject);
+        }
+}
 }

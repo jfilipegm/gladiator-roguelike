@@ -52,7 +52,7 @@ namespace Gladiator.UI
         TextMeshProUGUI _title, _sub, _prompt;
         TextMeshProUGUI[] _heads, _names, _values;
         float[] _rowTop; // each stat row's top below the column's top, scale 1
-        float _titleTop;
+        float _titleTop, _titleH, _rowH;
         int _rows;
         Color _headC, _dimC, _cardC, _valueC;
         float _pickScale = 1f;
@@ -135,8 +135,8 @@ namespace Gladiator.UI
             UiFactory.Stretch(_promptFrame.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             // the prompt's words inside the bronze's ContentRect (the padding rule)
             var pc = UiKit.ContentRect(FrameKind.Bronze, new Vector2(PromptWidth, PromptHeight));
-            _prompt = UiKit.Text("Text", _promptBox, "", TextRole.Body, 28f, th.ink, TextAlignmentOptions.Midline, mid, mid,
-                pc.center, pc.size);
+            _prompt = UiKit.Text("Text", _promptBox, "", TextRole.Body, 28f, th.ink, TextAlignmentOptions.Center, mid, mid,
+                pc.center, pc.size); // autosize keeps its textBounds inside (Center: the box centred)
             _prompt.richText = true;
             _prompt.enableAutoSizing = true; // "BLOOD ALTAR   Max HP 120 → 102" in Marcellus: shrink before it's cut
             _prompt.fontSizeMin = 20f;
@@ -170,41 +170,55 @@ namespace Gladiator.UI
             _heads = new TextMeshProUGUI[sections];
             _rowTop = new float[_rows];
 
+            // each row as tall as its textBounds with the theme's fonts (the padding rule), the stat rows' size shrinking
+            // (20 → 16) until all 21 fit the column's ContentRect
+            float titleH = InventoryPanel.Row(InventoryPanel.TitleH, InventoryPanel.TitleSize);
+            float subH = InventoryPanel.Row(InventoryPanel.SubH, InventoryPanel.SubSize);
+            float headH = InventoryPanel.Row(InventoryPanel.HeadH, InventoryPanel.HeadSize);
+            float room = LevelUpLayout.StatsH - top - pad.y - p - titleH - subH - sections * (SectionGap + headH);
+            float rowSize = RowSize;
+            _rowH = InventoryPanel.Row(RowH, rowSize);
+            while (_rowH * _rows > room && rowSize > MinRowSize)
+            {
+                rowSize -= 0.5f;
+                _rowH = InventoryPanel.Row(Mathf.Min(RowH, room / _rows), rowSize);
+            }
             _titleTop = top;
-            _title = UiKit.Text("Title", _box, PickTitle, TextRole.Body, InventoryPanel.TitleSize, _headC, TextAlignmentOptions.MidlineLeft, tl, tl,
-                new Vector2(left, -top), new Vector2(inner, InventoryPanel.TitleH));
+            _titleH = titleH;
+            _title = UiKit.Text("Title", _box, PickTitle, TextRole.Body, InventoryPanel.TitleSize, _headC, TextAlignmentOptions.Left, tl, tl,
+                new Vector2(left, -top), new Vector2(inner, titleH));
             _title.richText = true;
-            _sub = UiKit.Text("Sub", _box, "", TextRole.Body, InventoryPanel.SubSize, _dimC, TextAlignmentOptions.MidlineLeft, tl, tl,
-                new Vector2(left, -top - InventoryPanel.TitleH), new Vector2(inner, InventoryPanel.SubH));
+            _sub = UiKit.Text("Sub", _box, "", TextRole.Body, InventoryPanel.SubSize, _dimC, TextAlignmentOptions.Left, tl, tl,
+                new Vector2(left, -top - titleH), new Vector2(inner, subH));
             _sub.richText = true;
             AutoSize(_sub, 13f, InventoryPanel.SubSize); // "if you take Gilded Mercenary's Purse: HP 54 → 100"
             // the title takes the pointer too (the pause: the gladiator's traits)
-            Hit(_box, new Vector2(left, -top), new Vector2(inner, InventoryPanel.TitleH), TitleHover);
+            Hit(_box, new Vector2(left, -top), new Vector2(inner, titleH), TitleHover);
 
-            _rowLit = UiFactory.Image("Lit", _box, new Color(1f, 1f, 1f, 0f), tl, tl, new Vector2(left - 4f, -top), new Vector2(inner + 8f, RowH), PixelIcons.White);
+            _rowLit = UiFactory.Image("Lit", _box, new Color(1f, 1f, 1f, 0f), tl, tl, new Vector2(left - 4f, -top), new Vector2(inner + 8f, _rowH), PixelIcons.White);
             _rowLit.raycastTarget = false;
 
-            float y = top + InventoryPanel.TitleH + InventoryPanel.SubH;
+            float y = top + titleH + subH;
             for (int sct = 0; sct < sections; sct++)
             {
                 int from = StatText.SectionStart[sct], to = sct + 1 < sections ? StatText.SectionStart[sct + 1] : _rows;
                 y += SectionGap;
                 _heads[sct] = UiKit.Text("Head" + sct, _box, StatText.SectionTitle[sct], TextRole.Body, InventoryPanel.HeadSize, _headC,
-                    TextAlignmentOptions.MidlineLeft, tl, tl, new Vector2(left, -y), new Vector2(inner, InventoryPanel.HeadH));
-                y += InventoryPanel.HeadH;
+                    TextAlignmentOptions.Left, tl, tl, new Vector2(left, -y), new Vector2(inner, headH));
+                y += headH;
                 for (int i = from; i < to; i++)
                 {
                     _rowTop[i] = y;
                     var s = StatText.Order[i];
-                    _names[i] = UiKit.Text("Name_" + s, _box, StatInfo.Name(s), TextRole.Body, RowSize, _cardC, TextAlignmentOptions.MidlineLeft, tl, tl,
-                        new Vector2(left, -y), new Vector2(nameW, RowH));
-                    AutoSize(_names[i], MinRowSize, RowSize);
-                    _values[i] = UiKit.Text("Value_" + s, _box, "", TextRole.Body, RowSize, _valueC, TextAlignmentOptions.MidlineLeft, tl, tl,
-                        new Vector2(valueX, -y), new Vector2(valueW, RowH));
+                    _names[i] = UiKit.Text("Name_" + s, _box, StatInfo.Name(s), TextRole.Body, rowSize, _cardC, TextAlignmentOptions.Left, tl, tl,
+                        new Vector2(left, -y), new Vector2(nameW, _rowH));
+                    AutoSize(_names[i], MinRowSize, rowSize);
+                    _values[i] = UiKit.Text("Value_" + s, _box, "", TextRole.Body, rowSize, _valueC, TextAlignmentOptions.Left, tl, tl,
+                        new Vector2(valueX, -y), new Vector2(valueW, _rowH));
                     _values[i].richText = true;
-                    AutoSize(_values[i], MinRowSize, RowSize); // "+100% → +125%" shrinks before it's cut
-                    Hit(_box, new Vector2(left, -y), new Vector2(inner, RowH), i);
-                    y += RowH;
+                    AutoSize(_values[i], MinRowSize, rowSize); // "+100% → +125%" shrinks before it's cut
+                    Hit(_box, new Vector2(left, -y), new Vector2(inner, _rowH), i);
+                    y += _rowH;
                 }
             }
         }
@@ -519,14 +533,14 @@ namespace Gladiator.UI
                 if (!WriteTraits()) { _tip.Hide(); _rowLit.color = new Color(1f, 1f, 1f, 0f); return; }
                 rowTop = _titleTop;
                 _rowLit.rectTransform.anchoredPosition = new Vector2(_rowLit.rectTransform.anchoredPosition.x, -_titleTop);
-                _rowLit.rectTransform.sizeDelta = new Vector2(_rowLit.rectTransform.sizeDelta.x, InventoryPanel.TitleH);
+                _rowLit.rectTransform.sizeDelta = new Vector2(_rowLit.rectTransform.sizeDelta.x, _titleH);
             }
             else
             {
                 WriteSources(StatText.Order[hover]);
                 rowTop = _rowTop[hover];
                 _rowLit.rectTransform.anchoredPosition = new Vector2(_rowLit.rectTransform.anchoredPosition.x, -rowTop);
-                _rowLit.rectTransform.sizeDelta = new Vector2(_rowLit.rectTransform.sizeDelta.x, RowH);
+                _rowLit.rectTransform.sizeDelta = new Vector2(_rowLit.rectTransform.sizeDelta.x, _rowH);
             }
             _rowLit.color = new Color(1f, 1f, 1f, 0.09f);
             _tip.Apply();

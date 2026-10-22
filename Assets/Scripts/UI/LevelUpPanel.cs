@@ -45,11 +45,11 @@ namespace Gladiator.UI
         static readonly string[] PauseKeys = { "ESC", "O", "Q" };
         const float CardW = LevelUpLayout.CardW, CardH = LevelUpLayout.CardH;
         // the card (spec §6.2), y from its centre: 9 frame · 40 band · 112 icon · 26 tag · 68 name · 30 pips ·
-        // 168 description · 30 key · 24 foot (the frame's); P3: the key and the description moved up 6 so the key's
-        // glyphs stay inside the frame's ContentRect (UiKit.ContentRect: the padding rule)
+        // the description · the key · 24 foot (the frame's); P3: the key's row sits on the frame's ContentRect's bottom,
+        // as tall as its textBounds (TextBox), and the description ends 2 above it (the padding rule)
         const float Inset = 9f, BandY = 231f, BandH = 40f, IconY = 151f, IconSize = 100f,
             WreathY = 143f, TagY = 82f, TagH = 28f, NameY = 35f, NameH = 68f, PipY = -14f, PipSize = 14f, PipPitch = 20f,
-            DescY = -114f, DescH = 168f, KeyH = 30f;
+            DescTop = -24f, KeySize = 24f, KeyMinH = 30f;
         const float SelectedScale = 1.04f, RingOut = 6f, HaloOut = 8f; // producer (2026-10-22): the glow stays clear of the subtitle and the buttons
         // layout A at 1920×1080, in the content's units from the canvas centre: the title's glyphs from y 46, the
         // subtitle at 188, the cards' tops at 262, the buttons at 812 (from the top)
@@ -262,7 +262,9 @@ namespace Gladiator.UI
             float innerW = CardW - 2f * Inset;
             // P3: every label inside the stone frame's ContentRect (the four card frames share their insets)
             var cr = UiKit.ContentRect(FrameKind.CardStone, new Vector2(CardW, CardH));
-            float textW = cr.width, keyY = cr.yMin + KeyH * 0.5f;
+            float keyH = Mathf.Max(KeyMinH, Mathf.Ceil(TextBox.MidlineRow(TextRole.Number, KeySize)));
+            float textW = cr.width, keyY = cr.yMin + keyH * 0.5f;
+            float descBottom = cr.yMin + keyH + 2f, descH = DescTop - descBottom;
             var v = new CardView();
             v.Root = UiFactory.Rect("Card" + index, parent, mid, mid, Vector2.zero, new Vector2(CardW, CardH));
             // back to front: the selected card's halo, the dark inside, the rarity frame, the focus ring
@@ -291,14 +293,14 @@ namespace Gladiator.UI
             for (int p = 0; p < MaxPips; p++)
                 v.Pips[p] = UiFactory.Image("Pip" + p, v.Root, PipEmpty, mid, mid, new Vector2(0f, PipY), new Vector2(PipSize, PipSize), PixelIcons.White);
             v.Desc = UiKit.Text("Desc", v.Root, "Desc", TextRole.Body, 24f, _ink, TextAlignmentOptions.Top, mid, mid,
-                new Vector2(0f, DescY), new Vector2(textW, DescH));
+                new Vector2(0f, (DescTop + descBottom) * 0.5f), new Vector2(textW, descH));
             v.Desc.textWrappingMode = TextWrappingModes.Normal;
             v.Desc.richText = true;
             AutoSize(v.Desc, 18f, 24f); // evolutions and tag hints run longer: shrink to fit, never below the 18 floor
             var keyColor = _ink;
             keyColor.a = 0.5f;
-            v.Key = UiKit.Text("Key", v.Root, "[" + (index + 1) + "]", TextRole.Number, 26f, keyColor, TextAlignmentOptions.Midline, mid, mid,
-                new Vector2(0f, keyY), new Vector2(textW, KeyH));
+            v.Key = UiKit.Text("Key", v.Root, "[" + (index + 1) + "]", TextRole.Number, KeySize, keyColor, TextAlignmentOptions.Midline, mid, mid,
+                new Vector2(0f, keyY), new Vector2(textW, keyH));
             return v;
         }
 

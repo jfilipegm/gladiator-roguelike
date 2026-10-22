@@ -11,6 +11,8 @@ namespace Gladiator.UI
     /// In-run HUD (M1.3): XP bar (top), run timer (top centre), level (top right), HP bar + gold + kills (top left),
     /// build strip (owned weapons, then Boons below, each with its level, under the gold), LEVEL UP toast, pause overlay, F3 debug line. Built in
     /// code; texts only change when values change and use allocation-free TMP calls.
+    /// R7: the run's edicts as a row of small icons under the timer, built once at Start (nothing per frame); the boss's
+    /// name and bar take that space during the fight, so the row steps aside while they show.
     /// </summary>
     public sealed class Hud : MonoBehaviour, ITickable
     {
@@ -121,6 +123,14 @@ namespace Gladiator.UI
         static readonly Color RageHot = new Color(1f, 0.93f, 0.7f);
         static readonly Color RageSpent = new Color(0.45f, 0.45f, 0.48f);
 
+        // R7: the edicts in effect, one 28 px icon each on a dark plate, centred under the timer
+        Transform _canvas;
+        RectTransform _edictRow;
+        int _edictIcons;
+        const float EdictIcon = 28f, EdictPlate = 30f, EdictGap = 4f, EdictTop = -88f;
+        static readonly Color EdictPlateColor = new Color(0.03f, 0.02f, 0.02f, 0.7f);
+        static readonly Color EdictHurt = new Color(1f, 0.33f, 0.2f);
+
         static readonly Color XpColor = new Color(0.31f, 0.89f, 0.82f);
         static readonly Color HpColor = new Color(0.88f, 0.2f, 0.17f);
         static readonly Color Gold = new Color(1f, 0.84f, 0.3f);
@@ -128,6 +138,7 @@ namespace Gladiator.UI
         void Awake()
         {
             var canvas = UiFactory.Canvas("HudCanvas", transform, UiSortOrder.Hud).transform;
+            _canvas = canvas;
             var top = new Vector2(0.5f, 1f);
 
             // XP bar across the top
@@ -278,6 +289,47 @@ namespace Gladiator.UI
             PreSize(_announce, "GORM CALLS HIS GUARDS!");
         }
 
+        // R7: RunModifiers.Set comes before the arena loads, so the edicts are known by every Start
+        void Start() => BuildEdictRow(RunModifiers.Active);
+
+        /// <summary>Tests: how many edict icons the row holds, and whether it shows.</summary>
+        public int EdictIconCount => _edictIcons;
+        public bool EdictRowShown => _edictRow != null && _edictRow.gameObject.activeSelf;
+        public RectTransform EdictRow => _edictRow;
+
+        /// <summary>One icon per edict (the upgrade atlas's first frame, as the weapon strip draws them), built once.</summary>
+        void BuildEdictRow(RunModifierDef[] active)
+        {
+            _edictIcons = 0;
+            if (active == null || active.Length == 0 || _canvas == null) return;
+            int n = active.Length;
+            float w = n * EdictPlate + (n - 1) * EdictGap;
+            var top = new Vector2(0.5f, 1f);
+            var left = new Vector2(0f, 0.5f);
+            var mid = new Vector2(0.5f, 0.5f);
+            _edictRow = UiFactory.Rect("Edicts", _canvas, top, top, new Vector2(0f, EdictTop), new Vector2(w, EdictPlate));
+            for (int i = 0; i < n; i++)
+            {
+                var d = active[i];
+                if (d == null) continue;
+                var plate = UiFactory.Image("Edict_" + d.id, _edictRow, EdictPlateColor, left, left, new Vector2(i * (EdictPlate + EdictGap), 0f), new Vector2(EdictPlate, EdictPlate), PixelIcons.White);
+                if (d.icon != null && d.iconRow >= 0)
+                {
+                    var img = UiFactory.Rect("Icon", plate.transform, mid, mid, Vector2.zero, new Vector2(EdictIcon, EdictIcon)).gameObject.AddComponent<RawImage>();
+                    img.raycastTarget = false;
+                    img.texture = d.icon;
+                    float cw = (float)UpgradeIconView.Cell / d.icon.width, ch = (float)UpgradeIconView.Cell / d.icon.height;
+                    img.uvRect = new Rect(0f, 1f - (d.iconRow + 1) * ch, cw, ch);
+                }
+                else // no atlas row yet: its initial on an orange-red plate (it hurts you)
+                {
+                    plate.color = EdictHurt;
+                    UiFactory.Text("Glyph", plate.transform, EdictsPanel.Initial(d), 18, Color.white, TextAlignmentOptions.Center, mid, mid, Vector2.zero, new Vector2(EdictPlate, EdictPlate), font, fontMaterial);
+                }
+                _edictIcons++;
+            }
+        }
+
         static void PreSize(TMP_Text t, string longest)
         {
             string current = t.text;
@@ -388,7 +440,11 @@ namespace Gladiator.UI
                 }
             }
             float a = show ? 1f : 0f;
-            if (!Mathf.Approximately(_bossGroup.alpha, a)) _bossGroup.alpha = a;
+            if (!Mathf.Approximately(_bossGroup.alpha, a))
+            {
+                _bossGroup.alpha = a;
+                if (_edictRow != null) _edictRow.gameObject.SetActive(!show); // the boss's name sits where the edicts do
+            }
             if (show) _bossFill.fillAmount = Mathf.MoveTowards(_bossFill.fillAmount, b.Hp01, Time.unscaledDeltaTime * 1.5f);
             bool guard = show && b.Guarded;
             if (guard != _bossGuardOn)

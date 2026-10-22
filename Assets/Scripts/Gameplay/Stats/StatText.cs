@@ -27,7 +27,7 @@ namespace Gladiator.Gameplay
         // colours (rich text): gains green, losses red, sources by kind
         public const string Gain = "#7CF08A", Loss = "#FF6A55", Dim = "#8E98A8", Head = "#FFD84A", ValueCol = "#FFFFFF",
             CardCol = "#E6ECF5", SynergyCol = "#8CEBFF", TraitCol = "#FFC94A", TempCol = "#FFA040", AltarCol = "#FF6688",
-            AdminCol = "#FF66E0", VowCol = "#FF8A6A";
+            AdminCol = "#FF66E0", VowCol = "#FF8A6A", EdictCol = "#FF5A3C"; // edicts hurt you: orange-red
 
         public static Unit UnitOf(StatId s) => s switch
         {
@@ -109,6 +109,9 @@ namespace Gladiator.Gameplay
                 case StatSourceKind.Temporary: return src.Ref != null ? src.Ref.name : "Temporary";
                 case StatSourceKind.Altar: return "Blood Altar";
                 case StatSourceKind.Admin: return "ADMIN (F1)";
+                case StatSourceKind.Edict:
+                    var edict = src.Ref as RunModifierDef;
+                    return "Edict: " + (edict != null ? edict.displayName : "?");
                 default: return "Traits & effects";
             }
         }
@@ -123,6 +126,7 @@ namespace Gladiator.Gameplay
                 case StatSourceKind.Trait: return TraitCol;
                 case StatSourceKind.Altar: return AltarCol;
                 case StatSourceKind.Admin: return AdminCol;
+                case StatSourceKind.Edict: return EdictCol;
                 default: return TempCol; // traits' live bonuses, frenzies, the altar until it says so
             }
         }

@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0ea0c2151f44fc41b534863b8707d7a, type: 3}
+  m_Name: UL_Edict_FickleCrowd
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.UnlockDef
+  id: edict_fickle_crowd
+  displayName: 'Edict: A Fickle Crowd'
+  description: "A new edict for the arena screen: A Fickle Crowd (Favor at half speed, boredom \xD72). Accept it before a fight for +15 % Renown."
+  hint: For sale in the Market.
+  conditions: []
+  category: 2
+  renownCost: 150
+  renownBounty: 0
+  addsToPool: []

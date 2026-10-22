@@ -29,9 +29,10 @@ namespace Gladiator.Core
 
     /// <summary>
     /// Where a modifier came from (P1 stats page). Untracked is the default, for callers that don't say. Base and
-    /// Admin are never added as modifiers: Breakdown reports the base itself, and PlayerStats adds the admin layer.
+    /// Admin are never added as modifiers: Breakdown reports the base itself, and PlayerStats adds the admin layer. Edict
+    /// (R7): a run modifier's handicap (Ref = the RunModifierDef). Append only: never reorder.
     /// </summary>
-    public enum StatSourceKind : byte { Untracked, Base, Card, Synergy, Trait, Temporary, Altar, Admin }
+    public enum StatSourceKind : byte { Untracked, Base, Card, Synergy, Trait, Temporary, Altar, Admin, Edict }
 
     /// <summary>A modifier's source: its kind and the asset behind it (the UpgradeDef, TagSynergyDef or trait), if any.</summary>
     public readonly struct StatSource

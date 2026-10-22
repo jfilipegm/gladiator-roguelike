@@ -34,6 +34,10 @@ namespace Gladiator.Gameplay
         public string[] Evolutions;
         /// <summary>TagSynergyDef ids switched on this run.</summary>
         public string[] Synergies;
+        /// <summary>RunModifierDef ids on this run (R7; null or empty = none).</summary>
+        public string[] Edicts;
+        /// <summary>The edicts' summed Renown bonus (0.45 = Renown × 1.45).</summary>
+        public float EdictBonus;
     }
 
     public enum BuyResult { Bought, NotForSale, AlreadyOwned, TooExpensive }
@@ -41,7 +45,12 @@ namespace Gladiator.Gameplay
     /// <summary>What a run earned: shown on the end screen.</summary>
     public sealed class RunRewards
     {
+        /// <summary>Renown the run paid (the rounded BaseRenown × (1 + EdictBonus), rounded).</summary>
         public int Renown;
+        /// <summary>The run's Renown before its edicts (equals Renown when none were on).</summary>
+        public int BaseRenown;
+        /// <summary>The edicts' summed bonus (0 = none; the end screen shows "+base ×1.45 = +renown").</summary>
+        public float EdictBonus;
         /// <summary>Renown from the bounties of unlocks earned by this run (on top of Renown).</summary>
         public int Bounty;
         public int RenownTotal;
@@ -197,13 +206,32 @@ namespace Gladiator.Gameplay
             if (run.Upgrades != null) foreach (var id in run.Upgrades) SaveData.Add(data.upgradesTaken, id, 1);
             if (run.Evolutions != null) foreach (var id in run.Evolutions) SaveData.Add(data.evolutions, id, 1);
             if (run.Synergies != null) foreach (var id in run.Synergies) SaveData.Add(data.synergies, id, 1);
+            if (won) RecordEdictWin(run.Edicts, data);
 
+            r.BaseRenown = meta != null ? meta.BaseRenownFor(run) : 0;
+            r.EdictBonus = Mathf.Max(0f, run.EdictBonus);
             r.Renown = meta != null ? meta.RenownFor(run) : 0;
             data.renown += r.Renown;
             data.lifetimeRenown += r.Renown;
             GrantEarned(meta, data, r.NewUnlocks, out r.Bounty);
             r.RenownTotal = data.renown;
             return r;
+        }
+
+        /// <summary>A won run under edicts: each one's win count +1 (repeats and blanks skipped), and the record.</summary>
+        static void RecordEdictWin(string[] edicts, SaveData data)
+        {
+            if (edicts == null) return;
+            data.edictWins ??= new List<IdCount>();
+            int n = 0;
+            for (int i = 0; i < edicts.Length; i++)
+            {
+                string id = edicts[i];
+                if (string.IsNullOrEmpty(id) || System.Array.IndexOf(edicts, id) < i) continue;
+                SaveData.Add(data.edictWins, id, 1);
+                n++;
+            }
+            if (n > data.bestEdictWin) data.bestEdictWin = n;
         }
 
         public static bool AllMet(UnlockDef u, SaveData data)
@@ -234,6 +262,7 @@ namespace Gladiator.Gameplay
                 case UnlockConditionKind.SynergiesFound: return d.synergies.Count >= c.amount;
                 case UnlockConditionKind.WinWithWeapon: return CountAny(d.weaponWins, c.id) >= times;
                 case UnlockConditionKind.KillEnemies: return CountAny(d.enemyKills, c.id) >= c.amount;
+                case UnlockConditionKind.WinWithEdicts: return d.bestEdictWin >= times;
                 default: return false;
             }
         }
@@ -268,6 +297,7 @@ namespace Gladiator.Gameplay
                 case UnlockConditionKind.SynergiesFound: current = d.synergies.Count; target = c.amount; break;
                 case UnlockConditionKind.WinWithWeapon: current = CountAny(d.weaponWins, c.id); target = times; break;
                 case UnlockConditionKind.KillEnemies: current = CountAny(d.enemyKills, c.id); target = c.amount; break;
+                case UnlockConditionKind.WinWithEdicts: current = d.bestEdictWin; target = times; break;
                 default: current = Met(c, d) ? 1f : 0f; target = 1f; break; // yes/no conditions
             }
             target = Mathf.Max(1f, target);
@@ -287,6 +317,61 @@ namespace Gladiator.Gameplay
             int met = 0;
             foreach (var c in u.conditions) if (Met(c, d)) met++;
             return met / (float)u.conditions.Length;
+        }
+
+        // ---------------------------------------------------------------- Edicts (R7)
+
+        /// <summary>Has the player earned the Edicts (meta.edictsUnlock, The Editor Takes Notice; none set = open)?</summary>
+        public static bool EdictsOpen(MetaConfig meta, SaveData d) =>
+            meta != null && d != null && (meta.edictsUnlock == null || d.IsUnlocked(meta.edictsUnlock.id));
+
+        public static bool EdictsOpen(MetaConfig meta) => EdictsOpen(meta, Data);
+
+        /// <summary>Can `e` be chosen: the Edicts are open and its own unlock (Market or challenge) is earned or none.</summary>
+        public static bool IsOpen(RunModifierDef e, MetaConfig meta, SaveData d) =>
+            e != null && EdictsOpen(meta, d) && (e.unlock == null || d.IsUnlocked(e.unlock.id));
+
+        public static bool IsOpen(RunModifierDef e, MetaConfig meta) => IsOpen(e, meta, Data);
+
+        /// <summary>Is `u` the unlock of an edict (a Market one or a challenge) while the Edicts are still closed? The
+        /// Codex hides those until Gorm falls: the feature is unknown before, and a Market edict bought then does nothing.</summary>
+        public static bool WaitsForEdicts(UnlockDef u, MetaConfig meta, SaveData d)
+        {
+            if (u == null || meta == null || meta.edicts == null || u == meta.edictsUnlock || EdictsOpen(meta, d)) return false;
+            foreach (var e in meta.edicts) if (e != null && e.unlock == u) return true;
+            return false;
+        }
+
+        /// <summary>The remembered choice: open edicts whose id is in `edictsChosen`, in `meta.edicts` order (locked and
+        /// unknown ids are dropped). Allocates: menu only.</summary>
+        public static RunModifierDef[] ChosenEdicts(MetaConfig meta, SaveData d)
+        {
+            if (meta == null || meta.edicts == null || d == null || d.edictsChosen == null || d.edictsChosen.Count == 0)
+                return System.Array.Empty<RunModifierDef>();
+            var list = new List<RunModifierDef>(d.edictsChosen.Count);
+            foreach (var e in meta.edicts)
+                if (e != null && !list.Contains(e) && d.edictsChosen.Contains(e.id) && IsOpen(e, meta, d)) list.Add(e);
+            return list.ToArray();
+        }
+
+        public static RunModifierDef[] ChosenEdicts(MetaConfig meta) => ChosenEdicts(meta, Data);
+
+        /// <summary>Pure: remembers `chosen`'s ids (nulls and repeats dropped) in `d`.</summary>
+        public static void SetChosenEdicts(RunModifierDef[] chosen, SaveData d)
+        {
+            if (d == null) return;
+            d.edictsChosen ??= new List<string>();
+            d.edictsChosen.Clear();
+            if (chosen == null) return;
+            foreach (var e in chosen)
+                if (e != null && !string.IsNullOrEmpty(e.id) && !d.edictsChosen.Contains(e.id)) d.edictsChosen.Add(e.id);
+        }
+
+        /// <summary>Remembers the choice for the next runs, and saves.</summary>
+        public static void SetChosenEdicts(RunModifierDef[] chosen)
+        {
+            SetChosenEdicts(chosen, Data);
+            SaveSystem.Save(Data);
         }
     }
 }

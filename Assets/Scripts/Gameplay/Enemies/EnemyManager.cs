@@ -39,6 +39,10 @@ namespace Gladiator.Gameplay
         public Vector3 arenaCenter = Vector3.zero;
         [Tooltip("Arena difficulty: every non-boss enemy spawns with this much HP (ArenaLayoutDef.enemyHpMul).")]
         public float hpMul = 1f;
+        [Tooltip("Bosses (Scripted enemies, which skip hpMul) spawn with this much HP (R7: the Iron Hides edict).")]
+        public float scriptedHpMul = 1f;
+        [Tooltip("Every enemy spawns with its move speed × this (R7: the Swift Foes edict).")]
+        public float speedMul = 1f;
         public float arenaRadius = 20f;
         [Tooltip("The arena's shape: an ellipse, arenaRadius along X and arenaRadius × arenaAspect along Z (1 = a circle).")]
         public float arenaAspect = 1f;
@@ -395,8 +399,8 @@ namespace Gladiator.Gameplay
             float scale = affix != null ? affix.scale : 1f;
             _affix[i] = affix;
             _scale[i] = scale;
-            _hp[i] = _maxHp[i] = def.maxHp * (affix != null ? affix.hpMultiplier : 1f) * (def.behaviour == EnemyBehaviour.Scripted ? 1f : hpMul);
-            _speed[i] = def.moveSpeed * (1f + GameRandom.Range(-def.speedJitter, def.speedJitter)) * (affix != null ? affix.speedMultiplier : 1f);
+            _hp[i] = _maxHp[i] = def.maxHp * (affix != null ? affix.hpMultiplier : 1f) * (def.behaviour == EnemyBehaviour.Scripted ? scriptedHpMul : hpMul);
+            _speed[i] = def.moveSpeed * (1f + GameRandom.Range(-def.speedJitter, def.speedJitter)) * (affix != null ? affix.speedMultiplier : 1f) * speedMul;
             _radius[i] = def.radius * scale;
             if (_radius[i] > _maxRadius) _maxRadius = _radius[i];
             _dmgTakenMul[i] = affix != null ? affix.damageTakenMultiplier : 1f;
@@ -480,6 +484,8 @@ namespace Gladiator.Gameplay
         public int GetUid(int i) => _uid[i];
         public float GetHp(int i) => _hp[i];
         public float GetMaxHp(int i) => _maxHp[i];
+        /// <summary>Slot i's move speed as spawned (jitter, affix and speedMul; not slows or mud).</summary>
+        public float GetSpeed(int i) => _speed[i];
         public float GetYaw(int i) => _yaw[i];
         /// <summary>The steering velocity (without knockback), m/s (tests / debug).</summary>
         public Vector3 GetVelocity(int i) => _vel[i];

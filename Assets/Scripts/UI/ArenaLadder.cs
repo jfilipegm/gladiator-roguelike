@@ -211,14 +211,25 @@ namespace Gladiator.UI
     /// The tablet's arena page: the name, the ladder's line, the thumbnail at 2×, the description; the boss (portrait,
     /// name, beaten or not, with a laurel once beaten); then the floor (size and area), the hazards, the difficulty
     /// (enemy HP and damage taken) and the Renown multiplier. Locked: "???", a dark thumbnail, the padlock and the hint.
+    /// R7: with edicts chosen, one more row under them, "EDICTS  Iron Hides · Blood Sport   RENOWN ×1.45"; the rows close
+    /// up a little to make room in the wax (and sit exactly as before with none).
     /// </summary>
     public sealed class ArenaTablet
     {
+        // the rows: FLOOR, HAZARDS, DIFFICULTY, RENOWN, EDICTS (y and height in the group; the group's top in the wax)
+        static readonly float[] RowY = { 0f, 28f, 74f, 102f }, RowH = { 26f, 44f, 26f, 26f };
+        static readonly float[] TightY = { 0f, 26f, 68f, 94f, 120f }, TightH = { 24f, 40f, 24f, 24f, 24f };
+        const float RowsTop = 542f, RowsH = 130f, TightTop = 536f, TightRowsH = 144f;
+        /// <summary>The edicts' names on the tablet stop at about this many characters ("· +2 more" after them).</summary>
+        const int NamesBudget = 38;
+
         readonly TMP_FontAsset _font;
         RawImage _thumb, _boss;
         Image _lock, _wreath;
-        TextMeshProUGUI _name, _tagline, _desc, _bossName, _best, _floor, _hazards, _difficulty, _renown;
+        TextMeshProUGUI _name, _tagline, _desc, _bossName, _best, _floor, _hazards, _difficulty, _renown, _edicts;
         GameObject _rows;
+        readonly RectTransform[] _rowLabels = new RectTransform[5], _rowValues = new RectTransform[5];
+        bool _tight;
 
         public ArenaTablet(TMP_FontAsset font) => _font = font;
 
@@ -228,6 +239,8 @@ namespace Gladiator.UI
         public string BestText => _best.text;
         public string RenownText => _renown.text;
         public string DifficultyText => _difficulty.text;
+        /// <summary>The EDICTS row's words ("" when it's hidden).</summary>
+        public string EdictsText => _edicts.gameObject.activeSelf ? _edicts.text : "";
 
         public void Build(Transform parent, Vector2 anchor, Vector2 pivot, Vector2 pos)
         {
@@ -254,19 +267,47 @@ namespace Gladiator.UI
             _wreath = LanistaTablet.Image(wax, "Wreath", 158f, 486f, 48f, 36f, Color.white, PixelIcons.Wreath);
             _best = LanistaTablet.Text(wax, "Best", 214f, 490f, w - 228f, 30f, 18f, scratch, TextAlignmentOptions.TopLeft, FontStyles.Normal, f, 13f);
 
-            _rows = LanistaTablet.Group(wax, "Rows", 14f, 542f, w - 28f, 130f).gameObject;
+            _rows = LanistaTablet.Group(wax, "Rows", 14f, RowsTop, w - 28f, RowsH).gameObject;
             var rows = _rows.transform;
             float lw = 128f, vx = lw + 8f, vw = w - 28f - vx;
-            _floor = Row(rows, "FLOOR", 0f, 26f, lw, vx, vw);
-            _hazards = Row(rows, "HAZARDS", 28f, 44f, lw, vx, vw);
-            _difficulty = Row(rows, "DIFFICULTY", 74f, 26f, lw, vx, vw);
-            _renown = Row(rows, "RENOWN", 102f, 26f, lw, vx, vw);
+            _floor = Row(rows, 0, "FLOOR", RowY[0], RowH[0], lw, vx, vw);
+            _hazards = Row(rows, 1, "HAZARDS", RowY[1], RowH[1], lw, vx, vw);
+            _difficulty = Row(rows, 2, "DIFFICULTY", RowY[2], RowH[2], lw, vx, vw);
+            _renown = Row(rows, 3, "RENOWN", RowY[3], RowH[3], lw, vx, vw);
+            _edicts = Row(rows, 4, "EDICTS", TightY[4], TightH[4], lw, vx, vw);
+            _edicts.textWrappingMode = TextWrappingModes.NoWrap; // one line: the names give way, not the multiplier
+            _edicts.fontSizeMin = 11f;
+            _rowLabels[4].gameObject.SetActive(false);
+            _edicts.gameObject.SetActive(false);
         }
 
-        TextMeshProUGUI Row(Transform rows, string label, float y, float h, float lw, float vx, float vw)
+        TextMeshProUGUI Row(Transform rows, int i, string label, float y, float h, float lw, float vx, float vw)
         {
-            LanistaTablet.Text(rows, label, 0f, y + 2f, lw, 22f, 15f, LanistaTablet.Heading, TextAlignmentOptions.TopLeft, FontStyles.Bold, _font).text = label;
-            return LanistaTablet.Text(rows, label + "Value", vx, y, vw, h, 17f, LanistaTablet.Scratch, TextAlignmentOptions.TopLeft, FontStyles.Normal, _font, 12f);
+            var l = LanistaTablet.Text(rows, label, 0f, y + 2f, lw, 22f, 15f, LanistaTablet.Heading, TextAlignmentOptions.TopLeft, FontStyles.Bold, _font);
+            l.text = label;
+            var v = LanistaTablet.Text(rows, label + "Value", vx, y, vw, h, 17f, LanistaTablet.Scratch, TextAlignmentOptions.TopLeft, FontStyles.Normal, _font, 12f);
+            _rowLabels[i] = l.rectTransform;
+            _rowValues[i] = v.rectTransform;
+            return v;
+        }
+
+        /// <summary>Four rows as they always were, or five closed up a little (the EDICTS row under the others).</summary>
+        void LayRows(bool tight)
+        {
+            if (tight == _tight) return;
+            _tight = tight;
+            var group = (RectTransform)_rows.transform;
+            group.anchoredPosition = new Vector2(group.anchoredPosition.x, -(tight ? TightTop : RowsTop));
+            group.sizeDelta = new Vector2(group.sizeDelta.x, tight ? TightRowsH : RowsH);
+            for (int i = 0; i < 4; i++)
+            {
+                float y = tight ? TightY[i] : RowY[i], h = tight ? TightH[i] : RowH[i];
+                _rowLabels[i].anchoredPosition = new Vector2(_rowLabels[i].anchoredPosition.x, -(y + 2f));
+                _rowValues[i].anchoredPosition = new Vector2(_rowValues[i].anchoredPosition.x, -y);
+                _rowValues[i].sizeDelta = new Vector2(_rowValues[i].sizeDelta.x, h);
+            }
+            _rowLabels[4].gameObject.SetActive(tight);
+            _edicts.gameObject.SetActive(tight);
         }
 
         public void Fit(float scale)
@@ -275,7 +316,10 @@ namespace Gladiator.UI
         }
 
         /// <param name="tier">The arena's tier (ArenaLadder.Tier): its numeral's colour and its Renown.</param>
-        public void Show(RunDef r, bool open, int tier, SaveData save, MetaConfig meta)
+        public void Show(RunDef r, bool open, int tier, SaveData save, MetaConfig meta) => Show(r, open, tier, save, meta, null);
+
+        /// <param name="edicts">The edicts the run would start under (R7): an EDICTS row when any.</param>
+        public void Show(RunDef r, bool open, int tier, SaveData save, MetaConfig meta, RunModifierDef[] edicts)
         {
             var boss = r != null ? r.Boss : null;
             ArenaLadder.SetThumbnail(_thumb, r, open, LanistaTablet.WaxDark);
@@ -310,6 +354,31 @@ namespace Gladiator.UI
             _hazards.text = string.IsNullOrEmpty(r.hazards) ? "—" : r.hazards;
             _difficulty.text = l != null ? DifficultyLine(l) : "—";
             _renown.text = meta != null ? RenownLine(meta, tier) : "—";
+            bool any = edicts != null && edicts.Length > 0;
+            LayRows(any);
+            if (any) _edicts.text = EdictLine(edicts);
+        }
+
+        /// <summary>"Iron Hides · Blood Sport   RENOWN ×1.45" (the names stop at about NamesBudget characters: "· +2 more").</summary>
+        public static string EdictLine(RunModifierDef[] edicts)
+        {
+            var sb = new System.Text.StringBuilder(96);
+            int named = 0, n = 0;
+            bool full = false;
+            foreach (var e in edicts)
+            {
+                if (e == null) continue;
+                n++;
+                string name = e.displayName ?? e.id;
+                full |= named > 0 && sb.Length + 3 + name.Length > NamesBudget; // in order: the rest are counted, not named
+                if (full) continue;
+                if (named > 0) sb.Append(" · ");
+                sb.Append(name);
+                named++;
+            }
+            if (n > named) sb.Append(" · +").Append(n - named).Append(" more");
+            float mul = 1f + RunModifiers.Bonus(edicts);
+            return sb.Append("   RENOWN ").Append(EdictsPanel.MulText(mul)).ToString();
         }
 
         /// <summary>"Gorm, the Pit Master": the run's bossName, else its layout's boss.</summary>

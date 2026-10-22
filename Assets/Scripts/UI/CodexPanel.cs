@@ -22,6 +22,8 @@ namespace Gladiator.UI
     /// Entries opened since the Codex was last viewed are NEW (the menu's button counts them); viewing a page marks
     /// them seen, saved on close. Pages instead of scrolling, for the gamepad: left/right = tab, up/down = page (in the
     /// Market: the item), Enter = buy. Menu-only UI: it allocates freely when a page is built.
+    /// R7: an unlock that opens edicts names them as its reward ("Reward: Edict — Glass Jaw") and shows the first one's
+    /// icon; RECORDS adds "Most edicts in a win".
     /// </summary>
     public sealed class CodexPanel
     {
@@ -75,6 +77,7 @@ namespace Gladiator.UI
         GladiatorTablet _rosterTablet;
         RectTransform _rosterRoot;
         int _rosterFocus;
+        readonly Dictionary<string, string> _records = new Dictionary<string, string>(); // RECORDS: label → value (tests)
 
         public CodexPanel(TMP_FontAsset font, Material fontMat)
         {
@@ -392,17 +395,52 @@ namespace Gladiator.UI
             string r = "";
             foreach (var g in _gladiators) if (g != null && g.unlock == u) r = g.displayName;
             if (r.Length == 0 && u.addsToPool != null && u.addsToPool.Length > 0 && u.addsToPool[0] != null) r = u.addsToPool[0].displayName;
+            if (r.Length == 0) r = EdictReward(u);
             if (u.renownBounty > 0) r += (r.Length > 0 ? "  +" : "+") + u.renownBounty + " Renown";
             return r.Length > 0 ? "Reward: " + r : "";
         }
 
-        static Texture2D RewardIcon(UnlockDef u, out int row)
+        Texture2D RewardIcon(UnlockDef u, out int row)
         {
             row = -1;
-            if (u.addsToPool == null || u.addsToPool.Length == 0 || u.addsToPool[0] == null) return null;
-            row = u.addsToPool[0].iconRow;
-            return u.addsToPool[0].icon;
+            if (u.addsToPool != null && u.addsToPool.Length > 0 && u.addsToPool[0] != null)
+            {
+                row = u.addsToPool[0].iconRow;
+                return u.addsToPool[0].icon;
+            }
+            var edicts = EdictsOpenedBy(u); // R7: the first edict it opens
+            if (edicts.Count == 0 || edicts[0].icon == null) return null;
+            row = edicts[0].iconRow;
+            return edicts[0].icon;
         }
+
+        /// <summary>The edicts `u` opens, in MetaConfig.edicts order: those whose unlock it is, and for the Edicts' own
+        /// unlock (The Editor Takes Notice) those that need nothing more.</summary>
+        List<RunModifierDef> EdictsOpenedBy(UnlockDef u)
+        {
+            var list = new List<RunModifierDef>();
+            if (_meta == null || _meta.edicts == null || u == null) return list;
+            foreach (var e in _meta.edicts)
+                if (e != null && (e.unlock == u || (e.unlock == null && _meta.edictsUnlock == u))) list.Add(e);
+            return list;
+        }
+
+        /// <summary>"Edict — Glass Jaw", "Edicts — Iron Hides, The Hungry Horde, Blood Sport", or "".</summary>
+        string EdictReward(UnlockDef u)
+        {
+            var edicts = EdictsOpenedBy(u);
+            if (edicts.Count == 0) return "";
+            var sb = new System.Text.StringBuilder(edicts.Count == 1 ? "Edict — " : "Edicts — ");
+            for (int i = 0; i < edicts.Count; i++)
+            {
+                if (i > 0) sb.Append(", ");
+                sb.Append(edicts[i].displayName);
+            }
+            return sb.ToString();
+        }
+
+        /// <summary>The reward line the Codex gives `u` (tests).</summary>
+        public string RewardText(UnlockDef u) => u != null ? Reward(u) : "";
 
         static string Tags(UpgradeTag tags)
         {
@@ -594,16 +632,25 @@ namespace Gladiator.UI
                 ("Gorm defeated", SaveData.Count(s.bossKills, "gorm") + "×"), ("Champion defeated", SaveData.Count(s.bossKills, "champion") + "×"),
                 ("Evolutions made", SaveData.Total(s.evolutions).ToString()), ("Synergies found", s.synergies.Count.ToString()),
                 ("Challenges done", challengesDone + " / " + challenges), ("Secrets found", secretsFound + " / " + secrets),
+                ("Most edicts in a win", s.bestEdictWin.ToString()),
             };
+            // two columns; the rows close up when there are more than eight of them (the page is 660 tall)
+            _records.Clear();
+            foreach (var row in rows) _records[row.Item1] = row.Item2;
+            int lines = (rows.Length + 1) / 2;
+            float pitch = Mathf.Min(76f, 548f / Mathf.Max(1, lines - 1)), rowH = Mathf.Min(64f, pitch - 4f);
             for (int i = 0; i < rows.Length; i++)
             {
-                float x = i % 2 == 0 ? -400f : 400f, y = 250f - (i / 2) * 76f;
+                float x = i % 2 == 0 ? -400f : 400f, y = 250f - (i / 2) * pitch;
                 var mid = new Vector2(0.5f, 0.5f);
-                UiFactory.Image("Row", _content, new Color(0.08f, 0.1f, 0.14f, 0.96f), mid, mid, new Vector2(x, y), new Vector2(740, 64), PixelIcons.White).raycastTarget = false;
+                UiFactory.Image("Row", _content, new Color(0.08f, 0.1f, 0.14f, 0.96f), mid, mid, new Vector2(x, y), new Vector2(740, rowH), PixelIcons.White).raycastTarget = false;
                 Text(_content, rows[i].Item1, 28, Soft, new Vector2(x - 120f, y), new Vector2(460, 50), TextAlignmentOptions.Left).fontStyle = FontStyles.Normal;
                 Text(_content, rows[i].Item2, 32, Color.white, new Vector2(x + 210f, y), new Vector2(280, 50), TextAlignmentOptions.Right).fontStyle = FontStyles.Bold;
             }
         }
+
+        /// <summary>Tests: the value the last RECORDS page drawn shows beside `label` ("" when there's no such row).</summary>
+        public string RecordValue(string label) => _records.TryGetValue(label, out var v) ? v : "";
 
         static string Clock(float t) => Mathf.FloorToInt(t / 60f) + ":" + Mathf.FloorToInt(t % 60f).ToString("00");
 
@@ -614,15 +661,19 @@ namespace Gladiator.UI
         {
             var r = MetaProgress.Buy(u);
             SfxPlayer.Play2D(r == BuyResult.Bought ? SfxId.Coin : SfxId.Blocked);
-            if (r == BuyResult.Bought)
-            {
-                var tab = _tab;
-                int page = _pageIndex, focus = _focus;
-                Collect();
-                _tab = tab; _pageIndex = Mathf.Min(page, PageCount - 1); _focus = focus;
-                Draw();
-            }
+            if (r == BuyResult.Bought) Refresh();
             return r;
+        }
+
+        /// <summary>Rebuilds every tab from the save, keeping the tab, page and focus (after a purchase made elsewhere:
+        /// the Edicts page's Market edicts, R7).</summary>
+        public void Refresh()
+        {
+            var tab = _tab;
+            int page = _pageIndex, focus = _focus;
+            Collect();
+            _tab = tab; _pageIndex = Mathf.Min(page, PageCount - 1); _focus = focus;
+            Draw();
         }
 
         public void Close()

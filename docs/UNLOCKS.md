@@ -127,3 +127,8 @@ Both are new components in the RattlingCrate mould: spots from `ArenaLayoutDef.s
 - the Ashen Oracle's encounter;
 - per-gladiator records;
 - a Codex 3D model viewer.
+
+## Edicts (R7, v0.21.0)
+- **The Editor Takes Notice** (beat Gorm): opens the Edicts with Iron Hides, The Hungry Horde and Blood Sport.
+- **Market, 150 Renown each:** Glass Jaw, Swift Foes, Empty Purses, A Fickle Crowd.
+- **Challenges:** Under the Editor's Eye (win a run under 2 edicts: Meagre Choices, The Impatient Emperor), A Day of Champions (reach the Grand Arena: Champions' Day), The Emperor's Pleasure (win a run under 4 edicts: No Mercy). Condition `WinWithEdicts` (index 15).

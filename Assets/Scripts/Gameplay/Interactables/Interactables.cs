@@ -31,6 +31,8 @@ namespace Gladiator.Gameplay
         public Vector3[] altarAnchors = System.Array.Empty<Vector3>();
         [Tooltip("Seconds the opened chest stays before it sinks away.")]
         public float openLinger = 1.6f;
+        [Tooltip("Chest prices × this (R7: the Empty Purses edict).")]
+        public float priceMul = 1f;
 
         struct Slot
         {
@@ -46,7 +48,8 @@ namespace Gladiator.Gameplay
         int _chestSlots;
         bool _placed;
         float _respawnT;
-        uint _rng = 0x51ED27u;
+        const uint RngSalt = 0x51ED27u;
+        uint _rng = RngSalt;
 
         public int SlotCount => _slots != null ? _slots.Length : 0;
         public Kind KindOf(int i) => _slots[i].Kind;
@@ -56,13 +59,17 @@ namespace Gladiator.Gameplay
         public int ChestsOpened { get; private set; }
         public int AltarsUsed { get; private set; }
         /// <summary>What the next chest costs (every chest on the map shows it).</summary>
-        public int ChestPrice => config != null ? config.PriceFor(ChestsOpened) : 0;
+        public int ChestPrice => config != null ? Mathf.RoundToInt(config.PriceFor(ChestsOpened) * priceMul) : 0;
         /// <summary>The ready interactable in the player's reach (-1 = none): the HUD prompt and Interact use it.</summary>
         public int InReach { get; private set; } = -1;
 
         void Awake()
         {
             Instance = this;
+            // Q14 (R7): seeded from the run's GameRandom (GameSession seeds it per run), so the chests and the altar
+            // move from run to run; a test that seeds GameRandom gets a fixed placement
+            _rng = GameRandom.NextUInt() ^ RngSalt;
+            if (_rng == 0u) _rng = RngSalt;
             int chests = config != null ? config.maxChests : 0, altars = config != null ? config.altars : 0;
             _chestSlots = chests;
             _slots = new Slot[chests + altars];

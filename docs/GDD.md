@@ -54,6 +54,7 @@ Tier 1 (slice): Starving Convict (swarmer), Pit Cur (fast), Shield Thug (frontal
 
 ## Meta
 Renown per run gates arena tiers and cosmetics. Unlocks are **content, never flat stats**: gladiators, weapons entering the pool, arenas, modifiers, cosmetics. Conditions are pluggable (defeat boss, reach arena, survive T, kills with weapon, win with gladiator, lifetime gold, secret discovery, Renown purchase). A Codex shows locked gladiators as silhouettes with cryptic hints.
+**Edicts (R7, v0.21.0):** eleven run modifiers chosen on the arena screen, each a handicap that multiplies the run's Renown (×(1 + Σ bonus), win or lose); open once Gorm falls (3 free, 4 in the Market, 4 earned by winning under edicts). Every run started from the menu now draws its own chests, gifts and whims.
 **Slice (built):** versioned save, Renown per run (time, kills, boss, victory, arena depth), Codex screen (records, unlocks, gladiator silhouettes), and one unlock: beating Gorm adds **Gorm's Flail** (orbiting spiked balls) to the level-up pool.
 **Phase 5.6 (built, docs/UNLOCKS.md):**
 - **Three kinds of goal:** Challenges (visible, with progress; some pay a Renown bounty), Secrets (the rattling crate, the Golden Rat, the Bookmaker's wager) and the Market (Boons bought with Renown, the first use of Renown).

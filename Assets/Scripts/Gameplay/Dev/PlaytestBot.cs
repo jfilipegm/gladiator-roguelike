@@ -281,6 +281,8 @@ namespace Gladiator.Gameplay
             if (thirst != null) sb.Append(" kill-healed ").Append(thirst.Healed.ToString("0")).Append(" HP");
             sb.Append(" | hitstops ").Append(TimeController.HitStopCount).Append(" (").Append(TimeController.HitStopSeconds.ToString("0.0")).Append(" s)");
             if (run != null) sb.Append(" | outcome ").Append(run.Outcome).Append(" at ").Append(run.Elapsed.ToString("0"));
+            if (RunModifiers.Active.Length > 0) // R7: the edicts this run was played under
+                sb.Append(" edicts ").Append(RunModifiers.Active.Length).Append(" (+").Append((RunModifiers.RenownBonus * 100f).ToString("0")).Append(" %)");
             Debug.Log(sb.ToString());
         }
 

@@ -93,9 +93,14 @@ namespace Gladiator.Tests
             var rewards = RunEndController.Instance.Rewards;
             Assert.IsNotNull(rewards, "the run was recorded");
             Assert.Greater(rewards.Renown, 0);
-            Assert.AreEqual(3, rewards.NewUnlocks.Count, "the flail, (Phase 5.4) the Provincial Pit and (Phase 5.9) the Murder Machine");
-            bool flail = false, pit = false, machine = false;
-            foreach (var u in rewards.NewUnlocks) { flail |= u.id == "gorms_flail"; pit |= u.id == "provincial_pit"; machine |= u.id == "murder_machine"; }
+            Assert.AreEqual(4, rewards.NewUnlocks.Count, "the flail, (Phase 5.4) the Provincial Pit, (Phase 5.9) the Murder Machine and (R7) the Edicts");
+            bool flail = false, pit = false, machine = false, edicts = false;
+            foreach (var u in rewards.NewUnlocks)
+            {
+                flail |= u.id == "gorms_flail"; pit |= u.id == "provincial_pit"; machine |= u.id == "murder_machine";
+                edicts |= u == RunEndController.Instance.meta.edictsUnlock;
+            }
+            Assert.IsTrue(edicts, "the Editor takes notice: the Edicts open");
             Assert.IsTrue(machine, "Gorm's executioner wants new work");
             Assert.IsTrue(flail, "Gorm's Flail joins the cards");
             Assert.IsTrue(pit, "word reaches the provinces");

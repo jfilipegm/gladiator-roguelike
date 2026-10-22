@@ -6,10 +6,10 @@ namespace Gladiator.Gameplay
 {
     /// <summary>
     /// How a run ends. Player death, the timer reaching 0:00 in an arena without a boss (unless DevSettings.Timeless),
-    /// or the boss falling ends the run → the run is recorded in the save (Renown, records, unlocks: MetaProgress) →
-    /// a short beat (death: slow motion + collapse; victory: every enemy pops) → the game pauses and the end screen
-    /// (UI reads ScreenShown/Outcome/Rewards) offers Retry / Main Menu. From the moment the player goes down, nothing of
-    /// theirs fights on (RunState.CombatOver); the crowd gives one last reaction and falls silent (SfxPlayer).
+    /// or the boss falling ends the run → the run is recorded in the save (Renown × its edicts, records, unlocks:
+    /// MetaProgress) → a short beat (death: slow motion + collapse; victory: every enemy pops) → the game pauses and the
+    /// end screen (UI reads ScreenShown/Outcome/Rewards) offers Retry / Main Menu. From the moment the player goes down,
+    /// nothing of theirs fights on (RunState.CombatOver); the crowd gives one last reaction and falls silent (SfxPlayer).
     /// </summary>
     public sealed class RunEndController : MonoBehaviour, ITickable
     {
@@ -107,6 +107,8 @@ namespace Gladiator.Gameplay
                 Outcome = e.Outcome, Elapsed = e.Elapsed, Kills = run.Kills, GoldEarned = run.GoldEarned, Level = run.Level,
                 ArenaIndex = run.arenaTier, BossDefeated = run.BossDefeated, BossDefeatedHp01 = run.BossDefeatedHp01,
             };
+            s.Edicts = RunModifiers.ActiveIds();
+            s.EdictBonus = RunModifiers.RenownBonus;
             var p = Player.Main;
             if (p == null) return s;
             var stats = p.GetComponent<PlayerStats>();

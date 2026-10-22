@@ -4,9 +4,9 @@ using UnityEngine;
 
 namespace Gladiator.Gameplay
 {
-    /// <summary>Attack patterns that weapon data composes (CLAUDE.md §6.8). Implemented: MeleeArc, Thrust, Projectile, Returning, Orbit, Lob.
-    /// Append new patterns at the end (assets serialize the index).</summary>
-    public enum WeaponPattern { MeleeArc, Thrust, MultiHit, GroundSlam, Projectile, Returning, Orbit, Chain, Summon, Lob }
+    /// <summary>Attack patterns that weapon data composes (CLAUDE.md §6.8). Every one is implemented; Sweep (R3) is the
+    /// Labyrinth Chain. Append new patterns at the end (assets serialize the index: Sweep = 10).</summary>
+    public enum WeaponPattern { MeleeArc, Thrust, MultiHit, GroundSlam, Projectile, Returning, Orbit, Chain, Summon, Lob, Sweep }
 
     /// <summary>
     /// A weapon as data. Its numbers are the level-1 base; each level 2-8 adds `levels[level-2].mods` to that weapon only
@@ -15,7 +15,9 @@ namespace Gladiator.Gameplay
     /// Flail: range = orbit radius, width = ball radius, speed = m/s along the circle, cooldown = re-hit interval per enemy),
     /// Lob (Bomb Satchel: acquireRange = throw range, width = blast radius, flightTime/fuse shortened by Projectile Speed),
     /// GroundSlam (the Cleaver), Chain (the Storm Spear), MultiHit (the Trident: `prongs` thrust lines fanned across
-    /// arcDegrees, `prongInterval` s apart), Summon (the Wolf Pack: companions driven by CompanionPack).
+    /// arcDegrees, `prongInterval` s apart), Summon (the Wolf Pack: companions driven by CompanionPack), Sweep (the
+    /// Labyrinth Chain, R3: the chain travels across arcDegrees in `sweepTime`, range long, hitting what it passes once
+    /// per sweep; its last tipLength m is the stone, which always crits; Amount = backswings, each the other way).
     /// </summary>
     [CreateAssetMenu(menuName = "Gladiator/Weapon", fileName = "WP_")]
     public sealed class WeaponDef : ScriptableObject
@@ -56,7 +58,7 @@ namespace Gladiator.Gameplay
         public float windup = 0.06f;
 
         [Header("Shape")]
-        [Tooltip("Arc: reach from the player's centre. Thrust: line length. Projectile: max travel. Returning: throw distance (m).")]
+        [Tooltip("Arc: reach from the player's centre. Thrust: line length. Projectile: max travel. Returning: throw distance. Sweep: the chain's reach to the stone (× Area) (m).")]
         public float range = 2.6f;
         public float arcDegrees = 150f;
         [Tooltip("Thrust: line width. Projectiles: hit radius (m).")]
@@ -65,7 +67,7 @@ namespace Gladiator.Gameplay
         public float acquireRange = 3.2f;
 
         [Header("Amount / projectiles")]
-        [Tooltip("Arc/Thrust: attacks per trigger (extra ones follow at the next targets). Projectiles: per volley.")]
+        [Tooltip("Arc/Thrust: attacks per trigger (extra ones follow at the next targets). Projectiles: per volley. Sweep: sweeps per trigger (the extra ones are backswings, the other way, with no wind-up).")]
         public int amount = 1;
         [Tooltip("Projectile speed (m/s).")]
         public float speed = 16f;
@@ -94,7 +96,7 @@ namespace Gladiator.Gameplay
         [Header("Targeting and sweet spots (Phase 5.6)")]
         [Tooltip("Projectile: aim at the farthest enemies within acquireRange instead of the nearest (the Sling).")]
         public bool targetFarthest;
-        [Tooltip("Thrust: hits in the last tipLength m of the line always crit (the Whip's crack); 0 = off.")]
+        [Tooltip("Thrust: hits in the last tipLength m of the line always crit (the Whip's crack). Sweep: the stone, the chain's last tipLength m (× √Area), always crits and shoves tipKnockbackMul harder. 0 = off.")]
         public float tipLength;
         [Tooltip("MeleeArc / Thrust with Amount > 1: each extra strike goes for the next-nearest enemy instead of the nearest again.")]
         public bool spreadStrikes;
@@ -108,6 +110,26 @@ namespace Gladiator.Gameplay
         [Header("Summon (the Wolf Pack, Phase 5.15)")]
         [Tooltip("Summon: the companion model (rigid parts: Body, Head, ArmL/R = front legs, LegL/R). amount = how many, cooldown = seconds between one companion's bites, speed = run speed, acquireRange = how far from the player they hunt, range = the leash.")]
         public GameObject summon;
+
+        [Header("Sweep (the Labyrinth Chain, R3)")]
+        [Tooltip("Sweep: seconds the chain takes to cross arcDegrees (not scaled by attack speed).")]
+        public float sweepTime = 0.3f;
+        [Tooltip("Sweep: a whirl (360°, WeaponSystem.WhirlSweeps) takes sweepTime × this.")]
+        public float whirlTimeMul = 1.5f;
+        [Tooltip("Sweep: the push = the chain's tangent (the way it moves) + outward × this, normalised. Bosses are pushed straight out.")]
+        public float sweepOutward = 0.35f;
+        [Tooltip("Sweep: the stone's knockback × this (its hits crit through tipLength).")]
+        public float tipKnockbackMul = 1.6f;
+        [Tooltip("Sweep: the link mesh, laid end to end from the hand to `mesh` (the stone). None = no chain drawn.")]
+        public Mesh linkMesh;
+        [Tooltip("Sweep: the link mesh's length along +Z (m).")]
+        public float linkLength = 0.6f;
+        [Tooltip("Sweep: the chain's height above the feet at the hand (x) and at the stone (y) (m).")]
+        public Vector2 chainHeight = new Vector2(1.05f, 0.55f);
+        [Tooltip("Sweep: the stone's centre past the last link's end (m).")]
+        public float weightOffset = 0.33f;
+        [Tooltip("A part of the gladiator's model this weapon swings (Asterion's \"Chain\"): hidden while the weapon draws it. Empty = none.")]
+        public string modelPart = "";
 
         [Header("Hit effects (every pattern, Phase 5.5)")]
         [Tooltip("Run by BoonEffects on this weapon's direct hits only, at potency 1: StatusOnHit (chance 1 = always), ChainSpark, GroundOnHit.")]

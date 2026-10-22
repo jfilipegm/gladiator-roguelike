@@ -22,6 +22,9 @@ namespace Gladiator.Gameplay
         public float idleBobHeight = 0.015f;
         public float idleBobHz = 1.4f;
         public float idleArmSway = 4f;
+        [Tooltip("After idleHeadDelay s standing still (and not attacking), the head lifts this many degrees (Asterion looks at the sky). 0 = off.")]
+        public float idleHeadLift = 0f;
+        public float idleHeadDelay = 1.2f;
 
         [Header("Air")]
         public float airLegTuck = 30f;
@@ -53,6 +56,8 @@ namespace Gladiator.Gameplay
         public float chopPitchEnd = 35f;
         [Tooltip("The left arm follows the weapon arm (a two-handed grip).")]
         public bool twoHanded;
+        [Tooltip("How much of the arm's swing yaw the upper body twists along with it.")]
+        public float bodyTwistScale = 0.2f;
 
         [Header("Blend")]
         [Tooltip("How fast poses blend (1/s).")]

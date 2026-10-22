@@ -83,10 +83,10 @@ namespace Gladiator.Gameplay
         readonly Vector3[] _boltFrom = new Vector3[MaxBolts], _boltTo = new Vector3[MaxBolts];
         readonly float[] _boltT = new float[MaxBolts];
         int _boltCount;
-        const int MaxOrbiters = 16;
+        const int MaxOrbiters = 40; // R3: a 7 m Labyrinth Chain is 12 links + the stone, beside a flail's 8 and a loan
         readonly Vector3[] _orbPos = new Vector3[MaxOrbiters], _orbTravel = new Vector3[MaxOrbiters];
         readonly Quaternion[] _orbRot = new Quaternion[MaxOrbiters];
-        readonly float[] _orbScale = new float[MaxOrbiters];
+        readonly Vector3[] _orbScale = new Vector3[MaxOrbiters];
         readonly int[] _orbMesh = new int[MaxOrbiters];
         int _orbCount;
         const int MaxShockwaves = 12;
@@ -276,9 +276,13 @@ namespace Gladiator.Gameplay
             _boltT[_boltCount++] = boltLife;
         }
 
-        /// <summary>Draws one orbiting weapon piece this frame (a flail ball) with a streak behind it along `travel`.
-        /// WeaponSystem calls it every gameplay frame, before this system's tick.</summary>
-        public void Orbiter(int mesh, Vector3 pos, Quaternion rot, float scale, Vector3 travel)
+        /// <summary>Draws one orbiting weapon piece this frame (a flail ball, a chain's link or stone) with a streak behind
+        /// it along `travel` (none when zero). WeaponSystem calls it every gameplay frame, before this system's tick.</summary>
+        public void Orbiter(int mesh, Vector3 pos, Quaternion rot, float scale, Vector3 travel) =>
+            Orbiter(mesh, pos, rot, new Vector3(scale, scale, scale), travel);
+
+        /// <summary>Orbiter with a per-axis scale (a chain's links, stretched along Z to fit the chain exactly).</summary>
+        public void Orbiter(int mesh, Vector3 pos, Quaternion rot, Vector3 scale, Vector3 travel)
         {
             if (_orbCount >= MaxOrbiters) return;
             _orbMesh[_orbCount] = mesh;
@@ -294,7 +298,7 @@ namespace Gladiator.Gameplay
             {
                 int m = _orbMesh[o];
                 if (m >= 0 && m < _meshCount && _batch[m] < _matrices[m].Length)
-                    _matrices[m][_batch[m]++] = Matrix4x4.TRS(_orbPos[o], _orbRot[o], Vector3.one * _orbScale[o]);
+                    _matrices[m][_batch[m]++] = Matrix4x4.TRS(_orbPos[o], _orbRot[o], _orbScale[o]);
                 if (_streaks != null && _streakBatch < _streaks.Length && _orbTravel[o].sqrMagnitude > 1e-4f)
                     _streaks[_streakBatch++] = Matrix4x4.TRS(_orbPos[o], Quaternion.LookRotation(_orbTravel[o], Vector3.up),
                         new Vector3(orbitStreakWidth, orbitStreakWidth, orbitStreakLength));

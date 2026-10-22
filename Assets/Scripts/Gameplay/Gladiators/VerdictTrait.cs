@@ -122,7 +122,7 @@ namespace Gladiator.Gameplay
                     float rr = radius + em.GetRadius(i);
                     if (to.sqrMagnitude > rr * rr) continue;
                     float d = to.magnitude;
-                    bool crit = trait.critChance > 0f && GameRandom.Chance(trait.critChance);
+                    bool crit = trait.critChance > 0f && GameRandom.Chance(RngStream.Combat, trait.critChance);
                     int uid = em.GetUid(i);
                     em.ApplyDamage(i, new DamageInfo
                     {

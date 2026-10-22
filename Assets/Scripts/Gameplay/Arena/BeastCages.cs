@@ -45,6 +45,7 @@ namespace Gladiator.Gameplay
         int[] _left = System.Array.Empty<int>();
         Vector3[] _home = System.Array.Empty<Vector3>();
         float _nextAuto, _rattle;
+        Rng _rng; // R8: which cage opens first and where the beasts land, forked from the run seed
 
         /// <summary>Cages opened and beasts released this run (tests, bot log).</summary>
         public int Opened { get; private set; }
@@ -58,6 +59,7 @@ namespace Gladiator.Gameplay
         void Awake()
         {
             Instance = this;
+            _rng = GameRandom.Fork(RngStream.Hazards, GameRandom.KeyOf("beast_cages"));
             int n = cages.Length;
             _phase = new Phase[n];
             _t = new float[n];
@@ -136,7 +138,7 @@ namespace Gladiator.Gameplay
             if (every > 0f && run != null && !run.TimerDone && run.TimeRemaining > 0f && run.Elapsed >= _nextAuto)
             {
                 _nextAuto = run.Elapsed + every;
-                int start = (int)GameRandom.Range(0f, cages.Length - 0.001f);
+                int start = (int)_rng.Range(0f, cages.Length - 0.001f);
                 for (int k = 0; k < cages.Length; k++) if (Open((start + k) % cages.Length)) break;
             }
             var tele = TelegraphRenderer.Instance;
@@ -178,7 +180,7 @@ namespace Gladiator.Gameplay
                             _left[i]--;
                             if (em != null)
                             {
-                                Vector3 p = SpawnPoint(i) + cage.right * GameRandom.Range(-1.1f, 1.1f);
+                                Vector3 p = SpawnPoint(i) + cage.right * _rng.Range(-1.1f, 1.1f);
                                 if (em.Spawn(beast, p) >= 0) Released++;
                             }
                         }

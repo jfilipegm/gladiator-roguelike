@@ -61,7 +61,7 @@ namespace Gladiator.Gameplay
             {
                 int v = k == coins - 1 ? left : gold / coins;
                 left -= v;
-                float a = (k + GameRandom.Value * 0.5f) * Mathf.PI * 2f / coins;
+                float a = (k + GameRandom.Next01(RngStream.Loot) * 0.5f) * Mathf.PI * 2f / coins;
                 pickups.Spawn(PickupSystem.Kind.Gold, _pos[i] + new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * 0.9f, v);
             }
         }
@@ -81,8 +81,8 @@ namespace Gladiator.Gameplay
             float bestD = -1f;
             for (int attempt = 0; attempt < 4; attempt++) // a few headings away from the player: the farthest that fits
             {
-                Vector3 dir = Quaternion.Euler(0f, GameRandom.Range(-70f, 70f), 0f) * away;
-                Vector3 q = player + dir * GameRandom.Range(def.blinkDistance.x, def.blinkDistance.y);
+                Vector3 dir = Quaternion.Euler(0f, GameRandom.Range(RngStream.Enemies, -70f, 70f), 0f) * away;
+                Vector3 q = player + dir * GameRandom.Range(RngStream.Enemies, def.blinkDistance.x, def.blinkDistance.y);
                 _obstacles?.PushOut(ref q, _radius[i]);
                 ClampInside(ref q, _radius[i]);
                 float d = (q.x - player.x) * (q.x - player.x) + (q.z - player.z) * (q.z - player.z);

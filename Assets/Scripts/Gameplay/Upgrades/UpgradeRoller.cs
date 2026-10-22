@@ -18,7 +18,8 @@ namespace Gladiator.Gameplay
     /// from UpgradeConfig odds shifted by Luck and clamped to the upgrade's min/max rarity. When nothing is eligible the
     /// slot gets a filler consumable. Vows (P1) share a fixed slice of the odds (UpgradeConfig.vowShare) however big the
     /// rest of the pool is, at most maxVowsPerPick per pick, and only in picks without a rarity floor (level-ups) unless
-    /// vowsInRewards. Uses GameRandom (seeded per run) and preallocated buffers: no allocation.
+    /// vowsInRewards. Draws from GameRandom's Cards stream (R8: LevelUpController reseeds it per pick) into preallocated
+    /// buffers: no allocation.
     /// </summary>
     public sealed class UpgradeRoller
     {
@@ -79,7 +80,7 @@ namespace Gladiator.Gameplay
             if (max < min) max = min;
             float total = 0f;
             for (var r = min; r <= max; r++) total += config.RarityWeight(r, luck);
-            float x = GameRandom.Value * total;
+            float x = GameRandom.Next01(RngStream.Cards) * total;
             for (var r = min; r <= max; r++)
             {
                 x -= config.RarityWeight(r, luck);
@@ -161,7 +162,7 @@ namespace Gladiator.Gameplay
             UpgradeDef pick = null;
             if (n > 0)
             {
-                float x = GameRandom.Value * total;
+                float x = GameRandom.Next01(RngStream.Cards) * total;
                 pick = _cand[n - 1];
                 for (int i = 0; i < n; i++)
                 {

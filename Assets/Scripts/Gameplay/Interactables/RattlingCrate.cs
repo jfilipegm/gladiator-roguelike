@@ -45,6 +45,7 @@ namespace Gladiator.Gameplay
         Phase _phase = Phase.Hidden;
         float _nextRattle, _shake, _t;
         Vector3 _pos, _runDir;
+        Rng _rng; // R8: the spot and the rattles' timing, forked from the run seed in Start
 
         public Phase State => _phase;
         public Vector3 Position => _pos;
@@ -57,8 +58,9 @@ namespace Gladiator.Gameplay
 
         void Start()
         {
+            _rng = GameRandom.Fork(RngStream.Map, GameRandom.KeyOf("rattling_crate"));
             if (spots == null || spots.Length == 0 || (!alwaysAppear && MetaProgress.Data.HasFlag(flag))) return;
-            Place(Random.Range(0, spots.Length)); // not GameRandom: that one replays the same rolls every launch
+            Place(_rng.Range(0, spots.Length));
         }
 
         /// <summary>Puts the crate at spot `index` (tests pick one).</summary>
@@ -117,7 +119,7 @@ namespace Gladiator.Gameplay
                     Rattles++;
                     SfxPlayer.Play(SfxId.Rattle, _pos);
                     float near = Mathf.Lerp(0.5f, 1f, dist / rattleRange);
-                    _nextRattle = Random.Range(rattleEvery.x, rattleEvery.y) * near;
+                    _nextRattle = _rng.Range(rattleEvery.x, rattleEvery.y) * near;
                 }
             }
             if (_shake > 0f)

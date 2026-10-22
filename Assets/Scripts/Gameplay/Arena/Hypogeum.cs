@@ -156,6 +156,7 @@ namespace Gladiator.Gameplay
         Vector3[] _lcenter = System.Array.Empty<Vector3>(), _platHome = System.Array.Empty<Vector3>();
         Transform[] _plat = System.Array.Empty<Transform>();
         readonly int[] _pick = new int[16];
+        Rng _rng; // R8: the lifts' packs, counts and angles, forked from the run seed (the same sequence for the same seed)
         Transform _cplat;
         Vector3 _cplatHome;
         float _cplatY, _cplatSet;
@@ -364,6 +365,7 @@ namespace Gladiator.Gameplay
         void Awake()
         {
             Instance = this;
+            _rng = GameRandom.Fork(RngStream.Hazards, GameRandom.KeyOf("hypogeum"));
             Configure();
         }
 
@@ -705,7 +707,7 @@ namespace Gladiator.Gameplay
                 int pk = PickPack(em, t, cap);
                 if (pk < 0) continue; // nothing may come up: this lift stays down
                 var p = liftPacks[pk];
-                BeginRaise(_pick[i], p.enemy, GameRandom.Range(p.count.x, p.count.y + 1), p.maxAlive);
+                BeginRaise(_pick[i], p.enemy, _rng.Range(p.count.x, p.count.y + 1), p.maxAlive);
                 raised++;
                 if (call == null) call = p.call;
             }
@@ -752,7 +754,7 @@ namespace Gladiator.Gameplay
             float total = 0f;
             for (int i = 0; i < liftPacks.Length; i++) if (PackEligible(em, i, t, cap)) total += liftPacks[i].weight;
             if (total <= 0f) return -1;
-            float r = GameRandom.Value * total;
+            float r = _rng.Next01() * total;
             int last = -1;
             for (int i = 0; i < liftPacks.Length; i++)
             {
@@ -1138,7 +1140,7 @@ namespace Gladiator.Gameplay
             if (def == null || n <= 0 || em == null) return;
             n = Mathf.Min(n, ArenaCap(em) - em.AliveCount);
             if (_lcap[l] > 0) n = Mathf.Min(n, _lcap[l] - em.AliveOf(def));
-            float a0 = GameRandom.Range(0f, Mathf.PI * 2f);
+            float a0 = _rng.Range(0f, Mathf.PI * 2f);
             for (int k = 0; k < n; k++)
             {
                 float a = a0 + k * (Mathf.PI * 2f / n);

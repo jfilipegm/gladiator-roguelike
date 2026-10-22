@@ -64,7 +64,10 @@ namespace Gladiator.Gameplay
         public Vector3 Position(int i) => gates[i].position;
 
         /// <summary>A gate at least `minDistance` from `player`, preferring the one behind the camera's view (-1 if none).</summary>
-        public int Pick(Vector3 player, float minDistance)
+        public int Pick(Vector3 player, float minDistance) => Pick(player, minDistance, ref GameRandom.Stream(RngStream.Spawns));
+
+        /// <summary>As Pick, drawing from `rng` (R8: the Director's swarm and elite forks).</summary>
+        public int Pick(Vector3 player, float minDistance, ref Rng rng)
         {
             int best = -1;
             float bestScore = float.MinValue;
@@ -74,7 +77,7 @@ namespace Gladiator.Gameplay
                 Vector3 d = gates[i].position - player;
                 float dist = new Vector2(d.x, d.z).magnitude;
                 if (dist < minDistance) continue;
-                float score = dist + GameRandom.Range(0f, 8f); // farther is likelier, never fixed
+                float score = dist + rng.Range(0f, 8f); // farther is likelier, never fixed
                 if (score > bestScore) { bestScore = score; best = i; }
             }
             return best;
@@ -99,7 +102,8 @@ namespace Gladiator.Gameplay
         public Vector3 SpawnPoint(int i)
         {
             var g = gates[i];
-            return g.position + g.forward * GameRandom.Range(spawnDepth.x, spawnDepth.y) + g.right * GameRandom.Range(-spawnSpread, spawnSpread);
+            return g.position + g.forward * GameRandom.Range(RngStream.Spawns, spawnDepth.x, spawnDepth.y)
+                + g.right * GameRandom.Range(RngStream.Spawns, -spawnSpread, spawnSpread);
         }
 
         /// <summary>Swings gate i open for `seconds`.</summary>

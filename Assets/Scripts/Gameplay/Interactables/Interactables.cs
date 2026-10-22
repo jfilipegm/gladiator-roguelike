@@ -48,8 +48,7 @@ namespace Gladiator.Gameplay
         int _chestSlots;
         bool _placed;
         float _respawnT;
-        const uint RngSalt = 0x51ED27u;
-        uint _rng = RngSalt;
+        Rng _rng; // R8: placement (anchor order, free spots, yaw), forked from the run seed in Awake
 
         public int SlotCount => _slots != null ? _slots.Length : 0;
         public Kind KindOf(int i) => _slots[i].Kind;
@@ -66,10 +65,9 @@ namespace Gladiator.Gameplay
         void Awake()
         {
             Instance = this;
-            // Q14 (R7): seeded from the run's GameRandom (GameSession seeds it per run), so the chests and the altar
-            // move from run to run; a test that seeds GameRandom gets a fixed placement
-            _rng = GameRandom.NextUInt() ^ RngSalt;
-            if (_rng == 0u) _rng = RngSalt;
+            // R8: a fork of the run seed, so the chests and the altar move from run to run and the same seed (a daily, SAME
+            // SEED, a test) places them the same way
+            _rng = GameRandom.Fork(RngStream.Map, GameRandom.KeyOf("interactables"));
             int chests = config != null ? config.maxChests : 0, altars = config != null ? config.altars : 0;
             _chestSlots = chests;
             _slots = new Slot[chests + altars];
@@ -106,12 +104,6 @@ namespace Gladiator.Gameplay
             if (Instance == this) Instance = null;
         }
 
-        float Rand01()
-        {
-            _rng ^= _rng << 13; _rng ^= _rng >> 17; _rng ^= _rng << 5;
-            return (_rng & 0xFFFFFF) / (float)0x1000000;
-        }
-
         bool FarEnough(Vector3 p, Vector3 player)
         {
             var c = config;
@@ -131,7 +123,7 @@ namespace Gladiator.Gameplay
             spot = default;
             int n = anchors != null ? anchors.Length : 0;
             if (n == 0) return false;
-            int start = (int)(Rand01() * n);
+            int start = (int)(_rng.Next01() * n);
             for (int k = 0; k < n; k++)
             {
                 var p = anchors[(start + k) % n];
@@ -150,8 +142,8 @@ namespace Gladiator.Gameplay
             var c = config;
             for (int attempt = 0; attempt < 40; attempt++)
             {
-                float a = Rand01() * Mathf.PI * 2f;
-                var p = em.arenaCenter + (em.EdgePoint(a, 3f) - em.arenaCenter) * Mathf.Sqrt(Rand01());
+                float a = _rng.Next01() * Mathf.PI * 2f;
+                var p = em.arenaCenter + (em.EdgePoint(a, 3f) - em.arenaCenter) * Mathf.Sqrt(_rng.Next01());
                 if ((new Vector2(p.x - player.x, p.z - player.z)).sqrMagnitude < c.minPlayerDistance * c.minPlayerDistance) continue;
                 bool crowded = false;
                 for (int i = 0; i < _slots.Length && !crowded; i++)
@@ -185,7 +177,7 @@ namespace Gladiator.Gameplay
             s.State = State.Ready;
             s.Pos = p;
             s.T = 0f;
-            s.Go.transform.SetPositionAndRotation(p, Quaternion.Euler(0f, Rand01() * 360f, 0f));
+            s.Go.transform.SetPositionAndRotation(p, Quaternion.Euler(0f, _rng.Next01() * 360f, 0f));
             s.Go.transform.localScale = Vector3.one;
             if (s.Lid != null) s.Lid.localRotation = Quaternion.identity;
             s.Go.SetActive(true);

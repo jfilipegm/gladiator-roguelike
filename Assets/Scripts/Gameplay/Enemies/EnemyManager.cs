@@ -400,17 +400,17 @@ namespace Gladiator.Gameplay
             _affix[i] = affix;
             _scale[i] = scale;
             _hp[i] = _maxHp[i] = def.maxHp * (affix != null ? affix.hpMultiplier : 1f) * (def.behaviour == EnemyBehaviour.Scripted ? scriptedHpMul : hpMul);
-            _speed[i] = def.moveSpeed * (1f + GameRandom.Range(-def.speedJitter, def.speedJitter)) * (affix != null ? affix.speedMultiplier : 1f) * speedMul;
+            _speed[i] = def.moveSpeed * (1f + GameRandom.Range(RngStream.Enemies, -def.speedJitter, def.speedJitter)) * (affix != null ? affix.speedMultiplier : 1f) * speedMul;
             _radius[i] = def.radius * scale;
             if (_radius[i] > _maxRadius) _maxRadius = _radius[i];
             _dmgTakenMul[i] = affix != null ? affix.damageTakenMultiplier : 1f;
             _knockMul[i] = affix != null ? affix.knockbackMultiplier : 1f;
             _atkTimeMul[i] = affix != null ? affix.attackTimeMultiplier : 1f;
             _state[i] = AiState.Move;
-            _stateT[i] = def.behaviour == EnemyBehaviour.Dasher ? def.flankTimeout : GameRandom.Range(1.5f, 3.5f); // Move: strafe-flip / flank timer
+            _stateT[i] = def.behaviour == EnemyBehaviour.Dasher ? def.flankTimeout : GameRandom.Range(RngStream.Enemies, 1.5f, 3.5f); // Move: strafe-flip / flank timer
             _stateDur[i] = 1f;
-            _attackCd[i] = GameRandom.Range(0.6f, 1.4f) * def.attackCooldown * 0.5f; // don't all fire on the same frame
-            _strafe[i] = (GameRandom.NextUInt() & 1) == 0 ? 1f : -1f;
+            _attackCd[i] = GameRandom.Range(RngStream.Enemies, 0.6f, 1.4f) * def.attackCooldown * 0.5f; // don't all fire on the same frame
+            _strafe[i] = (GameRandom.NextUInt(RngStream.Enemies) & 1) == 0 ? 1f : -1f;
             _attackHit[i] = false;
             _heldAtEdge[i] = false;
             _charge[i] = _trampled[i] = 0;
@@ -419,7 +419,7 @@ namespace Gladiator.Gameplay
             ResetGilded(i);
             ResetLeash(i);
             _aim[i] = Vector3.forward;
-            _flash[i] = 0f; _contactCd[i] = 0.5f; _phase[i] = GameRandom.Range(0f, 6.28f); _recoil[i] = 0f; _dying[i] = 0f;
+            _flash[i] = 0f; _contactCd[i] = 0.5f; _phase[i] = GameRandom.Range(RngStream.Enemies, 0f, 6.28f); _recoil[i] = 0f; _dying[i] = 0f;
             _uid[i] = _nextUid++;
             _invuln[i] = _scriptedWindup[i] = _scriptedShield[i] = false;
             ClearStatus(i);
@@ -1159,7 +1159,7 @@ namespace Gladiator.Gameplay
                             }
                             return Vector3.zero;
                         case AiState.Recover:
-                            if (_stateT[i] <= 0f) { _state[i] = AiState.Move; _stateT[i] = GameRandom.Range(1.5f, 3.5f); }
+                            if (_stateT[i] <= 0f) { _state[i] = AiState.Move; _stateT[i] = GameRandom.Range(RngStream.Enemies, 1.5f, 3.5f); }
                             return Vector3.zero;
                         default:
                         {
@@ -1169,7 +1169,7 @@ namespace Gladiator.Gameplay
                                 return Vector3.zero;
                             }
                             // keep-distance band: approach / back off / strafe (flip side now and then)
-                            if (_stateT[i] <= 0f) { _strafe[i] = -_strafe[i]; _stateT[i] = GameRandom.Range(1.5f, 3.5f); }
+                            if (_stateT[i] <= 0f) { _strafe[i] = -_strafe[i]; _stateT[i] = GameRandom.Range(RngStream.Enemies, 1.5f, 3.5f); }
                             if (dist > def.keepDistance.y) return dirTo * speed;
                             if (dist < def.keepDistance.x) return -dirTo * speed;
                             return new Vector3(dirTo.z, 0f, -dirTo.x) * (_strafe[i] * speed * 0.55f);

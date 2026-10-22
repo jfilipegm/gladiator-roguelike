@@ -29,6 +29,7 @@ namespace Gladiator.Gameplay
             var s = player.GetComponent<Scavenger>();
             if (s == null) s = player.AddComponent<Scavenger>();
             s.trait = this;
+            s.SeedRolls();
         }
     }
 
@@ -42,6 +43,7 @@ namespace Gladiator.Gameplay
         WeaponSystem _weapons;
         PlayerBuild _build;
         float _next = -1f;
+        Rng _rng; // R8: the improvised weapons' rolls, forked from the run seed when the trait is installed
 
         public int Fired { get; private set; }
         public WeaponDef LastWeapon { get; private set; }
@@ -56,6 +58,9 @@ namespace Gladiator.Gameplay
 
         void OnEnable() => GameLoop.Register(this, TickGroup.Weapons, -5);
         void OnDisable() => GameLoop.Unregister(this);
+
+        /// <summary>The rolls start over from the run seed (ScavengerTrait.Install): the same seed lends the same weapons in order.</summary>
+        internal void SeedRolls() => _rng = GameRandom.Fork(RngStream.Traits, GameRandom.KeyOf("scavenger"));
 
         public void Tick(float dt, float unscaledDt)
         {
@@ -93,7 +98,7 @@ namespace Gladiator.Gameplay
             int n = 0;
             for (int i = 0; i < all.Length; i++) if (Lendable(all[i])) n++;
             if (n == 0) return null;
-            int k = GameRandom.Range(0, n);
+            int k = _rng.Range(0, n);
             for (int i = 0; i < all.Length; i++)
                 if (Lendable(all[i]) && k-- == 0) return all[i].weapon;
             return null;

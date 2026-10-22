@@ -72,7 +72,7 @@ namespace Gladiator.UI
         public Material heroMaterial;
 
         /// <summary>The gold of a dot or a multiplier written on a marble plate (the bright gold doesn't read on marble).</summary>
-        const string MarbleGoldHex = "#A8741F";
+        const string MarbleGoldHex = "#7E5514"; // P3: #A8741F was 2.7:1 on the marble plate; 4.6:1 now
         /// <summary>The orange-red of what hurts you, written on marble: darker, so it reads there (4.3:1; the bright one is 2.6).</summary>
         public const string MarbleHurtHex = "#B8361C";
         /// <summary>P3: the title's size (it was 140 on the mosaic plaque).</summary>

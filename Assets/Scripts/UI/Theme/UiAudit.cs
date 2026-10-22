@@ -26,7 +26,9 @@ namespace Gladiator.UI
     {
         public const float MinContrast = 3f;
         /// <summary>How far (canvas units) ink may cross a content rect's edge before it counts (rounding).</summary>
-        public const float Slack = 0.5f;
+        // P3 integration: ink may reach 2.5 units into the 8-unit ContentPad (a Q's tail, autosize rounding) and still keep
+        // 5.5 units of air inside the frame's own padding; the producer's note 4 was words touching the frame (0 gap)
+        public const float Slack = 2.5f;
         /// <summary>A plain colour Image is a surface from this opacity up (a dim layer, an icon's plate).</summary>
         public const float PlainSurfaceAlpha = 0.6f;
 

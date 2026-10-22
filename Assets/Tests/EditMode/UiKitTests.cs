@@ -233,7 +233,7 @@ namespace Gladiator.Tests
             Assert.AreEqual(21f, UiAudit.Contrast(Color.black, Color.white), 0.01f);
             Assert.AreEqual(21f, UiAudit.Contrast(Color.white, Color.black), 0.01f, "symmetric");
             Assert.AreEqual(1f, UiAudit.Contrast(Color.grey, Color.grey), 1e-4f);
-            Assert.AreEqual(4.48f, UiAudit.Contrast(new Color32(0x76, 0x76, 0x76, 0xFF), Color.white), 0.02f, "#767676 on white: the classic 4.5");
+            Assert.AreEqual(4.54f, UiAudit.Contrast(new Color32(0x76, 0x76, 0x76, 0xFF), Color.white), 0.02f, "#767676 on white: the classic 4.54:1");
             Assert.AreEqual(1f, UiAudit.Contrast(new Color(1f, 0f, 0f, 0.2f), Color.red), 1e-4f, "alpha is ignored");
         }
 
@@ -311,7 +311,8 @@ namespace Gladiator.Tests
             Assert.AreEqual(0, UiAudit.PaddingViolations(_canvas.transform, why), string.Join("; ", why));
 
             // the producer's note 4: the line sits on the frame's bottom edge
-            var low = Label(tablet.transform, "Low", "Starts with Rusty Gladius", th.waxInk, new Vector2(0f, -size.y * 0.5f + 6f), new Vector2(content.width, 30f));
+            // 40 tall: a 24 pt Marcellus line is 30.1, so a 30-tall box truncates the whole line (no ink to audit)
+            var low = Label(tablet.transform, "Low", "Starts with Rusty Gladius", th.waxInk, new Vector2(0f, -size.y * 0.5f + 6f), new Vector2(content.width, 40f));
             Canvas.ForceUpdateCanvases();
             why.Clear();
             Assert.AreEqual(1, UiAudit.PaddingViolations(_canvas.transform, why));

@@ -47,7 +47,7 @@ namespace Gladiator.UI
         static readonly Color PlateColor = new Color(0.02f, 0.02f, 0.03f, 1f);
         static readonly Color Silhouette = new Color(0f, 0f, 0f, 0.9f);
         /// <summary>Gold written on the marble page (the bright gold doesn't read on marble).</summary>
-        const string HurtHex = MainMenu.MarbleHurtHex, GoldHex = "#A8741F";
+        const string HurtHex = MainMenu.MarbleHurtHex, GoldHex = "#7E5514"; // P3: 4.6:1 on marble (#A8741F was 2.7:1)
 
         const string KeysLine = "Arrows: move  ·  Enter / A: toggle or buy  ·  X / Backspace: clear  ·  Esc / B: done";
         const string KeysReadOnly = "Esc / B: back";

@@ -203,7 +203,7 @@ namespace Gladiator.UI
             var ink = s.Open ? th.marbleInk : th.dust;
             var look = s.Open ? TextLook.Engraved : TextLook.Flat;
             UiKit.Text("Numeral", t, Numeral(tier), TextRole.Title, NumeralSize, ink, TextAlignmentOptions.Midline,
-                mid, mid, new Vector2(0f, numY), new Vector2(content.width, 30f), look);
+                mid, mid, new Vector2(0f, numY), new Vector2(content.width, 34f), look); // Marcellus SC's line is 1.254 em (32.6): a 30 box cut it
 
             float nameTop = numY - 18f;
             var name = UiKit.Text("Name", t, s.Open ? StepName(s.Run) : "???", TextRole.Title, NameMax, ink, TextAlignmentOptions.Top,

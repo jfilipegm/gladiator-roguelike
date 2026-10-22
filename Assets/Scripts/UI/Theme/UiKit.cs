@@ -20,7 +20,9 @@ namespace Gladiator.UI
     {
         // UI tints can only darken (vertex colours clamp at 1), so a resting face sits at 1/1.1 and Focused can be ×1.1.
         public const float FaceNormal = 1f / 1.1f, FaceFocused = 1f, FacePressed = FaceNormal * 0.85f;
-        public const float DisabledGrey = 0.6f, DisabledAlpha = 0.45f;
+        // P3: 0.8, not 0.6: a disabled plate fades (alpha) but its words must still read (a BUY price you can't afford
+        // yet was 2.1:1 bronzeInk on the darkened bronze; 3.1:1 now)
+        public const float DisabledGrey = 0.8f, DisabledAlpha = 0.45f;
 
         public RectTransform Root;
         public Image Frame, Focus;
@@ -125,7 +127,7 @@ namespace Gladiator.UI
             // there is one, takes the left of it), so autosize keeps the words inside the padding.
             float labelLeft = hasKey ? Mathf.Max(content.xMin, left + 6f + chip + gap) : content.xMin;
             var ink = style == ButtonStyle.Primary ? theme.bronzeInk : theme.marbleInk;
-            var text = Text("Label", frame.transform, label, TextRole.Title, fontSize, ink, TextAlignmentOptions.Center, Mid, Mid,
+            var text = Text("Label", frame.transform, label, TextRole.Title, fontSize, ink, TextAlignmentOptions.Midline, Mid, Mid, // glyph-centred (P3)
                 new Vector2((labelLeft + right) * 0.5f, 0f), new Vector2(Mathf.Max(10f, right - labelLeft), size.y), TextLook.Engraved);
             text.enableAutoSizing = true;
             text.fontSizeMax = fontSize;

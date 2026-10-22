@@ -37,6 +37,18 @@ that worker).
 8. **Stay inside your part.** If you're blocked, or the contract is wrong or missing something, message the
    orchestrator (SendMessage) instead of guessing broadly. Small sensible defaults are fine: log them in your notes.
 
+## Lessons from integration (2026-10-21/22)
+- **Blender export:** root every piece at the origin (`at_origin`, as in `imperial_arena.py` / `colosseum.py`). `K.export_fbx`
+  turns the root about its first part's origin, so an off-origin first part arrives displaced (the Slave Pit's platforms
+  sat 3 m inside the wall: the playtest's safe perch).
+- **Tests:** what a tick creates (a risen enemy in the spatial grid, a wind-up's threat) shows up on the next tick: wait a
+  frame before asserting on it. Loops that stop on an event must sample state on that frame too.
+- **Editor scripts that open scenes (`OpenSceneMode.Single`)** unload every asset nothing references: reload ScriptableObjects
+  by path after each switch, save them at once, and give temporary textures `HideFlags.HideAndDontSave`.
+- **TextMeshPro:** the font has no U+2026, so `TextOverflowModes.Ellipsis` warns (and fails tests): use `Truncate`.
+- **Random-dependent tests break when the pools change** (a new card family shifts the rolls): assert relative changes
+  ("one level up"), not absolute ones.
+
 ## Your final message (what the orchestrator receives)
 Under 400 characters, in this shape:
 `<branch> @ <short sha>. Done: <what>. Verified: <ccheck errors=0 / renders / tris>. Unverified: <what>. Needs: <none

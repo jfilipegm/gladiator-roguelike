@@ -1,8 +1,8 @@
 # Progress
 
 **Current phase:** Phase 5 — expansion
-**Current milestone:** R3 — Asterion, the Chained (branch `phase5-asterion`, release v0.20.0): design and art done and merged, the contract final (`docs/tracks/R3-asterion.md`); the three code parts started 09:44 from the producer's card clicks: setup done (`claude/sleepy-pare-af0042` @ f166b72, ccheck errors only on the R3-STUB names), chain and rage running. Merge order chain → rage → setup. v0.19.0 (the playtest fixes) released 2026-10-22. **Ask the producer before every merge.**
-**Last updated:** 2026-10-21
+**Current milestone:** R3 — Asterion, the Chained (branch `phase5-asterion`, release v0.20.0): integrated and tested 2026-10-22 10:00–11:40, PR open, **waiting for the producer's OK to merge**. Then `Tools/release 0.20.0` and the smoke runs; next roadmap item R7 (run modifiers). **Ask the producer before every merge.**
+**Last updated:** 2026-10-22
 
 **Repository:** https://github.com/jfilipegm/gladiator-roguelike (public, branch `main`, remote `origin`, `.blend` files via Git LFS). Work on a branch per milestone, push as you go, merge through a PR; release every playable build (`Tools/release`).
 
@@ -428,6 +428,13 @@
 - **P1 C:** the stats page on pause (totals + sources), previews on level-up cards, altars and chests, and eight Vows (trade-off cards, 15 % of each card's odds, at most one per pick, their own frame).
 - **Verified:** EditMode 154/154; PlayMode (see the PR); every perch audit 0; wall hugs hit at 0.98 and 1.52 m; screenshots `r9_select_1080`, `r9_select_720`, `r9_arena_1080`, `r9_codex_1080`, `p1_levelup`, `p1_stats_pause`, `p1_vow_card`.
 - **Released v0.19.0** (https://github.com/jfilipegm/gladiator-roguelike/releases/tag/v0.19.0): Linux 46 MB, Linux dev 76 MB, Windows 48 MB, macOS 55 MB. Smoke runs of the archives (40 s bot runs): Linux, Linux dev in the Provincial Pit and Windows under Wine (rerun at 09:40: the first run was cut off by a session restart overnight), all v0.19.0, the clock reached 37 s, 0 exceptions; their Profiling files deleted. macOS not run. The producer's answers: a Vow takes a Boon slot and stays random; the crowd stays full under the intro.
+
+## Done — R3 Asterion, the Chained (branch `phase5-asterion`, release v0.20.0 after the producer's OK)
+- **Built by five worker sessions:** design (`docs/tracks/R3-design.md`, the contract `R3-asterion.md`), art (`CH_Asterion` 1,148 tris with a `Chain` part; `WP_LabyrinthChain` `Link` + `Weight`), then chain, rage and setup at once (`R3-chain.md`, `R3-rage.md`, `R3-setup.md`). Integrated here 2026-10-22 10:00–11:40.
+- **What:** the 10th gladiator (unlock: defeat the Eternal Victor; the tease "BELOW THE SAND, A CHAIN SNAPS." during the Victor's fall while he's locked). The `Sweep` weapon pattern (the Labyrinth Chain: 240° over 0.3 s, 5.2 m, hits in order, the stone crits and shoves harder, sideways push, backswings by Amount, a 360° whirl), the Gore trait (horns toss enemies aside at a run) and Rage (the press and hits fill it; Unchained 8 s: bellow, whirl, ×1.3 attack speed, ×1.2 speed, no knockback, gore all round; Spent 2 s). The chain card joins every gladiator's pool once he's unlocked.
+- **Integration fixes:** the portrait bakes hide a `Chain` only where it hangs off the model, and in a run only a starting weapon hides its model part (the Ashen Oracle's censer has a `Chain` of its own); the tile name drops the epithet ("ASTERION"); his weapon and Rage texts shortened to fit the tablet; three test fixes (the bellow waits a frame for the grid, the GC test's rings fit 200, its Editor heap assert became a logged report: zero GC is read in the player).
+- **Verified:** EditMode 162/162; PlayMode 331/331 (the whole suite, before the last two fixes), then ChainSweepTests 12/12, AsterionTests 11/11, RosterTests 20/20 after them; screenshots `Screenshots/r3_select_asterion.png`, `r3_run_a.png`, `r3_run_b.png` and the baked portrait and Codex atlas checked by eye. **A 10-min bot run as Asterion** (`-gladiator asterion`, Slave Pit, Linux dev build): survived and beat Gorm, 380 fps avg, 189 fps at ≥ 250 enemies (gameplay 2.1 ms avg, 2.6 p95), 300 max alive, 0 exceptions; 573 sweeps (138 whirls, 3,685 hits, 2,117 by the stone), Unchained 14 times (112 s of 600), gored 356 (109 kills), peak press 32; GC ~1.5 KB in steady play over 8 minutes, the rest at the boss reward and the end screen (433 B/s over the whole run).
+- **Concern C30** (every feel number a first guess; two Sweep weapons would share one model part).
 
 ## Next (after the producer's playtest of v0.9.0–v0.15.0)
 - **The overnight run (2026-10-21, 01:25–05:40 WEST)** merged and released five milestones under the producer's "proceed with any merge in the next 5h40": v0.9.0 Arena 3 (PR #11, the producer's OK), v0.10.0 the Murder Machine (#12), v0.11.0 the Thunder Champion (#13), v0.12.0 the Golden Idol (#14), v0.13.0 the Ashen Oracle (#15). After 07:05 WEST, ask before every merge again.

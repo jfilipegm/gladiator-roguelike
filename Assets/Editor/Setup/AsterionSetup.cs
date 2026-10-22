@@ -69,7 +69,7 @@ namespace Gladiator.EditorTools
             var gore = Trait<GoreTrait>(GorePath, "gore", "Gore",
                 "Run into enemies head-first and you gore them: they're hurt and tossed out of your way.");
             var rage = Trait<RageTrait>(RagePath, "rage", "Rage",
-                "The crowd pressing round you fills your Rage, and so do hits. Full, you're Unchained for 8 s: the chain whirls all round, you're faster and gore everything you touch. Then you're Spent for 2 s.");
+                "The press of the crowd and every hit fill your Rage. Full, you're Unchained for 8 s: the chain whirls all round. Then Spent for 2 s.");
 
             var g = AssetDatabase.LoadAssetAtPath<GladiatorDef>(AsterionPath);
             if (g == null)
@@ -103,7 +103,7 @@ namespace Gladiator.EditorTools
             {
                 w = PlayerSetup.EnsureAsset<WeaponDef>(ChainPath);
                 w.id = "labyrinth_chain"; w.displayName = "Labyrinth Chain";
-                w.description = "A heavy chain with a block of the labyrinth's wall at its end, swept round you in a wide arc. Everything it passes is shoved aside; the stone always crits: fight at the chain's length.";
+                w.description = "A chain with a block of the labyrinth's wall at its end, swept round you: it shoves aside all it passes, and the stone always crits.";
                 w.pattern = WeaponPattern.Sweep;
                 // range = the chain's reach, arcDegrees = the sweep, tipLength = the stone (always crits), width = the
                 // chain's thickness, amount = sweeps per trigger (the backswings)

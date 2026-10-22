@@ -173,12 +173,15 @@ namespace Gladiator.UI
             _dots[i] = dot;
         }
 
-        /// <summary>"The Pit Goblin" → "PIT GOBLIN": carved capitals, without the article (the tile is narrow).</summary>
+        /// <summary>"The Pit Goblin" → "PIT GOBLIN", "Asterion, the Chained" → "ASTERION": carved capitals, without the
+        /// article or the epithet (the tile is narrow).</summary>
         public static string TileName(GladiatorDef g)
         {
             if (g == null) return "???";
             string n = g.displayName ?? g.id;
             if (n.StartsWith("The ", StringComparison.OrdinalIgnoreCase)) n = n.Substring(4);
+            int comma = n.IndexOf(',');
+            if (comma > 0) n = n.Substring(0, comma);
             return n.ToUpperInvariant();
         }
 

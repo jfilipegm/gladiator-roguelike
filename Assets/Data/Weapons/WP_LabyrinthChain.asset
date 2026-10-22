@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.WeaponDef
   id: labyrinth_chain
   displayName: Labyrinth Chain
-  description: 'A heavy chain with a block of the labyrinth''s wall at its end, swept round you in a wide arc. Everything it passes is shoved aside; the stone always crits: fight at the chain''s length.'
+  description: 'A chain with a block of the labyrinth''s wall at its end, swept round you: it shoves aside all it passes, and the stone always crits.'
   pattern: 10
   damage: 15
   critChance: 0.05

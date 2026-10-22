@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.RageTrait
   id: rage
   displayName: Rage
-  description: 'The crowd pressing round you fills your Rage, and so do hits. Full, you''re Unchained for 8 s: the chain whirls all round, you''re faster and gore everything you touch. Then you''re Spent for 2 s.'
+  description: 'The press of the crowd and every hit fill your Rage. Full, you''re Unchained for 8 s: the chain whirls all round. Then Spent for 2 s.'
   meterMax: 100
   pressRadius: 3.5
   pressPerEnemy: 1

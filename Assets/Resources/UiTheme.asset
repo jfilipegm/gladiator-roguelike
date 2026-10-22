@@ -1,0 +1,87 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 175fc1e9de5a7e5ed83a2bc1b3dd1b36, type: 3}
+  m_Name: UiTheme
+  m_EditorClassIdentifier: Gladiator.UI::Gladiator.UI.UiTheme
+  number:
+    font: {fileID: 11400000, guid: 05b87e65b1b05a43aa35e0401fc9b107, type: 2}
+    flat: {fileID: 2100000, guid: f0e8c130fc79d9810b511946a46a12f2, type: 2}
+    outline: {fileID: 2100000, guid: e3d7c1e1409bba595bd7732210ebbe41, type: 2}
+    engraved: {fileID: 2100000, guid: bcc73da934a4d8843a4cf6fe0c4052ed, type: 2}
+    spacing: 2
+  shout:
+    font: {fileID: 11400000, guid: adfd4af4fae5c8a289093ab303a0e087, type: 2}
+    flat: {fileID: 2100000, guid: ab4aed72df2d6a3d3b75876252bce98c, type: 2}
+    outline: {fileID: 2100000, guid: af328e7d1cdb0e9efa996d5c30dc248d, type: 2}
+    engraved: {fileID: 2100000, guid: d08def623e56ffd7b84286f3090dea5d, type: 2}
+    spacing: 1
+  title:
+    font: {fileID: 11400000, guid: d8eba895df2f0c1e69d5c3a4b5f6fabd, type: 2}
+    flat: {fileID: 2100000, guid: b674e6ba2dc47d2a4ac0aa6687696bd9, type: 2}
+    outline: {fileID: 2100000, guid: 8d044b433e9278a41b89c9fdb75b028d, type: 2}
+    engraved: {fileID: 2100000, guid: a67a29be541ee86d8a7df5a5bae71633, type: 2}
+    spacing: 4
+  body:
+    font: {fileID: 11400000, guid: 351e4780dc6764878a0023eec2e76285, type: 2}
+    flat: {fileID: 2100000, guid: 638920f17a3c54ab8af40bd40b88f237, type: 2}
+    outline: {fileID: 2100000, guid: a6f5df16c03e8fd25ad5bef211d329b9, type: 2}
+    engraved: {fileID: 2100000, guid: 85c3eb1c8e9a47b4f92dd88129459fb9, type: 2}
+    spacing: 0
+  plain:
+    font: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+    flat: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+    outline: {fileID: 2100000, guid: 79459efec17a4d00a321bdcc27bbc385, type: 2}
+    engraved: {fileID: 0}
+    spacing: 0
+  frameAtlas: {fileID: 2800000, guid: 1d384816d0c0db080a46b778a1231e68, type: 3}
+  frameIndex: {fileID: 4900000, guid: c13be33c2121b8ba7af3b87fee2b5787, type: 3}
+  night: {r: 0.09803922, g: 0.08235294, b: 0.07058824, a: 1}
+  stone: {r: 0.14901961, g: 0.1254902, b: 0.10980392, a: 1}
+  stoneLight: {r: 0.18431373, g: 0.15686275, b: 0.13725491, a: 1}
+  line: {r: 0.2901961, g: 0.24705882, b: 0.21176471, a: 1}
+  cardInside: {r: 0.10980392, g: 0.09019608, b: 0.078431375, a: 1}
+  ink: {r: 0.9372549, g: 0.9019608, b: 0.8392157, a: 1}
+  dust: {r: 0.7019608, g: 0.6509804, b: 0.5647059, a: 1}
+  outlineInk: {r: 0.101960786, g: 0.05882353, b: 0.03137255, a: 1}
+  bronze: {r: 0.6901961, g: 0.47843137, b: 0.23137255, a: 1}
+  bronzeLight: {r: 0.8784314, g: 0.68235296, b: 0.42352942, a: 1}
+  bronzeDark: {r: 0.3529412, g: 0.22745098, b: 0.105882354, a: 1}
+  bronzeInk: {r: 0.16470589, g: 0.09411765, b: 0.039215688, a: 1}
+  gold: {r: 0.8862745, g: 0.69411767, b: 0.2901961, a: 1}
+  goldBright: {r: 1, g: 0.8117647, b: 0.2901961, a: 1}
+  crimson: {r: 0.47843137, g: 0.12156863, b: 0.14509805, a: 1}
+  crimsonLight: {r: 0.60784316, g: 0.18039216, b: 0.2, a: 1}
+  purple: {r: 0.29411766, g: 0.16470589, b: 0.36078432, a: 1}
+  purpleDark: {r: 0.17254902, g: 0.09019608, b: 0.21176471, a: 1}
+  purpleInk: {r: 0.9647059, g: 0.8509804, b: 0.54901963, a: 1}
+  marble: {r: 0.9254902, g: 0.90588236, b: 0.87058824, a: 1}
+  marbleShade: {r: 0.85882354, g: 0.827451, b: 0.77254903, a: 1}
+  marbleInk: {r: 0.23921569, g: 0.20392157, b: 0.16862746, a: 1}
+  waxWood: {r: 0.49019608, g: 0.34117648, b: 0.20392157, a: 1}
+  wax: {r: 0.14509805, g: 0.11764706, b: 0.09803922, a: 1}
+  waxInk: {r: 0.84705883, g: 0.78039217, b: 0.6509804, a: 1}
+  danger: {r: 1, g: 0.32941177, b: 0.2, a: 1}
+  gain: {r: 0.48235294, g: 0.8784314, b: 0.5411765, a: 1}
+  loss: {r: 0.9411765, g: 0.5019608, b: 0.41568628, a: 1}
+  hp: {r: 0.78431374, g: 0.21568628, b: 0.1764706, a: 1}
+  hpDark: {r: 0.5411765, g: 0.14117648, b: 0.1254902, a: 1}
+  xp: {r: 0.30980393, g: 0.8901961, b: 0.81960785, a: 1}
+  favor: {r: 1, g: 0.78039217, b: 0.2509804, a: 1}
+  coin: {r: 1, g: 0.8392157, b: 0.3019608, a: 1}
+  bannerDrop: 0.32
+  bannerSettle: 0.12
+  bannerSway: 0.7
+  bannerHold: 2
+  bannerRoll: 0.28
+  bannerQuickRoll: 0.15
+  bannerSwayDegrees: 1.4
+  bannerOvershoot: 0.05

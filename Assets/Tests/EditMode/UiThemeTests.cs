@@ -201,7 +201,7 @@ namespace Gladiator.Tests
             foreach (var m in new[] { rf.flat, rf.outline, rf.engraved })
             {
                 Assert.IsNotNull(m, rf.font.name + " is missing a material preset");
-                Assert.AreSame(rf.font.atlasTexture, m.GetTexture(ShaderUtilities.ID_MainTex), m.name + " draws from the font's atlas");
+                Assert.AreEqual(rf.font.atlasTexture, m.GetTexture(ShaderUtilities.ID_MainTex), m.name + " draws from the font's atlas"); // Unity equality: GetTexture can hand back a second wrapper of the same texture
             }
             Assert.AreSame(rf.font, theme.FontFor(role));
         }

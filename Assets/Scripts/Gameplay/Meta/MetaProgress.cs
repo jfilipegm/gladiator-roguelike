@@ -38,6 +38,14 @@ namespace Gladiator.Gameplay
         public string[] Edicts;
         /// <summary>The edicts' summed Renown bonus (0.45 = Renown × 1.45).</summary>
         public float EdictBonus;
+        /// <summary>The run seed it was played on (R8; GameRandom.RunSeed).</summary>
+        public uint Seed;
+        /// <summary>RunDef id of the run (the daily ledger's "where"; null = unknown).</summary>
+        public string RunId;
+        /// <summary>yyyymmdd when this was a daily, scored or practice (0 = a normal run).</summary>
+        public int DailyDate;
+        /// <summary>The day's scored attempt: Renown × (1 + MetaConfig.dailyRenownBonus), the daily counts and the ledger.</summary>
+        public bool DailyScored;
     }
 
     public enum BuyResult { Bought, NotForSale, AlreadyOwned, TooExpensive }
@@ -51,6 +59,8 @@ namespace Gladiator.Gameplay
         public int BaseRenown;
         /// <summary>The edicts' summed bonus (0 = none; the end screen shows "+base ×1.45 = +renown").</summary>
         public float EdictBonus;
+        /// <summary>The scored daily's bonus (0.5 = ×1.5; 0 for practice and normal runs), on top of EdictBonus.</summary>
+        public float DailyBonus;
         /// <summary>Renown from the bounties of unlocks earned by this run (on top of Renown).</summary>
         public int Bounty;
         public int RenownTotal;
@@ -210,9 +220,11 @@ namespace Gladiator.Gameplay
 
             r.BaseRenown = meta != null ? meta.BaseRenownFor(run) : 0;
             r.EdictBonus = Mathf.Max(0f, run.EdictBonus);
+            r.DailyBonus = run.DailyScored && meta != null ? Mathf.Max(0f, meta.dailyRenownBonus) : 0f;
             r.Renown = meta != null ? meta.RenownFor(run) : 0;
             data.renown += r.Renown;
             data.lifetimeRenown += r.Renown;
+            if (run.DailyScored) RecordDaily(run, r.Renown, meta != null ? meta.dailyLedger : DefaultLedger, data);
             GrantEarned(meta, data, r.NewUnlocks, out r.Bounty);
             r.RenownTotal = data.renown;
             return r;
@@ -232,6 +244,24 @@ namespace Gladiator.Gameplay
                 n++;
             }
             if (n > data.bestEdictWin) data.bestEdictWin = n;
+        }
+
+        const int DefaultLedger = 30;
+
+        /// <summary>The scored daily: the counts, and a line in the ledger (the oldest beyond `keep` drop off).</summary>
+        static void RecordDaily(in RunSummary run, int renown, int keep, SaveData data)
+        {
+            data.dailiesPlayed++;
+            if (run.Outcome == RunOutcome.Survived) data.dailiesWon++;
+            data.dailies ??= new List<DailyRecord>();
+            data.dailies.Add(new DailyRecord
+            {
+                date = run.DailyDate, run = run.RunId ?? "", gladiator = run.GladiatorId ?? "",
+                edicts = run.Edicts != null ? string.Join("|", run.Edicts) : "",
+                outcome = (int)run.Outcome, elapsed = run.Elapsed, kills = run.Kills, renown = renown, seed = run.Seed,
+            });
+            keep = Mathf.Max(0, keep);
+            if (data.dailies.Count > keep) data.dailies.RemoveRange(0, data.dailies.Count - keep);
         }
 
         public static bool AllMet(UnlockDef u, SaveData data)
@@ -263,6 +293,8 @@ namespace Gladiator.Gameplay
                 case UnlockConditionKind.WinWithWeapon: return CountAny(d.weaponWins, c.id) >= times;
                 case UnlockConditionKind.KillEnemies: return CountAny(d.enemyKills, c.id) >= c.amount;
                 case UnlockConditionKind.WinWithEdicts: return d.bestEdictWin >= times;
+                case UnlockConditionKind.DailiesPlayed: return d.dailiesPlayed >= times;
+                case UnlockConditionKind.DailiesWon: return d.dailiesWon >= times;
                 default: return false;
             }
         }
@@ -298,6 +330,8 @@ namespace Gladiator.Gameplay
                 case UnlockConditionKind.WinWithWeapon: current = CountAny(d.weaponWins, c.id); target = times; break;
                 case UnlockConditionKind.KillEnemies: current = CountAny(d.enemyKills, c.id); target = c.amount; break;
                 case UnlockConditionKind.WinWithEdicts: current = d.bestEdictWin; target = times; break;
+                case UnlockConditionKind.DailiesPlayed: current = d.dailiesPlayed; target = times; break;
+                case UnlockConditionKind.DailiesWon: current = d.dailiesWon; target = times; break;
                 default: current = Met(c, d) ? 1f : 0f; target = 1f; break; // yes/no conditions
             }
             target = Mathf.Max(1f, target);
@@ -372,6 +406,38 @@ namespace Gladiator.Gameplay
         {
             SetChosenEdicts(chosen, Data);
             SaveSystem.Save(Data);
+        }
+
+        // ---------------------------------------------------------------- the Daily Games (R8)
+
+        /// <summary>Has the player earned the Daily Games (meta.dailyUnlock, beating Gorm; none set = open)?</summary>
+        public static bool DailyOpen(MetaConfig meta, SaveData d) =>
+            meta != null && d != null && (meta.dailyUnlock == null || d.IsUnlocked(meta.dailyUnlock.id));
+
+        public static bool DailyOpen(MetaConfig meta) => DailyOpen(meta, Data);
+
+        /// <summary>Is `date`'s scored attempt spent? Also true for any day before the last one started, so setting the
+        /// clock back never gives a second scored attempt.</summary>
+        public static bool DailyAttempted(int date, SaveData d) => d != null && d.dailyAttempt > 0 && d.dailyAttempt >= date;
+
+        public static bool DailyAttempted(int date) => DailyAttempted(date, Data);
+
+        /// <summary>Pure: starts `date`'s daily. True = the scored attempt (marked in `d`); false = it's spent: practice.</summary>
+        public static bool BeginDaily(int date, SaveData d)
+        {
+            if (d == null || date <= 0 || DailyAttempted(date, d)) return false;
+            d.dailyAttempt = date;
+            return true;
+        }
+
+        /// <summary>Starts `date`'s daily: the scored attempt is marked and saved at once (quitting doesn't give another).
+        /// True = scored, false = practice.</summary>
+        public static bool BeginDaily(int date)
+        {
+            if (!BeginDaily(date, Data)) return false;
+            SaveSystem.Save(Data);
+            Debug.Log("[Meta] daily " + date + ": the scored attempt starts");
+            return true;
         }
     }
 }

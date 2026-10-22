@@ -88,6 +88,7 @@ namespace Gladiator.UI
             string line = sb.ToString(0, Title.Chars.Length);
             _body.SetText(body);
             _body.ForceMeshUpdate(true, true);
+            _body.GetPreferredValues(_width, 32767f); // TMP sizes the arrays it measures with separately: grow them now too
             _title.SetText(line);
             _title.ForceMeshUpdate(true, true);
             _sub.SetText(line);

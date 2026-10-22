@@ -11,7 +11,7 @@ namespace Gladiator.UI
     /// Offset at their x. The words on the cloth ride the same function (VexillumBanner moves their TMP vertices).
     /// With Amplitude 0 the mesh passes through untouched. Buffers are kept: no allocation once they have grown.
     /// </summary>
-    [DisallowMultipleComponent]
+    [ExecuteAlways, DisallowMultipleComponent] // the attribute isn't inherited: EditMode tests bend the cloth too
     public sealed class ClothWave : BaseMeshEffect
     {
         /// <summary>The wave's height in the graphic's units (0 = flat).</summary>

@@ -48,3 +48,8 @@ Good ideas that are **not** in the current phase. Pull from here only when a pha
 - **More companions** (Phase 5.15) — the GDD's boar and hawk for the Beastmaster (a second `Summon` weapon each: a boar that charges, a hawk that dives), and a companion that can be hurt and revived if the pack ever feels too safe.
 - **Freed beasts that bolt** (Phase 5.15) — a freed cur vanishes in a white burst; running off through a gate would sell the "freed" better.
 
+
+## From the R7/R8/R6 spec (2026-10-22, `docs/tracks/R7-design.md` §7)
+- Edict ranks (Heat levels); *Night Games* (fog); *The Purist* (one weapon slot); edicts as Favor whims.
+- Typed seeds in the menu; online leaderboards or a shared daily ledger (needs a server); daily streaks.
+- Weapon skins, accessories (crests, plumes, capes), titles and announcer callouts, victory poses, skin portraits in the Codex's Gladiators tab.

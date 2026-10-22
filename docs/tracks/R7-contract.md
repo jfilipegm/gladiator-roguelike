@@ -1,13 +1,19 @@
-# R7 / R8 / R6 contract — Edicts, the Daily Games, Skins (DRAFT by the design worker, 2026-10-22)
+# R7 / R8 / R6 contract — Edicts, the Daily Games, Skins (FINAL, 2026-10-22)
 
 **Spec:** `docs/tracks/R7-design.md` (what each feature is, the rules, numbers, screens, save, decisions, Q1–Q14). This
-file splits the code into parts by file ownership and fixes the names they share. The orchestrator finalises it after
-the producer's answers.
+file splits the code into parts by file ownership and fixes the names they share.
+
+**FINAL (orchestrator, 2026-10-22 12:30):** the producer accepted every recommendation of Q1–Q14 (Edicts; the bonus
+always pays; open after Gorm, 3 free + 4 Market + 4 challenges; no easier edicts; UTC days; the daily fixes the
+gladiator; one scored attempt; ×1.5; no typed seed; RETRY = a fresh seed; two skins each; 250/350, 3 wins; three
+releases), **with one change: Q14, the repeating chests, gifts and whims, is fixed already in R7** (R7-A, "Q14 in R7"
+below; R8-A later replaces it with the seeded streams). Q15: eight code parts in three waves. Wave 1's item branch is
+`phase5-run-modifiers` (already made; it holds this file).
 
 **Three waves, in the roadmap's order** (`docs/ROADMAP.md` §1: they share the save, the menu and the Market):
 | Wave | Item | Item branch (proposed) | Release (proposed) | Parts |
 |---|---|---|---|---|
-| 1 | R7 Edicts | `phase5-edicts` from `main` | v0.21.0 | **R7-A** rules · **R7-B** meta + setup · **R7-C** menu |
+| 1 | R7 Edicts | `phase5-run-modifiers` from `main` | v0.21.0 | **R7-A** rules · **R7-B** meta + setup · **R7-C** menu |
 | 2 | R8 Daily Games + seeds | `phase5-daily` from `main` after wave 1 merges | v0.22.0 | **R8-A** streams · **R8-B** daily core · **R8-C** daily screens |
 | 3 | R6 Skins | `phase5-skins` from `main` after wave 2 merges | v0.23.0 | **R6-B** data + loadout · **R6-C** menu (+ **R6-art**, which may start during wave 1: it shares no file) |
 
@@ -67,7 +73,7 @@ wave in turn (listed at the end); a later wave always starts from the earlier on
 ### Parts
 | Part | Owns | Done when |
 |---|---|---|
-| **R7-A rules** | new `Assets/Scripts/Gameplay/Run/RunModifierDef.cs`, `RunModifiers.cs`; `Assets/Scripts/Gameplay/Enemies/EnemyManager.cs`; `Assets/Scripts/Gameplay/Director/Director.cs`; `Assets/Scripts/Gameplay/Interactables/Interactables.cs`; `Assets/Scripts/Gameplay/Run/LevelUpController.cs`; `Assets/Scripts/Gameplay/Crowd/Favor.cs`; `Assets/Scripts/Gameplay/Crowd/ArenaMaster.cs`; `Assets/Scripts/Gameplay/Combat/PlayerHealth.cs`; `Assets/Scripts/Core/Stats/StatBlock.cs` (the enum value only); `Assets/Scripts/Gameplay/Stats/StatText.cs`; `Assets/Scripts/Gameplay/Dev/PlaytestBot.cs` (the summary line); new tests `Assets/Tests/EditMode/EdictMathTests.cs`, `Assets/Tests/PlayMode/EdictRunTests.cs` | Every field of §2.4 reaches the game once per loaded run, with no edict nothing changes, Retry doesn't compound, zero GC; ccheck errors=0; tests written. |
+| **R7-A rules** | new `Assets/Scripts/Gameplay/Run/RunModifierDef.cs`, `RunModifiers.cs`; `Assets/Scripts/Gameplay/Enemies/EnemyManager.cs`; `Assets/Scripts/Gameplay/Director/Director.cs`; `Assets/Scripts/Gameplay/Interactables/Interactables.cs`; `Assets/Scripts/Gameplay/Run/LevelUpController.cs`; `Assets/Scripts/Gameplay/Crowd/Favor.cs`; `Assets/Scripts/Gameplay/Crowd/ArenaMaster.cs`; `Assets/Scripts/Gameplay/Combat/PlayerHealth.cs`; `Assets/Scripts/Core/Stats/StatBlock.cs` (the enum value only); `Assets/Scripts/Gameplay/Stats/StatText.cs`; `Assets/Scripts/Gameplay/Dev/PlaytestBot.cs` (the summary line); **Q14:** `Assets/Scripts/Gameplay/Crowd/CrowdGifts.cs` and `Assets/Scripts/Gameplay/Run/RunDef.cs` (`GameSession`: the seeding lines only); new tests `Assets/Tests/EditMode/EdictMathTests.cs`, `Assets/Tests/PlayMode/EdictRunTests.cs`, `Assets/Tests/PlayMode/RunVarietyTests.cs` | Every field of §2.4 reaches the game once per loaded run, with no edict nothing changes, Retry doesn't compound, zero GC; ccheck errors=0; tests written. |
 | **R7-B meta + setup** | `Assets/Scripts/Gameplay/Meta/SaveData.cs`, `MetaProgress.cs`, `UnlockDef.cs`, `MetaConfig.cs`; `Assets/Scripts/Gameplay/Run/RunEndController.cs`; new `Assets/Editor/Setup/EdictSetup.cs`; `PixelSrc/upgrade_icons.py` + the regenerated `Assets/Art/Textures/UI/UpgradeIcons.png` / `.txt`; new tests `Assets/Tests/EditMode/EdictMetaTests.cs` | Save v2 with Migrate, the Renown formula, records and the new condition, the eleven edicts and seven unlocks with their texts, eleven icons appended; ccheck errors=0 (only R7-STUB(a)); tests written. |
 | **R7-C menu** | new `Assets/Scripts/UI/EdictsPanel.cs`; `Assets/Scripts/UI/MainMenu.cs`; `Assets/Scripts/UI/ArenaLadder.cs` (`ArenaTablet`); `Assets/Scripts/UI/Hud.cs`; `Assets/Scripts/UI/RunEndPanel.cs`; `Assets/Scripts/UI/CodexPanel.cs`; new tests `Assets/Tests/PlayMode/EdictMenuTests.cs` | The arena screen's EDICTS button and panel (toggle, buy, clear, read-only), the tablet line, the HUD icons, the end screen's multiplier, the Codex's reward text and Records row, `-edicts`; ccheck errors=0 (only R7-STUBs); tests written. |
 
@@ -108,6 +114,23 @@ wave in turn (listed at the end); a later wave always starts from the earlier on
   `HealUnscaled`; never the max-HP growth in the MaxHp-changed handler.
 - **`StatBlock.cs`:** append `Edict` to `StatSourceKind`. **`StatText.cs`:** label `"Edict: " + ((RunModifierDef)Ref).displayName`.
 - **`PlaytestBot`:** after the existing lines, ` edicts N (+X %)` when `RunModifiers.Active.Length > 0`.
+- **Q14 in R7 (the producer, 2026-10-22: fix it now, not in R8).** Today `Interactables`, `CrowdGifts` and `ArenaMaster`
+  seed their own xorshift with constants (0x51ED27, 0x6A11F7, 0xB0BA5), so the chests and the altar appear in the same
+  places in the same order every run of an arena, and the gifts and whims come in the same order; `GameRandom` is never
+  seeded in play, so every launch replays the same sequence. The small fix, which R8-A later replaces with streams:
+  - **`GameSession`** (`RunDef.cs`): `StartRun` and `Retry` call `GameRandom.Seed((int)NextRunSeed())` right before the
+    scene load, where `static uint NextRunSeed()` mixes `System.Diagnostics.Stopwatch.GetTimestamp()` and a static counter
+    through a 32-bit hash (never 0). Nothing else in `RunDef.cs` changes. Bot and test runs that load an arena directly
+    keep today's behaviour (a fixed sequence per launch: perf runs stay comparable).
+  - **`Interactables`, `CrowdGifts`, `ArenaMaster`:** their xorshift state is seeded in `Awake` from
+    `GameRandom.NextUInt() ^ <their old constant>` (never 0), instead of the constant alone. A test that seeds `GameRandom`
+    still gets a fixed placement for that seed.
+  - Check `Assets/Tests` for anything that depends on the old constant placements, gift or whim order (`Interactables`,
+    `CrowdGifts`, `ArenaMaster`, Favor and chest tests) and make it seed `GameRandom` in its SetUp instead.
+  - PlayMode **`RunVarietyTests`** (the test arena or the Slave Pit with `GameSession` loads): two runs started through
+    `GameSession.StartRun` place their first three chests differently (allow one coincidence in three) and throw a
+    different first-three gift sequence or whim sequence; two loads after the same `GameRandom.Seed(1234)` place them
+    identically.
 - **Tests.** EditMode **`EdictMathTests`**: `Combine` of {hp 1.5, hp 1.2} = 1.8; deltas add (−1 + −1 = −2); `Bonus` of
   {0.25, 0.2} = 0.45; nulls skipped; `Totals.None`; `Set` drops duplicates and nulls. PlayMode **`EdictRunTests`** (the test
   arena; defs made with `ScriptableObject.CreateInstance` and the spec's numbers; `RunModifiers.Set` before the load,
@@ -117,8 +140,9 @@ wave in turn (listed at the end); a later wave always starts from the earlier on
   queued chest reward 3, `RerollsLeft` 0; `PaceClock` 8 s at 6 s elapsed, `Clock` capped at the run length, a swarm
   still starts after the cap; the elite interval halves; No Mercy: `Heal` and `HealUnscaled` add 0 and regen adds 0);
   with no edict every number equals the baseline; loading the scene twice doesn't compound; the stats page lists
-  "Edict: Glass Jaw"; no GC allocation per frame across 5 s with all eleven on and 200 enemies (ProfilerRecorder "GC
-  Allocated In Frame" after a warm-up).
+  "Edict: Glass Jaw"; across 5 s with all eleven on and 200 enemies, log `GameLoop.HeapReport()` (don't assert zero: in
+  the Editor the heap counter moves with the Editor's own allocations; R3 learned it. Zero GC is checked in the player by
+  the orchestrator's bot run).
 
 ### R7-B meta + setup
 - **`SaveData`:** `public List<string> edictsChosen`; `public List<IdCount> edictWins` (edict id → won runs with it on);
@@ -186,7 +210,7 @@ wave in turn (listed at the end); a later wave always starts from the earlier on
 ### Wave 1 merge order and the orchestrator's steps
 **A → B → C.** Then in Unity: `Gladiator/Setup/Upgrade Icons` (atlas import), `Gladiator/Setup/Meta/Create Edict Data`
 (it ends with `Create Meta Data`). No scene rebuild (the menu and every arena reference `MetaConfig`). Run `EdictMathTests`,
-`EdictMetaTests`, the full EditMode suite, `EdictRunTests`, `EdictMenuTests`, then the full PlayMode suite. Bot runs: the
+`EdictMetaTests`, the full EditMode suite, `EdictRunTests`, `RunVarietyTests`, `EdictMenuTests`, then the full PlayMode suite. Bot runs: the
 Slave Pit with `-edicts iron_hides,blood_sport` (survives? Renown line), and the perf check in the Colosseum with
 `-edicts hungry_horde,champions_day,impatient_emperor,swift_foes` (§8 budget). Screenshots: the arena screen with the
 button, the panel (1080p and 720p), the HUD row, the end screen. Shared docs: DECISIONS (spec §6.1–11), GDD Meta line,
@@ -448,11 +472,11 @@ after 3 iterations, DECISIONS §6.22–27, GDD, UNLOCKS, PROGRESS, release notes
 |---|---|---|---|
 | `SaveData.cs`, `MetaProgress.cs`, `MetaConfig.cs` | R7-B | R8-B | R6-B |
 | `UnlockDef.cs`, `RunEndController.cs` | R7-B | R8-B | — |
-| `RunDef.cs` (`GameSession`) | — | R8-B | R6-B |
+| `RunDef.cs` (`GameSession`) | R7-A (Q14 seeding only) | R8-B | R6-B |
 | `MainMenu.cs`, `CodexPanel.cs` | R7-C | R8-C | R6-C |
 | `RunEndPanel.cs`, `Hud.cs` | R7-C | R8-C | — |
 | `PlaytestBot.cs` | R7-A | R8-B | — |
-| `Director.cs`, `EnemyManager.cs`, `Interactables.cs`, `LevelUpController.cs`, `ArenaMaster.cs` | R7-A | R8-A | — |
+| `Director.cs`, `EnemyManager.cs`, `Interactables.cs`, `LevelUpController.cs`, `ArenaMaster.cs`, `CrowdGifts.cs` | R7-A | R8-A | — |
 
 **Not touched by anyone in R7, R8 or R6:** the scenes and `MenuSceneBuilder.cs`, `ArenaBuilder.cs`, the arena setups and
 layouts, `BossDef.cs`, `BossFight.cs`, `GladiatorDef.cs`, `GladiatorSetup.cs`, `IconSetup.cs`, `CodexSetup.cs`,
@@ -460,6 +484,5 @@ layouts, `BossDef.cs`, `BossFight.cs`, `GladiatorDef.cs`, `GladiatorSetup.cs`, `
 (the orchestrator's).
 
 ## Open questions
-Q1–Q14 are in `docs/tracks/R7-design.md` §8, each with a recommendation. For the orchestrator only: **Q15. Eight code
-parts in three waves (recommended)**, or fewer sessions to save usage: fold R7-B into R7-A, R8-C into R8-B and R6-C into
-R6-B (five code parts; each then owns more files and runs longer).
+**All answered (2026-10-22 12:30):** Q1–Q14 as recommended in `docs/tracks/R7-design.md` §8, except Q14, which R7-A
+fixes now (above). Q15: eight code parts in three waves, as drafted.

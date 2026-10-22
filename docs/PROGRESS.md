@@ -1,7 +1,7 @@
 # Progress
 
 **Current phase:** Phase 5 — expansion
-**Current milestone:** R7/R8/R6 — run modifiers, daily seeds, cosmetics (branch `phase5-run-modifiers`): one spec for all three first; the design worker (`r7-design`, started by the producer 11:08) writes `docs/tracks/R7-design.md` + `R7-contract.md`; then the producer's answers and the code parts. v0.20.0 (Asterion) released 2026-10-22. **Ask the producer before every merge.**
+**Current milestone:** R7 — Edicts (run modifiers), wave 1 of the R7/R8/R6 spec (branch `phase5-run-modifiers`, release v0.21.0). Spec and contract FINAL (`docs/tracks/R7-design.md`, `R7-contract.md`; the producer accepted every recommendation 12:30, Q14 the repeating chests/gifts/whims fixed in R7). Code parts R7-A rules, R7-B meta + setup, R7-C menu; merge order A → B → C. Then R8 (v0.22.0) and R6 (v0.23.0). **Ask the producer before every merge.**
 **Last updated:** 2026-10-22
 
 **Repository:** https://github.com/jfilipegm/gladiator-roguelike (public, branch `main`, remote `origin`, `.blend` files via Git LFS). Work on a branch per milestone, push as you go, merge through a PR; release every playable build (`Tools/release`).

@@ -448,10 +448,11 @@ namespace Gladiator.Gameplay
         }
 
         /// <summary>Tier IV: an elite from the arena's own elite pick (the Director's, with an affix) in at a gate away from
-        /// you (the gate swings open). False without a Director, an elite type or an affix.</summary>
+        /// you (the gate swings open). False without a Director, an elite type or an affix. A switched-off Director (the
+        /// admin's toggle, tests) still picks his champion: it's his, not the horde's.</summary>
         bool SendChampion()
         {
-            var director = Director.Instance;
+            var director = Director.Instance != null ? Director.Instance : FindAnyObjectByType<Director>();
             var em = EnemyManager.Instance;
             var player = Player.Main;
             if (director == null || em == null || player == null) return false;

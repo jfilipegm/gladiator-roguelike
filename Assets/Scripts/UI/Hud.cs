@@ -846,8 +846,9 @@ namespace Gladiator.UI
                 if (_build != null && _build.State.Version != _lastBuildVersion) RefreshStrip();
             }
 
-            // the clock is frozen under the cards and LEVEL UP! (or PAUSED) sits over it: hide it until they close
-            float timerAlpha = (LevelUpController.Instance != null && LevelUpController.Instance.IsOpen) || (player != null && player.IsPaused) ? 0f : 1f;
+            // the clock is frozen under the cards and LEVEL UP! (or PAUSED, or W1's THE BOOKMAKER'S BOOK) sits over it: hide it until they close
+            float timerAlpha = (LevelUpController.Instance != null && LevelUpController.Instance.IsOpen) || (player != null && player.IsPaused)
+                               || (Bookmaker.Instance != null && Bookmaker.Instance.BookOpen) ? 0f : 1f;
             if (_timer.alpha != timerAlpha) _timer.alpha = timerAlpha;
             if (_edictGroup != null && _edictGroup.alpha != timerAlpha) _edictGroup.alpha = timerAlpha;
             if (_stripGroup.alpha != timerAlpha) _stripGroup.alpha = timerAlpha;

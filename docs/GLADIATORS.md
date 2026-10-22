@@ -207,7 +207,7 @@ Arena 3 exists, so `UL_BloodKnight` switches from the interim "beat Gorm below 3
 
 **Tests:** he spawns with two wolves that hunt the nearest enemy and bite it (the weapon's kills count); levels add wolves; a wolf past the leash runs back; the horn makes every wolf pounce on a different enemy ahead, which takes three bites and is Staggered, and it waits when there's nothing to hunt; a hit on him frenzies the pack; a handler spawns with two leashed curs that stay within the leash, and killing him frees them (no kills counted); 25 handler kills unlock him.
 
-## Asterion, the Chained (R3, planned)
+## Asterion, the Chained (R3, v0.20.0)
 | | |
 |---|---|
 | **Fantasy** | On the Colosseum's opening day, four hundred years ago, the Eternal Victor's first fight was against a beast dragged out of a labyrinth across the sea: Asterion, half man, half bull, who had never hurt anyone who didn't come into the dark to kill him. The Victor didn't kill him. He chained him under the stage as a trophy, and for four centuries the crowd has heard him roar beneath the sand before every games. Gentle and lonely when he's calm, a storm when the crowd closes in. He doesn't fight for glory: the arena is the only world he has. |

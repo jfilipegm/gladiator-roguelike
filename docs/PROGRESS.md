@@ -1,7 +1,7 @@
 # Progress
 
 **Current phase:** Phase 5 — expansion
-**Current milestone:** R8 — the Daily Games and run seeds, wave 2 of the R7/R8/R6 spec (branch `phase5-daily`, release v0.22.0; contract `docs/tracks/R7-contract.md` "Wave 2": R8-A streams, R8-B daily core, R8-C daily screens, merge A → B → C). v0.21.0 (Edicts) released 2026-10-22. **Ask the producer before every merge.**
+**Current milestone:** R8 — the Daily Games and run seeds (branch `phase5-daily`, release v0.22.0). R8-A streams, R8-B daily core, R8-C daily screens merged A → B → C (no conflicts), Create Daily Data run, v0.22.0 + save v3 bumped, docs and release notes written. **Verified so far:** EditMode 231/231; SeedReplayTests 2/2 (after a test fix: each gift lands before the next), DailyMenuTests 8/8, RunVarietyTests 2/2. **Left:** the full PlayMode suite (running 15:05), screenshots (main menu with DAILY, the daily screen scored and practice, the end screen with the seed), bot runs (two Slave Pit runs with the same `-runSeed`: compare chest spots, swarm types, first offers; one with another seed; a `-daily` run; perf runs now pass a fixed seed by default), PROGRESS Done section, PR (ask the producer), release, smoke, housekeeping. Then R6 Skins (wave 3 of `docs/tracks/R7-contract.md`, with an art part). **Ask the producer before every merge.**
 **Last updated:** 2026-10-22
 
 **Repository:** https://github.com/jfilipegm/gladiator-roguelike (public, branch `main`, remote `origin`, `.blend` files via Git LFS). Work on a branch per milestone, push as you go, merge through a PR; release every playable build (`Tools/release`).

@@ -1,7 +1,7 @@
 # Progress
 
 **Current phase:** Phase 5 — expansion
-**Current milestone:** **v0.24.0 the Roman look is released** (PR #31 merged 2026-10-22 18:27 with the producer's OK). The producer is testing it to find bugs: fix those first on branch `phase5-playtest3`. Then, the producer said "proceed with developments" (and skipped the question of what next), so the order is my recommendation: **a clip recording mode** (hide the HUD, cinematic camera, slow motion / freeze, staged moments) for the Steam marketing clips, then **Steam-ready basics** (display options, gamepad prompts, key rebinding, a credits page). R4/R5 audio wait (the producer is gathering sounds). Producer picks: memory `ui-look-picks`. **Ask the producer before every merge.**
+**Current milestone:** **P3 — the producer's v0.24.0 UI notes** (branch `phase5-playtest3`, release v0.25.0). The producer tested v0.24.0 and sent 19 notes + 20 screenshots: all of them, my call on each and the worker split are in `docs/tracks/P3-notes.md` (screenshots in the shared notes folder `p3-notes/`). Next steps: add the new `FrameKind` members to `UiFrames.cs`, write `docs/tracks/P3-contract.md`, start three workers (P3-art, P3-B in-run, P3-C menus + kit), merge art → C → B, screenshots (both "LV" and "LEVEL" for the producer). After P3: the clip recording mode, then Steam-ready basics (the producer said "proceed with developments"). R4/R5 audio wait for the producer's sounds. **Ask the producer before every merge.**
 **Last updated:** 2026-10-22
 
 **Repository:** https://github.com/jfilipegm/gladiator-roguelike (public, branch `main`, remote `origin`, `.blend` files via Git LFS). Work on a branch per milestone, push as you go, merge through a PR; release every playable build (`Tools/release`).

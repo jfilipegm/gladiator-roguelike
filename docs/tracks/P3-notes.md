@@ -1,0 +1,38 @@
+# P3 — the producer's v0.24.0 UI notes (2026-10-22 19:40)
+
+The producer played v0.24.0 and sent 19 notes with 20 screenshots. The screenshots are in the shared notes folder
+`~/.config/Claude/side-session-notes/local_b89aff3c-4e3a-44a8-960d-dc6389ed4b89/p3-notes/` (`01_play_focus.png` …
+`20_xp_bar.webp`; 14 and 15 are the producer's *reference* images: Roman aurei, a skull in a galea. They are references
+only: we draw our own 8-bit art, CLAUDE.md §2.11).
+
+Branch `phase5-playtest3` (cut from main after v0.24.0). Release: **v0.25.0**. Ask the producer before merging.
+
+## The notes (the producer's words, condensed) and the call for each
+
+| # | Shot | Note | Call (mine where the note leaves a choice) | Part |
+|---|---|---|---|---|
+| 1 | 01 | The yellow rectangle around the focused PLAY plate: remove it, or make it follow the button's shape | A gold rim that **follows the ansata's silhouette** (new frame kinds `AnsataGlowBronze/Marble`, sliced with the plate's borders + 2 art px), on every focused plate (menus and in-run buttons). No rectangle anywhere. | art + C |
+| 2 | 02 | "RENOWN" on the bronze Renown plate is barely visible | The label in the marble (light) colour, not engraved-dark | C |
+| 3 | 03 | The GLADIATOR title plaque is horrible and too big | No mosaic box: the word in Marcellus SC gold (Outline look) over the sky, smaller, flanked by laurel branches, a thin gold meander rule under it, the tagline under that. (A real logo stays in BACKLOG.) | C |
+| 4 | 04 | Text too close to the frame's bottom (the tablet's "Starts with Rusty Gladius") | **One padding rule everywhere:** every label sits inside its frame's content rect = frame rect − `UiFrames.Padding` − 8 units. A `UiKit.ContentRect` helper and an audit test over every screen (`UiAudit`). | C (+ B on in-run screens) |
+| 5 | 05 | The daily's read-only Edicts page shows "ON" chips you can't toggle | Read-only: no ON chip and no OFF / LOCKED words; the day's two edicts keep their orange-red ring and say "TODAY'S EDICT" | C |
+| 6 | 06 | Codex tab's NEW mark is a random yellow square, badly placed | A **crimson wax seal with a gold "N"** (novum), new frame kind `SealNew`, on the tab's top-right corner over the last letter; the same seal replaces "• n NEW" on the main menu's CODEX plate and the NEW word on Codex entries | art + C |
+| 7 | 07 | Codex entry footer ("Reward: …") too close to the bottom | The padding rule (4) | C |
+| 8 | 08 | Dark text on a dark background (the Codex key line) | Light text on dark surfaces, dark on light; **audit test:** every label's colour vs the surface it sits on (each frame kind gets a light/dark surface tone) has a contrast ratio ≥ 3:1; labels over the 3D scene need the Outline look | C (+ B) |
+| 9 | 09 | No meander under buttons (it sits too close to the gladiator tiles) | Remove the meander under the active Codex tab (and under any button) | C |
+| 10 | 10 | No yellow ring around the picked gladiator tile; the wreath on top is enough; make the wreath read as gold laurel (green tones?) | Picked = the wreath (redrawn: gold leaves with green shading, a red ribbon) + the tile's lift; hovered = a brighter face; no rings on tiles | art + C |
+| 11 | 11 | The ‹ › arrows are plain "<" ">" | Pixel **pilum-tip arrows** (bronze spearheads, left/right; new kinds `ArrowLeft/ArrowRight`), no plate behind; brighter when hovered. Skin strip and the Codex pager | art + C |
+| 12 | 12 | The vertical arena ladder limits how many arenas fit | **An arena grid like the gladiator grid:** a frame holding small tiles (thumbnail, numeral, name; locked = dark + lock + ???), the wax tablet on the right as now. Rows of 3 (6 arenas = 2 rows), scales to more | C |
+| 13 | 13–15 | HP bar too close to the plate's top; heart, coin and skull not centred with their bars/numbers; the coin is too arcade-like (want a Roman gold coin, refs 14); the skull is crooked (want a skull in a galea with a red crest, ref 15: the kills are Romans) | Padding + vertical centring on the HUD plate; new 16×16 art-px icons `IconHeart`, `IconAureus` (gold coin with a laureate profile), `IconSkullGalea` (skull in a galea, red crest) | art + B |
+| 14 | 16 | "LV 2" comes out of its box, the box is mostly empty; try "LEVEL"; the laurel and the Favor bar are too close to the bottom | Re-lay the plate: "LEVEL 2" inside the padding, the laurel + Favor trough with bottom padding, a smaller plate if it's still empty. Screenshot both "LV" and "LEVEL" for the producer (a constant) | B |
+| 15 | 17 | When levelling up, show your items like the stats: an inventory box on the **left** of the cards; hover an item to see what it does | `InventoryPanel`: weapons (4 slots) and Boons (6 slots) as icon tiles in a bronze column mirroring the stats column; hover / gamepad focus shows a tooltip (name, level, CardText description). Layout A becomes symmetric: inventory left, cards centred, stats right | B |
+| 16 | 18 | Keep the drop, lose the left/right sway; add a vertical wave as it unrolls (flapping) | No rotation; while dropping and settling, a wave travels across the cloth (vertices displaced vertically, amplitude decaying), the words ride the wave; zero GC | B |
+| 17 | 19 | The pause stats look different from the level-up's; make the pause like the level-up: PAUSED and the commands in the centre (where the cards are), inventory left, stats right | Pause = the level-up's frame: PAUSED (Shout) in the title's place, three ansata plates in the centre (RESUME, OPTIONS, MAIN MENU), the inventory left, the same bronze stats column right. The P1 "where each stat comes from" breakdown moves into a hover tooltip on a stat row (my call, keeps that info) | B |
+| 18 | 20 | XP bar ~15 % bigger | 18 → 21 tall | B |
+| 19 | — | Hovering a new-weapon card makes the stats column jump (it makes room for weapon info) | The weapon's info goes to the inventory instead: a **ghost icon** (desaturated, translucent) in the next free weapon slot with its tooltip; the stats column shows only stats and their changes, fixed rows, no jumping | B |
+
+## The split (workers write code, no Unity; this session integrates)
+- **P3-art:** `PixelSrc/ui_frames.py` (+ `UiFrames.png/.txt`), the new kinds' index lines, the gallery page showing them. Kinds: `AnsataGlowBronze`, `AnsataGlowMarble`, `SealNew`, `ArrowLeft`, `ArrowRight`, `IconHeart`, `IconAureus`, `IconSkullGalea`, the redrawn `LaurelWreath`. Max 3 iterations per asset, preview reviewed.
+- **P3-B in-run:** `Hud.cs`, `LevelUpPanel.cs`, `StatsPanel.cs`, `Core/Layout/LevelUpLayout.cs`, new `InventoryPanel.cs` (+ tooltip), `Theme/VexillumBanner.cs` (+ a cloth-wave mesh effect), `RunEndPanel.cs` if needed; their tests.
+- **P3-C menus + kit:** `MainMenu.cs`, `LanistaTablet.cs`, `EdictsPanel.cs`, `CodexPanel.cs`, `RosterGrid.cs`, `SkinStrip.cs`, `ArenaLadder.cs` (→ the arena grid), `DailyPanel.cs`, `OptionsPanel.cs`, `Theme/UiKit.cs` (shape-following focus, `ContentRect`), new `Theme/UiAudit.cs` (padding + contrast checks) and `UiAuditTests` over the menus **and** the in-run screens; their tests.
+- **The orchestrator first** adds the new `FrameKind` members to `UiFrames.cs` on the branch (append-only), so B and C compile against them before the art lands; then a short contract (`docs/tracks/P3-contract.md`: names, sizes, the symmetric layout maths, UiAudit API) and the three worker cards. Merge order: art → C → B (C owns UiKit; B's buttons pick up the new focus).

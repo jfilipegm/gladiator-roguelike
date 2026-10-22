@@ -14,6 +14,8 @@ namespace Gladiator.Gameplay
         public static ArenaMaster Instance { get; private set; }
 
         public FavorConfig config;
+        [Tooltip("Boredom rises × this (R7: the Fickle Crowd edict); the fall is unchanged.")]
+        public float boredomMul = 1f;
 
         public const string RestlessText = "THE CROWD GROWS RESTLESS!";
         public const string ChallengeText = "A CHAMPION'S CHALLENGE!";
@@ -26,7 +28,8 @@ namespace Gladiator.Gameplay
         readonly float[] _kills = new float[Ring];
         int _head, _count;
         float _clock, _lastWhim = -9999f;
-        uint _rng = 0xB0BA5u;
+        const uint RngSalt = 0xB0BA5u;
+        uint _rng = RngSalt;
 
         int _championUid = -1, _championSlot = -1;
         float _championUntil;
@@ -39,7 +42,13 @@ namespace Gladiator.Gameplay
         /// <summary>Last frame's dull test (tests, debug).</summary>
         public bool Dull { get; private set; }
 
-        void Awake() => Instance = this;
+        void Awake()
+        {
+            Instance = this;
+            // Q14 (R7): seeded from the run's GameRandom (GameSession seeds it per run), so the whims change from run to run
+            _rng = GameRandom.NextUInt() ^ RngSalt;
+            if (_rng == 0u) _rng = RngSalt;
+        }
 
         void OnEnable()
         {
@@ -94,7 +103,7 @@ namespace Gladiator.Gameplay
             int target = Director.Instance != null && Director.Instance.isActiveAndEnabled ? Director.Instance.TargetAlive : em.AliveCount;
             float nearest = em.TryGetNearest(player, config.dullEnemyDistance, out _) ? 0f : float.MaxValue;
             Dull = !bossOn && config.IsDull(KillsInWindow(config.dullWindow), target, nearest);
-            Boredom = Mathf.Clamp(Boredom + (Dull ? config.boredomRise : -config.boredomFall) * dt, 0f, 100f);
+            Boredom = Mathf.Clamp(Boredom + (Dull ? config.boredomRise * boredomMul : -config.boredomFall) * dt, 0f, 100f);
             if (Boredom >= 100f && config.WhimAllowed(run.Elapsed, _clock - _lastWhim, bossOn)) FireWhim();
         }
 

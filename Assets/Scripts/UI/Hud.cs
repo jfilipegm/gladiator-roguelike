@@ -51,6 +51,7 @@ namespace Gladiator.UI
 
         // U1: the announcer's banner (crimson: swarms, elites, whims; purple: the boss's beats) and its one waiting slot
         VexillumBanner _banner;
+        CanvasGroup _bannerGroup; // hides the banner while the game is paused
         string _pendingText;
         BannerCloth _pendingCloth;
         float _pendingSeconds;
@@ -317,7 +318,13 @@ namespace Gladiator.UI
                 new Vector2(0, -380), new Vector2(1100, 64), TextLook.Outline), 30f, 48f);
             _announce.alpha = 0f;
             // the banner hangs under the boss bar: crossbar top at y 204 (it has its own canvas: its motion re-batches only itself)
-            _banner = new VexillumBanner(canvas, top, new Vector2(0f, -204f));
+            // under a group that hides it while the game is paused: frozen mid-sway it would hang behind PAUSED or LEVEL UP!
+            var holder = new GameObject("BannerHolder", typeof(RectTransform), typeof(CanvasGroup));
+            holder.transform.SetParent(canvas, false);
+            UiFactory.Stretch((RectTransform)holder.transform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            _bannerGroup = holder.GetComponent<CanvasGroup>();
+            _bannerGroup.blocksRaycasts = _bannerGroup.interactable = false;
+            _banner = new VexillumBanner(holder.transform, top, new Vector2(0f, -204f));
 
             var introRoot = new GameObject("Intro", typeof(RectTransform), typeof(CanvasGroup));
             introRoot.transform.SetParent(canvas, false);
@@ -649,6 +656,8 @@ namespace Gladiator.UI
                 return;
             }
             _banner.Tick(dt);
+            float shown = TimeController.IsPaused ? 0f : 1f;
+            if (_bannerGroup.alpha != shown) _bannerGroup.alpha = shown;
             if (_banner.Visible || _pendingText == null) return;
             string text = _pendingText;
             _pendingText = null;
@@ -712,6 +721,10 @@ namespace Gladiator.UI
                 if (_build == null) _build = player.GetComponent<PlayerBuild>();
                 if (_build != null && _build.State.Version != _lastBuildVersion) RefreshStrip();
             }
+
+            // the clock is frozen under the cards and LEVEL UP! sits over it: hide it until they close
+            float timerAlpha = LevelUpController.Instance != null && LevelUpController.Instance.IsOpen ? 0f : 1f;
+            if (_timer.alpha != timerAlpha) _timer.alpha = timerAlpha;
 
             DrawInteractables(run);
             DrawFavor(unscaledDt);

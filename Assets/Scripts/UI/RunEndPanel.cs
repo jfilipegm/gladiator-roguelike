@@ -27,7 +27,7 @@ namespace Gladiator.UI
         public TMP_FontAsset font;
         public Material fontMaterial;
 
-        const float TitleY = 300f, BannerWidth = 900f, BannerDrop = 72f; // the banner's bar sits so its cloth centres on the title's place
+        const float TitleY = 300f, BannerWidth = 900f, BannerClothH = 180f, BannerDrop = 132f; // a tall cloth for Shout 96; its foot where the 120 one's was
         const float ButtonsY = -372f, ButtonPitch = 360f, DailyPitch = 180f;
         static readonly Vector2 ButtonSize = new Vector2(340f, 66f);
         const float ButtonFont = 28f;
@@ -74,7 +74,7 @@ namespace Gladiator.UI
             _title = UiKit.Text("Title", canvas, "", TextRole.Shout, 132f, _goldBright, TextAlignmentOptions.Center, mid, mid,
                 new Vector2(0f, TitleY), new Vector2(1400f, 150f), TextLook.Outline);
             AutoSize(_title, 72f, 132f);
-            _banner = new VexillumBanner(canvas, mid, new Vector2(0f, TitleY + BannerDrop), BannerWidth);
+            _banner = new VexillumBanner(canvas, mid, new Vector2(0f, TitleY + BannerDrop), BannerWidth, BannerClothH);
             var soft = _ink;
             soft.a = 0.8f;
             _subtitle = UiKit.Text("Subtitle", canvas, "", TextRole.Body, 36f, soft, TextAlignmentOptions.Center, mid, mid,
@@ -130,7 +130,7 @@ namespace Gladiator.UI
             var mid = new Vector2(0.5f, 0.5f);
             UiKit.Text(label, card, label, TextRole.Title, 22f, _waxInk, TextAlignmentOptions.Left, mid, mid, new Vector2(-110f, y), new Vector2(340f, 50f));
             var value = UiKit.Text(label + "Value", card, "0", TextRole.Number, 30f, _ink, TextAlignmentOptions.Right, mid, mid, new Vector2(170f, y), new Vector2(220f, 50f));
-            AutoSize(value, 18f, 30f); // "not recorded", "88% left"
+            AutoSize(value, 18f, 30f); // "NOT RECORDED", "88% LEFT"
             return value;
         }
 
@@ -194,11 +194,11 @@ namespace Gladiator.UI
             _gold.SetText("{0}", run != null ? run.Gold : 0);
             _damage.SetText("{0}", run != null ? Mathf.Round(run.DamageDealt) : 0);
             var boss = BossController.Active;
-            if (boss == null || run == null || !run.TimerDone) _boss.text = "not reached";
+            if (boss == null || run == null || !run.TimerDone) _boss.text = "NOT REACHED"; // Luckiest Guy's lowercase is a mixed bag
             else if (boss.Defeated) _boss.text = "DEFEATED";
-            else _boss.SetText("{0}% left", Mathf.Round(boss.Hp01 * 100f));
+            else _boss.SetText("{0}% LEFT", Mathf.Round(boss.Hp01 * 100f));
             var rewards = c.Rewards;
-            if (rewards == null) { _renown.text = "not recorded"; SetUnlock(""); return; }
+            if (rewards == null) { _renown.text = "NOT RECORDED"; SetUnlock(""); return; }
             _renown.text = RenownLine(rewards);
             SetUnlock(UnlockLines(rewards));
         }
@@ -229,7 +229,7 @@ namespace Gladiator.UI
         /// </summary>
         void StyleBannerWords()
         {
-            var words = _banner.Root != null ? _banner.Root.GetComponentInChildren<TextMeshProUGUI>(true) : null;
+            var words = _banner.Words;
             if (words == null) return;
             words.color = _ink;
             if (words.enableAutoSizing) words.fontSizeMax = YouDiedSize;

@@ -41,6 +41,7 @@ namespace Gladiator.EditorTools
 
         // the material looks: tune them in the gallery, then here
         const float OutlineWidth = 0.2f;          // dark ink rim (SDF units)
+        const float OutlineWidthThin = 0.32f;     // Marcellus / Marcellus SC: thin strokes need a wider rim to read over sky and sand
         const float OutlineFaceDilate = 0.1f;     // thickens the face so the rim doesn't eat thin strokes
         const float OutlineDropAlpha = 0.9f;      // the drop shadow under outlined text
         const float OutlineDropOffsetY = -0.6f;
@@ -127,7 +128,7 @@ namespace Gladiator.EditorTools
             {
                 var fa = MakeFont(f.Ttf, f.Asset, UiTheme.Glyphs(f.Role) + UiTheme.Symbols, force, fallbacks);
                 if (fa == null) continue;
-                MakePresets(fa, TmpDir + "/FN_" + f.Name + " SDF");
+                MakePresets(fa, TmpDir + "/FN_" + f.Name + " SDF", f.Role == TextRole.Title || f.Role == TextRole.Body);
                 CopyLicence(f.LicencePath, f.Name + "-" + f.Licence);
                 made++;
             }
@@ -191,7 +192,7 @@ namespace Gladiator.EditorTools
 
         /// <summary>The three looks as material assets sharing the font's atlas: `<base> - Flat/Outline/Engraved.mat`.
         /// Existing materials are updated in place (their GUIDs stay).</summary>
-        static void MakePresets(TMP_FontAsset fa, string basePath)
+        static void MakePresets(TMP_FontAsset fa, string basePath, bool thin)
         {
             var theme = AssetDatabase.LoadAssetAtPath<UiTheme>(ThemePath);
             Color ink = theme != null ? theme.outlineInk : (Color)new Color32(0x1A, 0x0F, 0x08, 0xFF);
@@ -220,7 +221,7 @@ namespace Gladiator.EditorTools
                 {
                     mat.EnableKeyword(ShaderUtilities.Keyword_Outline);
                     mat.SetFloat(ShaderUtilities.ID_FaceDilate, OutlineFaceDilate);
-                    mat.SetFloat(ShaderUtilities.ID_OutlineWidth, OutlineWidth);
+                    mat.SetFloat(ShaderUtilities.ID_OutlineWidth, thin ? OutlineWidthThin : OutlineWidth);
                     mat.SetColor(ShaderUtilities.ID_OutlineColor, ink);
                     mat.EnableKeyword(ShaderUtilities.Keyword_Underlay);
                     mat.SetColor(ShaderUtilities.ID_UnderlayColor, new Color(ink.r, ink.g, ink.b, OutlineDropAlpha));

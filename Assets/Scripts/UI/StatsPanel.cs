@@ -75,7 +75,9 @@ namespace Gladiator.UI
         public void SetPickScale(float k)
         {
             _pickScale = Mathf.Clamp(k, 0.1f, 1f);
-            if (_layoutMode == Mode.Pick) _box.localScale = new Vector3(_pickScale, _pickScale, 1f);
+            if (_layoutMode != Mode.Pick) return;
+            _box.localScale = new Vector3(_pickScale, _pickScale, 1f);
+            _box.anchoredPosition = new Vector2(-Margin, LevelUpLayout.ColumnTop(((RectTransform)_canvas.transform).rect.height)); // the canvas may have changed size
         }
 
         int _key = int.MinValue, _promptKey = int.MinValue;

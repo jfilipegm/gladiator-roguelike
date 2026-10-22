@@ -178,13 +178,16 @@ namespace Gladiator.UI
             _statsPanel.cards = this;
         }
 
+        Vector2 _laidOutFor; // the canvas size LayoutContent last fitted
+
         /// <summary>
         /// Layout A on this canvas (LevelUpLayout): the content's scale and x, the title's room (it may not run off either
-        /// edge), and the stats column's scale. Only on a redraw (open, reroll, banish), never per frame.
+        /// edge), and the stats column's scale. On a redraw (open, reroll, banish) and when the canvas changes size.
         /// </summary>
         void LayoutContent()
         {
             var size = ((RectTransform)_canvas.transform).rect.size;
+            _laidOutFor = size;
             if (size.x < 1f || size.y < 1f) size = MenuLayout.Reference;
             _fit = LevelUpLayout.For(size, _shownCount);
             float s = _fit.ContentScale;
@@ -356,6 +359,7 @@ namespace Gladiator.UI
             if (!InGrace) ReadInput(c);
             if (!c.IsOpen) return;
             if (c.OffersVersion != _drawnVersion) Redraw(c);
+            else if (((RectTransform)_canvas.transform).rect.size != _laidOutFor) LayoutContent(); // the window changed size mid-pick
             if (_selected >= _shownCount) _selected = Mathf.Max(0, _shownCount - 1);
             RefreshDynamic(c);
         }

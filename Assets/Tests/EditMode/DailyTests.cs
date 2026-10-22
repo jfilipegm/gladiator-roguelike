@@ -487,11 +487,11 @@ namespace Gladiator.Tests
         [Test]
         public void Save_V2File_MigratesToV3()
         {
-            Assert.AreEqual(3, SaveData.CurrentVersion);
+            Assert.GreaterOrEqual(SaveData.CurrentVersion, 3, "R8 made it 3; later items go higher");
             File.WriteAllText(_path, "{\"version\":2,\"renown\":7,\"runs\":4,\"edictsChosen\":[\"iron_hides\"],\"bestEdictWin\":1," +
                                      "\"unlocked\":[\"edicts\"]}");
             var d = SaveSystem.Load(_path);
-            Assert.AreEqual(3, d.version);
+            Assert.AreEqual(SaveData.CurrentVersion, d.version);
             Assert.AreEqual(7, d.renown);
             Assert.AreEqual(4, d.runs);
             CollectionAssert.AreEqual(new[] { "iron_hides" }, d.edictsChosen, "nothing lost");
@@ -511,7 +511,7 @@ namespace Gladiator.Tests
             StringAssert.Contains("\"dailies\"", json);
             StringAssert.Contains("\"dailyAttempt\"", json);
             var back = SaveSystem.Load(_path);
-            Assert.AreEqual(3, back.version, "written as v3");
+            Assert.AreEqual(SaveData.CurrentVersion, back.version, "written at the current version");
             Assert.AreEqual(Day, back.dailyAttempt);
             Assert.AreEqual(1, back.dailies.Count);
             Assert.AreEqual(1904, back.dailies[0].kills);
@@ -524,9 +524,9 @@ namespace Gladiator.Tests
             Assert.AreEqual(0, bare.dailyAttempt);
             Assert.AreEqual(0, bare.dailiesPlayed);
             Assert.AreEqual(0, bare.dailiesWon);
-            Assert.AreEqual(3, bare.version);
+            Assert.AreEqual(SaveData.CurrentVersion, bare.version);
             bare.Migrate();
-            Assert.AreEqual(3, bare.version, "idempotent");
+            Assert.AreEqual(SaveData.CurrentVersion, bare.version, "idempotent");
         }
 
         [Test]
@@ -534,7 +534,7 @@ namespace Gladiator.Tests
         {
             File.WriteAllText(_path, "{\"version\":1,\"renown\":5,\"unlocked\":[\"gorms_flail\"]}");
             var d = SaveSystem.Load(_path);
-            Assert.AreEqual(3, d.version);
+            Assert.AreEqual(SaveData.CurrentVersion, d.version);
             Assert.IsNotNull(d.edictsChosen, "the v2 step");
             Assert.IsNotNull(d.dailies, "the v3 step");
             Assert.IsTrue(d.IsUnlocked("gorms_flail"));

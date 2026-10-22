@@ -169,11 +169,11 @@ namespace Gladiator.UI
 
             _content = UiFactory.Rect("Content", box, mid, mid, new Vector2(0, -40), new Vector2(1600, 660));
             BuildRoster(box);
-            UiKit.Button("Back", box, "BACK", ButtonStyle.Secondary, mid, mid, new Vector2(-640, -440), new Vector2(220, 66), () => Close(), 30f);
-            UiKit.Button("Prev", box, "<", ButtonStyle.Secondary, mid, mid, new Vector2(-150, -440), new Vector2(96, 66), () => Turn(-1), 30f);
-            UiKit.Button("Next", box, ">", ButtonStyle.Secondary, mid, mid, new Vector2(150, -440), new Vector2(96, 66), () => Turn(1), 30f);
-            _page = Text(box, "", TextRole.Title, 26, th.ink, new Vector2(0, -440), new Vector2(200, 40), TextAlignmentOptions.Center, TextLook.Outline);
-            Text(box, "Left / Right: tab    Up / Down: page or gladiator    Esc / B: back", TextRole.Body, 22, th.dust, new Vector2(530, -440), new Vector2(640, 32),
+            UiKit.Button("Back", box, "BACK", ButtonStyle.Secondary, mid, mid, new Vector2(-640, -446), new Vector2(220, 66), () => Close(), 30f);
+            UiKit.Button("Prev", box, "<", ButtonStyle.Secondary, mid, mid, new Vector2(-150, -446), new Vector2(96, 66), () => Turn(-1), 30f);
+            UiKit.Button("Next", box, ">", ButtonStyle.Secondary, mid, mid, new Vector2(150, -446), new Vector2(96, 66), () => Turn(1), 30f);
+            _page = Text(box, "", TextRole.Title, 26, th.ink, new Vector2(0, -446), new Vector2(200, 40), TextAlignmentOptions.Center, TextLook.Outline);
+            Text(box, "Left / Right: tab    Up / Down: page or gladiator    Esc / B: back", TextRole.Body, 22, th.dust, new Vector2(530, -446), new Vector2(640, 32),
                 TextAlignmentOptions.Right, TextLook.Outline);
 
             Collect();
@@ -582,12 +582,13 @@ namespace Gladiator.UI
             int per = PerPage(_tab), start = _pageIndex * per;
             bool wide = per == 6;
             int cols = wide ? 2 : 3;
-            Vector2 size = wide ? new Vector2(780, 206) : new Vector2(516, 206);
+            Vector2 size = wide ? new Vector2(780, 224) : new Vector2(516, 206); // wide: four Body 18 lines under a bar (measured 90.3)
+            float top = wide ? 217.5f : 222f;
             for (int k = 0; k < per && start + k < list.Count; k++)
             {
                 int i = start + k;
                 var e = list[i];
-                var pos = new Vector2((k % cols - (cols - 1) * 0.5f) * (size.x + 12f), 222f - (k / cols) * (size.y + 12f));
+                var pos = new Vector2((k % cols - (cols - 1) * 0.5f) * (size.x + 12f), top - (k / cols) * (size.y + 12f));
                 DrawCard(e, pos, size, wide, _tab == Tab.Market && k == _focus);
                 if (e.New) { e.New = false; list[i] = e; MetaProgress.MarkSeen(e.Id, _save); } // seen now: not NEW next time
             }
@@ -629,13 +630,13 @@ namespace Gladiator.UI
             var hint = lit ? th.marbleInk : th.dust;
             var look = lit ? TextLook.Engraved : TextLook.Flat;
 
-            Text(card, "Kind", e.Kind, TextRole.Title, 18, lit ? th.bronzeDark : th.dust, new Vector2(cx, halfH - 26f), new Vector2(w, 24), TextAlignmentOptions.Left, look);
+            Text(card, "Kind", e.Kind, TextRole.Title, 18, lit ? th.bronzeDark : th.dust, new Vector2(cx, halfH - 24f), new Vector2(w, 24), TextAlignmentOptions.Left, look);
             float newW = e.New ? 64f : 0f;
-            var title = Text(card, "Title", e.Title, TextRole.Title, 28, lit ? ink : th.dust, new Vector2(cx - newW * 0.5f, halfH - 56f), new Vector2(w - newW, 36), TextAlignmentOptions.Left, look);
+            var title = Text(card, "Title", e.Title, TextRole.Title, 28, lit ? ink : th.dust, new Vector2(cx - newW * 0.5f, halfH - 52f), new Vector2(w - newW, 34), TextAlignmentOptions.Left, look);
             title.textWrappingMode = TextWrappingModes.NoWrap;
             title.enableAutoSizing = true; title.fontSizeMin = 18; title.fontSizeMax = 28;
 
-            float bodyTop = halfH - 76f, bodyBottom = -halfH + (bar || buy ? 70f : footer ? 38f : 20f);
+            float bodyTop = halfH - 70f, bodyBottom = -halfH + (bar || buy ? 60f : footer ? 32f : 18f);
             var body = Text(card, "Body", e.Body, TextRole.Body, 22, hint, new Vector2(cx, (bodyTop + bodyBottom) * 0.5f), new Vector2(w, bodyTop - bodyBottom), TextAlignmentOptions.TopLeft, look);
             body.enableAutoSizing = true; body.fontSizeMin = 18; body.fontSizeMax = 22;
 
@@ -643,19 +644,19 @@ namespace Gladiator.UI
             {
                 float barW = w - (buy ? 260f : 170f);
                 var fill = UiKit.Bar("Progress", card, e.Open ? th.gain : th.gold, mid, mid,
-                    new Vector2(x0 + barW * 0.5f, -halfH + 50f), new Vector2(barW, 24));
+                    new Vector2(x0 + barW * 0.5f, -halfH + 44f), new Vector2(barW, 24));
                 fill.fillAmount = Mathf.Clamp01(e.Progress);
-                Text(card, "ProgressText", e.ProgressText ?? "", TextRole.Number, 20, th.ink, new Vector2(x0 + barW + 84f, -halfH + 50f), new Vector2(160, 28), TextAlignmentOptions.Left, TextLook.Outline);
+                Text(card, "ProgressText", e.ProgressText ?? "", TextRole.Number, 20, th.ink, new Vector2(x0 + barW + 84f, -halfH + 44f), new Vector2(160, 28), TextAlignmentOptions.Left, TextLook.Outline);
             }
             if (footer)
-                Text(card, "Footer", e.Footer, TextRole.Body, 18, lit ? th.bronzeDark : th.dust, new Vector2(cx, -halfH + 26f), new Vector2(w, 24), TextAlignmentOptions.Left, look);
-            if (e.New) Text(card, "New", "NEW", TextRole.Title, 20, lit ? th.bronze : th.gold, new Vector2(halfW - 50f, halfH - 26f), new Vector2(70, 26), TextAlignmentOptions.Right, look);
+                Text(card, "Footer", e.Footer, TextRole.Body, 18, lit ? th.bronzeDark : th.dust, new Vector2(cx, -halfH + 18f), new Vector2(w, 24), TextAlignmentOptions.Left, look);
+            if (e.New) Text(card, "New", "NEW", TextRole.Title, 20, lit ? th.bronze : th.gold, new Vector2(halfW - 50f, halfH - 24f), new Vector2(70, 26), TextAlignmentOptions.Right, look);
             if (buy)
             {
                 var u = e.Buy;
                 bool afford = _save.renown >= u.renownCost;
                 var plate = UiKit.Button("Buy", card, afford ? "BUY " + u.renownCost : "NEED " + (u.renownCost - _save.renown) + " MORE", ButtonStyle.Primary, mid, mid,
-                    new Vector2(halfW - 136f, -halfH + 40f), new Vector2(240, 48), () => Buy(u), 22f);
+                    new Vector2(halfW - 136f, -halfH + 36f), new Vector2(240, 48), () => Buy(u), 22f);
                 var label = UiFactory.Label(plate.Button);
                 label.enableAutoSizing = true; label.fontSizeMin = 18f; label.fontSizeMax = 22f;
                 plate.Button.interactable = afford;

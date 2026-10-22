@@ -206,7 +206,7 @@ namespace Gladiator.UI
         /// <summary>Death: the crimson banner drops and stays, "YOU DIED" on its cloth. Otherwise the gold title between laurels.</summary>
         void ShowTitle(bool died, bool bossDown)
         {
-            if (_titleLaurels != null) { Destroy(_titleLaurels.gameObject); _titleLaurels = null; }
+            if (_titleLaurels != null) _titleLaurels.gameObject.SetActive(false); // hidden, not destroyed: UiKit.Laurels re-places the same pair
             if (died)
             {
                 _title.text = "";
@@ -219,6 +219,7 @@ namespace Gladiator.UI
             _title.color = _goldBright;
             _title.ForceMeshUpdate(true, true);
             _titleLaurels = UiKit.Laurels("TitleLaurels", _title);
+            _titleLaurels.gameObject.SetActive(true);
         }
 
         /// <summary>
@@ -239,10 +240,11 @@ namespace Gladiator.UI
         void SetUnlock(string text)
         {
             _unlock.text = text;
-            if (_unlockLaurels != null) { Destroy(_unlockLaurels.gameObject); _unlockLaurels = null; }
+            if (_unlockLaurels != null) _unlockLaurels.gameObject.SetActive(false);
             if (string.IsNullOrEmpty(text)) return;
             _unlock.ForceMeshUpdate(true, true);
             _unlockLaurels = UiKit.Laurels("UnlockLaurels", _unlock, 16f);
+            _unlockLaurels.gameObject.SetActive(true);
         }
 
         /// <summary>The Renown row's words (tests).</summary>

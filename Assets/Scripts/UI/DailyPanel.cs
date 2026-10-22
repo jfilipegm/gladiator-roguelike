@@ -113,7 +113,7 @@ namespace Gladiator.UI
         public Component StatusLabel => _status;
         public Component ClockLabel => _next;
         /// <summary>Ledger line `i`'s outcome has the laurels (a won day).</summary>
-        public bool LedgerHasLaurels(int i) => i >= 0 && i < LedgerRows && _ledger[i].Laurels != null;
+        public bool LedgerHasLaurels(int i) => i >= 0 && i < LedgerRows && _ledger[i].Laurels != null && _ledger[i].Laurels.gameObject.activeSelf;
 
         /// <summary>Tests (their assembly has no TextMeshPro): the first active text under `root` that's cut off after
         /// autosizing, as "Name: words", or null when everything fits.</summary>
@@ -474,12 +474,15 @@ namespace Gladiator.UI
                 v.Renown.text = "+" + r.renown.ToString(CultureInfo.InvariantCulture);
                 v.Frame.enabled = r.date == _date;
                 // laurel means victory (spec §1.3): a won day's outcome between two small branches
-                if (v.Laurels != null) { UnityEngine.Object.Destroy(v.Laurels.gameObject); v.Laurels = null; }
-                if (r.outcome == (int)RunOutcome.Survived)
+                // one pair per row, shown or hidden (a Destroy waits for the frame's end, so a redraw in the same frame
+                // would find and re-place the pair being destroyed)
+                bool won = r.outcome == (int)RunOutcome.Survived;
+                if (won)
                 {
                     v.Outcome.ForceMeshUpdate(true, true);
                     v.Laurels = UiKit.Laurels("Laurels", v.Outcome, 6f);
                 }
+                if (v.Laurels != null) v.Laurels.gameObject.SetActive(won);
             }
             _ledgerEmpty.gameObject.SetActive(n == 0);
             _ledgerCounts.text = "PLAYED " + save.dailiesPlayed + "  ·  WON " + save.dailiesWon;

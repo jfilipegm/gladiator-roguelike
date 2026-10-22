@@ -10,7 +10,8 @@ namespace Gladiator.UI
     /// <summary>
     /// End-of-run screen: "YOU DIED" (orange-red), "SURVIVED!" or "VICTORY!" (gold), the run's stats, the Renown it
     /// earned, any unlock it earned (gold banner), Retry (button / R / Enter / gamepad South) and Main Menu.
-    /// Shown while RunEndController.ScreenShown.
+    /// Shown while RunEndController.ScreenShown. R7: under edicts the Renown row shows the multiplier,
+    /// "+124 ×1.65 = +205  (2310)" (bounties after it, never multiplied).
     /// </summary>
     public sealed class RunEndPanel : MonoBehaviour, ITickable
     {
@@ -48,6 +49,14 @@ namespace Gladiator.UI
             _bossLabel = card.transform.Find("Boss").GetComponent<TextMeshProUGUI>(); // named per arena in Fill
             _renown = StatRow(card.transform, "Renown", 6);
             _renown.color = Gold;
+            // R7: wider than the other values (it may read "+124 ×1.65 = +205 +50  (2310)"), shrinking before it overflows
+            var rr = _renown.rectTransform;
+            rr.anchoredPosition = new Vector2(80f, rr.anchoredPosition.y);
+            rr.sizeDelta = new Vector2(400f, rr.sizeDelta.y);
+            _renown.enableAutoSizing = true;
+            _renown.fontSizeMin = 22f;
+            _renown.fontSizeMax = 34f;
+            _renown.overflowMode = TextOverflowModes.Truncate;
             _unlock = UiFactory.Text("Unlock", canvas, "", 30, Gold, TextAlignmentOptions.Center, mid, mid, new Vector2(0, -296), new Vector2(1500, 84), font, fontMaterial);
             _unlock.enableAutoSizing = true; _unlock.fontSizeMin = 20; _unlock.fontSizeMax = 30;
 
@@ -119,9 +128,21 @@ namespace Gladiator.UI
             else _boss.SetText("{0}% left", Mathf.Round(boss.Hp01 * 100f));
             var rewards = c.Rewards;
             if (rewards == null) { _renown.text = "not recorded"; _unlock.text = ""; return; }
-            if (rewards.Bounty > 0) _renown.SetText("+{0} +{1}  ({2})", (float)rewards.Renown, (float)rewards.Bounty, (float)rewards.RenownTotal);
-            else _renown.SetText("+{0}  ({1})", (float)rewards.Renown, (float)rewards.RenownTotal);
+            _renown.text = RenownLine(rewards);
             _unlock.text = UnlockLines(rewards);
+        }
+
+        /// <summary>The Renown row's words (tests).</summary>
+        public string RenownText => _renown != null ? _renown.text : "";
+
+        /// <summary>"+124  (2310)", "+124 +50  (2360)" with a bounty, "+124 ×1.65 = +205 +50  (2410)" under edicts.</summary>
+        public static string RenownLine(RunRewards r)
+        {
+            string s = r.EdictBonus > 0f // R7-STUB(b)
+                ? "+" + r.BaseRenown + " " + EdictsPanel.MulText(1f + r.EdictBonus) + " = +" + r.Renown // R7-STUB(b)
+                : "+" + r.Renown;
+            if (r.Bounty > 0) s += " +" + r.Bounty;
+            return s + "  (" + r.RenownTotal + ")";
         }
 
         /// <summary>One line per new unlock (two at most, then "+N more in the Codex"), named by how it was earned.</summary>

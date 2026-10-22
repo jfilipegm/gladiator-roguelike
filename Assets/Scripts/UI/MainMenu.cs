@@ -21,6 +21,9 @@ namespace Gladiator.UI
     /// Mouse (click picks, a second click fights), keyboard (arrows/WASD move in 2D, Enter / Space fight, Esc back) and
     /// gamepad (d-pad, South, East). Under -bot the run starts at once (`-gladiator &lt;id&gt;` picks who and
     /// `-arena &lt;run id&gt;` where, earned or not).
+    /// R7: once the Edicts are earned (The Editor Takes Notice), the arena screen always shows, with an EDICTS button
+    /// between BACK and FIGHT! ("EDICTS · RENOWN ×1.65"; E / gamepad North) that opens the EdictsPanel over it; input goes
+    /// to the panel while it's open. FIGHT! starts the run under the chosen edicts (`-edicts a,b` for bot runs: any).
     /// </summary>
     public sealed class MainMenu : MonoBehaviour
     {
@@ -81,14 +84,22 @@ namespace Gladiator.UI
         ArenaTablet _arenaTablet;
         Button _arenaFight;
 
+        // R7: the Edicts (a layer over every screen, used from the arena screen)
+        Button _edictsButton;
+        string _edictsButtonText = "";
+        RunModifierDef[] _chosenEdicts = Array.Empty<RunModifierDef>();
+        bool _edictsShown;
+        TextMeshProUGUI _menuRenown;
+
         /// <summary>Earned: no unlock, or its unlock is in the save.</summary>
         public static bool IsAvailable(GladiatorDef g) => g != null && (g.unlock == null || MetaProgress.IsUnlocked(g.unlock));
         public static bool IsAvailable(RunDef r) => r != null && (r.unlock == null || MetaProgress.IsUnlocked(r.unlock));
 
         /// <summary>The arena FIGHT! starts in.</summary>
         public RunDef SelectedRun => _openRuns.Length > 0 ? _openRuns[Mathf.Clamp(_runPick, 0, _openRuns.Length - 1)] : run;
-        /// <summary>True when FIGHT! on the gladiator screen goes on to the arena screen (two or more arenas earned).</summary>
-        public bool AsksForArena => _openRuns.Length > 1;
+        /// <summary>True when FIGHT! on the gladiator screen goes on to the arena screen (two or more arenas earned, or the
+        /// Edicts: their button lives there).</summary>
+        public bool AsksForArena => _openRuns.Length > 1 || _edictsShown;
         RunDef[] AllRuns => runs != null && runs.Length > 0 ? runs : new[] { run };
 
         /// <summary>The gladiator FIGHT! starts with.</summary>
@@ -153,6 +164,78 @@ namespace Gladiator.UI
         /// <summary>The menu's CODEX button text ("CODEX • 3 NEW").</summary>
         public string CodexButtonText => UiFactory.Label(_menuButtons[1]).text;
 
+        // ---- the Edicts (R7) -----------------------------------------------------------------------------------
+
+        /// <summary>The Edicts page (tests drive it).</summary>
+        public EdictsPanel Edicts { get; private set; }
+        /// <summary>The arena screen's EDICTS button is there (the Edicts are earned and exist as data).</summary>
+        public bool EdictsButtonShown => _edictsButton != null && _edictsButton.gameObject.activeSelf;
+        /// <summary>The button's words without colour tags ("EDICTS · RENOWN ×1.45").</summary>
+        public string EdictsButtonText => _edictsButtonText;
+
+        /// <summary>Opens the Edicts page over the current screen (the EDICTS button, E, gamepad North).</summary>
+        public void OpenEdicts()
+        {
+            if (Edicts == null || !EdictsButtonShown || Edicts.IsOpen) return;
+            SfxPlayer.Play2D(SfxId.Card);
+            Edicts.Open();
+        }
+
+        /// <summary>The edicts FIGHT! starts under: `-edicts a,b` (bot / perf runs: any, earned or not), else the saved choice.</summary>
+        public RunModifierDef[] EdictsForLaunch()
+        {
+            string wanted = CommandLine.Get("-edicts");
+            if (!string.IsNullOrEmpty(wanted))
+            {
+                var list = new System.Collections.Generic.List<RunModifierDef>();
+                foreach (var raw in wanted.Split(','))
+                {
+                    string id = raw.Trim();
+                    if (id.Length == 0) continue;
+                    RunModifierDef found = null;
+                    if (meta != null && meta.edicts != null) // R7-STUB(b)
+                        foreach (var e in meta.edicts) if (e != null && e.id == id) found = e;
+                    if (found == null) Debug.LogWarning("[Edicts] -edicts: no edict \"" + id + "\"");
+                    else if (!list.Contains(found)) list.Add(found);
+                }
+                return list.ToArray();
+            }
+            return _edictsShown ? MetaProgress.ChosenEdicts(meta) : Array.Empty<RunModifierDef>(); // R7-STUB(b)
+        }
+
+        /// <summary>The page changed (a toggle, a clear, a purchase): the button, the tablet and the Renown follow it.</summary>
+        void OnEdictsChanged()
+        {
+            if (!Edicts.ReadOnly) _chosenEdicts = Edicts.Chosen;
+            RefreshEdictsButton();
+            RefreshRunPick();
+            if (_menuRenown != null) _menuRenown.text = "RENOWN  " + MetaProgress.Data.renown;
+        }
+
+        void CloseEdicts()
+        {
+            if (!Edicts.ReadOnly) _chosenEdicts = MetaProgress.ChosenEdicts(meta); // R7-STUB(b) (saved by the panel)
+            RefreshEdictsButton();
+            RefreshRunPick();
+            if (Edicts.BoughtAny) // the Codex's Market and the corner's Renown were built before the purchase
+            {
+                if (_menuRenown != null) _menuRenown.text = "RENOWN  " + MetaProgress.Data.renown;
+                if (Codex != null) Codex.Refresh();
+                RefreshCodexButton();
+            }
+        }
+
+        void RefreshEdictsButton()
+        {
+            if (_edictsButton == null) return;
+            int n = _chosenEdicts.Length;
+            float mul = 1f + RunModifiers.Bonus(_chosenEdicts); // R7-STUB(a)
+            _edictsButtonText = EdictsPanel.ButtonText(n, mul);
+            UiFactory.Label(_edictsButton).text = n <= 0
+                ? _edictsButtonText
+                : "<color=#FF5433>EDICTS</color> · RENOWN <color=#FFD84A>" + EdictsPanel.MulText(mul) + "</color>";
+        }
+
         void RefreshCodexButton()
         {
             int n = Codex != null ? Codex.RemainingNew : 0;
@@ -163,11 +246,15 @@ namespace Gladiator.UI
         void Awake()
         {
             MetaProgress.CheckUnlocks(meta); // a discovery from a run that was quit, not finished
+            // R7: the Edicts, once earned and once they exist as data (before EdictSetup there are none to show)
+            _edictsShown = meta != null && meta.edicts != null && meta.edicts.Length > 0 && MetaProgress.EdictsOpen(meta); // R7-STUB(b)
+            _chosenEdicts = _edictsShown ? MetaProgress.ChosenEdicts(meta) : Array.Empty<RunModifierDef>(); // R7-STUB(b)
             var canvas = UiFactory.Canvas("MenuCanvas", transform, UiSortOrder.Menus).transform;
             _menu = Group("Menu", canvas);
             _select = Group("Select", canvas);
             _arena = Group("Arena", canvas);
             _codex = Group("Codex", canvas);
+            var edicts = Group("Edicts", canvas); // over every screen; empty (no clicks taken) while the page is closed
             BuildMenu(_menu.transform);
             BuildSelect(_select.transform);
             BuildArena(_arena.transform);
@@ -176,6 +263,9 @@ namespace Gladiator.UI
             Codex = new CodexPanel(font, fontMaterial);
             Codex.Build(_codex.transform, MetaProgress.Data, codex, meta, gladiators, locked, CloseCodex);
             RefreshCodexButton();
+            Edicts = new EdictsPanel(font, fontMaterial);
+            Edicts.Build(edicts.transform, meta, MetaProgress.Data, CloseEdicts);
+            Edicts.OnChanged = OnEdictsChanged;
             Refit();
             Show(Screen.Menu);
         }
@@ -226,6 +316,7 @@ namespace Gladiator.UI
             var corner = new Vector2(1f, 1f);
             var renown = UiFactory.Text("Renown", root, "RENOWN  " + save.renown, 34, Gold, TextAlignmentOptions.Right, corner, corner, new Vector2(-60, -60), new Vector2(600, 50), font, fontMaterial);
             renown.fontStyle = FontStyles.Bold;
+            _menuRenown = renown;
             if (save.runs > 0)
                 UiFactory.Text("Runs", root, save.runs + (save.runs == 1 ? " run  ·  " : " runs  ·  ") + save.victories + (save.victories == 1 ? " victory" : " victories"), 24, Soft, TextAlignmentOptions.Right, corner, corner, new Vector2(-60, -102), new Vector2(600, 36), font, fontMaterial).fontStyle = FontStyles.Normal;
         }
@@ -281,7 +372,14 @@ namespace Gladiator.UI
                 steps[k++] = new ArenaLadder.Step { Run = r, Open = earned };
             }
 
-            _arenaFight = Chrome(root, "CHOOSE YOUR ARENA", "Up / Down: climb     Enter / A: fight     Esc / B: back", Launch, BackToSelect);
+            _arenaFight = Chrome(root, "CHOOSE YOUR ARENA", _edictsShown
+                ? "Up / Down: climb     Enter / A: fight     E / Y: edicts     Esc / B: back"
+                : "Up / Down: climb     Enter / A: fight     Esc / B: back", Launch, BackToSelect);
+            // R7: between BACK and FIGHT!, only once the Edicts are earned
+            var bottom = new Vector2(0.5f, 0f);
+            _edictsButton = UiFactory.Button("Edicts", root, "EDICTS", bottom, bottom, new Vector2(0, 40), new Vector2(520, 76), font, fontMaterial, OpenEdicts, 34f);
+            _edictsButton.gameObject.SetActive(_edictsShown);
+            RefreshEdictsButton();
             _ladder = new ArenaLadder(font);
             _ladder.Build(root, new Vector2(MenuLayout.Margin, MenuLayout.Bottom), steps, MetaProgress.Data, ChooseArena);
             _arenaTablet = new ArenaTablet(font);
@@ -312,6 +410,7 @@ namespace Gladiator.UI
             if (_tablet != null) _tablet.Fit(tablet);
             if (_ladder != null) _ladder.Fit(MenuLayout.LadderScale(canvas, _ladder.Count));
             if (_arenaTablet != null) _arenaTablet.Fit(tablet);
+            if (Edicts != null) Edicts.Fit(GridMath.Fit(EdictsPanel.Size, canvas));
         }
 
         /// <summary>Picks arena `r` if it's earned (tests). False if it's locked or unknown.</summary>
@@ -339,7 +438,7 @@ namespace Gladiator.UI
             if (_ladder == null || _ladder.Count == 0) return;
             _ladder.SetPick(_step);
             bool open = _stepToOpen[_step] >= 0;
-            _arenaTablet.Show(_ladder.Run(_step), open, ArenaLadder.Tier(_ladder.Run(_step), _step), MetaProgress.Data, meta);
+            _arenaTablet.Show(_ladder.Run(_step), open, ArenaLadder.Tier(_ladder.Run(_step), _step), MetaProgress.Data, meta, _chosenEdicts);
             _arenaFight.interactable = open;
         }
 
@@ -439,6 +538,8 @@ namespace Gladiator.UI
             string arena = CommandLine.Get("-arena");
             if (!string.IsNullOrEmpty(arena))
                 foreach (var d in AllRuns) if (d != null && d.id == arena) r = d;
+            if (Edicts != null && Edicts.IsOpen) Edicts.Close(); // the page covers FIGHT!, but a launch from code keeps its choice
+            RunModifiers.Set(EdictsForLaunch()); // R7-STUB(a): applied when the arena loads
             GameSession.StartRun(g, r);
         }
 
@@ -461,6 +562,15 @@ namespace Gladiator.UI
             bool back = (kb != null && kb.escapeKey.wasPressedThisFrame) || (pad != null && pad.buttonEast.wasPressedThisFrame);
             bool up = (kb != null && (kb.upArrowKey.wasPressedThisFrame || kb.wKey.wasPressedThisFrame)) || (pad != null && pad.dpad.up.wasPressedThisFrame);
             bool down = (kb != null && (kb.downArrowKey.wasPressedThisFrame || kb.sKey.wasPressedThisFrame)) || (pad != null && pad.dpad.down.wasPressedThisFrame);
+            bool edictsKey = (kb != null && kb.eKey.wasPressedThisFrame) || (pad != null && pad.buttonNorth.wasPressedThisFrame);
+            if (Edicts != null && Edicts.IsOpen) // R7: the page owns the input; E / North closes it as it opened it
+            {
+                bool left = (kb != null && (kb.leftArrowKey.wasPressedThisFrame || kb.aKey.wasPressedThisFrame)) || (pad != null && pad.dpad.left.wasPressedThisFrame);
+                bool right = (kb != null && (kb.rightArrowKey.wasPressedThisFrame || kb.dKey.wasPressedThisFrame)) || (pad != null && pad.dpad.right.wasPressedThisFrame);
+                bool clear = (kb != null && (kb.backspaceKey.wasPressedThisFrame || kb.deleteKey.wasPressedThisFrame)) || (pad != null && pad.buttonWest.wasPressedThisFrame);
+                Edicts.HandleInput(left, right, up, down, confirm, back || edictsKey, clear);
+                return;
+            }
             if (_screen == Screen.Select)
             {
                 bool left = (kb != null && (kb.leftArrowKey.wasPressedThisFrame || kb.aKey.wasPressedThisFrame)) || (pad != null && pad.dpad.left.wasPressedThisFrame);
@@ -476,6 +586,7 @@ namespace Gladiator.UI
             {
                 bool left = (kb != null && (kb.leftArrowKey.wasPressedThisFrame || kb.aKey.wasPressedThisFrame)) || (pad != null && pad.dpad.left.wasPressedThisFrame);
                 bool right = (kb != null && (kb.rightArrowKey.wasPressedThisFrame || kb.dKey.wasPressedThisFrame)) || (pad != null && pad.dpad.right.wasPressedThisFrame);
+                if (edictsKey && EdictsButtonShown) { OpenEdicts(); return; }
                 // the ladder climbs up and to the right
                 if (up || right) Climb(1);
                 else if (down || left) Climb(-1);

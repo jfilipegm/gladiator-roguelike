@@ -846,16 +846,27 @@ namespace Gladiator.Gameplay
             pp.Orbiter(mesh, stone, look * Quaternion.Euler(0f, 0f, w.SweepT * stoneTumble), d.meshScale * Mathf.Sqrt(area), travel);
         }
 
-        /// <summary>The model part this weapon swings (WeaponDef.modelPart, found once under the visual root) is hidden.</summary>
+        /// <summary>The model part this weapon swings (WeaponDef.modelPart, found once under the visual root) is hidden.
+        /// Only for a starting weapon: the model carries its own weapon, and another gladiator who takes the card may
+        /// have a part of the same name (the Ashen Oracle's censer has a "Chain").</summary>
         void HidePart(WeaponInstance w)
         {
             if (!w.PartLooked)
             {
                 w.PartLooked = true;
                 var root = animator != null ? animator.visualRoot : null;
-                if (root != null && !string.IsNullOrEmpty(w.Def.modelPart)) w.Part = FindPart(root, w.Def.modelPart);
+                if (root != null && !string.IsNullOrEmpty(w.Def.modelPart) && IsStarting(w.Def))
+                    w.Part = FindPart(root, w.Def.modelPart);
             }
             if (w.Part != null && w.Part.gameObject.activeSelf) w.Part.gameObject.SetActive(false);
+        }
+
+        bool IsStarting(WeaponDef def)
+        {
+            if (startingWeapons != null)
+                for (int i = 0; i < startingWeapons.Length; i++)
+                    if (startingWeapons[i] == def) return true;
+            return false;
         }
 
         static void ShowPart(WeaponInstance w)

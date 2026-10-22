@@ -336,6 +336,7 @@ namespace Gladiator.Tests
             yield return Boot();
             var part = new GameObject("Chain");
             part.transform.SetParent(_animator.visualRoot, false);
+            _weapons.startingWeapons = new[] { _chain }; // the model's part is his own weapon's (Asterion starts with it)
             var w = Equip(_chain);
             Put(_dummy, 0f, 3f);
             yield return Until(() => w.SwingT >= 0f, 2f);
@@ -347,6 +348,20 @@ namespace Gladiator.Tests
             yield return Until(() => w.SweepT < 0f, 2f);
             Assert.IsTrue(part.activeSelf, "back once it's over");
             Assert.AreSame(part.transform, w.Part);
+        }
+
+        [UnityTest, Timeout(60000)]
+        public IEnumerator AGladiatorWhoTakesTheChainsCard_KeepsHisOwnChainPart()
+        {
+            yield return Boot();
+            var part = new GameObject("Chain"); // the Ashen Oracle's censer has one
+            part.transform.SetParent(_animator.visualRoot, false);
+            var w = Equip(_chain); // from a card, not his starting weapon
+            Put(_dummy, 0f, 3f);
+            yield return Until(() => _weapons.Sweeps >= 1, 3f);
+            Assert.IsTrue(w.SweepT >= 0f, "sweeping");
+            Assert.IsTrue(part.activeSelf, "his own part stays");
+            Assert.IsNull(w.Part);
         }
 
         [UnityTest, Timeout(60000)]

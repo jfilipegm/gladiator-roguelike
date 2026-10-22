@@ -53,3 +53,11 @@ Good ideas that are **not** in the current phase. Pull from here only when a pha
 - Edict ranks (Heat levels); *Night Games* (fog); *The Purist* (one weapon slot); edicts as Favor whims.
 - Typed seeds in the menu; online leaderboards or a shared daily ledger (needs a server); daily streaks.
 - Weapon skins, accessories (crests, plumes, capes), titles and announcer callouts, victory poses, skin portraits in the Codex's Gladiators tab.
+
+## From the U1 spec (2026-10-22, `docs/tracks/U1-design.md` §11)
+- Frames that follow the arena's palette family ("frames that climb the ladder"); per-arena UI palettes.
+- Device-aware button prompts (gamepad glyphs for Xbox / PlayStation / Steam Deck); today's keyboard letters stay.
+- A CREDITS page in the game (the licences ship in the build and in `docs/CREDITS.md` now); a logo (Cinzel Decorative or drawn).
+- UI sounds (R4 / R5 audio), animated transitions between menu screens, cursor art, localisation.
+- Restyling the admin panel, threat chevrons, the hurt overlay, world-space telegraphs.
+- A 2× laurel branch for big words (VICTORY! at Shout 132 draws the 20×24 branch at 2.75×, chunky), from U1-A's art review.

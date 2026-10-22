@@ -305,14 +305,13 @@ namespace Gladiator.UI
                 if (selected)
                 {
                     card.localScale = new Vector3(1.04f, 1.04f, 1f);
-                    UiKit.Frame("SelectedHalo", card, FrameKind.Halo, Mid, Mid, Vector2.zero, new Vector2(w + 90f, h + 90f), new Color(rc.r, rc.g, rc.b, 0.55f));
+                    UiKit.Frame("SelectedHalo", card, FrameKind.Halo, Mid, Mid, Vector2.zero, new Vector2(w + 16f, h + 16f), new Color(rc.r, rc.g, rc.b, 0.45f)); // as the level-up panel
                 }
                 UiFactory.Image("Inside", card, theme.cardInside, Mid, Mid, Vector2.zero, new Vector2(w - 12f, h - 12f), PixelIcons.White);
                 UiFactory.Image("Band", card, rc, Top, Top, new Vector2(0f, -9f), new Vector2(w - 18f, 40f), PixelIcons.White);
                 var band = UiKit.Text("BandText", card, Bands[i], TextRole.Title, 24f, new Color32(0x17, 0x12, 0x0F, 0xFF), TextAlignmentOptions.Center,
                     Top, Top, new Vector2(0f, -9f), new Vector2(w - 18f, 40f));
                 band.characterSpacing = 12f;
-                UiKit.Frame("Halo", card, FrameKind.Halo, Top, Mid, new Vector2(0f, -105f), new Vector2(150f, 150f), new Color(rc.r, rc.g, rc.b, 0.8f));
                 if (i == 3) UiKit.Frame("Wreath", card, FrameKind.LaurelWreath, Top, Mid, new Vector2(0f, -122f), UiFrames.NativeSize(FrameKind.LaurelWreath), Color.white);
                 if (iconAtlas != null)
                 {

@@ -34,10 +34,10 @@ namespace Gladiator.UI
         const float CardW = LevelUpLayout.CardW, CardH = LevelUpLayout.CardH;
         // the card (spec §6.2), y from its centre: 9 frame · 40 band · 112 icon · 26 tag · 68 name · 30 pips ·
         // 174 description · 30 key · 24 foot (the frame's)
-        const float Inset = 9f, BandY = 231f, BandH = 40f, IconY = 151f, IconSize = 100f, IconHaloW = 140f, IconHaloH = 112f,
+        const float Inset = 9f, BandY = 231f, BandH = 40f, IconY = 151f, IconSize = 100f,
             WreathY = 143f, TagY = 82f, TagH = 28f, NameY = 35f, NameH = 68f, PipY = -14f, PipSize = 14f, PipPitch = 20f,
             DescY = -117f, DescH = 174f, KeyY = -221f, KeyH = 30f;
-        const float SelectedScale = 1.04f, RingOut = 6f, HaloOut = 22f;
+        const float SelectedScale = 1.04f, RingOut = 6f, HaloOut = 8f; // producer (2026-10-22): the glow stays clear of the subtitle and the buttons
         // layout A at 1920×1080, in the content's units from the canvas centre: the title's glyphs from y 46, the
         // subtitle at 188, the cards' tops at 262, the buttons at 812 (from the top)
         const float TitleY = 425f, TitleH = 150f, TitleMaxW = 1400f, SubY = 326f, SubH = 50f, CardsY = 18f,
@@ -47,7 +47,7 @@ namespace Gladiator.UI
         sealed class CardView
         {
             public RectTransform Root;
-            public Image Halo, Inside, Frame, Focus, Band, VowHalf, IconHalo, Wreath;
+            public Image Halo, Inside, Frame, Focus, Band, VowHalf, Wreath;
             public TextMeshProUGUI Rarity, Kind, Title, Desc, Key;
             public Image[] Pips;
             public UpgradeIconView Icon;
@@ -64,7 +64,7 @@ namespace Gladiator.UI
         static readonly Color NewGold = new Color(1f, 0.86f, 0.3f);
         static readonly Color VowGold = new Color(1f, 0.76f, 0.22f);
         static readonly Color BanishTint = new Color(0.6f, 0.6f, 0.6f, 1f); // banish mode: every frame at 60 %
-        const float SelectedGlow = 0.45f, IconGlow = 0.55f;
+        const float SelectedGlow = 0.45f;
 
         Canvas _canvas;
         CanvasGroup _group;
@@ -224,8 +224,7 @@ namespace Gladiator.UI
             v.Rarity = UiKit.Text("Rarity", v.Root, "COMMON", TextRole.Title, 24f, BandInk, TextAlignmentOptions.Center, mid, mid,
                 new Vector2(0f, BandY), new Vector2(innerW - 8f, BandH));
             v.Rarity.characterSpacing = 12f; // the band's letter-spacing (spec §2.2)
-            // the icon on a halo in its rarity colour; a Legendary's laurel wreath behind it (playtest: an animated 8-bit icon)
-            v.IconHalo = UiKit.Frame("IconHalo", v.Root, FrameKind.Halo, mid, mid, new Vector2(0f, IconY), new Vector2(IconHaloW, IconHaloH), Color.clear);
+            // the animated 8-bit icon with its own rarity aura (no square behind it: producer, 2026-10-22); a Legendary's laurel wreath behind it
             v.Wreath = UiKit.Frame("Wreath", v.Root, FrameKind.LaurelWreath, mid, mid, new Vector2(0f, WreathY), UiFrames.NativeSize(FrameKind.LaurelWreath), Color.clear);
             v.Icon = new UpgradeIconView(v.Root, "Icon", mid, new Vector2(0f, IconY), IconSize, lively: true);
             v.Kind = UiKit.Text("Kind", v.Root, "NEW!", TextRole.Title, 21f, NewGold, TextAlignmentOptions.Center, mid, mid,
@@ -420,9 +419,6 @@ namespace Gladiator.UI
                 var kind = FrameFor(o.Rarity);
                 if (kind != v.FrameKind) { v.FrameKind = kind; UiFrames.Apply(v.Frame, kind); }
                 v.Wreath.color = o.Rarity == Rarity.Legendary ? Color.white : Color.clear;
-                var halo = col;
-                halo.a = IconGlow;
-                v.IconHalo.color = halo;
                 bool vow = o.Def.IsVow;
                 v.Band.color = vow ? _gold : col;
                 v.VowHalf.color = vow ? _crimson : Color.clear; // a Vow: the oath's crimson | its gold

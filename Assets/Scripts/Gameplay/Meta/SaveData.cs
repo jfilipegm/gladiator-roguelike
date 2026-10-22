@@ -43,8 +43,8 @@ namespace Gladiator.Gameplay
     public sealed class SaveData
     {
         /// <summary>1: everything up to v0.20.0. 2: R7's edicts (edictsChosen, edictWins, bestEdictWin). 3: R8's Daily
-        /// Games (dailyAttempt, dailiesPlayed, dailiesWon, dailies).</summary>
-        public const int CurrentVersion = 3;
+        /// Games (dailyAttempt, dailiesPlayed, dailiesWon, dailies). 4: R6's skins (equippedSkins).</summary>
+        public const int CurrentVersion = 4;
 
         public int version = CurrentVersion;
         public int renown;
@@ -96,6 +96,10 @@ namespace Gladiator.Gameplay
         public int dailiesWon;
         /// <summary>The ledger: the last MetaConfig.dailyLedger scored dailies, oldest first.</summary>
         public List<DailyRecord> dailies = new List<DailyRecord>();
+        // R6 Skins (save v4; filled by Migrate in older files).
+        /// <summary>SkinDef ids equipped, at most one per gladiator (MetaProgress.Equip keeps it so). An id no SkinDef knows
+        /// or one no longer owned is ignored by MetaProgress.EquippedSkin, and the gladiator wears the default.</summary>
+        public List<string> equippedSkins = new List<string>();
 
         public static long Count(List<IdCount> list, string id)
         {
@@ -172,6 +176,9 @@ namespace Gladiator.Gameplay
             if (dailyAttempt < 0) dailyAttempt = 0;
             if (dailiesPlayed < 0) dailiesPlayed = 0;
             if (dailiesWon < 0) dailiesWon = 0;
+            // v3 → v4 (R6): the equipped skins; nothing to convert (unknown ids are ignored where they're read, not here:
+            // Migrate has no data to know them by).
+            equippedSkins ??= new List<string>();
             if (renown < 0) renown = 0;
             // v0 (no version field) → v1: nothing to convert. Each step is an idempotent fill, so any older file runs them all.
             if (version < CurrentVersion) version = CurrentVersion;

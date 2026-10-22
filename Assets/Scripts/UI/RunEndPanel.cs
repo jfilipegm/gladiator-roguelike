@@ -20,6 +20,8 @@ namespace Gladiator.UI
     /// more orange-red: dying isn't a hazard); survived / victory is a gold Shout title between laurel branches. The stats
     /// sit on a wax tablet, the unlock line between laurels, the buttons are tabulae ansatae (RETRY / PRACTICE bronze,
     /// SAME SEED and MAIN MENU marble) with today's words and keys. The end screen may allocate (the run is over).
+    /// P3 (the producer's note 4, the padding rule): the tablet's seven rows share its ContentRect (UiKit.ContentRect:
+    /// the wax's padding + 8), names left, values right, every glyph inside it; the plates' focus glow is UiKit's.
     /// </summary>
     public sealed class RunEndPanel : MonoBehaviour, ITickable
     {
@@ -32,6 +34,9 @@ namespace Gladiator.UI
         static readonly Vector2 ButtonSize = new Vector2(340f, 66f);
         const float ButtonFont = 28f;
         const float YouDiedSize = 96f;
+        static readonly Vector2 StatsSize = new Vector2(640f, 420f);
+        const float StatsY = -44f, StatRows = 7f, ValueGap = 8f, NameW = 340f, RenownLabelW = 96f;
+        Rect _statsContent; // the tablet's ContentRect (its centre at 0, 0)
 
         GameObject _root;
         Transform _canvas;
@@ -81,7 +86,8 @@ namespace Gladiator.UI
                 new Vector2(0f, 205f), new Vector2(1400f, 50f), TextLook.Outline);
             AutoSize(_subtitle, 24f, 36f);
 
-            _statsFrame = UiKit.Frame("Stats", canvas, FrameKind.Wax, mid, mid, new Vector2(0f, -44f), new Vector2(640f, 420f), Color.white);
+            _statsFrame = UiKit.Frame("Stats", canvas, FrameKind.Wax, mid, mid, new Vector2(0f, StatsY), StatsSize, Color.white);
+            _statsContent = UiKit.ContentRect(FrameKind.Wax, StatsSize);
             var card = _statsFrame.transform;
             _time = StatRow(card, "Time survived", 0);
             _level = StatRow(card, "Level", 1);
@@ -94,9 +100,11 @@ namespace Gladiator.UI
             _renown.color = _goldColor;
             // R7: wider than the other values (it may read "+124 ×1.65 = +205 +50  (2310)"), shrinking before it overflows;
             // R8: wider still for a scored daily ("+124 ×1.45 ×1.5 daily = +270 +150  (2410)"), from just right of its label
+            // (P3: to the ContentRect's right edge)
             var rr = _renown.rectTransform;
-            rr.anchoredPosition = new Vector2(65f, rr.anchoredPosition.y);
-            rr.sizeDelta = new Vector2(450f, rr.sizeDelta.y);
+            float renownLeft = _statsContent.xMin + RenownLabelW + ValueGap;
+            rr.anchoredPosition = new Vector2((renownLeft + _statsContent.xMax) * 0.5f, rr.anchoredPosition.y);
+            rr.sizeDelta = new Vector2(_statsContent.xMax - renownLeft, rr.sizeDelta.y);
             AutoSize(_renown, 18f, 30f);
             _unlock = UiKit.Text("Unlock", canvas, "", TextRole.Title, 30f, _goldColor, TextAlignmentOptions.Center, mid, mid,
                 new Vector2(0f, -298f), new Vector2(1400f, 80f), TextLook.Outline);
@@ -124,15 +132,27 @@ namespace Gladiator.UI
             t.fontSizeMax = max;
         }
 
+        /// <summary>One of the tablet's seven rows, spread evenly down its ContentRect: the name from its left edge, the
+        /// value to its right edge (their glyphs centred on the row: Midline).</summary>
         TextMeshProUGUI StatRow(Transform card, string label, int row)
         {
-            float y = 168f - row * 54f;
+            var c = _statsContent;
+            float pitch = c.height / StatRows, h = Mathf.Min(50f, pitch);
+            float y = c.yMax - pitch * (row + 0.5f);
             var mid = new Vector2(0.5f, 0.5f);
-            UiKit.Text(label, card, label, TextRole.Title, 22f, _waxInk, TextAlignmentOptions.Left, mid, mid, new Vector2(-110f, y), new Vector2(340f, 50f));
-            var value = UiKit.Text(label + "Value", card, "0", TextRole.Number, 30f, _ink, TextAlignmentOptions.Right, mid, mid, new Vector2(170f, y), new Vector2(220f, 50f));
+            float nameW = Mathf.Min(NameW, c.width * 0.6f);
+            UiKit.Text(label, card, label, TextRole.Title, 22f, _waxInk, TextAlignmentOptions.MidlineLeft, mid, mid,
+                new Vector2(c.xMin + nameW * 0.5f, y), new Vector2(nameW, h));
+            float valueLeft = c.xMin + nameW + ValueGap;
+            var value = UiKit.Text(label + "Value", card, "0", TextRole.Number, 30f, _ink, TextAlignmentOptions.MidlineRight, mid, mid,
+                new Vector2((valueLeft + c.xMax) * 0.5f, y), new Vector2(c.xMax - valueLeft, h));
             AutoSize(value, 18f, 30f); // "NOT RECORDED", "88% LEFT"
             return value;
         }
+
+        /// <summary>P3 tests: the stats tablet (its ContentRect holds every row's glyphs).</summary>
+        public RectTransform StatsRect => _statsFrame != null ? _statsFrame.rectTransform : null;
+        public Component RenownLabel => _renown;
 
         void OnEnable() => GameLoop.Register(this, TickGroup.Late, 65);
         void OnDisable() => GameLoop.Unregister(this);

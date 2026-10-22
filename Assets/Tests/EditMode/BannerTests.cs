@@ -9,10 +9,12 @@ namespace Gladiator.Tests
 {
     /// <summary>
     /// U1-A the vexillum banner's timeline (docs/tracks/U1-contract.md "VexillumBanner", spec §7.1), ticked at 60 fps:
-    /// Dropping → Settling → Holding → Rolling → Hidden in TotalSeconds; the drop's overshoot; the sway's bounds and
-    /// end; the event's seconds lengthen the hold but never shorten it; a new banner while one holds rolls the old one up
-    /// quickly, then drops; Hold stays until RollUp; Clear hides at once; and a whole cycle of ticks allocates nothing.
-    /// Timings come from UiTheme.Current (the asset's, if the designer retuned them).
+    /// Dropping → Settling → Holding → Rolling → Hidden in TotalSeconds; the drop's overshoot; the event's seconds
+    /// lengthen the hold but never shorten it; a new banner while one holds rolls the old one up quickly, then drops;
+    /// Hold stays until RollUp; Clear hides at once; and a whole cycle of ticks allocates nothing.
+    /// P3 (the producer's note 16): no rotation ever; the wave's function (ClothWave.Offset, VexillumBanner.WaveEnvelope),
+    /// its strength through a banner (full while dropping, gone before the roll-up), the words riding it, the cloth's mesh
+    /// cut into columns. Timings come from UiTheme.Current (the asset's, if the designer retuned them).
     /// </summary>
     public class BannerTests
     {
@@ -86,23 +88,119 @@ namespace Gladiator.Tests
         }
 
         [Test]
-        public void Sway_StaysWithinItsDegrees_AndEndsInTheHold()
+        public void NeverRotates_TheWaveRunsWhileItDrops_AndIsGoneBeforeTheRollUp()
         {
             _b.Show("SWARM INCOMING!", BannerCloth.Crimson);
-            float maxAbs = 0f, held = 0f;
-            for (float time = 0f; _b.Phase != BannerPhase.Rolling && time < 10f; time += Dt)
+            float since = 0f, waveEnd = _t.bannerDrop + 3f * _t.bannerWaveDecay, peak = 0f;
+            bool waved = false;
+            for (int i = 0; i < 1200 && _b.Visible; i++)
             {
                 _b.Tick(Dt);
-                if (_b.Phase == BannerPhase.Dropping || _b.Phase == BannerPhase.Settling)
-                    Assert.AreEqual(0f, _b.SwayDegrees, "no sway while dropping");
-                if (_b.Phase != BannerPhase.Holding) continue;
-                held += Dt;
-                maxAbs = Mathf.Max(maxAbs, Mathf.Abs(_b.SwayDegrees));
-                if (held > _t.bannerSway + 2f * Dt) Assert.AreEqual(0f, _b.SwayDegrees, 1e-5f, "the sway is over");
+                since += Dt;
+                Assert.AreEqual(0f, _b.SwayDegrees, "no sway");
+                Assert.AreEqual(Quaternion.identity, _b.ClothImage.rectTransform.localRotation, "no rotation");
+                float env = _b.WaveEnvelope01;
+                Assert.GreaterOrEqual(env, 0f);
+                Assert.LessOrEqual(env, 1f + 1e-5f);
+                Assert.AreEqual(_t.bannerWaveAmplitude * _b.ClothImage.rectTransform.rect.height * env, _b.WaveAmplitude, 1e-3f,
+                    "the wave's height: a share of the cloth's");
+                if (_b.Phase == BannerPhase.Dropping) Assert.AreEqual(1f, env, 1e-5f, "full strength while it drops");
+                if (_b.Phase == BannerPhase.Rolling) Assert.AreEqual(0f, env, 1e-5f, "flat when it rolls up");
+                if (since > waveEnd + Dt) Assert.AreEqual(0f, env, 1e-5f, "gone 3 × decay after the drop");
+                peak = Mathf.Max(peak, env);
+                if (env > 0f && _t.bannerWaveAmplitude > 0f) waved = true;
             }
-            Assert.LessOrEqual(maxAbs, _t.bannerSwayDegrees + 0.01f);
-            if (_t.bannerSwayDegrees > 0f && _t.bannerSway > 0f)
-                Assert.Greater(maxAbs, 0.5f * _t.bannerSwayDegrees, "it sways");
+            Assert.IsFalse(_b.Visible, "a whole cycle");
+            Assert.IsTrue(waved, "the cloth waved");
+            Assert.AreEqual(1f, peak, 1e-5f);
+            Assert.Less(waveEnd, _t.bannerDrop + _t.bannerSettle + _t.bannerHold, "the defaults: still before the roll-up");
+        }
+
+        [Test]
+        public void WaveEnvelope_FullWhileDropping_AThirdPerDecay_ThenCut()
+        {
+            const float drop = 0.32f, d = 0.45f;
+            Assert.AreEqual(0f, VexillumBanner.WaveEnvelope(BannerPhase.Hidden, 0.1f, drop, d));
+            Assert.AreEqual(1f, VexillumBanner.WaveEnvelope(BannerPhase.Dropping, 0.1f, drop, d));
+            Assert.AreEqual(1f, VexillumBanner.WaveEnvelope(BannerPhase.Settling, drop, drop, d), 1e-5f, "continuous at the drop's end");
+            Assert.AreEqual(1f / 3f, VexillumBanner.WaveEnvelope(BannerPhase.Settling, drop + d, drop, d), 1e-4f, "a third after one decay");
+            Assert.AreEqual(1f / 9f, VexillumBanner.WaveEnvelope(BannerPhase.Holding, drop + 2f * d, drop, d), 1e-4f, "a ninth after two");
+            float late = VexillumBanner.WaveEnvelope(BannerPhase.Holding, drop + 2.5f * d, drop, d);
+            Assert.Less(late, 1f / 27f, "cut between 2 and 3 decays");
+            Assert.Greater(late, 0f);
+            Assert.AreEqual(0f, VexillumBanner.WaveEnvelope(BannerPhase.Holding, drop + 3f * d, drop, d), "gone after three");
+            Assert.AreEqual(0f, VexillumBanner.WaveEnvelope(BannerPhase.Rolling, drop + 5f, drop, d));
+            Assert.AreEqual(0f, VexillumBanner.WaveEnvelope(BannerPhase.Settling, drop + 0.01f, drop, 0f), "decay 0: it stops with the drop");
+            float prev = 2f;
+            for (float t = drop; t < drop + 3f * d; t += 0.01f)
+            {
+                float e = VexillumBanner.WaveEnvelope(BannerPhase.Holding, t, drop, d);
+                Assert.LessOrEqual(e, prev + 1e-6f, "it only ever falls");
+                prev = e;
+            }
+        }
+
+        [Test]
+        public void ClothWaveOffset_IsTheFormula_AndTravelsRight()
+        {
+            const float a = 8.4f, len = 418f;
+            for (float x = 0f; x <= 760f; x += 38f)
+                for (float ph = 0f; ph < 2f; ph += 0.13f)
+                {
+                    Assert.AreEqual(a * Mathf.Sin(2f * Mathf.PI * (x / len - ph)), ClothWave.Offset(x, a, len, ph), 1e-4f);
+                    Assert.LessOrEqual(Mathf.Abs(ClothWave.Offset(x, a, len, ph)), a + 1e-4f);
+                    // a crest at x moves to x + λ·Δ when the phase grows by Δ: the wave travels across the cloth
+                    Assert.AreEqual(ClothWave.Offset(x, a, len, ph), ClothWave.Offset(x + len * 0.25f, a, len, ph + 0.25f), 1e-3f);
+                }
+            Assert.AreEqual(0f, ClothWave.Offset(123f, 0f, len, 0.3f), "no amplitude, no wave");
+        }
+
+        [Test]
+        public void TheWords_RideTheWave_AndLieFlatAfterIt()
+        {
+            _b.Show("SWARM INCOMING!", BannerCloth.Crimson);
+            for (int i = 0; i < 8; i++) _b.Tick(Dt); // mid-drop
+            Assert.AreEqual(BannerPhase.Dropping, _b.Phase);
+            var words = _b.Words;
+            var info = words.textInfo;
+            Assert.Greater(info.characterCount, 0);
+            float fromLeft = words.rectTransform.anchoredPosition.x + _b.ClothWidth * 0.5f;
+            var verts = info.meshInfo[0].vertices;
+            int moved = 0;
+            for (int c = 0; c < info.characterCount; c++)
+            {
+                var ch = info.characterInfo[c];
+                if (!ch.isVisible || ch.materialReferenceIndex != 0) continue;
+                int v = ch.vertexIndex;
+                float cx = (verts[v].x + verts[v + 2].x) * 0.5f;
+                float lift = verts[v].y - ch.vertex_BL.position.y; // the vertex TMP laid out, before the wave
+                Assert.AreEqual(_b.WaveOffsetAt(fromLeft + cx), lift, 0.05f, "character " + c + " rides the wave at its x");
+                if (Mathf.Abs(lift) > 0.01f) moved++;
+            }
+            if (_t.bannerWaveAmplitude > 0f) Assert.Greater(moved, 0, "the words move with the cloth");
+
+            for (int i = 0; i < 600 && _b.Phase != BannerPhase.Rolling; i++) _b.Tick(Dt);
+            Assert.AreEqual(0f, _b.WaveAmplitude, "flat by the roll-up");
+            verts = info.meshInfo[0].vertices;
+            for (int c = 0; c < info.characterCount; c++)
+            {
+                var ch = info.characterInfo[c];
+                if (!ch.isVisible || ch.materialReferenceIndex != 0) continue;
+                Assert.AreEqual(ch.vertex_BL.position.y, verts[ch.vertexIndex].y, 0.05f, "character " + c + " back on its line");
+            }
+        }
+
+        [Test]
+        public void TheClothsMesh_IsCutIntoColumns_WhileItWaves()
+        {
+            _b.Show("SWARM INCOMING!", BannerCloth.Crimson);
+            for (int i = 0; i < 8; i++) _b.Tick(Dt);
+            Assert.Greater(_b.WaveAmplitude, 0f);
+            Canvas.ForceUpdateCanvases(); // the Image rebuilds its mesh through ClothWave
+            int n = _b.Wave.LastVertexCount;
+            if (n == 0) Assert.Inconclusive("the canvas didn't rebuild the cloth's mesh in this EditMode run");
+            Debug.Log($"[P3] the waving cloth's mesh: {n} vertices ({_b.ClothWidth:0} wide, columns {_b.Wave.ColumnWidth:0})");
+            Assert.Greater(n, 9 * 6, "more than the sliced frame's nine quads");
         }
 
         float RunOnce(float seconds)

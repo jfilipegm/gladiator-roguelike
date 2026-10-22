@@ -61,3 +61,4 @@ Good ideas that are **not** in the current phase. Pull from here only when a pha
 - UI sounds (R4 / R5 audio), animated transitions between menu screens, cursor art, localisation.
 - Restyling the admin panel, threat chevrons, the hurt overlay, world-space telegraphs.
 - A 2× laurel branch for big words (VICTORY! at Shout 132 draws the 20×24 branch at 2.75×, chunky), from U1-A's art review.
+- **From P3 (the producer's v0.24.0 UI notes):** a true greyscale ghost icon in the inventory (a `UI/Desaturate` shader + material; today a grey-blue tint at 45 %); the Scutum's padding as its usable area (4 4 4 4) so RosterGrid's name exemption can go; hide the Codex pager's arrows on pages without pages (Records); the Options row marker sits on the panel's rim (move it inside); the HUD's timer, edict icons and strip on the end screens (they stay up behind YOU DIED / VICTORY!).

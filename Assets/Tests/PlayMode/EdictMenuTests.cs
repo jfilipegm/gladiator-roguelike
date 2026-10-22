@@ -36,7 +36,7 @@ namespace Gladiator.Tests
         [TearDown]
         public void TearDown()
         {
-            RunModifiers.Clear(); // R7-STUB(a)
+            RunModifiers.Clear();
             GameSession.Clear();
             DevSettings.ResetAll();
             TimeController.GameSpeed = 1f;
@@ -50,21 +50,21 @@ namespace Gladiator.Tests
             {
                 var m = AssetDatabase.LoadAssetAtPath<MetaConfig>("Assets/Data/Meta/MetaConfig.asset");
                 Assert.IsNotNull(m, "MetaConfig");
-                Assert.IsNotNull(m.edicts, "MetaConfig.edicts (run Gladiator/Setup/Meta/Create Edict Data)"); // R7-STUB(b)
-                Assert.IsNotNull(m.edictsUnlock, "MetaConfig.edictsUnlock (UL_Edicts)"); // R7-STUB(b)
+                Assert.IsNotNull(m.edicts, "MetaConfig.edicts (run Gladiator/Setup/Meta/Create Edict Data)");
+                Assert.IsNotNull(m.edictsUnlock, "MetaConfig.edictsUnlock (UL_Edicts)");
                 return m;
             }
         }
 
         static RunModifierDef Edict(string id)
         {
-            foreach (var e in Meta.edicts) if (e != null && e.id == id) return e; // R7-STUB(b)
+            foreach (var e in Meta.edicts) if (e != null && e.id == id) return e;
             Assert.Fail("no edict " + id + " in MetaConfig.edicts");
             return null;
         }
 
         /// <summary>The Edicts earned: The Editor Takes Notice is in the save.</summary>
-        static void EarnEdicts(SaveData d) => d.unlocked.Add(Meta.edictsUnlock.id); // R7-STUB(b)
+        static void EarnEdicts(SaveData d) => d.unlocked.Add(Meta.edictsUnlock.id);
 
         static void Invoke(object target, string method) =>
             target.GetType().GetMethod(method, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).Invoke(target, null);
@@ -155,7 +155,7 @@ namespace Gladiator.Tests
         {
             yield return Boot(EarnEdicts);
             int n = 0;
-            foreach (var e in Meta.edicts) if (e != null) n++; // R7-STUB(b)
+            foreach (var e in Meta.edicts) if (e != null) n++;
             Assert.GreaterOrEqual(n, 11, "the eleven edicts of the spec (§2.3)");
             Assert.IsTrue(_menu.EdictsButtonShown);
             Assert.IsTrue(_menu.AsksForArena, "the arena screen hosts the button, even with one arena earned");
@@ -283,7 +283,7 @@ namespace Gladiator.Tests
 
             Assert.IsTrue(p.HandleInput(false, false, false, false, false, true, false), "Esc / B closes");
             Assert.IsFalse(p.IsOpen);
-            CollectionAssert.AreEquivalent(new[] { "iron_hides", "blood_sport" }, SavedFile().edictsChosen, "closing saves the choice"); // R7-STUB(b)
+            CollectionAssert.AreEquivalent(new[] { "iron_hides", "blood_sport" }, SavedFile().edictsChosen, "closing saves the choice");
             CollectionAssert.AreEqual(new[] { p.Def(a), p.Def(b) }, _menu.EdictsForLaunch(), "FIGHT! takes the chosen, in the page's order");
 
             yield return LoadMenu(); // remembered between visits
@@ -330,7 +330,7 @@ namespace Gladiator.Tests
             StringAssert.Contains("NO EDICTS", p.FooterText);
             Assert.AreEqual("EDICTS", _menu.EdictsButtonText);
             Assert.IsTrue(p.HandleInput(false, false, false, false, false, true, false), "Esc / B closes");
-            CollectionAssert.IsEmpty(SavedFile().edictsChosen, "an empty choice is saved too"); // R7-STUB(b)
+            CollectionAssert.IsEmpty(SavedFile().edictsChosen, "an empty choice is saved too");
             yield return null;
         }
 
@@ -358,7 +358,7 @@ namespace Gladiator.Tests
             Assert.AreEqual(1f + bonus, p.RenownMul, 1e-4f);
             Assert.IsTrue(p.HandleInput(false, false, false, false, false, true, false));
             Assert.IsFalse(p.IsOpen);
-            CollectionAssert.IsEmpty(MetaProgress.Data.edictsChosen, "the daily's edicts aren't the player's choice"); // R7-STUB(b)
+            CollectionAssert.IsEmpty(MetaProgress.Data.edictsChosen, "the daily's edicts aren't the player's choice");
             Assert.AreEqual("EDICTS", _menu.EdictsButtonText);
             yield return null;
             LogAssert.NoUnexpectedReceived();
@@ -367,12 +367,12 @@ namespace Gladiator.Tests
         [UnityTest, Timeout(60000)]
         public IEnumerator TheCodex_NamesTheEdictsAnUnlockOpens_AndRecordsTheMostInAWin()
         {
-            yield return Boot(d => d.bestEdictWin = 3); // R7-STUB(b)
+            yield return Boot(d => d.bestEdictWin = 3);
             var codex = _menu.Codex;
             var meta = Meta;
-            string notice = codex.RewardText(meta.edictsUnlock); // R7-STUB(b)
+            string notice = codex.RewardText(meta.edictsUnlock);
             StringAssert.Contains("Edicts — ", notice, "The Editor Takes Notice opens several");
-            foreach (var e in meta.edicts) // R7-STUB(b)
+            foreach (var e in meta.edicts)
                 if (e != null && e.unlock == null) StringAssert.Contains(e.displayName, notice, "it opens " + e.id);
             var jaw = Edict("glass_jaw");
             StringAssert.Contains("Edict — " + jaw.displayName, codex.RewardText(jaw.unlock), "a Market edict's unlock names it");
@@ -390,7 +390,7 @@ namespace Gladiator.Tests
             DevSettings.ResetAll();
             TimeController.GameSpeed = 1f;
             TimeController.ResetForNewRun();
-            RunModifiers.Set(edicts); // R7-STUB(a): before the load, as MainMenu.Launch does
+            RunModifiers.Set(edicts);
             var op = SceneManager.LoadSceneAsync(Arena, LoadSceneMode.Single);
             while (!op.isDone) yield return null;
             yield return null;
@@ -426,11 +426,11 @@ namespace Gladiator.Tests
 
             yield return EndRun();
             var rewards = RunEndController.Instance.Rewards;
-            Assert.Greater(rewards.EdictBonus, 0f, "the summary carried the edicts' bonus"); // R7-STUB(b)
+            Assert.Greater(rewards.EdictBonus, 0f, "the summary carried the edicts' bonus");
             var panel = Object.FindAnyObjectByType<RunEndPanel>();
             Assert.IsNotNull(panel);
             StringAssert.Contains("×", panel.RenownText, "the Renown row shows the multiplier");
-            StringAssert.Contains(EdictsPanel.MulText(1f + rewards.EdictBonus), panel.RenownText); // R7-STUB(b)
+            StringAssert.Contains(EdictsPanel.MulText(1f + rewards.EdictBonus), panel.RenownText);
             StringAssert.Contains("= +" + rewards.Renown, panel.RenownText);
             Assert.AreEqual(RunEndPanel.RenownLine(rewards), panel.RenownText);
         }

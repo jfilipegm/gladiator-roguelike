@@ -25,7 +25,7 @@ namespace Gladiator.Gameplay
 
         [Header("Edicts (R7)")]
         [Tooltip("Every edict, in the order the Edicts panel shows them.")]
-        public RunModifierDef[] edicts = Array.Empty<RunModifierDef>(); // R7-STUB(a)
+        public RunModifierDef[] edicts = Array.Empty<RunModifierDef>();
         [Tooltip("The Edicts open with this (The Editor Takes Notice). Empty = open.")]
         public UnlockDef edictsUnlock;
 

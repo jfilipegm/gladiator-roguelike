@@ -196,7 +196,7 @@ namespace Gladiator.UI
                     string id = raw.Trim();
                     if (id.Length == 0) continue;
                     RunModifierDef found = null;
-                    if (meta != null && meta.edicts != null) // R7-STUB(b)
+                    if (meta != null && meta.edicts != null)
                         foreach (var e in meta.edicts) if (e != null && e.id == id) found = e;
                     if (found == null) Debug.LogWarning("[Edicts] -edicts: no edict \"" + id + "\"");
                     else if (!list.Contains(found)) list.Add(found);
@@ -204,7 +204,7 @@ namespace Gladiator.UI
                 return list.ToArray();
             }
             if (CommandLine.Has("-bot") || CommandLine.Has("-stress")) return Array.Empty<RunModifierDef>();
-            return _edictsShown ? MetaProgress.ChosenEdicts(meta) : Array.Empty<RunModifierDef>(); // R7-STUB(b)
+            return _edictsShown ? MetaProgress.ChosenEdicts(meta) : Array.Empty<RunModifierDef>();
         }
 
         /// <summary>The page changed (a toggle, a clear, a purchase): the button, the tablet and the Renown follow it.</summary>
@@ -218,7 +218,7 @@ namespace Gladiator.UI
 
         void CloseEdicts()
         {
-            if (!Edicts.ReadOnly) _chosenEdicts = MetaProgress.ChosenEdicts(meta); // R7-STUB(b) (saved by the panel)
+            if (!Edicts.ReadOnly) _chosenEdicts = MetaProgress.ChosenEdicts(meta);
             RefreshEdictsButton();
             RefreshRunPick();
             if (Edicts.BoughtAny) // the Codex's Market and the corner's Renown were built before the purchase
@@ -233,7 +233,7 @@ namespace Gladiator.UI
         {
             if (_edictsButton == null) return;
             int n = _chosenEdicts.Length;
-            float mul = 1f + RunModifiers.Bonus(_chosenEdicts); // R7-STUB(a)
+            float mul = 1f + RunModifiers.Bonus(_chosenEdicts);
             _edictsButtonText = EdictsPanel.ButtonText(n, mul);
             UiFactory.Label(_edictsButton).text = n <= 0
                 ? _edictsButtonText
@@ -251,8 +251,8 @@ namespace Gladiator.UI
         {
             MetaProgress.CheckUnlocks(meta); // a discovery from a run that was quit, not finished
             // R7: the Edicts, once earned and once they exist as data (before EdictSetup there are none to show)
-            _edictsShown = meta != null && meta.edicts != null && meta.edicts.Length > 0 && MetaProgress.EdictsOpen(meta); // R7-STUB(b)
-            _chosenEdicts = _edictsShown ? MetaProgress.ChosenEdicts(meta) : Array.Empty<RunModifierDef>(); // R7-STUB(b)
+            _edictsShown = meta != null && meta.edicts != null && meta.edicts.Length > 0 && MetaProgress.EdictsOpen(meta);
+            _chosenEdicts = _edictsShown ? MetaProgress.ChosenEdicts(meta) : Array.Empty<RunModifierDef>();
             var canvas = UiFactory.Canvas("MenuCanvas", transform, UiSortOrder.Menus).transform;
             _menu = Group("Menu", canvas);
             _select = Group("Select", canvas);
@@ -544,7 +544,7 @@ namespace Gladiator.UI
             if (!string.IsNullOrEmpty(arena))
                 foreach (var d in AllRuns) if (d != null && d.id == arena) r = d;
             if (Edicts != null && Edicts.IsOpen) Edicts.Close(); // the page covers FIGHT!, but a launch from code keeps its choice
-            RunModifiers.Set(EdictsForLaunch()); // R7-STUB(a): applied when the arena loads
+            RunModifiers.Set(EdictsForLaunch());
             GameSession.StartRun(g, r);
         }
 

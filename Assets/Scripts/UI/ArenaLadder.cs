@@ -377,7 +377,7 @@ namespace Gladiator.UI
                 named++;
             }
             if (n > named) sb.Append(" · +").Append(n - named).Append(" more");
-            float mul = 1f + RunModifiers.Bonus(edicts); // R7-STUB(a)
+            float mul = 1f + RunModifiers.Bonus(edicts);
             return sb.Append("   RENOWN ").Append(EdictsPanel.MulText(mul)).ToString();
         }
 

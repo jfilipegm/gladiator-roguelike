@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 96d0bcfb5b19335d2ac27643bfcc5465, type: 3}
+  m_Name: ED_GlassJaw
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.RunModifierDef
+  id: glass_jaw
+  displayName: Glass Jaw
+  description: One clean blow and you're on the sand. Don't take it.
+  effectLine: "Max HP \xD70.6"
+  icon: {fileID: 2800000, guid: 13ceaa4af4e914da3ab8c2724bbfa51d, type: 3}
+  iconRow: 68
+  renownBonus: 0.25
+  unlock: {fileID: 11400000, guid: 204bb6c568572ba0390f5cd93d702a97, type: 2}
+  dailyEligible: 1
+  playerStats:
+  - stat: 0
+    op: 2
+    value: 0.6
+  playerDamageTakenMul: 1
+  healingScale: 1
+  enemyHpMul: 1
+  bossHpMul: 1
+  enemySpeedMul: 1
+  densityMul: 1
+  swarmMul: 1
+  eliteEveryMul: 1
+  clockScale: 1
+  chestPriceMul: 1
+  favorGainMul: 1
+  boredomMul: 1
+  levelUpCardDelta: 0

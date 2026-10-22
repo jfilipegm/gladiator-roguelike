@@ -290,7 +290,7 @@ namespace Gladiator.UI
         }
 
         // R7: RunModifiers.Set comes before the arena loads, so the edicts are known by every Start
-        void Start() => BuildEdictRow(RunModifiers.Active); // R7-STUB(a)
+        void Start() => BuildEdictRow(RunModifiers.Active);
 
         /// <summary>Tests: how many edict icons the row holds, and whether it shows.</summary>
         public int EdictIconCount => _edictIcons;

@@ -328,36 +328,36 @@ namespace Gladiator.Gameplay
         public static bool EdictsOpen(MetaConfig meta) => EdictsOpen(meta, Data);
 
         /// <summary>Can `e` be chosen: the Edicts are open and its own unlock (Market or challenge) is earned or none.</summary>
-        public static bool IsOpen(RunModifierDef e, MetaConfig meta, SaveData d) => // R7-STUB(a)
+        public static bool IsOpen(RunModifierDef e, MetaConfig meta, SaveData d) =>
             e != null && EdictsOpen(meta, d) && (e.unlock == null || d.IsUnlocked(e.unlock.id));
 
-        public static bool IsOpen(RunModifierDef e, MetaConfig meta) => IsOpen(e, meta, Data); // R7-STUB(a)
+        public static bool IsOpen(RunModifierDef e, MetaConfig meta) => IsOpen(e, meta, Data);
 
         /// <summary>Is `u` the unlock of an edict (a Market one or a challenge) while the Edicts are still closed? The
         /// Codex hides those until Gorm falls: the feature is unknown before, and a Market edict bought then does nothing.</summary>
         public static bool WaitsForEdicts(UnlockDef u, MetaConfig meta, SaveData d)
         {
             if (u == null || meta == null || meta.edicts == null || u == meta.edictsUnlock || EdictsOpen(meta, d)) return false;
-            foreach (var e in meta.edicts) if (e != null && e.unlock == u) return true; // R7-STUB(a)
+            foreach (var e in meta.edicts) if (e != null && e.unlock == u) return true;
             return false;
         }
 
         /// <summary>The remembered choice: open edicts whose id is in `edictsChosen`, in `meta.edicts` order (locked and
         /// unknown ids are dropped). Allocates: menu only.</summary>
-        public static RunModifierDef[] ChosenEdicts(MetaConfig meta, SaveData d) // R7-STUB(a)
+        public static RunModifierDef[] ChosenEdicts(MetaConfig meta, SaveData d)
         {
             if (meta == null || meta.edicts == null || d == null || d.edictsChosen == null || d.edictsChosen.Count == 0)
-                return System.Array.Empty<RunModifierDef>(); // R7-STUB(a)
-            var list = new List<RunModifierDef>(d.edictsChosen.Count); // R7-STUB(a)
+                return System.Array.Empty<RunModifierDef>();
+            var list = new List<RunModifierDef>(d.edictsChosen.Count);
             foreach (var e in meta.edicts)
                 if (e != null && !list.Contains(e) && d.edictsChosen.Contains(e.id) && IsOpen(e, meta, d)) list.Add(e);
             return list.ToArray();
         }
 
-        public static RunModifierDef[] ChosenEdicts(MetaConfig meta) => ChosenEdicts(meta, Data); // R7-STUB(a)
+        public static RunModifierDef[] ChosenEdicts(MetaConfig meta) => ChosenEdicts(meta, Data);
 
         /// <summary>Pure: remembers `chosen`'s ids (nulls and repeats dropped) in `d`.</summary>
-        public static void SetChosenEdicts(RunModifierDef[] chosen, SaveData d) // R7-STUB(a)
+        public static void SetChosenEdicts(RunModifierDef[] chosen, SaveData d)
         {
             if (d == null) return;
             d.edictsChosen ??= new List<string>();
@@ -368,7 +368,7 @@ namespace Gladiator.Gameplay
         }
 
         /// <summary>Remembers the choice for the next runs, and saves.</summary>
-        public static void SetChosenEdicts(RunModifierDef[] chosen) // R7-STUB(a)
+        public static void SetChosenEdicts(RunModifierDef[] chosen)
         {
             SetChosenEdicts(chosen, Data);
             SaveSystem.Save(Data);

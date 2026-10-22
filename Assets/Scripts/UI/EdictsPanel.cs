@@ -95,7 +95,7 @@ namespace Gladiator.UI
         public RunModifierDef Def(int i) => i >= 0 && i < _defs.Length ? _defs[i] : null;
         public bool IsOn(int i) => i >= 0 && i < _on.Length && _on[i];
         /// <summary>Not earned yet (the Edicts themselves, its Market purchase or its challenge).</summary>
-        public bool IsLocked(int i) => i < 0 || i >= _defs.Length || !MetaProgress.IsOpen(_defs[i], _meta, _save); // R7-STUB(b)
+        public bool IsLocked(int i) => i < 0 || i >= _defs.Length || !MetaProgress.IsOpen(_defs[i], _meta, _save);
         /// <summary>The index of the edict with `id`, or -1.</summary>
         public int IndexOf(string id)
         {
@@ -115,7 +115,7 @@ namespace Gladiator.UI
         }
 
         /// <summary>What the chosen edicts multiply a run's Renown by: 1 + Σ bonus.</summary>
-        public float RenownMul => 1f + RunModifiers.Bonus(Chosen); // R7-STUB(a)
+        public float RenownMul => 1f + RunModifiers.Bonus(Chosen);
 
         // ---- tests: what the panel shows
         public string HeaderText => _header.text;
@@ -144,7 +144,7 @@ namespace Gladiator.UI
             _save = save ?? MetaProgress.Data;
             _onClose = onClose;
             var defs = new List<RunModifierDef>();
-            if (meta != null && meta.edicts != null) // R7-STUB(b)
+            if (meta != null && meta.edicts != null)
                 foreach (var e in meta.edicts)
                     if (e != null && !defs.Contains(e)) defs.Add(e);
             _defs = defs.ToArray();
@@ -258,7 +258,7 @@ namespace Gladiator.UI
         {
             ReadOnly = forced != null;
             BoughtAny = false;
-            var on = forced ?? (_meta != null ? MetaProgress.ChosenEdicts(_meta, _save) : Array.Empty<RunModifierDef>()); // R7-STUB(b)
+            var on = forced ?? (_meta != null ? MetaProgress.ChosenEdicts(_meta, _save) : Array.Empty<RunModifierDef>());
             for (int i = 0; i < _defs.Length; i++) _on[i] = Array.IndexOf(on, _defs[i]) >= 0;
             _focus = 0;
             _hover = -1;
@@ -278,7 +278,7 @@ namespace Gladiator.UI
         public void Close()
         {
             if (!IsOpen) return;
-            if (!ReadOnly) MetaProgress.SetChosenEdicts(Chosen); // R7-STUB(b)
+            if (!ReadOnly) MetaProgress.SetChosenEdicts(Chosen);
             IsOpen = false;
             if (_root != null) _root.SetActive(false);
             _onClose?.Invoke();
@@ -421,7 +421,7 @@ namespace Gladiator.UI
             var v = _cards[i];
             var d = v.Def;
             bool on = _on[i], locked = IsLocked(i);
-            var u = d.unlock != null ? d.unlock : _meta != null ? _meta.edictsUnlock : null; // R7-STUB(b)
+            var u = d.unlock != null ? d.unlock : _meta != null ? _meta.edictsUnlock : null;
             bool market = locked && d.unlock != null && d.unlock.category == UnlockCategory.Market;
             bool dark = locked && !market && !(ReadOnly && on); // the daily may proclaim an edict you haven't earned: it shows lit
             v.Ring.color = i == _focus ? Gold : i == _hover ? Pale : Color.clear;

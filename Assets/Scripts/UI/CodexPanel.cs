@@ -419,9 +419,9 @@ namespace Gladiator.UI
         List<RunModifierDef> EdictsOpenedBy(UnlockDef u)
         {
             var list = new List<RunModifierDef>();
-            if (_meta == null || _meta.edicts == null || u == null) return list; // R7-STUB(b)
-            foreach (var e in _meta.edicts) // R7-STUB(b)
-                if (e != null && (e.unlock == u || (e.unlock == null && _meta.edictsUnlock == u))) list.Add(e); // R7-STUB(b)
+            if (_meta == null || _meta.edicts == null || u == null) return list;
+            foreach (var e in _meta.edicts)
+                if (e != null && (e.unlock == u || (e.unlock == null && _meta.edictsUnlock == u))) list.Add(e);
             return list;
         }
 
@@ -632,7 +632,7 @@ namespace Gladiator.UI
                 ("Gorm defeated", SaveData.Count(s.bossKills, "gorm") + "×"), ("Champion defeated", SaveData.Count(s.bossKills, "champion") + "×"),
                 ("Evolutions made", SaveData.Total(s.evolutions).ToString()), ("Synergies found", s.synergies.Count.ToString()),
                 ("Challenges done", challengesDone + " / " + challenges), ("Secrets found", secretsFound + " / " + secrets),
-                ("Most edicts in a win", s.bestEdictWin.ToString()), // R7-STUB(b)
+                ("Most edicts in a win", s.bestEdictWin.ToString()),
             };
             // two columns; the rows close up when there are more than eight of them (the page is 660 tall)
             _records.Clear();

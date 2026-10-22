@@ -107,8 +107,8 @@ namespace Gladiator.Gameplay
                 Outcome = e.Outcome, Elapsed = e.Elapsed, Kills = run.Kills, GoldEarned = run.GoldEarned, Level = run.Level,
                 ArenaIndex = run.arenaTier, BossDefeated = run.BossDefeated, BossDefeatedHp01 = run.BossDefeatedHp01,
             };
-            s.Edicts = RunModifiers.ActiveIds(); // R7-STUB(a)
-            s.EdictBonus = RunModifiers.RenownBonus; // R7-STUB(a)
+            s.Edicts = RunModifiers.ActiveIds();
+            s.EdictBonus = RunModifiers.RenownBonus;
             var p = Player.Main;
             if (p == null) return s;
             var stats = p.GetComponent<PlayerStats>();

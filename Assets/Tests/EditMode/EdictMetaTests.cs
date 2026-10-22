@@ -6,7 +6,7 @@ using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
 
-// R7-STUB(a): RunModifierDef and its fields (R7-A, Assets/Scripts/Gameplay/Run/RunModifierDef.cs) throughout this file.
+
 
 namespace Gladiator.Tests
 {

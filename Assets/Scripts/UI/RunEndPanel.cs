@@ -138,8 +138,8 @@ namespace Gladiator.UI
         /// <summary>"+124  (2310)", "+124 +50  (2360)" with a bounty, "+124 ×1.65 = +205 +50  (2410)" under edicts.</summary>
         public static string RenownLine(RunRewards r)
         {
-            string s = r.EdictBonus > 0f // R7-STUB(b)
-                ? "+" + r.BaseRenown + " " + EdictsPanel.MulText(1f + r.EdictBonus) + " = +" + r.Renown // R7-STUB(b)
+            string s = r.EdictBonus > 0f
+                ? "+" + r.BaseRenown + " " + EdictsPanel.MulText(1f + r.EdictBonus) + " = +" + r.Renown
                 : "+" + r.Renown;
             if (r.Bounty > 0) s += " +" + r.Bounty;
             return s + "  (" + r.RenownTotal + ")";

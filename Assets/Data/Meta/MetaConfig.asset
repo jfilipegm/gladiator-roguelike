@@ -27,6 +27,14 @@ MonoBehaviour:
   - {fileID: 11400000, guid: a3f6187c831960ec485f448897ec337e, type: 2}
   - {fileID: 11400000, guid: 90ab7f14349edf25c81dea1a213fafc8, type: 2}
   - {fileID: 11400000, guid: eb49579977cfe931badc2869f575f9ef, type: 2}
+  - {fileID: 11400000, guid: 9310ce1c529d250a28e239599c1ee684, type: 2}
+  - {fileID: 11400000, guid: f27e4bc219515a5c3a993f971bbadf01, type: 2}
+  - {fileID: 11400000, guid: 38bcdc8f89867ebf8a492a57843bdd8c, type: 2}
+  - {fileID: 11400000, guid: 204bb6c568572ba0390f5cd93d702a97, type: 2}
+  - {fileID: 11400000, guid: 632771efba37aebbca1f581c48d4cb8b, type: 2}
+  - {fileID: 11400000, guid: 36ce95a64e90b34c08f5f5a9ea0ae84e, type: 2}
+  - {fileID: 11400000, guid: 69f99c62c5b7703eb8c343da1af27ad1, type: 2}
+  - {fileID: 11400000, guid: ca43e1ead38104ea9b36add3cbbb39b0, type: 2}
   - {fileID: 11400000, guid: 0f3402ef1c51cce07903cae05866af18, type: 2}
   - {fileID: 11400000, guid: 571048723ef9bb635aa8a1d3cb08dc87, type: 2}
   - {fileID: 11400000, guid: 9e5f9aa05ad8cf94eb4fe91cde0346e7, type: 2}
@@ -44,3 +52,16 @@ MonoBehaviour:
   - {fileID: 11400000, guid: d2ee2af01641103c8935920256db4fc4, type: 2}
   - {fileID: 11400000, guid: f40e8d5246075e65cb645101575bca8a, type: 2}
   - {fileID: 11400000, guid: 1541e2c9608b665bdad5450a28178ecb, type: 2}
+  edicts:
+  - {fileID: 11400000, guid: 675bcd0da368cd31aab5c244b3bcf0f5, type: 2}
+  - {fileID: 11400000, guid: de9bf79ece574aac592d3b7f567255e1, type: 2}
+  - {fileID: 11400000, guid: a9bb6897518cbee73a8528f6c554637e, type: 2}
+  - {fileID: 11400000, guid: 52548d9420b97a078ae2f6a68721420c, type: 2}
+  - {fileID: 11400000, guid: 7f0846e84c64f64f89439fa9ddf37e68, type: 2}
+  - {fileID: 11400000, guid: d633265763e301825b465f50b5161c87, type: 2}
+  - {fileID: 11400000, guid: 96d67238a3e008c17b61c8b5807281b4, type: 2}
+  - {fileID: 11400000, guid: e1f2d8bbc7269d561addc73c77f204be, type: 2}
+  - {fileID: 11400000, guid: 35486a805a7d47a0e97c80713cc594f0, type: 2}
+  - {fileID: 11400000, guid: 27d98244af0b59632843b80c870e7bdd, type: 2}
+  - {fileID: 11400000, guid: 57e26f32e5aadc5db990d2fd03efd3b1, type: 2}
+  edictsUnlock: {fileID: 11400000, guid: 36ce95a64e90b34c08f5f5a9ea0ae84e, type: 2}

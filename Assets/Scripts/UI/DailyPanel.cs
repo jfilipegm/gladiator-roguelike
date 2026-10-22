@@ -165,7 +165,7 @@ namespace Gladiator.UI
         public static string OutcomeWord(int outcome) => outcome == (int)RunOutcome.Survived ? "VICTORY" : outcome == (int)RunOutcome.Died ? "DIED" : "UNFINISHED";
 
         /// <summary>"scored: VICTORY 8:00, 1,904 kills, +412": a scored daily's result in one line.</summary>
-        public static string ResultLine(in DailyRecord r) => // R8-STUB(b)
+        public static string ResultLine(in DailyRecord r) =>
             "scored: " + OutcomeWord(r.outcome) + " " + Clock(r.elapsed) + ", " + r.kills.ToString("N0", CultureInfo.InvariantCulture) + " kills, +" + r.renown.ToString(CultureInfo.InvariantCulture);
 
         /// <summary>The ledger's names: the arenas and gladiators the records' ids point at (unknown ids show as words).</summary>
@@ -341,12 +341,12 @@ namespace Gladiator.UI
         {
             if (_box == null) return;
             _plan = plan;
-            _date = plan.Date > 0 ? plan.Date : DailyGames.DateKey(utcNow); // R8-STUB(b)
+            _date = plan.Date > 0 ? plan.Date : DailyGames.DateKey(utcNow);
             save ??= MetaProgress.Data;
-            bool valid = plan.IsValid; // R8-STUB(b)
+            bool valid = plan.IsValid;
             bool attempted = ReferenceEquals(save, MetaProgress.Data)
-                ? MetaProgress.DailyAttempted(_date) // R8-STUB(b)
-                : save.dailyAttempt >= _date; // R8-STUB(b): as MetaProgress.DailyAttempted (setting the clock back gives nothing)
+                ? MetaProgress.DailyAttempted(_date)
+                : save.dailyAttempt >= _date;
             Scored = valid && !attempted;
 
             // the arena and the gladiator
@@ -377,7 +377,7 @@ namespace Gladiator.UI
             _edictsBlock.GetComponent<Button>().interactable = EdictCount > 0;
 
             // the Renown: the daily's ×1.5 only pays on the scored attempt (struck through on practice)
-            float daily = 1f + Mathf.Max(0f, meta != null ? meta.dailyRenownBonus : 0.5f); // R8-STUB(b)
+            float daily = 1f + Mathf.Max(0f, meta != null ? meta.dailyRenownBonus : 0.5f);
             float edictMul = 1f + RunModifiers.Bonus(edicts);
             string dailyMul = EdictsPanel.MulText(daily);
             string s = Scored || !valid ? "RENOWN " + dailyMul : "RENOWN <color=" + StruckHex + "><s>" + dailyMul + "</s></color>";
@@ -428,10 +428,10 @@ namespace Gladiator.UI
         }
 
         /// <summary>Today's scored result, if the attempt has finished.</summary>
-        static bool TodaysRecord(SaveData save, int date, out DailyRecord rec) // R8-STUB(b)
+        static bool TodaysRecord(SaveData save, int date, out DailyRecord rec)
         {
             rec = default;
-            var list = save != null ? save.dailies : null; // R8-STUB(b)
+            var list = save != null ? save.dailies : null;
             if (list == null) return false;
             for (int i = list.Count - 1; i >= 0; i--)
                 if (list[i].date == date) { rec = list[i]; return true; }
@@ -440,7 +440,7 @@ namespace Gladiator.UI
 
         void DrawLedger(SaveData save)
         {
-            var list = save.dailies; // R8-STUB(b): oldest first
+            var list = save.dailies;
             int n = list != null ? Mathf.Min(LedgerShown, list.Count) : 0;
             LedgerRows = n;
             for (int i = 0; i < _ledger.Length; i++)
@@ -461,7 +461,7 @@ namespace Gladiator.UI
                 v.Frame.color = r.date == _date ? Gold : Border;
             }
             _ledgerEmpty.gameObject.SetActive(n == 0);
-            _ledgerCounts.text = "PLAYED " + save.dailiesPlayed + "  ·  WON " + save.dailiesWon; // R8-STUB(b)
+            _ledgerCounts.text = "PLAYED " + save.dailiesPlayed + "  ·  WON " + save.dailiesWon;
         }
 
         string GladiatorName(string id)
@@ -494,8 +494,8 @@ namespace Gladiator.UI
             long second = utcNow.Ticks / TimeSpan.TicksPerSecond;
             if (second == _clockSecond) return false;
             _clockSecond = second;
-            if (_date > 0 && DailyGames.DateKey(utcNow) != _date) return true; // R8-STUB(b)
-            var left = DailyGames.UntilNext(utcNow); // R8-STUB(b)
+            if (_date > 0 && DailyGames.DateKey(utcNow) != _date) return true;
+            var left = DailyGames.UntilNext(utcNow);
             int minutes = Mathf.Max(0, (int)Math.Floor(left.TotalMinutes));
             if (minutes != _clockMinutes)
             {

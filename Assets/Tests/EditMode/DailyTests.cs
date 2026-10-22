@@ -8,7 +8,7 @@ using UnityEngine;
 using UnityEngine.TestTools;
 using Object = UnityEngine.Object;
 
-// R8-STUB(a): GameRandom.RunSeed (R8-A's GameRandom.cs) throughout; DailyGames and GameSession call R8-A's Hash / BeginRun.
+
 
 namespace Gladiator.Tests
 {

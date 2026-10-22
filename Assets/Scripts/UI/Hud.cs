@@ -296,7 +296,7 @@ namespace Gladiator.UI
         void Start()
         {
             BuildEdictRow(RunModifiers.Active);
-            if (GameSession.HasDaily) BuildDailyChip(GameSession.DailyScored); // R8-STUB(b)
+            if (GameSession.HasDaily) BuildDailyChip(GameSession.DailyScored);
         }
 
         // R8: the daily chip, right of the timer's digits (and of "BOSS")

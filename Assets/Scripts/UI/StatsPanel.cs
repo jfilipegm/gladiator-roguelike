@@ -256,7 +256,7 @@ namespace Gladiator.UI
             var g = _stats.gladiator;
             t.Append("<size=143%><color=").Append(StatText.Head).Append('>').Append("<uppercase>").Append(g != null ? g.displayName : "Stats").Append("</uppercase></color></size>\n");
             t.Append("<size=81%><color=").Append(StatText.Dim).Append(">every stat, then where it comes from<pos=68%>");
-            AppendSeed(t, GameRandom.RunSeed); // R8-STUB(a)
+            AppendSeed(t, GameRandom.RunSeed);
             t.Append("</color></size>\n");
             if (g != null && g.traits != null && g.traits.Length > 0)
             {

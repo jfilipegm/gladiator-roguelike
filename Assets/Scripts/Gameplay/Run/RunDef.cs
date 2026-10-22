@@ -87,7 +87,7 @@ namespace Gladiator.Gameplay
         {
             if (!TryCommandLineSeed(out uint seed)) return;
             Seed = seed;
-            GameRandom.BeginRun(seed); // R8-STUB(a)
+            GameRandom.BeginRun(seed);
         }
 
         /// <summary>Forget the gladiator, run, seed and daily, and the test switches (tests: one that picks a gladiator
@@ -130,7 +130,7 @@ namespace Gladiator.Gameplay
             Seed = plan.Seed;
             RunModifiers.Set(plan.Edicts);
             Debug.Log($"[GameSession] daily {plan.Date} {(scored ? "SCORED" : "practice")}: {plan.Run.id} as {plan.Gladiator.id}, " +
-                      $"{(plan.Edicts != null ? plan.Edicts.Length : 0)} edicts, seed {GameRandom.SeedText(plan.Seed)}"); // R8-STUB(a)
+                      $"{(plan.Edicts != null ? plan.Edicts.Length : 0)} edicts, seed {GameRandom.SeedText(plan.Seed)}");
             LoadRun(FirstArena(plan.Run));
         }
 
@@ -147,7 +147,7 @@ namespace Gladiator.Gameplay
         public static void RetrySameSeed()
         {
             if (HasDaily) DailyScored = false;
-            if (Seed == 0u) Seed = GameRandom.RunSeed; // an arena loaded straight from the Editor or a test: replay what it ran on // R8-STUB(a)
+            if (Seed == 0u) Seed = GameRandom.RunSeed; // an arena loaded straight from the Editor or a test: replay what it ran on
             Reload();
         }
 
@@ -155,7 +155,7 @@ namespace Gladiator.Gameplay
         public static uint FreshSeed()
         {
             ulong ticks = (ulong)System.Diagnostics.Stopwatch.GetTimestamp() ^ (ulong)DateTime.UtcNow.Ticks;
-            uint h = GameRandom.Hash((uint)ticks, (uint)(ticks >> 32), ++_freshCount); // R8-STUB(a)
+            uint h = GameRandom.Hash((uint)ticks, (uint)(ticks >> 32), ++_freshCount);
             return h != 0u ? h : 0x9E3779B9u;
         }
 
@@ -167,7 +167,7 @@ namespace Gladiator.Gameplay
             seed = 0u;
             string text = CommandLine.Get("-runSeed");
             if (string.IsNullOrEmpty(text)) return false;
-            if (GameRandom.TryParseSeed(text, out seed)) return true; // R8-STUB(a)
+            if (GameRandom.TryParseSeed(text, out seed)) return true;
             Debug.LogWarning("[GameSession] -runSeed " + text + " isn't a seed (8 hex digits, e.g. 7F3A91C2): using a fresh one");
             seed = 0u;
             return false;
@@ -194,7 +194,7 @@ namespace Gladiator.Gameplay
         static void Reload()
         {
             var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
-            GameRandom.BeginRun(Seed); // R8-STUB(a)
+            GameRandom.BeginRun(Seed);
             LastLoadPath = scene.path;
             if (SuppressLoad) return;
             TimeController.ResetForNewRun();
@@ -207,7 +207,7 @@ namespace Gladiator.Gameplay
         static void LoadRun(string path)
         {
             if (string.IsNullOrEmpty(path)) return;
-            GameRandom.BeginRun(Seed); // R8-STUB(a)
+            GameRandom.BeginRun(Seed);
             LastLoadPath = path;
             if (SuppressLoad) return;
             Load(path);

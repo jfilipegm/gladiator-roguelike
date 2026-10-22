@@ -39,13 +39,13 @@ namespace Gladiator.Tests
         MainMenu _menu;
 
         [SetUp]
-        public void SetUp() => GameSession.SuppressLoad = true; // R8-STUB(b)
+        public void SetUp() => GameSession.SuppressLoad = true;
 
         [TearDown]
         public void TearDown()
         {
             if (Player.Main != null) Player.Main.SetPaused(false);
-            GameSession.SuppressLoad = false; // R8-STUB(b)
+            GameSession.SuppressLoad = false;
             RunModifiers.Clear();
             GameSession.Clear();
             DevSettings.ResetAll();
@@ -60,7 +60,7 @@ namespace Gladiator.Tests
             {
                 var m = AssetDatabase.LoadAssetAtPath<MetaConfig>("Assets/Data/Meta/MetaConfig.asset");
                 Assert.IsNotNull(m, "MetaConfig");
-                Assert.IsNotNull(m.dailyUnlock, "MetaConfig.dailyUnlock (run Gladiator/Setup/Meta/Create Daily Data)"); // R8-STUB(b)
+                Assert.IsNotNull(m.dailyUnlock, "MetaConfig.dailyUnlock (run Gladiator/Setup/Meta/Create Daily Data)");
                 return m;
             }
         }
@@ -73,10 +73,10 @@ namespace Gladiator.Tests
         }
 
         /// <summary>The Daily Games earned: Gorm has fallen (UL_Daily is in the save).</summary>
-        static void EarnDaily(SaveData d) => d.unlocked.Add(Meta.dailyUnlock.id); // R8-STUB(b)
+        static void EarnDaily(SaveData d) => d.unlocked.Add(Meta.dailyUnlock.id);
 
-        static int Today => DailyGames.Today(); // R8-STUB(b)
-        static int DaysAgo(int n) => DailyGames.DateKey(DateTime.UtcNow.Date.AddDays(-n)); // R8-STUB(b)
+        static int Today => DailyGames.Today();
+        static int DaysAgo(int n) => DailyGames.DateKey(DateTime.UtcNow.Date.AddDays(-n));
 
         IEnumerator Boot(Action<SaveData> stage = null)
         {
@@ -160,15 +160,15 @@ namespace Gladiator.Tests
             Assert.AreEqual("22 OCT", DailyPanel.DateShort(20261022));
             Assert.AreEqual("1 JAN 2027", DailyPanel.DateLong(20270101));
             Assert.AreEqual("THE DAILY GAMES — 22 OCT 2026", DailyPanel.Header(20261022));
-            Assert.AreEqual(DailyGames.DateText(20261022), DailyPanel.DateLong(20261022), "the menu's dates read as the daily core's"); // R8-STUB(b)
+            Assert.AreEqual(DailyGames.DateText(20261022), DailyPanel.DateLong(20261022), "the menu's dates read as the daily core's");
             Assert.AreEqual("5 H 12 M", DailyPanel.Countdown(new TimeSpan(5, 12, 40)));
             Assert.AreEqual("12 M", DailyPanel.Countdown(new TimeSpan(0, 12, 0)));
             var lastHalfMinute = new DateTime(2026, 10, 22, 23, 59, 30, DateTimeKind.Utc);
-            Assert.AreEqual("LESS THAN A MINUTE", DailyPanel.Countdown(DailyGames.UntilNext(lastHalfMinute))); // R8-STUB(b)
+            Assert.AreEqual("LESS THAN A MINUTE", DailyPanel.Countdown(DailyGames.UntilNext(lastHalfMinute)));
             Assert.AreEqual("8:00", DailyPanel.Clock(480f));
             Assert.AreEqual("12:07", DailyPanel.Clock(727.9f));
 
-            Assert.AreEqual("SEED " + GameRandom.SeedText(SeedA), RunEndPanel.SeedLine(false, 0, false, SeedA)); // R8-STUB(a)
+            Assert.AreEqual("SEED " + GameRandom.SeedText(SeedA), RunEndPanel.SeedLine(false, 0, false, SeedA));
             Assert.AreEqual("SEED 7F3A-91C2", RunEndPanel.SeedLine(false, 0, false, SeedA), "the spec's 8 hex digits");
             Assert.AreEqual("DAILY 22 OCT · SCORED", RunEndPanel.SeedLine(true, 20261022, true, 0u));
             Assert.AreEqual("DAILY 22 OCT · PRACTICE", RunEndPanel.SeedLine(true, 20261022, false, 0u));
@@ -176,12 +176,12 @@ namespace Gladiator.Tests
             {
                 var t = new CharBuffer(32);
                 StatsPanel.AppendSeed(t, s);
-                Assert.AreEqual("SEED " + GameRandom.SeedText(s), t.ToString(), "the pause page writes the seed as GameRandom does"); // R8-STUB(a)
+                Assert.AreEqual("SEED " + GameRandom.SeedText(s), t.ToString(), "the pause page writes the seed as GameRandom does");
             }
 
-            var daily = new RunRewards { BaseRenown = 124, EdictBonus = 0.45f, DailyBonus = 0.5f, Renown = 270, Bounty = 150, RenownTotal = 2410 }; // R8-STUB(b)
+            var daily = new RunRewards { BaseRenown = 124, EdictBonus = 0.45f, DailyBonus = 0.5f, Renown = 270, Bounty = 150, RenownTotal = 2410 };
             Assert.AreEqual("+124 ×1.45 ×1.5 daily = +270 +150  (2410)", RunEndPanel.RenownLine(daily));
-            var dailyOnly = new RunRewards { BaseRenown = 100, DailyBonus = 0.5f, Renown = 150, RenownTotal = 900 }; // R8-STUB(b)
+            var dailyOnly = new RunRewards { BaseRenown = 100, DailyBonus = 0.5f, Renown = 150, RenownTotal = 900 };
             Assert.AreEqual("+100 ×1.5 daily = +150  (900)", RunEndPanel.RenownLine(dailyOnly));
             var plain = new RunRewards { BaseRenown = 100, Renown = 100, RenownTotal = 900 };
             Assert.AreEqual("+100  (900)", RunEndPanel.RenownLine(plain), "a normal run's line is unchanged");
@@ -197,7 +197,7 @@ namespace Gladiator.Tests
             Assert.IsFalse(_menu.DailyDot);
             Assert.AreEqual("DAILY", _menu.DailyButtonText);
             Assert.IsNotEmpty(_menu.DailyHintText, "the greyed button says how to open it");
-            var hint = Meta.dailyUnlock.hint; // R8-STUB(b)
+            var hint = Meta.dailyUnlock.hint;
             if (!string.IsNullOrEmpty(hint) && hint != "???") Assert.AreEqual(hint, _menu.DailyHintText, "its unlock's hint");
             _menu.OpenDaily();
             Assert.IsFalse(_menu.DailyShown, "no Daily screen before it's earned");
@@ -236,7 +236,7 @@ namespace Gladiator.Tests
             Canvas.ForceUpdateCanvases();
             Assert.IsTrue(_menu.DailyShown, "a click on DAILY opens the Daily screen");
             var p = _menu.Daily;
-            var plan = _menu.TodayPlan; // R8-STUB(b)
+            var plan = _menu.TodayPlan;
             Assert.IsTrue(plan.IsValid, "a fresh save still has an arena and a gladiator");
             Assert.AreEqual(Today, plan.Date, "today, UTC");
             Assert.IsTrue(MainMenu.IsAvailable(plan.Run), "the arena is one the save has earned");
@@ -245,14 +245,14 @@ namespace Gladiator.Tests
             Assert.AreEqual(plan.Run.DisplayName.ToUpperInvariant(), p.ArenaText);
             Assert.AreEqual(plan.Gladiator.displayName.ToUpperInvariant(), p.GladiatorText);
 
-            Assert.AreEqual(meta.dailyEdicts, plan.Edicts.Length, "two edicts"); // R8-STUB(b)
+            Assert.AreEqual(meta.dailyEdicts, plan.Edicts.Length, "two edicts");
             Assert.AreEqual(plan.Edicts.Length, p.EdictCount);
             Assert.AreNotSame(plan.Edicts[0], plan.Edicts[1], "two different edicts");
             for (int i = 0; i < plan.Edicts.Length; i++) Assert.AreEqual(plan.Edicts[i].displayName, p.EdictName(i));
 
             Assert.IsTrue(p.Scored);
             Assert.AreEqual("SCORED ATTEMPT", p.StatusText);
-            StringAssert.Contains("RENOWN " + EdictsPanel.MulText(1f + meta.dailyRenownBonus), p.RenownText); // R8-STUB(b)
+            StringAssert.Contains("RENOWN " + EdictsPanel.MulText(1f + meta.dailyRenownBonus), p.RenownText);
             StringAssert.Contains("EDICTS " + EdictsPanel.MulText(1f + RunModifiers.Bonus(plan.Edicts)), p.RenownText);
             StringAssert.DoesNotContain("<s>", p.RenownText, "the ×1.5 pays on the scored attempt");
             StringAssert.StartsWith("NEXT DAILY IN ", p.NextText);
@@ -290,20 +290,20 @@ namespace Gladiator.Tests
         {
             yield return Boot(EarnDaily);
             yield return OpenDaily();
-            var plan = _menu.TodayPlan; // R8-STUB(b)
+            var plan = _menu.TodayPlan;
             Assert.IsTrue(_menu.DailyFightEnabled);
             Click(MenuPart("Daily/Fight"));
 
-            Assert.IsTrue(GameSession.HasDaily, "FIGHT! started the daily"); // R8-STUB(b)
-            Assert.IsTrue(GameSession.DailyScored, "the day's first attempt is scored"); // R8-STUB(b)
-            Assert.AreEqual(plan.Date, GameSession.Daily.Date); // R8-STUB(b)
-            Assert.AreEqual(plan.Seed, GameSession.Seed, "the day's seed"); // R8-STUB(b)
+            Assert.IsTrue(GameSession.HasDaily, "FIGHT! started the daily");
+            Assert.IsTrue(GameSession.DailyScored, "the day's first attempt is scored");
+            Assert.AreEqual(plan.Date, GameSession.Daily.Date);
+            Assert.AreEqual(plan.Seed, GameSession.Seed, "the day's seed");
             Assert.AreSame(plan.Gladiator, GameSession.Gladiator, "the day's gladiator, no select screen");
             Assert.AreSame(plan.Run, GameSession.Run, "the day's arena, no arena screen");
             CollectionAssert.AreEqual(plan.Edicts, RunModifiers.Active, "under the day's edicts");
-            Assert.AreEqual(plan.Run.arenas[0].scenePath, GameSession.LastLoadPath, "its first arena would load"); // R8-STUB(b)
-            Assert.IsTrue(MetaProgress.DailyAttempted(plan.Date), "the attempt is marked at once"); // R8-STUB(b)
-            Assert.AreEqual(plan.Date, SavedFile().dailyAttempt, "and saved at once (quitting doesn't give another)"); // R8-STUB(b)
+            Assert.AreEqual(plan.Run.arenas[0].scenePath, GameSession.LastLoadPath, "its first arena would load");
+            Assert.IsTrue(MetaProgress.DailyAttempted(plan.Date), "the attempt is marked at once");
+            Assert.AreEqual(plan.Date, SavedFile().dailyAttempt, "and saved at once (quitting doesn't give another)");
             Assert.IsFalse(_menu.DailyDot, "no gold dot once the attempt is spent");
             StringAssert.DoesNotContain("•", _menu.DailyButtonText);
 
@@ -315,12 +315,12 @@ namespace Gladiator.Tests
             StringAssert.Contains("<s>", p.RenownText, "practice: the daily's ×1.5 struck through");
             AssertNothingTruncated(p.Box, "the practice screen");
             _menu.FightDaily();
-            Assert.IsTrue(GameSession.HasDaily); // R8-STUB(b)
-            Assert.IsFalse(GameSession.DailyScored, "a second attempt is practice"); // R8-STUB(b)
-            Assert.AreEqual(plan.Seed, GameSession.Seed, "practice replays the day's seed"); // R8-STUB(b)
+            Assert.IsTrue(GameSession.HasDaily);
+            Assert.IsFalse(GameSession.DailyScored, "a second attempt is practice");
+            Assert.AreEqual(plan.Seed, GameSession.Seed, "practice replays the day's seed");
             var saved = SavedFile();
-            Assert.AreEqual(plan.Date, saved.dailyAttempt); // R8-STUB(b)
-            Assert.AreEqual(0, saved.dailiesPlayed, "nothing counted before a run ends"); // R8-STUB(b)
+            Assert.AreEqual(plan.Date, saved.dailyAttempt);
+            Assert.AreEqual(0, saved.dailiesPlayed, "nothing counted before a run ends");
         }
 
         [UnityTest, Timeout(60000)]
@@ -330,13 +330,13 @@ namespace Gladiator.Tests
             yield return Boot(d =>
             {
                 EarnDaily(d);
-                d.dailies ??= new List<DailyRecord>(); // R8-STUB(b)
+                d.dailies ??= new List<DailyRecord>();
                 for (int k = 8; k >= 1; k--) // oldest first, as the save keeps them
                     d.dailies.Add(new DailyRecord { date = DaysAgo(k), run = k == 3 ? "old_arena" : "slice", gladiator = "nobody", edicts = "iron_hides|blood_sport", outcome = (int)RunOutcome.Died, elapsed = 60f * k + 7f, kills = 100 * k, renown = 10 * k, seed = k });
                 d.dailies.Add(new DailyRecord { date = today, run = "slice", gladiator = "nobody", edicts = "iron_hides|blood_sport", outcome = (int)RunOutcome.Survived, elapsed = 480f, kills = 1904, renown = 412, seed = SeedA });
-                d.dailyAttempt = today; // R8-STUB(b)
-                d.dailiesPlayed = 9; // R8-STUB(b)
-                d.dailiesWon = 1; // R8-STUB(b)
+                d.dailyAttempt = today;
+                d.dailiesPlayed = 9;
+                d.dailiesWon = 1;
             });
             Assert.IsFalse(_menu.DailyDot, "today's attempt is spent");
             yield return OpenDaily();
@@ -382,7 +382,7 @@ namespace Gladiator.Tests
             DevSettings.ResetAll();
             TimeController.GameSpeed = 1f;
             TimeController.ResetForNewRun();
-            GameRandom.BeginRun(seed); // R8-STUB(a): what GameSession.Load does before a real load
+            GameRandom.BeginRun(seed);
             var op = SceneManager.LoadSceneAsync(Arena, LoadSceneMode.Single);
             while (!op.isDone) yield return null;
             yield return null;
@@ -418,9 +418,9 @@ namespace Gladiator.Tests
             RunModifiers.Clear();
             var nobody = AssetDatabase.LoadAssetAtPath<GladiatorDef>(Nobody);
             var pit = AssetDatabase.LoadAssetAtPath<RunDef>(SlavePit);
-            GameSession.StartRun(nobody, pit, SeedA); // R8-STUB(b): suppressed, it only records
-            Assert.AreEqual(SeedA, GameSession.Seed); // R8-STUB(b)
-            Assert.IsFalse(GameSession.HasDaily); // R8-STUB(b)
+            GameSession.StartRun(nobody, pit, SeedA);
+            Assert.AreEqual(SeedA, GameSession.Seed);
+            Assert.IsFalse(GameSession.HasDaily);
             yield return BootArena(SeedA);
 
             var hud = Object.FindAnyObjectByType<Hud>();
@@ -434,14 +434,14 @@ namespace Gladiator.Tests
             yield return null;
             yield return null;
             Assert.AreEqual(StatsPanel.Mode.Pause, page.Current);
-            StringAssert.Contains("SEED " + GameRandom.SeedText(SeedA), page.Text, "the pause page shows the seed"); // R8-STUB(a)
+            StringAssert.Contains("SEED " + GameRandom.SeedText(SeedA), page.Text, "the pause page shows the seed");
             Player.Main.SetPaused(false);
             yield return null;
 
             yield return EndRun();
             var panel = Object.FindAnyObjectByType<RunEndPanel>();
             Assert.IsNotNull(panel);
-            Assert.AreEqual("SEED " + GameRandom.SeedText(SeedA), panel.SeedText, "the end screen names the seed"); // R8-STUB(a)
+            Assert.AreEqual("SEED " + GameRandom.SeedText(SeedA), panel.SeedText, "the end screen names the seed");
             StringAssert.Contains(panel.SeedText, panel.NoteText);
             Assert.IsTrue(panel.SameSeedShown, "SAME SEED beside RETRY");
             Assert.AreEqual("Retry  [R]", panel.RetryText);
@@ -454,21 +454,21 @@ namespace Gladiator.Tests
             string arenaPath = SceneManager.GetActiveScene().path;
             Press(panel.SameSeedRect);
             yield return null;
-            Assert.AreEqual(SeedA, GameSession.Seed, "SAME SEED replays this seed"); // R8-STUB(b)
-            Assert.IsFalse(GameSession.HasDaily); // R8-STUB(b)
+            Assert.AreEqual(SeedA, GameSession.Seed, "SAME SEED replays this seed");
+            Assert.IsFalse(GameSession.HasDaily);
             Assert.IsTrue(panel != null, "SuppressLoad also holds RETRY's reload (the scene is still this one)");
-            Assert.AreEqual(arenaPath, GameSession.LastLoadPath, "the reload it recorded: this arena again"); // R8-STUB(b)
+            Assert.AreEqual(arenaPath, GameSession.LastLoadPath, "the reload it recorded: this arena again");
 
             Press(panel.RetryRect);
             yield return null;
-            Assert.AreNotEqual(SeedA, GameSession.Seed, "RETRY is a new run: a fresh seed"); // R8-STUB(b)
+            Assert.AreNotEqual(SeedA, GameSession.Seed, "RETRY is a new run: a fresh seed");
         }
 
         [UnityTest, Timeout(60000)]
         public IEnumerator AScoredDaily_ShowsTheChip_TheDailyLine_TheBonus_AndOnlyPractice()
         {
             SaveSandbox.Wipe();
-            var plan = new DailyPlan // R8-STUB(b)
+            var plan = new DailyPlan
             {
                 Date = Today,
                 Seed = SeedA,
@@ -476,7 +476,7 @@ namespace Gladiator.Tests
                 Gladiator = AssetDatabase.LoadAssetAtPath<GladiatorDef>(Nobody),
                 Edicts = new[] { Edict("iron_hides"), Edict("blood_sport") },
             };
-            GameSession.StartDaily(plan, true); // R8-STUB(b): suppressed, it sets the session and the edicts
+            GameSession.StartDaily(plan, true);
             CollectionAssert.AreEqual(plan.Edicts, RunModifiers.Active);
             yield return BootArena(plan.Seed);
 
@@ -495,23 +495,23 @@ namespace Gladiator.Tests
             Assert.IsFalse(panel.SameSeedShown, "a daily's retry already keeps the seed");
             Assert.AreEqual("Practice  [R]", panel.RetryText);
             AssertOnScreen(panel.RetryRect, "PRACTICE");
-            Assert.Greater(rewards.DailyBonus, 0f, "the scored daily's bonus reached the rewards"); // R8-STUB(b)
-            StringAssert.Contains(EdictsPanel.MulText(1f + rewards.DailyBonus) + " daily", panel.RenownText); // R8-STUB(b)
+            Assert.Greater(rewards.DailyBonus, 0f, "the scored daily's bonus reached the rewards");
+            StringAssert.Contains(EdictsPanel.MulText(1f + rewards.DailyBonus) + " daily", panel.RenownText);
             Assert.AreEqual(RunEndPanel.RenownLine(rewards), panel.RenownText);
             AssertNothingTruncated((RectTransform)panel.transform.Find("RunEndCanvas"), "the end screen");
 
             Press(panel.RetryRect); // PRACTICE
             yield return null;
-            Assert.IsTrue(GameSession.HasDaily, "practice stays in the daily"); // R8-STUB(b)
-            Assert.IsFalse(GameSession.DailyScored, "and is never scored"); // R8-STUB(b)
-            Assert.AreEqual(plan.Seed, GameSession.Seed, "on the day's seed"); // R8-STUB(b)
+            Assert.IsTrue(GameSession.HasDaily, "practice stays in the daily");
+            Assert.IsFalse(GameSession.DailyScored, "and is never scored");
+            Assert.AreEqual(plan.Seed, GameSession.Seed, "on the day's seed");
         }
 
         [UnityTest, Timeout(60000)]
         public IEnumerator APracticeDaily_HasAGreyChip_AndNoBonus()
         {
             SaveSandbox.Wipe();
-            var plan = new DailyPlan // R8-STUB(b)
+            var plan = new DailyPlan
             {
                 Date = Today,
                 Seed = SeedA,
@@ -519,7 +519,7 @@ namespace Gladiator.Tests
                 Gladiator = AssetDatabase.LoadAssetAtPath<GladiatorDef>(Nobody),
                 Edicts = Array.Empty<RunModifierDef>(),
             };
-            GameSession.StartDaily(plan, false); // R8-STUB(b)
+            GameSession.StartDaily(plan, false);
             yield return BootArena(plan.Seed);
             var hud = Object.FindAnyObjectByType<Hud>();
             Assert.IsTrue(hud.DailyChipShown);
@@ -529,7 +529,7 @@ namespace Gladiator.Tests
             var rewards = RunEndController.Instance.Rewards;
             var panel = Object.FindAnyObjectByType<RunEndPanel>();
             Assert.AreEqual("DAILY " + DailyPanel.DateShort(plan.Date) + " · PRACTICE", panel.SeedText);
-            Assert.AreEqual(0f, rewards.DailyBonus, "practice pays as a normal run"); // R8-STUB(b)
+            Assert.AreEqual(0f, rewards.DailyBonus, "practice pays as a normal run");
             StringAssert.DoesNotContain("daily", panel.RenownText);
         }
     }

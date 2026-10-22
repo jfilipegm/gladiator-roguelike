@@ -632,7 +632,7 @@ namespace Gladiator.UI
                 ("Gorm defeated", SaveData.Count(s.bossKills, "gorm") + "×"), ("Champion defeated", SaveData.Count(s.bossKills, "champion") + "×"),
                 ("Evolutions made", SaveData.Total(s.evolutions).ToString()), ("Synergies found", s.synergies.Count.ToString()),
                 ("Challenges done", challengesDone + " / " + challenges), ("Secrets found", secretsFound + " / " + secrets),
-                ("Dailies played", s.dailiesPlayed.ToString()), ("Dailies won", s.dailiesWon.ToString()), // R8-STUB(b): one line, side by side
+                ("Dailies played", s.dailiesPlayed.ToString()), ("Dailies won", s.dailiesWon.ToString()),
                 ("Most edicts in a win", s.bestEdictWin.ToString()),
             };
             // two columns; the rows close up when there are more than eight of them (the page is 660 tall)

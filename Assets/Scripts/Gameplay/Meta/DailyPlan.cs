@@ -72,7 +72,7 @@ namespace Gladiator.Gameplay
 
         /// <summary>The day's run seed: Hash(FNV-1a(salt), date, 0). A new salt gives every day a new seed.</summary>
         public static uint SeedFor(int date, string salt) =>
-            GameRandom.Hash((uint)GameInfo.StableId(salt ?? ""), (uint)date, 0u); // R8-STUB(a)
+            GameRandom.Hash((uint)GameInfo.StableId(salt ?? ""), (uint)date, 0u);
 
         /// <summary>
         /// The plan for `date`: an arena among `earnedRuns`, a gladiator among `earnedGladiators`, and meta.dailyEdicts
@@ -87,8 +87,8 @@ namespace Gladiator.Gameplay
             var gladiators = SortedById(earnedGladiators, g => g.id);
             if (date <= 0 || runs.Count == 0 || gladiators.Count == 0) return plan;
 
-            plan.Run = runs[(int)(GameRandom.Hash(plan.Seed, 1u, 0u) % (uint)runs.Count)]; // R8-STUB(a)
-            plan.Gladiator = gladiators[(int)(GameRandom.Hash(plan.Seed, 2u, 0u) % (uint)gladiators.Count)]; // R8-STUB(a)
+            plan.Run = runs[(int)(GameRandom.Hash(plan.Seed, 1u, 0u) % (uint)runs.Count)];
+            plan.Gladiator = gladiators[(int)(GameRandom.Hash(plan.Seed, 2u, 0u) % (uint)gladiators.Count)];
             plan.Edicts = DrawEdicts(plan.Seed, meta);
             return plan;
         }
@@ -107,7 +107,7 @@ namespace Gladiator.Gameplay
             var picked = new RunModifierDef[k];
             for (int i = 0; i < k; i++)
             {
-                int j = i + (int)(GameRandom.Hash(seed, 3u, (uint)i) % (uint)(eligible.Count - i)); // R8-STUB(a)
+                int j = i + (int)(GameRandom.Hash(seed, 3u, (uint)i) % (uint)(eligible.Count - i));
                 (eligible[i], eligible[j]) = (eligible[j], eligible[i]);
                 picked[i] = eligible[i];
             }

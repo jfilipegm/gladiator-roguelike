@@ -130,10 +130,10 @@ namespace Gladiator.UI
                 ? (RunState.Current != null && RunState.Current.TimerDone && bdef != null ? bdef.deathLine : "The crowd wanted more.")
                 : bossDown && bdef != null ? bdef.victoryLine : "The pit falls silent.";
             // R8: the seed (or the daily) and the buttons that go with it
-            _daily = GameSession.HasDaily; // R8-STUB(b)
+            _daily = GameSession.HasDaily;
             string seedLine = _daily
-                ? SeedLine(true, GameSession.Daily.Date, GameSession.DailyScored, 0u) // R8-STUB(b)
-                : SeedLine(false, 0, false, GameRandom.RunSeed); // R8-STUB(a)
+                ? SeedLine(true, GameSession.Daily.Date, GameSession.DailyScored, 0u)
+                : SeedLine(false, 0, false, GameRandom.RunSeed);
             _note.text = Debug.isDebugBuild
                 ? seedLine + "     <color=#FFFFFF73>Admin menu: F1 (God mode, buffs, spawns, \"Timer to 0:10\" for the boss)</color>"
                 : seedLine;
@@ -171,7 +171,7 @@ namespace Gladiator.UI
         /// <summary>"SEED 7F3A-91C2" for a normal run; "DAILY 22 OCT · SCORED" or "DAILY 22 OCT · PRACTICE" for a daily.</summary>
         public static string SeedLine(bool daily, int date, bool scored, uint seed) => daily
             ? "DAILY " + DailyPanel.DateShort(date) + " · " + (scored ? "SCORED" : "PRACTICE")
-            : "SEED " + GameRandom.SeedText(seed); // R8-STUB(a)
+            : "SEED " + GameRandom.SeedText(seed);
 
         /// <summary>A daily: PRACTICE · MAIN MENU; a normal run: RETRY · SAME SEED · MAIN MENU.</summary>
         void PlaceButtons(bool daily)
@@ -186,7 +186,7 @@ namespace Gladiator.UI
         /// "+124 ×1.65 ×1.5 daily = +307 +50  (2512)" in a scored daily (R8).</summary>
         public static string RenownLine(RunRewards r)
         {
-            float daily = r.DailyBonus; // R8-STUB(b)
+            float daily = r.DailyBonus;
             string s;
             if (r.EdictBonus > 0f || daily > 0f)
             {
@@ -221,7 +221,7 @@ namespace Gladiator.UI
 
         void OnRetry() { if (_shown) RunEndController.Instance?.Retry(); }
         /// <summary>SAME SEED: this run's seed again (a normal run's end only; a daily's RETRY already is).</summary>
-        void OnSameSeed() { if (_shown && !_daily) GameSession.RetrySameSeed(); } // R8-STUB(b)
+        void OnSameSeed() { if (_shown && !_daily) GameSession.RetrySameSeed(); }
         void OnQuit() { if (_shown) RunEndController.Instance?.Quit(); }
     }
 }

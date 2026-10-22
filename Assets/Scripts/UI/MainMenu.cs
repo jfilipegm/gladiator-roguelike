@@ -100,7 +100,7 @@ namespace Gladiator.UI
         // R8: the Daily Games (the second menu button and its screen)
         Button _dailyButton, _codexButton, _dailyFight;
         TextMeshProUGUI _dailyHint, _dailyHeader;
-        DailyPlan _todayPlan; // R8-STUB(b)
+        DailyPlan _todayPlan;
         bool _dailyOpen;
 
         /// <summary>Earned: no unlock, or its unlock is in the save.</summary>
@@ -193,11 +193,11 @@ namespace Gladiator.UI
         /// <summary>The Daily screen's header ("THE DAILY GAMES — 22 OCT 2026").</summary>
         public string DailyHeaderText => _dailyHeader != null ? _dailyHeader.text : "";
         /// <summary>Today's plan (UTC), drawn from what the save has earned.</summary>
-        public DailyPlan TodayPlan => _todayPlan; // R8-STUB(b)
+        public DailyPlan TodayPlan => _todayPlan;
         public bool DailyFightEnabled => _dailyFight != null && _dailyFight.interactable;
 
         /// <summary>The plan for `date` from the earned arenas and gladiators (DailyGames sorts them by id itself).</summary>
-        DailyPlan PlanFor(int date) => DailyGames.For(date, meta, _openRuns, _available); // R8-STUB(b)
+        DailyPlan PlanFor(int date) => DailyGames.For(date, meta, _openRuns, _available);
 
         /// <summary>Opens the Daily screen on today's plan (DAILY). Refused (a blocked sound) before the Daily Games are earned.</summary>
         public void OpenDaily()
@@ -214,11 +214,11 @@ namespace Gladiator.UI
 
         void ShowDaily(DateTime utcNow)
         {
-            _todayPlan = PlanFor(DailyGames.DateKey(utcNow)); // R8-STUB(b)
-            int date = _todayPlan.Date > 0 ? _todayPlan.Date : DailyGames.DateKey(utcNow); // R8-STUB(b)
+            _todayPlan = PlanFor(DailyGames.DateKey(utcNow));
+            int date = _todayPlan.Date > 0 ? _todayPlan.Date : DailyGames.DateKey(utcNow);
             if (_dailyHeader != null) _dailyHeader.text = DailyPanel.Header(date);
             Daily.Show(_todayPlan, MetaProgress.Data, meta, utcNow);
-            if (_dailyFight != null) _dailyFight.interactable = _todayPlan.IsValid; // R8-STUB(b)
+            if (_dailyFight != null) _dailyFight.interactable = _todayPlan.IsValid;
             RefreshDailyButton();
         }
 
@@ -226,27 +226,27 @@ namespace Gladiator.UI
         /// once, so quitting doesn't give another), else practice.</summary>
         public void FightDaily()
         {
-            if (!_dailyOpen || !_todayPlan.IsValid) // R8-STUB(b)
+            if (!_dailyOpen || !_todayPlan.IsValid)
             {
                 SfxPlayer.Play2D(SfxId.Blocked);
                 return;
             }
-            if (DailyGames.DateKey(DateTime.UtcNow) != _todayPlan.Date) // R8-STUB(b): midnight passed on this screen: today's plan, then
+            if (DailyGames.DateKey(DateTime.UtcNow) != _todayPlan.Date)
             {
                 ShowDaily(DateTime.UtcNow);
-                if (!_todayPlan.IsValid) { SfxPlayer.Play2D(SfxId.Blocked); return; } // R8-STUB(b)
+                if (!_todayPlan.IsValid) { SfxPlayer.Play2D(SfxId.Blocked); return; }
             }
             SfxPlayer.Play2D(SfxId.Pick);
             if (Edicts != null && Edicts.IsOpen) Edicts.Close(); // read-only: closing saves nothing
-            bool scored = MetaProgress.BeginDaily(_todayPlan.Date); // R8-STUB(b)
-            GameSession.StartDaily(_todayPlan, scored); // R8-STUB(b): sets the edicts and the seed, loads the arena
+            bool scored = MetaProgress.BeginDaily(_todayPlan.Date);
+            GameSession.StartDaily(_todayPlan, scored);
             RefreshDailyButton(); // a test's suppressed load leaves the menu up
         }
 
         /// <summary>The day's edicts, read-only, over the Daily screen (the edicts block, E, gamepad North).</summary>
         public void OpenDailyEdicts()
         {
-            var edicts = _todayPlan.Edicts; // R8-STUB(b)
+            var edicts = _todayPlan.Edicts;
             if (Edicts == null || Edicts.IsOpen || edicts == null || edicts.Length == 0) { SfxPlayer.Play2D(SfxId.Blocked); return; }
             SfxPlayer.Play2D(SfxId.Card);
             Edicts.Open(edicts);
@@ -258,14 +258,14 @@ namespace Gladiator.UI
         {
             if (_dailyButton == null) return;
             _dailyButton.interactable = _dailyOpen;
-            DailyDot = _dailyOpen && !MetaProgress.DailyAttempted(DailyGames.Today()); // R8-STUB(b)
+            DailyDot = _dailyOpen && !MetaProgress.DailyAttempted(DailyGames.Today());
             var label = UiFactory.Label(_dailyButton);
             label.text = DailyDot ? "DAILY  <color=#FFD84A>•</color>" : "DAILY";
             label.color = _dailyOpen ? Color.white : Dim;
             if (_dailyHint != null)
             {
                 _dailyHint.gameObject.SetActive(!_dailyOpen);
-                var u = meta != null ? meta.dailyUnlock : null; // R8-STUB(b)
+                var u = meta != null ? meta.dailyUnlock : null;
                 _dailyHint.text = u != null && !string.IsNullOrEmpty(u.hint) && u.hint != "???" ? u.hint : "Defeat Gorm, the Pit Master, to open the Daily Games.";
             }
         }
@@ -275,20 +275,20 @@ namespace Gladiator.UI
         bool LaunchDailyFromCommandLine()
         {
             string v = CommandLine.Get("-daily");
-            int date = DailyGames.Today(); // R8-STUB(b)
+            int date = DailyGames.Today();
             if (!string.IsNullOrEmpty(v) && DateTime.TryParseExact(v, "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var day))
-                date = DailyGames.DateKey(day); // R8-STUB(b)
+                date = DailyGames.DateKey(day);
             else if (!string.IsNullOrEmpty(v) && !v.StartsWith("-") && !string.Equals(v, "today", StringComparison.OrdinalIgnoreCase))
                 Debug.LogWarning("[Daily] -daily " + v + ": not a yyyymmdd date, playing today's");
             var plan = PlanFor(date);
-            if (!plan.IsValid) // R8-STUB(b)
+            if (!plan.IsValid)
             {
                 Debug.LogWarning("[Daily] -daily: no arena or gladiator to fight with");
                 return false;
             }
-            Debug.Log("[Daily] practice daily " + date + ": " + plan.Run.id + ", " + plan.Gladiator.id + ", " + (plan.Edicts != null ? plan.Edicts.Length : 0) + " edicts"); // R8-STUB(b)
+            Debug.Log("[Daily] practice daily " + date + ": " + plan.Run.id + ", " + plan.Gladiator.id + ", " + (plan.Edicts != null ? plan.Edicts.Length : 0) + " edicts");
             _todayPlan = plan;
-            GameSession.StartDaily(plan, false); // R8-STUB(b): never spends the save's attempt
+            GameSession.StartDaily(plan, false);
             return true;
         }
 
@@ -381,7 +381,7 @@ namespace Gladiator.UI
             // R7: the Edicts, once earned and once they exist as data (before EdictSetup there are none to show)
             _edictsShown = meta != null && meta.edicts != null && meta.edicts.Length > 0 && MetaProgress.EdictsOpen(meta);
             _chosenEdicts = _edictsShown ? MetaProgress.ChosenEdicts(meta) : Array.Empty<RunModifierDef>();
-            _dailyOpen = meta != null && MetaProgress.DailyOpen(meta); // R8-STUB(b)
+            _dailyOpen = meta != null && MetaProgress.DailyOpen(meta);
             var canvas = UiFactory.Canvas("MenuCanvas", transform, UiSortOrder.Menus).transform;
             _menu = Group("Menu", canvas);
             _select = Group("Select", canvas);
@@ -407,7 +407,7 @@ namespace Gladiator.UI
 
         void BuildDaily(Transform root)
         {
-            _dailyFight = Chrome(root, DailyPanel.Header(DailyGames.Today()), // R8-STUB(b)
+            _dailyFight = Chrome(root, DailyPanel.Header(DailyGames.Today()),
                 "Enter / A: fight     E / Y: edicts     Esc / B: back", FightDaily, CloseDaily);
             _dailyHeader = root.Find("Header").GetComponent<TextMeshProUGUI>();
             _dailyHeader.overflowMode = TextOverflowModes.Truncate;

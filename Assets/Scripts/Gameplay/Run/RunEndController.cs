@@ -109,7 +109,7 @@ namespace Gladiator.Gameplay
             };
             s.Edicts = RunModifiers.ActiveIds();
             s.EdictBonus = RunModifiers.RenownBonus;
-            s.Seed = GameRandom.RunSeed; // R8-STUB(a)
+            s.Seed = GameRandom.RunSeed;
             s.RunId = GameSession.Run != null ? GameSession.Run.id : null;
             s.DailyDate = GameSession.HasDaily ? GameSession.Daily.Date : 0;
             s.DailyScored = GameSession.DailyScored;

@@ -8,10 +8,12 @@ namespace Gladiator.UI
     /// <summary>
     /// Pooled floating damage numbers on one overlay canvas (CLAUDE.md §5). Listens to OnHit (white, crit = big gold)
     /// and OnDamaged (orange-red: the player got hurt). Allocation-free: TMP SetText with numeric args.
+    /// U1: the theme's Number font (Luckiest Guy) with its Outline material; sizes, colours and motion unchanged.
     /// </summary>
     public sealed class DamageNumbers : MonoBehaviour, ITickable
     {
         public HitFeedbackConfig feedback;
+        [Tooltip("Fallbacks only since U1: UiTheme's Number font and Outline material are used when they exist.")]
         public TMP_FontAsset font;
         public Material fontMaterial;
         public int poolSize = 96;
@@ -32,15 +34,27 @@ namespace Gladiator.UI
             _canvas.sortingOrder = UiSortOrder.WorldOverlay;
             _canvasRt = (RectTransform)go.transform;
             _pool = new Entry[poolSize];
+            var theme = UiTheme.Current;
+            var themeFont = theme.FontFor(TextRole.Number);
+            var themeMaterial = theme.MaterialFor(TextRole.Number, TextLook.Outline);
             for (int i = 0; i < poolSize; i++)
             {
                 var t = new GameObject("Num" + i, typeof(RectTransform), typeof(TextMeshProUGUI));
                 t.transform.SetParent(go.transform, false);
                 var txt = t.GetComponent<TextMeshProUGUI>();
-                if (font != null) txt.font = font;
-                if (fontMaterial != null) txt.fontSharedMaterial = fontMaterial;
+                if (themeFont != null)
+                {
+                    txt.font = themeFont;
+                    if (themeMaterial != null) txt.fontSharedMaterial = themeMaterial;
+                }
+                else
+                {
+                    if (font != null) txt.font = font;
+                    if (fontMaterial != null) txt.fontSharedMaterial = fontMaterial;
+                }
+                txt.characterSpacing = theme.Role(TextRole.Number).spacing;
                 txt.fontSize = baseFontSize;
-                txt.fontStyle = FontStyles.Bold;
+                txt.fontStyle = FontStyles.Normal; // no faux bold on a theme font (U1 rule 4)
                 txt.alignment = TextAlignmentOptions.Center;
                 txt.raycastTarget = false;
                 txt.textWrappingMode = TextWrappingModes.NoWrap;
@@ -55,6 +69,9 @@ namespace Gladiator.UI
                 _pool[i] = new Entry { Rt = rt, Text = txt };
             }
         }
+
+        /// <summary>Tests: pooled label `i` (its font and material are the theme's Number + Outline).</summary>
+        public Component PoolLabel(int i) => _pool[i].Text;
 
         void OnEnable()
         {

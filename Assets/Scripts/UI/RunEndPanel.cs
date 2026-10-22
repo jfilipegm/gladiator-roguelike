@@ -8,83 +8,130 @@ using UnityEngine.UI;
 namespace Gladiator.UI
 {
     /// <summary>
-    /// End-of-run screen: "YOU DIED" (orange-red), "SURVIVED!" or "VICTORY!" (gold), the run's stats, the Renown it
-    /// earned, any unlock it earned (gold banner), Retry (button / R / Enter / gamepad South) and Main Menu.
+    /// End-of-run screen: "YOU DIED", "SURVIVED!" or "VICTORY!", the run's stats, the Renown it earned, any unlock it
+    /// earned, Retry (button / R / Enter / gamepad South) and Main Menu.
     /// Shown while RunEndController.ScreenShown. R7: under edicts the Renown row shows the multiplier,
     /// "+124 ×1.65 = +205  (2310)" (bounties after it, never multiplied).
     /// R8: the note line names the run's seed ("SEED 7F3A-91C2") or the daily ("DAILY 22 OCT · SCORED" / "· PRACTICE");
     /// the scored daily's ×1.5 joins the Renown breakdown ("+124 ×1.45 ×1.5 daily = +270"); the buttons are RETRY (a
     /// fresh seed) · SAME SEED (S / gamepad West: this seed again) · MAIN MENU, and in a daily PRACTICE (the same seed,
     /// never scored) · MAIN MENU.
+    /// U1 (docs/tracks/U1-design.md §5, §7.3): death drops a crimson vexillum that stays, "YOU DIED" on its cloth (no
+    /// more orange-red: dying isn't a hazard); survived / victory is a gold Shout title between laurel branches. The stats
+    /// sit on a wax tablet, the unlock line between laurels, the buttons are tabulae ansatae (RETRY / PRACTICE bronze,
+    /// SAME SEED and MAIN MENU marble) with today's words and keys. The end screen may allocate (the run is over).
     /// </summary>
     public sealed class RunEndPanel : MonoBehaviour, ITickable
     {
+        [Tooltip("Unused since U1 (UiTheme decides the fonts); kept so the scene builders' links stay valid.")]
         public TMP_FontAsset font;
         public Material fontMaterial;
 
-        static readonly Color Hurt = new Color(1f, 0.33f, 0.2f);
-        static readonly Color Gold = new Color(1f, 0.84f, 0.3f);
-        static readonly Color Soft = new Color(1f, 1f, 1f, 0.75f);
+        const float TitleY = 300f, BannerWidth = 900f, BannerDrop = 72f; // the banner's bar sits so its cloth centres on the title's place
+        const float ButtonsY = -372f, ButtonPitch = 360f, DailyPitch = 180f;
+        static readonly Vector2 ButtonSize = new Vector2(340f, 66f);
+        const float ButtonFont = 28f;
+        const float YouDiedSize = 96f;
 
         GameObject _root;
+        Transform _canvas;
         Button _retry, _sameSeed, _quit;
+        UiPlate _retryPlate, _sameSeedPlate, _quitPlate;
+        VexillumBanner _banner;
+        RectTransform _titleLaurels, _unlockLaurels;
+        Image _statsFrame;
         const float SameSeedKeyDelay = 1f;
         bool _daily;
         TextMeshProUGUI _title, _subtitle, _note, _time, _level, _kills, _gold, _damage, _boss, _bossLabel, _renown, _unlock;
+        Color _ink, _waxInk, _goldColor, _goldBright;
         bool _shown;
         float _shownAt;
 
+        /// <summary>Tests: the death banner (Held, Crimson, "YOU DIED"), the victory laurels, the stats tablet's frame.</summary>
+        public VexillumBanner TitleBanner => _banner;
+        public bool TitleHasLaurels => _titleLaurels != null && _titleLaurels.gameObject.activeInHierarchy;
+        public int StatsFrame => UiFrames.KindOf(_statsFrame);
+        public string TitleText => _title != null ? _title.text : "";
+        public Component TitleLabel => _title;
+        public RectTransform CanvasRect => (RectTransform)_canvas;
+
         void Awake()
         {
+            var th = UiTheme.Current;
+            _ink = th.ink;
+            _waxInk = th.waxInk;
+            _goldColor = th.gold;
+            _goldBright = th.goldBright;
             var canvas = UiFactory.Canvas("RunEndCanvas", transform, UiSortOrder.Menus).transform;
+            _canvas = canvas;
             _root = canvas.gameObject;
-            var dim = UiFactory.Image("Dim", canvas, new Color(0.02f, 0.02f, 0.04f, 0.72f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, PixelIcons.White);
+            var mid = new Vector2(0.5f, 0.5f);
+            var dimColor = th.night;
+            dimColor.a = 0.78f;
+            var dim = UiFactory.Image("Dim", canvas, dimColor, mid, mid, Vector2.zero, Vector2.zero, PixelIcons.White);
             UiFactory.Stretch(dim.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             dim.raycastTarget = true;
-            var mid = new Vector2(0.5f, 0.5f);
-            _title = UiFactory.Text("Title", canvas, "YOU DIED", 120, Hurt, TextAlignmentOptions.Center, mid, mid, new Vector2(0, 300), new Vector2(1400, 150), font, fontMaterial);
-            _subtitle = UiFactory.Text("Subtitle", canvas, "", 36, Soft, TextAlignmentOptions.Center, mid, mid, new Vector2(0, 205), new Vector2(1400, 50), font, fontMaterial);
-            _subtitle.fontStyle = FontStyles.Normal;
+            _title = UiKit.Text("Title", canvas, "", TextRole.Shout, 132f, _goldBright, TextAlignmentOptions.Center, mid, mid,
+                new Vector2(0f, TitleY), new Vector2(1400f, 150f), TextLook.Outline);
+            AutoSize(_title, 72f, 132f);
+            _banner = new VexillumBanner(canvas, mid, new Vector2(0f, TitleY + BannerDrop), BannerWidth);
+            var soft = _ink;
+            soft.a = 0.8f;
+            _subtitle = UiKit.Text("Subtitle", canvas, "", TextRole.Body, 36f, soft, TextAlignmentOptions.Center, mid, mid,
+                new Vector2(0f, 205f), new Vector2(1400f, 50f), TextLook.Outline);
+            AutoSize(_subtitle, 24f, 36f);
 
-            var card = UiFactory.Image("Stats", canvas, new Color(0.08f, 0.1f, 0.14f, 0.95f), mid, mid, new Vector2(0, -44), new Vector2(620, 408), PixelIcons.White);
-            _time = StatRow(card.transform, "Time survived", 0);
-            _level = StatRow(card.transform, "Level", 1);
-            _kills = StatRow(card.transform, "Kills", 2);
-            _gold = StatRow(card.transform, "Gold", 3);
-            _damage = StatRow(card.transform, "Damage dealt", 4);
-            _boss = StatRow(card.transform, "Boss", 5);
-            _bossLabel = card.transform.Find("Boss").GetComponent<TextMeshProUGUI>(); // named per arena in Fill
-            _renown = StatRow(card.transform, "Renown", 6);
-            _renown.color = Gold;
+            _statsFrame = UiKit.Frame("Stats", canvas, FrameKind.Wax, mid, mid, new Vector2(0f, -44f), new Vector2(640f, 420f), Color.white);
+            var card = _statsFrame.transform;
+            _time = StatRow(card, "Time survived", 0);
+            _level = StatRow(card, "Level", 1);
+            _kills = StatRow(card, "Kills", 2);
+            _gold = StatRow(card, "Gold", 3);
+            _damage = StatRow(card, "Damage dealt", 4);
+            _boss = StatRow(card, "Boss", 5);
+            _bossLabel = card.Find("Boss").GetComponent<TextMeshProUGUI>(); // named per arena in Fill
+            _renown = StatRow(card, "Renown", 6);
+            _renown.color = _goldColor;
             // R7: wider than the other values (it may read "+124 ×1.65 = +205 +50  (2310)"), shrinking before it overflows;
             // R8: wider still for a scored daily ("+124 ×1.45 ×1.5 daily = +270 +150  (2410)"), from just right of its label
             var rr = _renown.rectTransform;
             rr.anchoredPosition = new Vector2(65f, rr.anchoredPosition.y);
             rr.sizeDelta = new Vector2(450f, rr.sizeDelta.y);
-            _renown.enableAutoSizing = true;
-            _renown.fontSizeMin = 18f;
-            _renown.fontSizeMax = 34f;
-            _renown.overflowMode = TextOverflowModes.Truncate;
-            _unlock = UiFactory.Text("Unlock", canvas, "", 30, Gold, TextAlignmentOptions.Center, mid, mid, new Vector2(0, -296), new Vector2(1500, 84), font, fontMaterial);
-            _unlock.enableAutoSizing = true; _unlock.fontSizeMin = 20; _unlock.fontSizeMax = 30;
+            AutoSize(_renown, 18f, 30f);
+            _unlock = UiKit.Text("Unlock", canvas, "", TextRole.Title, 30f, _goldColor, TextAlignmentOptions.Center, mid, mid,
+                new Vector2(0f, -298f), new Vector2(1400f, 80f), TextLook.Outline);
+            AutoSize(_unlock, 20f, 30f);
 
             // R8: three buttons for a normal run, two for a daily (Fill places them)
-            _retry = UiFactory.Button("Retry", canvas, "Retry  [R]", mid, mid, new Vector2(-290, -365), new Vector2(270, 70), font, fontMaterial, OnRetry, 32f);
-            _sameSeed = UiFactory.Button("SameSeed", canvas, "Same Seed  [S]", mid, mid, new Vector2(0, -365), new Vector2(270, 70), font, fontMaterial, OnSameSeed, 32f);
-            _quit = UiFactory.Button("Quit", canvas, "Main Menu  [M]", mid, mid, new Vector2(290, -365), new Vector2(270, 70), font, fontMaterial, OnQuit, 32f);
-            _note = UiFactory.Text("Note", canvas, "", 22, new Color(1f, 1f, 1f, 0.7f), TextAlignmentOptions.Center, mid, mid, new Vector2(0, -430), new Vector2(1400, 40), font, fontMaterial);
-            _note.fontStyle = FontStyles.Normal;
-            _note.overflowMode = TextOverflowModes.Truncate;
+            _retryPlate = UiKit.Button("Retry", canvas, "Retry  [R]", ButtonStyle.Primary, mid, mid, new Vector2(-ButtonPitch, ButtonsY), ButtonSize, OnRetry, ButtonFont);
+            _sameSeedPlate = UiKit.Button("SameSeed", canvas, "Same Seed  [S]", ButtonStyle.Secondary, mid, mid, new Vector2(0f, ButtonsY), ButtonSize, OnSameSeed, ButtonFont);
+            _quitPlate = UiKit.Button("Quit", canvas, "Main Menu  [M]", ButtonStyle.Secondary, mid, mid, new Vector2(ButtonPitch, ButtonsY), ButtonSize, OnQuit, ButtonFont);
+            _retry = _retryPlate.Button;
+            _sameSeed = _sameSeedPlate.Button;
+            _quit = _quitPlate.Button;
+            foreach (var p in new[] { _retryPlate, _sameSeedPlate, _quitPlate }) AutoSize(p.Label, 20f, ButtonFont);
+            var dust = th.dust;
+            _note = UiKit.Text("Note", canvas, "", TextRole.Body, 22f, dust, TextAlignmentOptions.Center, mid, mid,
+                new Vector2(0f, -440f), new Vector2(1500f, 40f), TextLook.Outline);
+            AutoSize(_note, 18f, 22f);
             _root.SetActive(false);
+        }
+
+        static void AutoSize(TMP_Text t, float min, float max)
+        {
+            t.enableAutoSizing = true;
+            t.fontSizeMin = min;
+            t.fontSizeMax = max;
         }
 
         TextMeshProUGUI StatRow(Transform card, string label, int row)
         {
-            float y = 166f - row * 54f;
+            float y = 168f - row * 54f;
             var mid = new Vector2(0.5f, 0.5f);
-            var l = UiFactory.Text(label, card, label, 32, Soft, TextAlignmentOptions.Left, mid, mid, new Vector2(-110, y), new Vector2(340, 50), font, fontMaterial);
-            l.fontStyle = FontStyles.Normal;
-            return UiFactory.Text(label + "Value", card, "0", 34, Color.white, TextAlignmentOptions.Right, mid, mid, new Vector2(170, y), new Vector2(220, 50), font, fontMaterial);
+            UiKit.Text(label, card, label, TextRole.Title, 22f, _waxInk, TextAlignmentOptions.Left, mid, mid, new Vector2(-110f, y), new Vector2(340f, 50f));
+            var value = UiKit.Text(label + "Value", card, "0", TextRole.Number, 30f, _ink, TextAlignmentOptions.Right, mid, mid, new Vector2(170f, y), new Vector2(220f, 50f));
+            AutoSize(value, 18f, 30f); // "not recorded", "88% left"
+            return value;
         }
 
         void OnEnable() => GameLoop.Register(this, TickGroup.Late, 65);
@@ -99,8 +146,10 @@ namespace Gladiator.UI
                 _shown = show;
                 _root.SetActive(show);
                 if (show) Fill(c);
+                else _banner.Clear();
             }
             if (!show) return;
+            _banner.Tick(unscaledDt); // the screen is paused: the banner drops in real time
             // ignore keys for a moment so a held button doesn't instantly retry
             if (Time.unscaledTime - _shownAt < 0.4f) return;
             var kb = Keyboard.current;
@@ -124,8 +173,7 @@ namespace Gladiator.UI
             var fight = FindAnyObjectByType<BossFight>();
             var bdef = fight != null ? fight.boss : null;
             _bossLabel.text = bdef != null ? bdef.shortName : "Boss";
-            _title.text = died ? "YOU DIED" : bossDown ? "VICTORY!" : "SURVIVED!";
-            _title.color = died ? Hurt : Gold;
+            ShowTitle(died, bossDown);
             _subtitle.text = died
                 ? (RunState.Current != null && RunState.Current.TimerDone && bdef != null ? bdef.deathLine : "The crowd wanted more.")
                 : bossDown && bdef != null ? bdef.victoryLine : "The pit falls silent.";
@@ -150,9 +198,51 @@ namespace Gladiator.UI
             else if (boss.Defeated) _boss.text = "DEFEATED";
             else _boss.SetText("{0}% left", Mathf.Round(boss.Hp01 * 100f));
             var rewards = c.Rewards;
-            if (rewards == null) { _renown.text = "not recorded"; _unlock.text = ""; return; }
+            if (rewards == null) { _renown.text = "not recorded"; SetUnlock(""); return; }
             _renown.text = RenownLine(rewards);
-            _unlock.text = UnlockLines(rewards);
+            SetUnlock(UnlockLines(rewards));
+        }
+
+        /// <summary>Death: the crimson banner drops and stays, "YOU DIED" on its cloth. Otherwise the gold title between laurels.</summary>
+        void ShowTitle(bool died, bool bossDown)
+        {
+            if (_titleLaurels != null) { Destroy(_titleLaurels.gameObject); _titleLaurels = null; }
+            if (died)
+            {
+                _title.text = "";
+                _banner.Hold("YOU DIED", BannerCloth.Crimson);
+                StyleBannerWords();
+                return;
+            }
+            _banner.Clear();
+            _title.text = bossDown ? "VICTORY!" : "SURVIVED!";
+            _title.color = _goldBright;
+            _title.ForceMeshUpdate(true, true);
+            _titleLaurels = UiKit.Laurels("TitleLaurels", _title);
+        }
+
+        /// <summary>
+        /// "YOU DIED" is bigger than a run banner's words and in light ink (spec §5: Shout 96 `ink`). The banner keeps
+        /// its words in one label under its root, set on Hold; this restyles that label after it (autosize up to 96:
+        /// the cloth's room decides).
+        /// </summary>
+        void StyleBannerWords()
+        {
+            var words = _banner.Root != null ? _banner.Root.GetComponentInChildren<TextMeshProUGUI>(true) : null;
+            if (words == null) return;
+            words.color = _ink;
+            if (words.enableAutoSizing) words.fontSizeMax = YouDiedSize;
+            else words.fontSize = YouDiedSize;
+        }
+
+        /// <summary>The unlock line, between laurel branches when there is one (laurel means victory: an unlock earned).</summary>
+        void SetUnlock(string text)
+        {
+            _unlock.text = text;
+            if (_unlockLaurels != null) { Destroy(_unlockLaurels.gameObject); _unlockLaurels = null; }
+            if (string.IsNullOrEmpty(text)) return;
+            _unlock.ForceMeshUpdate(true, true);
+            _unlockLaurels = UiKit.Laurels("UnlockLaurels", _unlock, 16f);
         }
 
         /// <summary>The Renown row's words (tests).</summary>
@@ -162,7 +252,7 @@ namespace Gladiator.UI
         /// <summary>The whole note line (tests).</summary>
         public string NoteText => _note != null ? _note.text : "";
         /// <summary>SAME SEED is offered (a normal run's end).</summary>
-        public bool SameSeedShown => _sameSeed != null && _sameSeed.gameObject.activeSelf;
+        public bool SameSeedShown => _sameSeedPlate != null && _sameSeedPlate.Root.gameObject.activeSelf;
         public RectTransform SameSeedRect => _sameSeed != null ? (RectTransform)_sameSeed.transform : null;
         public RectTransform RetryRect => _retry != null ? (RectTransform)_retry.transform : null;
         /// <summary>RETRY's words: "Retry  [R]", or "Practice  [R]" in a daily.</summary>
@@ -176,10 +266,10 @@ namespace Gladiator.UI
         /// <summary>A daily: PRACTICE · MAIN MENU; a normal run: RETRY · SAME SEED · MAIN MENU.</summary>
         void PlaceButtons(bool daily)
         {
-            _sameSeed.gameObject.SetActive(!daily);
+            _sameSeedPlate.Root.gameObject.SetActive(!daily);
             UiFactory.Label(_retry).text = daily ? "Practice  [R]" : "Retry  [R]";
-            ((RectTransform)_retry.transform).anchoredPosition = new Vector2(daily ? -150f : -290f, -365f);
-            ((RectTransform)_quit.transform).anchoredPosition = new Vector2(daily ? 150f : 290f, -365f);
+            _retryPlate.Root.anchoredPosition = new Vector2(daily ? -DailyPitch : -ButtonPitch, ButtonsY);
+            _quitPlate.Root.anchoredPosition = new Vector2(daily ? DailyPitch : ButtonPitch, ButtonsY);
         }
 
         /// <summary>"+124  (2310)", "+124 +50  (2360)" with a bounty, "+124 ×1.65 = +205 +50  (2410)" under edicts,

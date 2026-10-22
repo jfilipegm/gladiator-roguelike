@@ -44,16 +44,20 @@ namespace Gladiator.Gameplay
     }
 
     /// <summary>
-    /// What survives scene loads during a session: the chosen gladiator, the run, which arena of it we're in, the run's
-    /// seed and, in the Daily Games, the day's plan. The menu starts a run (or the daily), arenas read the gladiator, the
-    /// end screen retries or goes back to the menu. Every run load seeds GameRandom with Seed right before LoadScene (R8),
-    /// so the same seed replays the same chests, swarms, elites, gifts and whims (docs/tracks/R7-design.md §3.4).
+    /// What survives scene loads during a session: the chosen gladiator and their skin, the run, which arena of it we're
+    /// in, the run's seed and, in the Daily Games, the day's plan. The menu starts a run (or the daily), arenas read the
+    /// gladiator, the end screen retries or goes back to the menu. Every run load seeds GameRandom with Seed right before
+    /// LoadScene (R8), so the same seed replays the same chests, swarms, elites, gifts and whims (docs/tracks/R7-design.md
+    /// §3.4).
     /// </summary>
     public static class GameSession
     {
         public const string MenuScene = "Assets/Scenes/MainMenu.unity";
 
         public static GladiatorDef Gladiator { get; private set; }
+        /// <summary>The skin to fight in (R6): the menu sets it at launch (MetaProgress.EquippedSkin); Retry keeps it, Clear
+        /// resets it. GladiatorLoadout ignores a skin that isn't the gladiator's own; null = the default look.</summary>
+        public static SkinDef Skin { get; set; }
         public static RunDef Run { get; private set; }
         public static int ArenaIndex { get; private set; }
         /// <summary>The run seed the current (or last loaded) run was seeded with; 0 until a run starts here.</summary>
@@ -75,7 +79,7 @@ namespace Gladiator.Gameplay
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void Reset()
         {
-            Gladiator = null; Run = null; ArenaIndex = 0;
+            Gladiator = null; Skin = null; Run = null; ArenaIndex = 0;
             Seed = 0u; Daily = default; DailyScored = false;
             SuppressLoad = false; LastLoadPath = null; RunSeedOverride = null;
         }
@@ -90,7 +94,7 @@ namespace Gladiator.Gameplay
             GameRandom.BeginRun(seed);
         }
 
-        /// <summary>Forget the gladiator, run, seed and daily, and the test switches (tests: one that picks a gladiator
+        /// <summary>Forget the gladiator, skin, run, seed and daily, and the test switches (tests: one that picks a gladiator
         /// must not leak it into the next; set SuppressLoad / RunSeedOverride after calling this).</summary>
         public static void Clear() => Reset();
 

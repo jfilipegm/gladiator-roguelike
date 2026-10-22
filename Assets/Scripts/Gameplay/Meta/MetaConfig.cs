@@ -6,8 +6,8 @@ namespace Gladiator.Gameplay
     /// <summary>
     /// Meta progression rules: how much Renown a run earns, and every UnlockDef in the game. Renown is per run, more for
     /// time survived, kills, deeper arenas and bosses (CLAUDE.md §6.6), × the edicts' bonus (R7); in the slice it's a
-    /// score that will gate arena tiers and cosmetics later. Also the list of edicts and the unlock that opens them, and
-    /// the Daily Games' rules (R8: the scored attempt pays × (1 + dailyRenownBonus) on top of the edicts).
+    /// score that will gate arena tiers and cosmetics later. Also the list of edicts and the unlock that opens them, the
+    /// Daily Games' rules (R8: the scored attempt pays × (1 + dailyRenownBonus) on top of the edicts), and every skin (R6).
     /// </summary>
     [CreateAssetMenu(menuName = "Gladiator/Meta Config", fileName = "MetaConfig")]
     public sealed class MetaConfig : ScriptableObject
@@ -41,6 +41,11 @@ namespace Gladiator.Gameplay
         public string dailySalt = DailyGames.DefaultSalt;
         [Tooltip("Scored dailies kept in the save's ledger (the oldest drop off).")]
         public int dailyLedger = 30;
+
+        [Header("Skins (R6)")]
+        [Tooltip("Every skin, grouped by gladiator (the select screen's strip shows a gladiator's in this order). Filled by " +
+                 "Gladiator/Setup/Gladiators/Create Skin Data from BlenderSrc/characters/skins.json.")]
+        public SkinDef[] skins = Array.Empty<SkinDef>();
 
         /// <summary>The run's Renown before its edicts: time, kills, the boss, victory, × the arena's depth.</summary>
         public int BaseRenownFor(in RunSummary run) => Mathf.Max(0, Mathf.RoundToInt(BaseRenown(run)));

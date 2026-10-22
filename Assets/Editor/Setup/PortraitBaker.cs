@@ -15,6 +15,8 @@ namespace Gladiator.EditorTools
     /// The pictures of the select screens and the Codex roster (R9), all rendered from our own models and scenes:
     /// - every GladiatorDef's model, head and shoulders from the front-left (the Codex atlas's light and palette look),
     ///   128 px → Assets/Art/UI/Portraits/PT_&lt;id&gt;.png and PT_&lt;id&gt;_sil.png (the same in ink: locked);
+    /// - every MetaConfig.skins entry's model with its gladiator's framing (R6) → PT_&lt;gladiator id&gt;_&lt;skin&gt;.png
+    ///   (the skin's suffix, lower case, no underscores: PT_nobody_freedman.png), assigned to SkinDef.portrait;
     /// - every BossDef's model → PT_boss_&lt;id&gt;.png;
     /// - every RunDef's first arena scene from a fixed high three-quarter camera, 192×108 (rendered at 2× and box
     ///   filtered) → Assets/Art/UI/Arenas/AT_&lt;run id&gt;.png.
@@ -51,7 +53,7 @@ namespace Gladiator.EditorTools
             }
             EnsureFolder(PortraitDir);
             EnsureFolder(ArenaDir);
-            int g = BakeGladiators(), b = BakeBosses();
+            int g = BakeGladiators(), sk = BakeSkins(), b = BakeBosses();
             var runs = AllRuns();
             foreach (var r in runs) RunTaglines.Apply(r);
             AssetDatabase.SaveAssets(); // the arena pass opens scenes (Single), which unloads assets nothing references
@@ -59,7 +61,25 @@ namespace Gladiator.EditorTools
             runs = AllRuns(); // the scene switches unloaded the old RunDef objects: load them again
             foreach (var r in runs) Link(r);
             AssetDatabase.SaveAssets();
-            string msg = $"[PortraitBaker] {g} gladiator portraits, {b} boss portraits, {a} of {runs.Length} arena thumbnails";
+            string msg = $"[PortraitBaker] {g} gladiator portraits, {sk} skin portraits, {b} boss portraits, " +
+                         $"{a} of {runs.Length} arena thumbnails";
+            Debug.Log(msg);
+            return msg;
+        }
+
+        /// <summary>Only the skins' portraits (R6): no scene is opened, so it runs with unsaved scenes too.</summary>
+        [MenuItem("Gladiator/Setup/UI/Bake Skin Portraits")]
+        public static string BakeSkinPortraits()
+        {
+            if (Application.isPlaying)
+            {
+                Debug.LogError("[PortraitBaker] leave Play mode first");
+                return "playing";
+            }
+            EnsureFolder(PortraitDir);
+            int n = BakeSkins();
+            AssetDatabase.SaveAssets();
+            string msg = $"[PortraitBaker] {n} skin portraits";
             Debug.Log(msg);
             return msg;
         }
@@ -268,6 +288,64 @@ namespace Gladiator.EditorTools
                 Object.DestroyImmediate(tex);
             }
             return n;
+        }
+
+        /// <summary>Every MetaConfig.skins entry, rendered as its gladiator's portrait is (head and shoulders, the parts in
+        /// PortraitHidden left out), to SkinPortraitPath; sets SkinDef.portrait. No silhouette: a skin's tile only shows
+        /// once its gladiator is earned.</summary>
+        static int BakeSkins()
+        {
+            var meta = MetaSetup.Load();
+            if (meta == null || meta.skins == null || meta.skins.Length == 0) return 0;
+            var mat = AssetDatabase.LoadAssetAtPath<Material>(LookSetup.CharMat);
+            int n = 0;
+            var tex = new Texture2D(Size, Size, TextureFormat.RGBA32, false);
+            try
+            {
+                using (var rig = new Rig(Size, Size))
+                    foreach (var s in meta.skins)
+                    {
+                        if (s == null) continue;
+                        if (s.model == null || s.gladiator == null)
+                        {
+                            Debug.LogWarning("[PortraitBaker] skin " + s.id + " has no model or gladiator: no portrait");
+                            continue;
+                        }
+                        rig.Render(s.model, mat, true);
+                        rig.CopyTo(tex, 0, 0);
+                        tex.Apply();
+                        string path = SkinPortraitPath(s);
+                        File.WriteAllBytes(path, tex.EncodeToPNG());
+                        s.portrait = ImportSprite(path);
+                        EditorUtility.SetDirty(s);
+                        n++;
+                    }
+            }
+            finally
+            {
+                Object.DestroyImmediate(tex);
+            }
+            return n;
+        }
+
+        /// <summary>PT_&lt;gladiator id&gt;_&lt;skin suffix, lower case, no underscores&gt;.png (docs/tracks/R7-contract.md, wave 3).
+        /// The suffix is read off the model's name (CH_Nobody_Freedman → freedman), else the asset's (SK_Nobody_Freedman),
+        /// else the id after the gladiator's (nobody_freedman → freedman).</summary>
+        public static string SkinPortraitPath(SkinDef s)
+        {
+            string key = AfterBase(s.model != null ? s.model.name : null, "CH_") ?? AfterBase(s.name, "SK_");
+            if (key == null && s.gladiator != null && SkinDef.IdBelongsTo(s.id, s.gladiator.id)) key = s.id.Substring(s.gladiator.id.Length + 1);
+            key ??= string.IsNullOrEmpty(s.id) ? "skin" : s.id;
+            string who = s.gladiator != null ? s.gladiator.id : "unknown";
+            return PortraitDir + "PT_" + who + "_" + key.Replace("_", "").ToLowerInvariant() + ".png";
+        }
+
+        /// <summary>"CH_Nobody_Freedman" with prefix "CH_" → "Freedman" (null if the name has no part after the base).</summary>
+        static string AfterBase(string name, string prefix)
+        {
+            if (string.IsNullOrEmpty(name) || !name.StartsWith(prefix, StringComparison.Ordinal)) return null;
+            int cut = name.IndexOf('_', prefix.Length);
+            return cut > 0 && cut < name.Length - 1 ? name.Substring(cut + 1) : null;
         }
 
         static int BakeBosses()

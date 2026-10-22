@@ -16,6 +16,7 @@ namespace Gladiator.UI
     /// Created by LevelUpPanel (so every arena scene has one without a scene rebuild). Built once; the text is rewritten
     /// only when what it shows changes (stats, offers, selection) into a char buffer handed to TMP: no allocation per
     /// frame. Hidden with a CanvasGroup, never SetActive (LevelUpPanel's note on canvas rebuilds).
+    /// R8: the Pause face's header names the run's seed ("SEED 7F3A-91C2"), written digit by digit (no allocation).
     /// </summary>
     public sealed class StatsPanel : MonoBehaviour, ITickable
     {
@@ -254,7 +255,9 @@ namespace Gladiator.UI
             var t = _text.Clear();
             var g = _stats.gladiator;
             t.Append("<size=143%><color=").Append(StatText.Head).Append('>').Append("<uppercase>").Append(g != null ? g.displayName : "Stats").Append("</uppercase></color></size>\n");
-            t.Append("<size=81%><color=").Append(StatText.Dim).Append(">every stat, then where it comes from</color></size>\n");
+            t.Append("<size=81%><color=").Append(StatText.Dim).Append(">every stat, then where it comes from<pos=68%>");
+            AppendSeed(t, GameRandom.RunSeed);
+            t.Append("</color></size>\n");
             if (g != null && g.traits != null && g.traits.Length > 0)
             {
                 t.Append("<size=86%><color=").Append(StatText.TraitCol).Append(">Traits: ");
@@ -279,6 +282,18 @@ namespace Gladiator.UI
             }
             if (DevSettings.AnyBuff && StatText.AdminVisible)
                 t.Append("<size=76%><color=").Append(StatText.AdminCol).Append(">ADMIN buffs (F1) are on: they're the pink shares.</color></size>");
+        }
+
+        /// <summary>"SEED 7F3A-91C2" (GameRandom.SeedText's words, built in the buffer).</summary>
+        public static void AppendSeed(CharBuffer t, uint seed)
+        {
+            t.Append("SEED ");
+            for (int i = 7; i >= 0; i--)
+            {
+                int d = (int)(seed >> (i * 4)) & 0xF;
+                t.Append((char)(d < 10 ? '0' + d : 'A' + d - 10));
+                if (i == 4) t.Append('-');
+            }
         }
 
         void WriteWeapons(CharBuffer t)

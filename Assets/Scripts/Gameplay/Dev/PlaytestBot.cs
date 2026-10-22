@@ -283,6 +283,8 @@ namespace Gladiator.Gameplay
             if (run != null) sb.Append(" | outcome ").Append(run.Outcome).Append(" at ").Append(run.Elapsed.ToString("0"));
             if (RunModifiers.Active.Length > 0) // R7: the edicts this run was played under
                 sb.Append(" edicts ").Append(RunModifiers.Active.Length).Append(" (+").Append((RunModifiers.RenownBonus * 100f).ToString("0")).Append(" %)");
+            sb.Append(" seed ").Append(GameRandom.SeedText(GameRandom.RunSeed)); // R8: replay it with -runSeed
+            if (GameSession.HasDaily) sb.Append(" daily ").Append(GameSession.Daily.Date).Append(GameSession.DailyScored ? " scored" : " practice");
             Debug.Log(sb.ToString());
         }
 

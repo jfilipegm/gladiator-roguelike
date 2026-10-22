@@ -88,8 +88,9 @@ namespace Gladiator.Gameplay
 
         void Start()
         {
+            var rng = GameRandom.Fork(RngStream.Map, GameRandom.KeyOf("bookmaker")); // R8: the same seed, the same spot
             if (spots == null || spots.Length == 0) return;
-            Place(Random.Range(0, spots.Length)); // not GameRandom: that one replays the same rolls every launch
+            Place(rng.Range(0, spots.Length));
         }
 
         /// <summary>Puts him at spot `index`, waiting for a customer (tests pick one).</summary>

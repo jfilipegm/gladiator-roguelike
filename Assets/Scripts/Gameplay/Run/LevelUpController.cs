@@ -46,6 +46,11 @@ namespace Gladiator.Gameplay
         struct Reward { public PickSource Source; public Rarity Floor; }
         readonly Reward[] _rewards = new Reward[8];
         int _rewardCount;
+        // picks opened per source: the nth pick of a source reseeds the Cards stream with (source, n) (R8)
+        readonly int[] _opens = new int[4];
+
+        /// <summary>How many times cards opened for `s` this run (tests).</summary>
+        public int OpensOf(PickSource s) => _opens[(int)s];
 
         /// <summary>Queues a pick from a chest or altar: it opens (paused) before any queued level-up. False if the queue is full.</summary>
         public bool QueueReward(PickSource source, Rarity floor)
@@ -111,12 +116,15 @@ namespace Gladiator.Gameplay
 
         void Open(PickSource source, Rarity floor)
         {
+            // R8: the nth level-up (or chest, altar, boss reward) rolls the same cards however the run went; rerolls and
+            // banishes continue this pick's own sequence
+            GameRandom.Reseed(RngStream.Cards, ((uint)source << 16) | (uint)_opens[(int)source]++);
             Source = source;
             Floor = floor;
             _roller.MinRarity = floor;
             var c = Config;
             _roller.OfferEvolutions = c != null && (source == PickSource.LevelUp ? c.evolutionInLevelUps : c.evolutionInRewards);
-            int n = c != null ? c.CardCount(Luck, GameRandom.Value) : 3;
+            int n = c != null ? c.CardCount(Luck, GameRandom.Next01(RngStream.Cards)) : 3;
             if (source == PickSource.LevelUp) n = Mathf.Clamp(n + levelUpCardDelta, 1, 4);
             ChoiceCount = RollAll(n);
             OffersVersion++;

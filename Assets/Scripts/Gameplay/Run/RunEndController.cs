@@ -7,7 +7,7 @@ namespace Gladiator.Gameplay
     /// <summary>
     /// How a run ends. Player death, the timer reaching 0:00 in an arena without a boss (unless DevSettings.Timeless),
     /// or the boss falling ends the run → the run is recorded in the save (Renown × its edicts, records, unlocks:
-    /// MetaProgress) → a short beat (death: slow motion + collapse; victory: every enemy pops) → the game pauses and the
+    /// MetaProgress; the run's seed and, in the Daily Games, the day and whether it's the scored attempt) → a short beat (death: slow motion + collapse; victory: every enemy pops) → the game pauses and the
     /// end screen (UI reads ScreenShown/Outcome/Rewards) offers Retry / Main Menu. From the moment the player goes down,
     /// nothing of theirs fights on (RunState.CombatOver); the crowd gives one last reaction and falls silent (SfxPlayer).
     /// </summary>
@@ -109,6 +109,10 @@ namespace Gladiator.Gameplay
             };
             s.Edicts = RunModifiers.ActiveIds();
             s.EdictBonus = RunModifiers.RenownBonus;
+            s.Seed = GameRandom.RunSeed;
+            s.RunId = GameSession.Run != null ? GameSession.Run.id : null;
+            s.DailyDate = GameSession.HasDaily ? GameSession.Daily.Date : 0;
+            s.DailyScored = GameSession.DailyScored;
             var p = Player.Main;
             if (p == null) return s;
             var stats = p.GetComponent<PlayerStats>();

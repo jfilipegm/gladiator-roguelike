@@ -65,6 +65,9 @@ namespace Gladiator.Gameplay
         bool[] _bearerLeft = System.Array.Empty<bool>(); // cached: Object.name allocates
         Vector3 _leapFrom;
         readonly float[] _weights = new float[8];
+        // R8: every roll of the fight (attack choice, bomb scatter, guards, beast packs), forked from the run seed by his id
+        // when he spawns, so the same seed gives the same sequence of attacks
+        Rng _rng;
         Vector3 _pos, _aim, _target, _entryEnd;
         float _yaw;
         PartRig _rig;
@@ -198,6 +201,7 @@ namespace Gladiator.Gameplay
         {
             _em = EnemyManager.Instance;
             if (_em == null || def == null || def.enemy == null) return false;
+            _rng = GameRandom.Fork(RngStream.Boss, GameRandom.KeyOf(def.id));
             _pos = at;
             _slot = _em.Spawn(def.enemy, _pos);
             if (_slot < 0) return false;
@@ -501,7 +505,7 @@ namespace Gladiator.Gameplay
             }
             if (total > 0f)
             {
-                float r = GameRandom.Value * total;
+                float r = _rng.Next01() * total;
                 for (int k = 0; k < list.Length; k++)
                     if ((r -= _weights[k % _weights.Length]) < 0f) return list[k];
             }
@@ -876,8 +880,8 @@ namespace Gladiator.Gameplay
                         if (k > 0) // the rest around you: where you'd go, and beside it
                         {
                             Vector3 v = _motor != null ? Flat(_motor.Velocity) : Vector3.zero;
-                            float a = GameRandom.Range(0f, Mathf.PI * 2f);
-                            at = pp + v * (def.bombFlight * 0.5f) + new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * GameRandom.Range(def.bombSpread * 0.4f, def.bombSpread);
+                            float a = _rng.Range(0f, Mathf.PI * 2f);
+                            at = pp + v * (def.bombFlight * 0.5f) + new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * _rng.Range(def.bombSpread * 0.4f, def.bombSpread);
                             _em.ClampInside(ref at, 0.5f);
                         }
                         proj.Bomb(Hand, at, def.bombFlight, def.bombRadius, def.bombDamage, def.bombCoins);
@@ -1232,9 +1236,9 @@ namespace Gladiator.Gameplay
             if (beasts) // the pen nearest him opens: his boars (they trample his own horde too)
             {
                 int c = pens.NearestIdle(_pos);
-                if (c >= 0) pens.Open(c, GameRandom.Range(def.beastPack.x, def.beastPack.y + 1));
+                if (c >= 0) pens.Open(c, _rng.Range(def.beastPack.x, def.beastPack.y + 1));
             }
-            int n = guards ? GameRandom.Range(def.guardCount.x, def.guardCount.y + 1) : 0;
+            int n = guards ? _rng.Range(def.guardCount.x, def.guardCount.y + 1) : 0;
             int spots = guardSpots != null ? Mathf.Min(guardSpots.Length, _spotD.Length) : 0;
             int use = Mathf.Clamp(def.guardSpotsUsed, 1, Mathf.Max(1, spots));
             if (spots > 0) // the spots nearest the player, nearest first (a little selection sort: there are few)

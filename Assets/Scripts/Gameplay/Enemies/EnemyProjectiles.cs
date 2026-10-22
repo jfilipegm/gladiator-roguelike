@@ -369,8 +369,8 @@ namespace Gladiator.Gameplay
             int n = _coins[i];
             for (int k = 0; k < n && pickups != null; k++)
             {
-                float a = (k + GameRandom.Value * 0.6f) * Mathf.PI * 2f / Mathf.Max(1, n);
-                float r = _zoneRadius[i] * GameRandom.Range(0.3f, 0.9f);
+                float a = (k + GameRandom.Next01(RngStream.Enemies) * 0.6f) * Mathf.PI * 2f / Mathf.Max(1, n);
+                float r = _zoneRadius[i] * GameRandom.Range(RngStream.Enemies, 0.3f, 0.9f);
                 pickups.Spawn(PickupSystem.Kind.Gold, _to[i] + new Vector3(Mathf.Cos(a) * r, 0f, Mathf.Sin(a) * r), bombCoinValue);
             }
             if (burst != null)

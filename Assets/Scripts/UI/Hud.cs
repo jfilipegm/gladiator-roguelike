@@ -13,6 +13,8 @@ namespace Gladiator.UI
     /// code; texts only change when values change and use allocation-free TMP calls.
     /// R7: the run's edicts as a row of small icons under the timer, built once at Start (nothing per frame); the boss's
     /// name and bar take that space during the fight, so the row steps aside while they show.
+    /// R8: in a daily, a small "DAILY" chip beside the timer (gold on the scored attempt, grey in practice), built once
+    /// at Start.
     /// </summary>
     public sealed class Hud : MonoBehaviour, ITickable
     {
@@ -290,7 +292,38 @@ namespace Gladiator.UI
         }
 
         // R7: RunModifiers.Set comes before the arena loads, so the edicts are known by every Start
-        void Start() => BuildEdictRow(RunModifiers.Active);
+        // R8: so is the daily (GameSession.StartDaily)
+        void Start()
+        {
+            BuildEdictRow(RunModifiers.Active);
+            if (GameSession.HasDaily) BuildDailyChip(GameSession.DailyScored);
+        }
+
+        // R8: the daily chip, right of the timer's digits (and of "BOSS")
+        RectTransform _dailyChip;
+        TextMeshProUGUI _dailyChipText;
+        const float DailyChipLeft = 98f, DailyChipY = -61f;
+        static readonly Vector2 DailyChipSize = new Vector2(104f, 32f);
+        static readonly Color DailyScoredColor = new Color(1f, 0.84f, 0.3f, 0.95f);
+        static readonly Color DailyPracticeColor = new Color(0.42f, 0.42f, 0.46f, 0.9f);
+
+        /// <summary>Tests: the daily chip is there, and its words ("DAILY") and colour.</summary>
+        public bool DailyChipShown => _dailyChip != null && _dailyChip.gameObject.activeSelf;
+        public string DailyChipText => _dailyChipText != null ? _dailyChipText.text : "";
+        public RectTransform DailyChip => _dailyChip;
+        public bool DailyChipScored { get; private set; }
+
+        void BuildDailyChip(bool scored)
+        {
+            if (_canvas == null || _dailyChip != null) return;
+            var top = new Vector2(0.5f, 1f);
+            var mid = new Vector2(0.5f, 0.5f);
+            var plate = UiFactory.Image("DailyChip", _canvas, scored ? DailyScoredColor : DailyPracticeColor, top, new Vector2(0f, 0.5f), new Vector2(DailyChipLeft, DailyChipY), DailyChipSize, PixelIcons.White);
+            _dailyChip = plate.rectTransform;
+            _dailyChip.SetSiblingIndex(_timer.transform.GetSiblingIndex() + 1); // under the intro's dim, the boss HUD and PAUSED
+            _dailyChipText = UiFactory.Text("Label", _dailyChip, "DAILY", 22, scored ? new Color(0.12f, 0.08f, 0.02f) : Color.white, TextAlignmentOptions.Center, mid, mid, Vector2.zero, DailyChipSize, font, fontMaterial);
+            DailyChipScored = scored;
+        }
 
         /// <summary>Tests: how many edict icons the row holds, and whether it shows.</summary>
         public int EdictIconCount => _edictIcons;

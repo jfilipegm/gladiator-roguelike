@@ -145,3 +145,4 @@ Evolutions arrive after 8 weapon levels plus a catalyst plus a chest, so late in
 ## C31 — Edicts: first-guess numbers, the Victor's remains, bot runs repeat per launch (NEW, R7)
 - **The risk:** every edict's handicap and Renown bonus is a guess (×3.35 with all eleven); some may never be worth taking, others free Renown. Iron Hides doesn't reach the Eternal Victor's remains (`BossController` sets that HP absolutely). Bot runs launched straight into an arena still replay the same chests, gifts and whims per launch (on purpose: perf runs stay comparable) until R8's `-runSeed`.
 - **Proposal:** judge in the playtest; tune `ED_*` (`renownBonus` and the effect fields); scale `remainsHp` by `scriptedHpMul` if the Victor feels soft under Iron Hides.
+- **Update (R8, v0.22.0):** closed for the repeating randomness: every run-shaping draw is on a seeded stream or fork; bot and perf runs pass `-runSeed` to stay comparable.

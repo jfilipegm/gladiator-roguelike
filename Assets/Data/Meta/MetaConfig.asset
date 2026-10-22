@@ -26,7 +26,10 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 1eae844bfff5dcc14ba3874bc66a6c77, type: 2}
   - {fileID: 11400000, guid: a3f6187c831960ec485f448897ec337e, type: 2}
   - {fileID: 11400000, guid: 90ab7f14349edf25c81dea1a213fafc8, type: 2}
+  - {fileID: 11400000, guid: 731f96c43e763d1cb9e1af5373a6859b, type: 2}
   - {fileID: 11400000, guid: eb49579977cfe931badc2869f575f9ef, type: 2}
+  - {fileID: 11400000, guid: cb4bcba34b8a1863d9e6b4cfd97e062b, type: 2}
+  - {fileID: 11400000, guid: 33ad335f66a6376b987fe7a648127c08, type: 2}
   - {fileID: 11400000, guid: 9310ce1c529d250a28e239599c1ee684, type: 2}
   - {fileID: 11400000, guid: f27e4bc219515a5c3a993f971bbadf01, type: 2}
   - {fileID: 11400000, guid: 38bcdc8f89867ebf8a492a57843bdd8c, type: 2}
@@ -65,3 +68,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 27d98244af0b59632843b80c870e7bdd, type: 2}
   - {fileID: 11400000, guid: 57e26f32e5aadc5db990d2fd03efd3b1, type: 2}
   edictsUnlock: {fileID: 11400000, guid: 36ce95a64e90b34c08f5f5a9ea0ae84e, type: 2}
+  dailyUnlock: {fileID: 11400000, guid: cb4bcba34b8a1863d9e6b4cfd97e062b, type: 2}
+  dailyRenownBonus: 0.5
+  dailyEdicts: 2
+  dailySalt: gladiator-daily-1
+  dailyLedger: 30

@@ -23,7 +23,7 @@ namespace Gladiator.UI
     /// them seen, saved on close. Pages instead of scrolling, for the gamepad: left/right = tab, up/down = page (in the
     /// Market: the item), Enter = buy. Menu-only UI: it allocates freely when a page is built.
     /// R7: an unlock that opens edicts names them as its reward ("Reward: Edict — Glass Jaw") and shows the first one's
-    /// icon; RECORDS adds "Most edicts in a win".
+    /// icon; RECORDS adds "Most edicts in a win". R8: RECORDS adds "Dailies played" and "Dailies won" (scored dailies).
     /// </summary>
     public sealed class CodexPanel
     {
@@ -632,6 +632,7 @@ namespace Gladiator.UI
                 ("Gorm defeated", SaveData.Count(s.bossKills, "gorm") + "×"), ("Champion defeated", SaveData.Count(s.bossKills, "champion") + "×"),
                 ("Evolutions made", SaveData.Total(s.evolutions).ToString()), ("Synergies found", s.synergies.Count.ToString()),
                 ("Challenges done", challengesDone + " / " + challenges), ("Secrets found", secretsFound + " / " + secrets),
+                ("Dailies played", s.dailiesPlayed.ToString()), ("Dailies won", s.dailiesWon.ToString()),
                 ("Most edicts in a win", s.bestEdictWin.ToString()),
             };
             // two columns; the rows close up when there are more than eight of them (the page is 660 tall)

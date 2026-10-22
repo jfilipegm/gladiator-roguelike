@@ -44,8 +44,10 @@ namespace Gladiator.Gameplay
     }
 
     /// <summary>
-    /// What survives scene loads during a session: the chosen gladiator, the run and which arena of it we're in. The
-    /// menu starts a run, arenas read the gladiator, the end screen retries or goes back to the menu.
+    /// What survives scene loads during a session: the chosen gladiator, the run, which arena of it we're in, the run's
+    /// seed and, in the Daily Games, the day's plan. The menu starts a run (or the daily), arenas read the gladiator, the
+    /// end screen retries or goes back to the menu. Every run load seeds GameRandom with Seed right before LoadScene (R8),
+    /// so the same seed replays the same chests, swarms, elites, gifts and whims (docs/tracks/R7-design.md §3.4).
     /// </summary>
     public static class GameSession
     {
@@ -54,55 +56,121 @@ namespace Gladiator.Gameplay
         public static GladiatorDef Gladiator { get; private set; }
         public static RunDef Run { get; private set; }
         public static int ArenaIndex { get; private set; }
+        /// <summary>The run seed the current (or last loaded) run was seeded with; 0 until a run starts here.</summary>
+        public static uint Seed { get; private set; }
+        /// <summary>The Daily Games' plan while a daily is on (default otherwise: HasDaily false).</summary>
+        public static DailyPlan Daily { get; private set; }
+        public static bool HasDaily => Daily.IsValid;
+        /// <summary>Is this the day's scored attempt (×1.5 Renown, the ledger)? False for practice and normal runs.</summary>
+        public static bool DailyScored { get; private set; }
+        /// <summary>Tests: record the scene a run would load (LastLoadPath) instead of loading it. Clear() turns it off.</summary>
+        public static bool SuppressLoad;
+        /// <summary>The scene path the last run load asked for (also set under SuppressLoad).</summary>
+        public static string LastLoadPath { get; private set; }
+        /// <summary>Tests: stands in for -runSeed's parsed value (null = read the command line). Clear() resets it.</summary>
+        public static uint? RunSeedOverride;
+
+        static uint _freshCount;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void Reset() { Gladiator = null; Run = null; ArenaIndex = 0; }
+        static void Reset()
+        {
+            Gladiator = null; Run = null; ArenaIndex = 0;
+            Seed = 0u; Daily = default; DailyScored = false;
+            SuppressLoad = false; LastLoadPath = null; RunSeedOverride = null;
+        }
 
-        /// <summary>Forget the chosen gladiator and run (tests: one that picks a gladiator must not leak it into the next).</summary>
+        /// <summary>A build that boots straight into an arena (no menu) still honours -runSeed: GameRandom's own reset
+        /// (SubsystemRegistration) runs before this, the first scene's Awakes after.</summary>
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        static void SeedFirstScene()
+        {
+            if (!TryCommandLineSeed(out uint seed)) return;
+            Seed = seed;
+            GameRandom.BeginRun(seed);
+        }
+
+        /// <summary>Forget the gladiator, run, seed and daily, and the test switches (tests: one that picks a gladiator
+        /// must not leak it into the next; set SuppressLoad / RunSeedOverride after calling this).</summary>
         public static void Clear() => Reset();
 
         public static string ArenaName =>
             Run != null && ArenaIndex < Run.arenas.Length ? Run.arenas[ArenaIndex].displayName : null;
 
-        public static void StartRun(GladiatorDef gladiator, RunDef run)
+        /// <summary>A normal run: -runSeed's seed if the command line gives one (bot and perf runs), else a fresh one.</summary>
+        public static void StartRun(GladiatorDef gladiator, RunDef run) =>
+            StartRun(gladiator, run, TryCommandLineSeed(out uint seed) ? seed : FreshSeed());
+
+        /// <summary>A normal run on `seed` (SAME SEED, -runSeed, tests). Leaves any daily.</summary>
+        public static void StartRun(GladiatorDef gladiator, RunDef run, uint seed)
         {
             Gladiator = gladiator;
             Run = run;
             ArenaIndex = 0;
-            SeedRun(); // Q14 (R7): every run rolls differently (R8 replaces this with seeded streams)
-            Load(run != null && run.arenas.Length > 0 ? run.arenas[0].scenePath : null);
+            Daily = default;
+            DailyScored = false;
+            Seed = seed;
+            LoadRun(FirstArena(run));
         }
 
-        /// <summary>Same arena, same gladiator, a fresh run.</summary>
+        /// <summary>The Daily Games: the plan's gladiator, arena, edicts and seed. `scored` = the day's one scored attempt
+        /// (MetaProgress.BeginDaily has already marked it in the save); false = practice.</summary>
+        public static void StartDaily(in DailyPlan plan, bool scored)
+        {
+            if (!plan.IsValid)
+            {
+                Debug.LogWarning("[GameSession] StartDaily: the plan has no arena or gladiator");
+                return;
+            }
+            Gladiator = plan.Gladiator;
+            Run = plan.Run;
+            ArenaIndex = 0;
+            Daily = plan;
+            DailyScored = scored;
+            Seed = plan.Seed;
+            RunModifiers.Set(plan.Edicts);
+            Debug.Log($"[GameSession] daily {plan.Date} {(scored ? "SCORED" : "practice")}: {plan.Run.id} as {plan.Gladiator.id}, " +
+                      $"{(plan.Edicts != null ? plan.Edicts.Length : 0)} edicts, seed {GameRandom.SeedText(plan.Seed)}");
+            LoadRun(FirstArena(plan.Run));
+        }
+
+        /// <summary>Same arena, same gladiator, a new attempt: a normal run gets a fresh seed (it's a new run); a daily
+        /// replays its seed as practice (the scored attempt is spent).</summary>
         public static void Retry()
         {
-            TimeController.ResetForNewRun();
-            SeedRun(); // Q14 (R7): a fresh run, fresh rolls
-            var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
-            if (scene.buildIndex >= 0) UnityEngine.SceneManagement.SceneManager.LoadScene(scene.buildIndex);
-            else UnityEngine.SceneManagement.SceneManager.LoadScene(scene.path);
+            if (HasDaily) DailyScored = false;
+            else Seed = FreshSeed();
+            Reload();
         }
 
-        static uint _runCounter;
-
-        /// <summary>
-        /// Q14 (R7): seeds GameRandom for the run about to load, so chests, gifts and whims change from run to run. Bot and
-        /// stress runs (-bot, -stress) keep today's fixed sequence per launch, so perf runs stay comparable; runs loaded
-        /// straight into an arena (tests) never come through here.
-        /// </summary>
-        static void SeedRun()
+        /// <summary>SAME SEED: the same arena, gladiator and seed again (a daily: as practice).</summary>
+        public static void RetrySameSeed()
         {
-            if (CommandLine.Has("-bot") || CommandLine.Has("-stress")) return;
-            GameRandom.Seed((int)NextRunSeed());
+            if (HasDaily) DailyScored = false;
+            if (Seed == 0u) Seed = GameRandom.RunSeed; // an arena loaded straight from the Editor or a test: replay what it ran on
+            Reload();
         }
 
-        /// <summary>A seed that differs every time (the clock's ticks and a counter, through a 32-bit hash; never 0).</summary>
-        static uint NextRunSeed()
+        /// <summary>A seed that differs every time: the clock's ticks and a counter through GameRandom.Hash (never 0).</summary>
+        public static uint FreshSeed()
         {
-            ulong ticks = (ulong)System.Diagnostics.Stopwatch.GetTimestamp();
-            uint h = (uint)ticks ^ (uint)(ticks >> 32) ^ (++_runCounter * 0x9E3779B9u);
-            h ^= h >> 16; h *= 0x7FEB352Du; h ^= h >> 15; h *= 0x846CA68Bu; h ^= h >> 16; // lowbias32
+            ulong ticks = (ulong)System.Diagnostics.Stopwatch.GetTimestamp() ^ (ulong)DateTime.UtcNow.Ticks;
+            uint h = GameRandom.Hash((uint)ticks, (uint)(ticks >> 32), ++_freshCount);
             return h != 0u ? h : 0x9E3779B9u;
+        }
+
+        /// <summary>-runSeed 7F3A91C2 (hex, "7F3A-91C2" too): a fixed seed for bot and perf runs (RunSeedOverride in tests).
+        /// False when absent; an unreadable value is reported and ignored.</summary>
+        public static bool TryCommandLineSeed(out uint seed)
+        {
+            if (RunSeedOverride.HasValue) { seed = RunSeedOverride.Value; return true; }
+            seed = 0u;
+            string text = CommandLine.Get("-runSeed");
+            if (string.IsNullOrEmpty(text)) return false;
+            if (GameRandom.TryParseSeed(text, out seed)) return true;
+            Debug.LogWarning("[GameSession] -runSeed " + text + " isn't a seed (8 hex digits, e.g. 7F3A91C2): using a fresh one");
+            seed = 0u;
+            return false;
         }
 
         /// <summary>Back to the main menu (or quit if it isn't in the build, e.g. a bare arena build).</summary>
@@ -118,6 +186,31 @@ namespace Gladiator.Gameplay
                 Application.Quit();
 #endif
             }
+        }
+
+        static string FirstArena(RunDef run) => run != null && run.arenas.Length > 0 ? run.arenas[0].scenePath : null;
+
+        /// <summary>Retry's reload: the active scene again, on Seed.</summary>
+        static void Reload()
+        {
+            var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+            GameRandom.BeginRun(Seed);
+            LastLoadPath = scene.path;
+            if (SuppressLoad) return;
+            TimeController.ResetForNewRun();
+            if (scene.buildIndex >= 0) UnityEngine.SceneManagement.SceneManager.LoadScene(scene.buildIndex);
+            else UnityEngine.SceneManagement.SceneManager.LoadScene(scene.path);
+        }
+
+        /// <summary>A run's first scene: GameRandom.BeginRun(Seed) right before the load, so every stream starts from the
+        /// seed (also under SuppressLoad, which only skips the load itself).</summary>
+        static void LoadRun(string path)
+        {
+            if (string.IsNullOrEmpty(path)) return;
+            GameRandom.BeginRun(Seed);
+            LastLoadPath = path;
+            if (SuppressLoad) return;
+            Load(path);
         }
 
         static void Load(string path)

@@ -25,12 +25,22 @@ namespace Gladiator.Gameplay
         int _swarmLeft, _prewarmIndex, _escortIndex;
         float _swarmAcc, _swarmAngle, _swarmRate;
         int _swarmEntry = -1, _swarmGate = -1;
+        // R8 (docs/tracks/R7-design.md §3.3): the steady picks draw from the run's Director fork; each swarm and each elite
+        // from a fork keyed by its number, so the nth swarm (type, gate, side, spread) and the nth elite (type, affix,
+        // gate) are the same however the run went; spawn positions draw from the Spawns stream
+        Rng _steady, _swarm;
+        int _eliteRolls;
+        const int AnyGate = -2;
         ArenaGates _gates;
         int[] _poolTargets;
         Transform _cam;
 
         public int SwarmsStarted { get; private set; }
         public int ElitesSent { get; private set; }
+        /// <summary>The last swarm's table entry (-1 = none yet), its ring angle (radians) and its gate (-1 = the ring). Tests.</summary>
+        public int SwarmEntry => _swarmEntry;
+        public float SwarmAngle => _swarmAngle;
+        public int SwarmGate => _swarmGate;
         [Tooltip("The Director's clock runs × this (R7: the Impatient Emperor edict, 1.33): the swarm and elite schedules run on PaceClock, the curves and the spawn table on Clock. The run timer and the boss don't change.")]
         public float clockScale = 1f;
         /// <summary>The run clock × clockScale, uncapped: the swarm and elite schedules run on it.</summary>
@@ -67,6 +77,7 @@ namespace Gladiator.Gameplay
         void Awake()
         {
             Instance = this;
+            _steady = GameRandom.Fork(RngStream.Director, 0u);
             if (config != null) { _nextSwarm = config.firstSwarm; _nextElite = config.firstElite; }
         }
 
@@ -195,7 +206,7 @@ namespace Gladiator.Gameplay
                 while (_spawnAcc >= 1f && em.AliveCount < target)
                 {
                     _spawnAcc -= 1f;
-                    int k = Pick(em, t, runLength, swarmOnly: false, eliteOnly: false);
+                    int k = Pick(em, t, runLength, swarmOnly: false, eliteOnly: false, ref _steady);
                     if (k < 0) break;
                     SpawnAt(em, table.entries[k].enemy, RandomAngle(), null);
                 }
@@ -206,7 +217,7 @@ namespace Gladiator.Gameplay
             if (pace >= _nextSwarm)
             {
                 _nextSwarm = pace + config.swarmEvery;
-                BeginSwarm(em, t, runLength, PickGate(em));
+                BeginSwarm(em, t, runLength, AnyGate);
             }
             if (_swarmLeft > 0 && _swarmEntry >= 0)
             {
@@ -218,7 +229,7 @@ namespace Gladiator.Gameplay
                     _swarmAcc -= 1f;
                     _swarmLeft--;
                     if (_swarmGate >= 0) em.Spawn(def, _gates.SpawnPoint(_swarmGate));
-                    else SpawnAt(em, def, _swarmAngle + GameRandom.Range(-halfArc, halfArc), null, skipOffscreenTest: true);
+                    else SpawnAt(em, def, _swarmAngle + _swarm.Range(-halfArc, halfArc), null, skipOffscreenTest: true);
                 }
                 if (em.AliveCount >= HardCap) _swarmLeft = 0;
             }
@@ -227,11 +238,12 @@ namespace Gladiator.Gameplay
             if (pace >= _nextElite)
             {
                 _nextElite = pace + EliteEvery;
-                int k = Pick(em, t, runLength, swarmOnly: false, eliteOnly: true);
+                var rng = GameRandom.Fork(RngStream.Elite, (uint)_eliteRolls++);
+                int k = Pick(em, t, runLength, swarmOnly: false, eliteOnly: true, ref rng);
                 if (k >= 0 && table.affixes.Length > 0)
                 {
-                    var affix = table.affixes[GameRandom.Range(0, table.affixes.Length)];
-                    int gate = PickGate(em);
+                    var affix = table.affixes[rng.Range(0, table.affixes.Length)];
+                    int gate = PickGate(em, ref rng);
                     int slot;
                     if (gate >= 0) { slot = em.Spawn(table.entries[k].enemy, _gates.SpawnPoint(gate), affix); _gates.Open(gate, 2.5f); }
                     else slot = SpawnAt(em, table.entries[k].enemy, RandomAngle(), affix);
@@ -244,16 +256,21 @@ namespace Gladiator.Gameplay
             }
         }
 
-        /// <summary>A swarm from now on through `gate` (-1 = from a random side of the ring). False if no swarm type is active.</summary>
+        /// <summary>
+        /// A swarm from now on through `gate` (-1 = from a random side of the ring, AnyGate = a gate away from the player, or
+        /// the ring without gates). False if no swarm type is active. Its type, gate, side and spread come from its fork.
+        /// </summary>
         bool BeginSwarm(EnemyManager em, float t, float runLength, int gate)
         {
-            _swarmEntry = Pick(em, t, runLength, swarmOnly: true, eliteOnly: false);
+            _swarm = GameRandom.Fork(RngStream.Swarm, (uint)SwarmsStarted);
+            _swarmEntry = Pick(em, t, runLength, swarmOnly: true, eliteOnly: false, ref _swarm);
             if (_swarmEntry < 0) return false;
             if (_gates == null) _gates = ArenaGates.Instance;
+            if (gate == AnyGate) gate = PickGate(em, ref _swarm);
             _swarmLeft = Mathf.RoundToInt(config.swarmSize.Evaluate(t) * densityMultiplier * SwarmMul);
             _swarmRate = _swarmLeft / Mathf.Max(0.1f, config.swarmDuration);
             _swarmAcc = 1f; // first one right away
-            _swarmAngle = RandomAngle();
+            _swarmAngle = _swarm.Range(0f, Mathf.PI * 2f);
             _swarmGate = _gates != null && gate >= 0 && gate < _gates.Count ? gate : -1;
             SwarmsStarted++;
             Vector3 at = _swarmGate >= 0 ? _gates.Position(_swarmGate) : RingPoint(em, _swarmAngle);
@@ -280,9 +297,10 @@ namespace Gladiator.Gameplay
         {
             var em = EnemyManager.Instance;
             if (em == null || config == null || table == null || table.affixes.Length == 0) return -1;
-            int k = Pick(em, Clock, RunLength, swarmOnly: false, eliteOnly: true);
+            var rng = GameRandom.Fork(RngStream.Elite, (uint)_eliteRolls++);
+            int k = Pick(em, Clock, RunLength, swarmOnly: false, eliteOnly: true, ref rng);
             if (k < 0) return -1;
-            var affix = table.affixes[GameRandom.Range(0, table.affixes.Length)];
+            var affix = table.affixes[rng.Range(0, table.affixes.Length)];
             int slot = em.Spawn(table.entries[k].enemy, pos, affix);
             if (slot >= 0)
             {
@@ -292,8 +310,8 @@ namespace Gladiator.Gameplay
             return slot;
         }
 
-        /// <summary>Weighted pick among entries active at t and under their cap. -1 if none.</summary>
-        int Pick(EnemyManager em, float t, float runLength, bool swarmOnly, bool eliteOnly)
+        /// <summary>Weighted pick among entries active at t and under their cap, drawing from `rng`. -1 if none.</summary>
+        int Pick(EnemyManager em, float t, float runLength, bool swarmOnly, bool eliteOnly, ref Rng rng)
         {
             var entries = table.entries;
             float total = 0f;
@@ -303,7 +321,7 @@ namespace Gladiator.Gameplay
                 total += SpawnTableDef.Weight(entries[i], t, runLength);
             }
             if (total <= 0f) return -1;
-            float r = GameRandom.Value * total;
+            float r = rng.Next01() * total;
             int last = -1;
             for (int i = 0; i < entries.Length; i++)
             {
@@ -325,15 +343,15 @@ namespace Gladiator.Gameplay
             return e.maxAlive <= 0 || em.AliveOf(e.enemy) < e.maxAlive;
         }
 
-        static float RandomAngle() => GameRandom.Range(0f, Mathf.PI * 2f);
+        static float RandomAngle() => GameRandom.Range(RngStream.Spawns, 0f, Mathf.PI * 2f);
 
-        /// <summary>A gate away from the player for a swarm or an elite (-1 = no gates: use the ring).</summary>
-        int PickGate(EnemyManager em)
+        /// <summary>A gate away from the player for a swarm or an elite, drawing from `rng` (-1 = no gates: use the ring).</summary>
+        int PickGate(EnemyManager em, ref Rng rng)
         {
             if (_gates == null) _gates = ArenaGates.Instance;
             if (_gates == null || _gates.Count == 0) return -1;
             Vector3 player = Player.Main != null ? Player.Main.transform.position : em.arenaCenter;
-            return _gates.Pick(player, config.minPlayerDistance);
+            return _gates.Pick(player, config.minPlayerDistance, ref rng);
         }
 
         Vector3 RingPoint(EnemyManager em, float angle)
@@ -350,10 +368,10 @@ namespace Gladiator.Gameplay
             Vector3 best = RingPoint(em, angle);
             for (int attempt = 0; attempt < 8; attempt++)
             {
-                float a = attempt == 0 ? angle : (skipOffscreenTest ? angle + GameRandom.Range(-0.4f, 0.4f) : RandomAngle());
+                float a = attempt == 0 ? angle : (skipOffscreenTest ? angle + GameRandom.Range(RngStream.Spawns, -0.4f, 0.4f) : RandomAngle());
                 Vector3 p = RingPoint(em, a);
                 // a little depth so a ring of spawns doesn't look like a fence of enemies
-                p += (em.arenaCenter - p).normalized * GameRandom.Range(0f, 2.5f);
+                p += (em.arenaCenter - p).normalized * GameRandom.Range(RngStream.Spawns, 0f, 2.5f);
                 float dx = p.x - player.x, dz = p.z - player.z, d2 = dx * dx + dz * dz;
                 if (d2 < min2 || (d2 > max2 && !skipOffscreenTest)) continue; // a swarm keeps its side, however far
                 best = p;

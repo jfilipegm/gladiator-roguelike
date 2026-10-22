@@ -266,10 +266,10 @@ namespace Gladiator.Tests
         [Test]
         public void Save_V1File_MigratesToV2()
         {
-            Assert.AreEqual(2, SaveData.CurrentVersion);
+            Assert.GreaterOrEqual(SaveData.CurrentVersion, 2, "R7 made it 2; later items go higher");
             File.WriteAllText(_path, "{\"version\":1,\"renown\":5,\"runs\":3,\"unlocked\":[\"gorms_flail\"]}");
             var d = SaveSystem.Load(_path);
-            Assert.AreEqual(2, d.version);
+            Assert.AreEqual(SaveData.CurrentVersion, d.version);
             Assert.AreEqual(5, d.renown);
             Assert.AreEqual(3, d.runs);
             Assert.IsTrue(d.IsUnlocked("gorms_flail"), "nothing lost");
@@ -278,16 +278,16 @@ namespace Gladiator.Tests
             Assert.AreEqual(0, d.bestEdictWin);
             Assert.IsTrue(SaveSystem.Save(d, _path));
             StringAssert.Contains("\"edictsChosen\"", File.ReadAllText(_path));
-            Assert.AreEqual(2, JsonUtility.FromJson<SaveData>(File.ReadAllText(_path)).version, "written as v2");
+            Assert.AreEqual(SaveData.CurrentVersion, JsonUtility.FromJson<SaveData>(File.ReadAllText(_path)).version, "written at the current version");
 
             var bare = new SaveData { version = 1, edictsChosen = null, edictWins = null, bestEdictWin = -3 };
             bare.Migrate();
             Assert.IsNotNull(bare.edictsChosen, "Migrate fills the lists");
             Assert.IsNotNull(bare.edictWins);
             Assert.AreEqual(0, bare.bestEdictWin);
-            Assert.AreEqual(2, bare.version);
+            Assert.AreEqual(SaveData.CurrentVersion, bare.version);
             bare.Migrate();
-            Assert.AreEqual(2, bare.version, "idempotent");
+            Assert.AreEqual(SaveData.CurrentVersion, bare.version, "idempotent");
         }
 
         [Test]

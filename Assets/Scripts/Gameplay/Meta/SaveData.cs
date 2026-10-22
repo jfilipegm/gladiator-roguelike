@@ -12,6 +12,28 @@ namespace Gladiator.Gameplay
         public long count;
     }
 
+    /// <summary>One scored daily in the ledger (R8): which day, who, where, how it went. Oldest first in SaveData.dailies.</summary>
+    [Serializable]
+    public struct DailyRecord
+    {
+        /// <summary>yyyymmdd (UTC).</summary>
+        public int date;
+        /// <summary>RunDef id.</summary>
+        public string run;
+        /// <summary>GladiatorDef id.</summary>
+        public string gladiator;
+        /// <summary>The day's edict ids, "a|b".</summary>
+        public string edicts;
+        /// <summary>(int)RunOutcome: 1 died, 2 survived.</summary>
+        public int outcome;
+        public float elapsed;
+        public int kills;
+        /// <summary>The Renown the run paid (bounties not included).</summary>
+        public int renown;
+        /// <summary>The run seed (a uint; long because JsonUtility and the file stay readable either way).</summary>
+        public long seed;
+    }
+
     /// <summary>
     /// Everything that survives between runs (CLAUDE.md §4: versioned JSON in persistentDataPath). Lifetime records feed
     /// the unlock conditions; `unlocked` holds UnlockDef ids, `flags` secrets and discoveries. Add fields freely: missing
@@ -20,8 +42,9 @@ namespace Gladiator.Gameplay
     [Serializable]
     public sealed class SaveData
     {
-        /// <summary>1: everything up to v0.20.0. 2: R7's edicts (edictsChosen, edictWins, bestEdictWin).</summary>
-        public const int CurrentVersion = 2;
+        /// <summary>1: everything up to v0.20.0. 2: R7's edicts (edictsChosen, edictWins, bestEdictWin). 3: R8's Daily
+        /// Games (dailyAttempt, dailiesPlayed, dailiesWon, dailies).</summary>
+        public const int CurrentVersion = 3;
 
         public int version = CurrentVersion;
         public int renown;
@@ -64,6 +87,15 @@ namespace Gladiator.Gameplay
         public List<IdCount> edictWins = new List<IdCount>();
         /// <summary>The most edicts on in one won run (the WinWithEdicts condition, the Codex's Records).</summary>
         public int bestEdictWin;
+        // R8 the Daily Games (save v3; filled by Migrate in older files).
+        /// <summary>yyyymmdd of the last day whose scored attempt was started (marked at launch: quitting doesn't give another).</summary>
+        public int dailyAttempt;
+        /// <summary>Scored dailies finished (won or lost; the DailiesPlayed condition).</summary>
+        public int dailiesPlayed;
+        /// <summary>Scored dailies won (the DailiesWon condition).</summary>
+        public int dailiesWon;
+        /// <summary>The ledger: the last MetaConfig.dailyLedger scored dailies, oldest first.</summary>
+        public List<DailyRecord> dailies = new List<DailyRecord>();
 
         public static long Count(List<IdCount> list, string id)
         {
@@ -135,6 +167,11 @@ namespace Gladiator.Gameplay
             edictsChosen ??= new List<string>();
             edictWins ??= new List<IdCount>();
             if (bestEdictWin < 0) bestEdictWin = 0;
+            // v2 → v3 (R8): the daily ledger; nothing to convert.
+            dailies ??= new List<DailyRecord>();
+            if (dailyAttempt < 0) dailyAttempt = 0;
+            if (dailiesPlayed < 0) dailiesPlayed = 0;
+            if (dailiesWon < 0) dailiesWon = 0;
             if (renown < 0) renown = 0;
             // v0 (no version field) → v1: nothing to convert. Each step is an idempotent fill, so any older file runs them all.
             if (version < CurrentVersion) version = CurrentVersion;

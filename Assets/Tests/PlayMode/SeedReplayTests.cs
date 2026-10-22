@@ -221,7 +221,11 @@ namespace Gladiator.Tests
                 R2TestArena.PutPlayer(em.arenaCenter);
                 player.GetComponent<PlayerHealth>().HealFull();
                 yield return null;
+                int landed = gifts.WaitingCount;
                 Assert.GreaterOrEqual(gifts.Throw(null), 0, "gift " + k + " thrown");
+                // the crowd has maxGifts (3) slots: let this one land before the next, or the 4th finds them all in the air
+                float until = Time.time + 5f;
+                while (gifts.WaitingCount <= landed && gifts.WaitingCount < 3 && Time.time < until) yield return null;
                 yield return Noise();
             }
 

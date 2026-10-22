@@ -34,6 +34,10 @@ namespace Gladiator.UI
     /// Q / E (LB / RB, or its arrows) cycle them on the diorama, an owned one is equipped at once, F / gamepad North (or
     /// its button) buys a Market one. The roster tiles show each gladiator's equipped skin, and FIGHT! (and the daily's)
     /// fights in it (`-skin &lt;id&gt;` for bot runs: any skin, owned or not; it picks its gladiator when -gladiator doesn't).
+    /// U1 (docs/tracks/U1-design.md §5): the Roman look. The title on a mosaic plaque over a gold meander; the buttons a
+    /// column of tabulae ansatae (PLAY bronze, the rest marble) whose focus is the plate's gold ring; Renown on a bronze
+    /// plate. Every screen's header in Title over a meander, its key line in Body, BACK marble and FIGHT! bronze. The
+    /// Codex, the Edicts page and the Daily screen scale with UiKit.FitScale. Words, keys and test hooks unchanged.
     /// </summary>
     public sealed class MainMenu : MonoBehaviour
     {
@@ -62,17 +66,17 @@ namespace Gladiator.UI
         [Tooltip("Palette material for the swapped models (they import without materials).")]
         public Material heroMaterial;
 
-        static readonly Color Gold = new Color(1f, 0.84f, 0.3f);
-        static readonly Color Soft = new Color(1f, 1f, 1f, 0.75f);
-        static readonly Color Dim = new Color(1f, 1f, 1f, 0.5f);
+        /// <summary>The gold of a dot or a multiplier written on a marble plate (the bright gold doesn't read on marble).</summary>
+        const string MarbleGoldHex = "#A8741F";
 
         enum Screen { Menu, Select, Arena, Codex, Daily }
 
         CanvasGroup _menu, _select, _arena, _codex, _daily;
         Button[] _menuButtons;
-        int _focus;
+        UiPlate[] _menuPlates;
+        int _focus, _shownFocus = -1;
+        bool _shownDailyOpen;
         Screen _screen;
-        Image[] _menuFrames;
         readonly System.Collections.Generic.Dictionary<GameObject, GameObject> _heroModels = new System.Collections.Generic.Dictionary<GameObject, GameObject>();
         int _screenW, _screenH;
 
@@ -100,6 +104,7 @@ namespace Gladiator.UI
         RunModifierDef[] _chosenEdicts = Array.Empty<RunModifierDef>();
         bool _edictsShown;
         TextMeshProUGUI _menuRenown, _arenaKeys;
+        UiPlate _edictsPlate;
 
         // R8: the Daily Games (the second menu button and its screen)
         Button _dailyButton, _codexButton, _dailyFight;
@@ -136,6 +141,36 @@ namespace Gladiator.UI
         public int Step => _step;
         public bool FightEnabled => _fight != null && _fight.interactable;
         public bool ArenaFightEnabled => _arenaFight != null && _arenaFight.interactable;
+
+        // ---- tests (UiMenuLookTests) ---------------------------------------------------------------------------------
+        /// <summary>The main menu's plate `i` (PLAY = 0, DAILY, CODEX, OPTIONS, QUIT), or null.</summary>
+        public UiPlate MenuPlate(int i) => _menuPlates != null && i >= 0 && i < _menuPlates.Length ? _menuPlates[i] : null;
+        public int MenuPlateCount => _menuPlates != null ? _menuPlates.Length : 0;
+        /// <summary>The main menu's keyboard / gamepad focus (a MenuPlate index).</summary>
+        public int MenuFocus => _focus;
+        /// <summary>The arena screen's EDICTS plate (null before the arena screen is built).</summary>
+        public UiPlate EdictsPlate => _edictsPlate;
+        /// <summary>The main menu's title and the Renown number (their theme roles).</summary>
+        public Component TitleLabel { get; private set; }
+        public Component RenownLabel => _menuRenown;
+        /// <summary>The frames behind the title and the Renown (`Mosaic`, `Bronze`).</summary>
+        public Component TitlePlaque { get; private set; }
+        public Component RenownPlate { get; private set; }
+
+        /// <summary>A screen's BACK and FIGHT! plates ("Select", "Arena", "Daily"), or null.</summary>
+        public UiPlate BackPlateOf(string screen) => _chrome.TryGetValue(screen, out var p) ? p[0] : null;
+        public UiPlate FightPlateOf(string screen) => _chrome.TryGetValue(screen, out var p) ? p[1] : null;
+        readonly System.Collections.Generic.Dictionary<string, UiPlate[]> _chrome = new System.Collections.Generic.Dictionary<string, UiPlate[]>();
+
+        /// <summary>The keyboard / gamepad move on the main menu's column (up -1, down +1), as Update does it.</summary>
+        public void MoveMenuFocus(int d)
+        {
+            if (_menuButtons == null || _menuButtons.Length == 0 || d == 0) return;
+            int n = _menuButtons.Length;
+            _focus = (_focus + (d > 0 ? 1 : n - 1)) % n;
+            if (!_menuButtons[_focus].interactable) _focus = (_focus + (d > 0 ? 1 : n - 1)) % n;
+            RefreshMenuFocus();
+        }
 
         /// <summary>Moves the grid's cursor to `slot`, earned or locked (a keyboard/gamepad move; never fights).</summary>
         public void PickSlot(int slot)
@@ -210,7 +245,7 @@ namespace Gladiator.UI
         {
             for (int i = 0; i < _available.Length; i++) if (_available[i] == _skins.Gladiator) RefreshTilePortrait(i);
             if (!bought) return;
-            if (_menuRenown != null) _menuRenown.text = "RENOWN  " + MetaProgress.Data.renown;
+            SetMenuRenown();
             if (Codex != null) Codex.Refresh(); // its Market was built before the purchase
             RefreshCodexButton();
         }
@@ -356,8 +391,8 @@ namespace Gladiator.UI
             _dailyButton.interactable = _dailyOpen;
             DailyDot = _dailyOpen && !MetaProgress.DailyAttempted(DailyGames.Today());
             var label = UiFactory.Label(_dailyButton);
-            label.text = DailyDot ? "DAILY  <color=#FFD84A>•</color>" : "DAILY";
-            label.color = _dailyOpen ? Color.white : Dim;
+            label.text = DailyDot ? "DAILY  <color=" + MarbleGoldHex + ">•</color>" : "DAILY"; // the marble plate dims it when shut
+            RefreshMenuFocus();
             if (_dailyHint != null)
             {
                 _dailyHint.gameObject.SetActive(!_dailyOpen);
@@ -394,7 +429,7 @@ namespace Gladiator.UI
         /// <summary>The Edicts page (tests drive it).</summary>
         public EdictsPanel Edicts { get; private set; }
         /// <summary>The arena screen's EDICTS button is there (the Edicts are earned and exist as data).</summary>
-        public bool EdictsButtonShown => _edictsButton != null && _edictsButton.gameObject.activeSelf;
+        public bool EdictsButtonShown => _edictsPlate != null && _edictsPlate.Root.gameObject.activeSelf;
         /// <summary>The button's words without colour tags ("EDICTS · RENOWN ×1.45").</summary>
         public string EdictsButtonText => _edictsButtonText;
         /// <summary>The arena screen's key line (tests).</summary>
@@ -438,7 +473,7 @@ namespace Gladiator.UI
             if (!Edicts.ReadOnly) _chosenEdicts = Edicts.Chosen;
             RefreshEdictsButton();
             RefreshRunPick();
-            if (_menuRenown != null) _menuRenown.text = "RENOWN  " + MetaProgress.Data.renown;
+            SetMenuRenown();
         }
 
         void CloseEdicts()
@@ -448,7 +483,7 @@ namespace Gladiator.UI
             RefreshRunPick();
             if (Edicts.BoughtAny) // the Codex's Market and the corner's Renown were built before the purchase
             {
-                if (_menuRenown != null) _menuRenown.text = "RENOWN  " + MetaProgress.Data.renown;
+                SetMenuRenown();
                 if (Codex != null) Codex.Refresh();
                 RefreshCodexButton();
             }
@@ -462,14 +497,14 @@ namespace Gladiator.UI
             _edictsButtonText = EdictsPanel.ButtonText(n, mul);
             UiFactory.Label(_edictsButton).text = n <= 0
                 ? _edictsButtonText
-                : "<color=#FF5433>EDICTS</color> · RENOWN <color=#FFD84A>" + EdictsPanel.MulText(mul) + "</color>";
+                : "<color=#FF5433>EDICTS</color> · RENOWN <color=" + MarbleGoldHex + ">" + EdictsPanel.MulText(mul) + "</color>"; // orange-red: it hurts you
         }
 
         void RefreshCodexButton()
         {
             int n = Codex != null ? Codex.RemainingNew : 0;
             var label = UiFactory.Label(_codexButton);
-            label.text = n > 0 ? "CODEX  <color=#FFD84A>• " + n + " NEW</color>" : "CODEX";
+            label.text = n > 0 ? "CODEX  <color=" + MarbleGoldHex + ">• " + n + " NEW</color>" : "CODEX";
         }
 
         void Awake()
@@ -491,7 +526,9 @@ namespace Gladiator.UI
             BuildSelect(_select.transform);
             BuildArena(_arena.transform);
             BuildDaily(_daily.transform); // after the select screens: the plan draws from what they found earned
-            var dim = UiFactory.Image("Dim", _codex.transform, new Color(0.02f, 0.02f, 0.04f, 0.88f), Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, PixelIcons.White);
+            var night = UiTheme.Current.night;
+            night.a = 0.88f;
+            var dim = UiFactory.Image("Dim", _codex.transform, night, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, PixelIcons.White);
             UiFactory.Stretch(dim.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             Codex = new CodexPanel(font, fontMaterial);
             Codex.Build(_codex.transform, MetaProgress.Data, codex, meta, gladiators, locked, CloseCodex);
@@ -537,57 +574,94 @@ namespace Gladiator.UI
 
         void BuildMenu(Transform root)
         {
+            var th = UiTheme.Current;
             var left = new Vector2(0f, 0.5f);
-            var t = UiFactory.Text("Title", root, title, 130, Gold, TextAlignmentOptions.Left, left, left, new Vector2(110, 230), new Vector2(1100, 160), font, fontMaterial);
-            t.fontStyle = FontStyles.Bold;
-            var s = UiFactory.Text("Subtitle", root, subtitle, 38, Soft, TextAlignmentOptions.Left, left, left, new Vector2(116, 140), new Vector2(1100, 50), font, fontMaterial);
-            s.fontStyle = FontStyles.Italic;
-            // R8: DAILY under PLAY; the others one slot down
-            var play = UiFactory.Button("Play", root, "PLAY", left, left, new Vector2(110, 10), new Vector2(360, 76), font, fontMaterial, OpenSelect, 40f);
-            _dailyButton = UiFactory.Button("Daily", root, "DAILY", left, left, new Vector2(110, -82), new Vector2(360, 76), font, fontMaterial, OpenDaily, 40f);
-            _codexButton = UiFactory.Button("Codex", root, "CODEX", left, left, new Vector2(110, -174), new Vector2(360, 76), font, fontMaterial, OpenCodex, 40f);
-            _menuButtons = new[]
+            // the title and its line on a mosaic plaque, a gold meander under it (spec §5)
+            const float plaqueX = 86f, plaqueW = 940f;
+            var plaque = UiKit.Frame("TitlePlaque", root, FrameKind.Mosaic, left, new Vector2(0f, 0f), new Vector2(plaqueX, 96f), new Vector2(plaqueW, 284f), Color.white);
+            TitlePlaque = plaque;
+            TitleLabel = UiKit.Text("Title", root, title, TextRole.Title, 140f, th.gold, TextAlignmentOptions.Center, left, left,
+                new Vector2(plaqueX + 40f, 270f), new Vector2(plaqueW - 80f, 180f));
+            UiKit.Text("Subtitle", root, subtitle, TextRole.Body, 38f, th.ink, TextAlignmentOptions.Center, left, left,
+                new Vector2(plaqueX + 40f, 146f), new Vector2(plaqueW - 80f, 50f));
+            UiKit.Meander("Meander", root, true, left, left, new Vector2(plaqueX, 74f), plaqueW);
+
+            // R8: DAILY under PLAY; the others one slot down. PLAY is the screen's main action (bronze), the rest marble.
+            var size = new Vector2(360f, 66f);
+            _menuPlates = new[]
             {
-                play,
-                _dailyButton,
-                _codexButton,
-                UiFactory.Button("Options", root, "OPTIONS", left, left, new Vector2(110, -266), new Vector2(360, 76), font, fontMaterial, OpenOptions, 40f),
-                UiFactory.Button("Quit", root, "QUIT", left, left, new Vector2(110, -358), new Vector2(360, 76), font, fontMaterial, Quit, 40f),
+                UiKit.Button("Play", root, "PLAY", ButtonStyle.Primary, left, left, new Vector2(110, 10), size, OpenSelect, 34f),
+                UiKit.Button("Daily", root, "DAILY", ButtonStyle.Secondary, left, left, new Vector2(110, -82), size, OpenDaily, 34f),
+                UiKit.Button("Codex", root, "CODEX", ButtonStyle.Secondary, left, left, new Vector2(110, -174), size, OpenCodex, 34f),
+                UiKit.Button("Options", root, "OPTIONS", ButtonStyle.Secondary, left, left, new Vector2(110, -266), size, OpenOptions, 34f),
+                UiKit.Button("Quit", root, "QUIT", ButtonStyle.Secondary, left, left, new Vector2(110, -358), size, Quit, 34f),
             };
+            _menuButtons = new Button[_menuPlates.Length];
+            for (int i = 0; i < _menuPlates.Length; i++) _menuButtons[i] = _menuPlates[i].Button;
+            _dailyButton = _menuButtons[1];
+            _codexButton = _menuButtons[2];
             // the greyed DAILY's hint, beside it (its unlock's hint)
-            _dailyHint = UiFactory.Text("DailyHint", root, "", 24, new Color(1f, 0.84f, 0.3f, 0.7f), TextAlignmentOptions.Left, left, left, new Vector2(494, -82), new Vector2(760, 40), font, fontMaterial);
-            _dailyHint.fontStyle = FontStyles.Italic;
-            _dailyHint.enableAutoSizing = true; _dailyHint.fontSizeMin = 16f; _dailyHint.fontSizeMax = 24f;
+            _dailyHint = UiKit.Text("DailyHint", root, "", TextRole.Body, 22f, th.dust, TextAlignmentOptions.Left, left, left,
+                new Vector2(494, -82), new Vector2(760, 40), TextLook.Outline);
+            _dailyHint.enableAutoSizing = true; _dailyHint.fontSizeMin = 18f; _dailyHint.fontSizeMax = 22f;
             _dailyHint.overflowMode = TextOverflowModes.Truncate;
-            _menuFrames = new Image[_menuButtons.Length];
-            for (int i = 0; i < _menuButtons.Length; i++)
-            {
-                var f = UiFactory.Image("Focus", _menuButtons[i].transform, Gold, new Vector2(0f, 0.5f), new Vector2(1f, 0.5f), new Vector2(-10, 0), new Vector2(10, 60), PixelIcons.White);
-                f.raycastTarget = false;
-                _menuFrames[i] = f;
-            }
-            var hint = UiFactory.Text("Keys", root, "Enter / A: select     Esc / B: back", 24, new Color(1f, 1f, 1f, 0.45f), TextAlignmentOptions.Left, new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(116, 40), new Vector2(900, 34), font, fontMaterial);
-            hint.fontStyle = FontStyles.Normal;
+            UiKit.Text("Keys", root, "Enter / A: select     Esc / B: back", TextRole.Body, 22f, th.dust, TextAlignmentOptions.Left,
+                new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(116, 40), new Vector2(900, 34), TextLook.Outline);
             var bottomRight = new Vector2(1f, 0f);
             UiFactory.Text("Version", root, GameInfo.VersionLabel, 22, new Color(1f, 1f, 1f, 0.35f), TextAlignmentOptions.Right, bottomRight, bottomRight, new Vector2(-60, 40), new Vector2(400, 34), font, fontMaterial).fontStyle = FontStyles.Normal;
+
+            // Renown on a small bronze plate in the top-right corner, the runs line under it
             var save = MetaProgress.Data;
             var corner = new Vector2(1f, 1f);
-            var renown = UiFactory.Text("Renown", root, "RENOWN  " + save.renown, 34, Gold, TextAlignmentOptions.Right, corner, corner, new Vector2(-60, -60), new Vector2(600, 50), font, fontMaterial);
-            renown.fontStyle = FontStyles.Bold;
-            _menuRenown = renown;
+            var plate = UiKit.Frame("RenownPlate", root, FrameKind.Bronze, corner, corner, new Vector2(-MenuLayout.Margin, -40f), new Vector2(330f, 66f), Color.white);
+            RenownPlate = plate;
+            var mid = new Vector2(0.5f, 0.5f);
+            var pl = new Vector2(0f, 0.5f);
+            UiKit.Text("RenownLabel", plate.transform, "RENOWN", TextRole.Title, 22f, th.bronzeInk, TextAlignmentOptions.Left, pl, pl,
+                new Vector2(22f, 0f), new Vector2(120f, 30f), TextLook.Engraved);
+            _menuRenown = UiKit.Text("Renown", plate.transform, "", TextRole.Number, 34f, th.goldBright, TextAlignmentOptions.Right, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f),
+                new Vector2(-22f, 0f), new Vector2(170f, 42f), TextLook.Outline);
+            _menuRenown.enableAutoSizing = true; _menuRenown.fontSizeMin = 22f; _menuRenown.fontSizeMax = 34f;
+            SetMenuRenown();
             if (save.runs > 0)
-                UiFactory.Text("Runs", root, save.runs + (save.runs == 1 ? " run  ·  " : " runs  ·  ") + save.victories + (save.victories == 1 ? " victory" : " victories"), 24, Soft, TextAlignmentOptions.Right, corner, corner, new Vector2(-60, -102), new Vector2(600, 36), font, fontMaterial).fontStyle = FontStyles.Normal;
+                UiKit.Text("Runs", root, save.runs + (save.runs == 1 ? " run  ·  " : " runs  ·  ") + save.victories + (save.victories == 1 ? " victory" : " victories"),
+                    TextRole.Body, 22f, th.ink, TextAlignmentOptions.Right, corner, corner, new Vector2(-MenuLayout.Margin, -114f), new Vector2(600, 30), TextLook.Outline);
+            RefreshMenuFocus();
         }
 
-        /// <summary>The header, the key line under it, and BACK / FIGHT! in the bottom corners (both select screens).</summary>
+        /// <summary>The Renown plate's number (after a purchase or an edict changed it).</summary>
+        void SetMenuRenown()
+        {
+            if (_menuRenown != null) _menuRenown.text = MetaProgress.Data.renown.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>The menu column's plates: the focused one shows its gold ring, a shut one (DAILY before Gorm) is dimmed.
+        /// Only on a change (no per-frame recolour).</summary>
+        void RefreshMenuFocus()
+        {
+            if (_menuPlates == null) return;
+            bool daily = _dailyButton != null && _dailyButton.interactable;
+            if (_focus == _shownFocus && daily == _shownDailyOpen) return;
+            _shownFocus = _focus;
+            _shownDailyOpen = daily;
+            for (int i = 0; i < _menuPlates.Length; i++)
+                _menuPlates[i].SetState(!_menuButtons[i].interactable ? UiState.Disabled : i == _focus ? UiState.Focused : UiState.Normal);
+        }
+
+        /// <summary>The header over a gold meander, the key line under it, and BACK (marble) / FIGHT! (bronze) in the bottom
+        /// corners (the select screens and the Daily screen). Returns FIGHT!'s button.</summary>
         Button Chrome(Transform root, string header, string keys, UnityEngine.Events.UnityAction fight, UnityEngine.Events.UnityAction back)
         {
+            var th = UiTheme.Current;
             var top = new Vector2(0.5f, 1f);
-            UiFactory.Text("Header", root, header, 56, Gold, TextAlignmentOptions.Center, top, top, new Vector2(0, -24), new Vector2(1400, 72), font, fontMaterial);
-            UiFactory.Text("Keys", root, keys, 22, Dim, TextAlignmentOptions.Center, top, top, new Vector2(0, -100), new Vector2(1400, 26), font, fontMaterial).fontStyle = FontStyles.Normal;
-            UiFactory.Button("Back", root, "BACK", Vector2.zero, Vector2.zero, new Vector2(MenuLayout.Margin, 40), new Vector2(220, 76), font, fontMaterial, back, 34f);
+            UiKit.Text("Header", root, header, TextRole.Title, 56f, th.gold, TextAlignmentOptions.Center, top, top, new Vector2(0, -14), new Vector2(1400, 72), TextLook.Outline);
+            UiKit.Meander("Meander", root, true, top, top, new Vector2(0, -88), 540f);
+            UiKit.Text("Keys", root, keys, TextRole.Body, 22f, th.dust, TextAlignmentOptions.Center, top, top, new Vector2(0, -106), new Vector2(1400, 30), TextLook.Outline);
+            var backPlate = UiKit.Button("Back", root, "BACK", ButtonStyle.Secondary, Vector2.zero, Vector2.zero, new Vector2(MenuLayout.Margin, 40), new Vector2(220, 66), back, 30f);
             var corner = new Vector2(1f, 0f);
-            return UiFactory.Button("Fight", root, "FIGHT!", corner, corner, new Vector2(-MenuLayout.Margin, 40), new Vector2(300, 80), font, fontMaterial, fight, 44f);
+            var fightPlate = UiKit.Button("Fight", root, "FIGHT!", ButtonStyle.Primary, corner, corner, new Vector2(-MenuLayout.Margin, 40), new Vector2(300, 78), fight, 40f);
+            _chrome[root.name] = new[] { backPlate, fightPlate };
+            return fightPlate.Button;
         }
 
         void BuildSelect(Transform root)
@@ -645,8 +719,9 @@ namespace Gladiator.UI
             _arenaKeys = root.Find("Keys").GetComponent<TextMeshProUGUI>();
             // R7: between BACK and FIGHT!, only once the Edicts are earned
             var bottom = new Vector2(0.5f, 0f);
-            _edictsButton = UiFactory.Button("Edicts", root, "EDICTS", bottom, bottom, new Vector2(0, 40), new Vector2(520, 76), font, fontMaterial, OpenEdicts, 34f);
-            _edictsButton.gameObject.SetActive(_edictsShown);
+            _edictsPlate = UiKit.Button("Edicts", root, "EDICTS", ButtonStyle.Secondary, bottom, bottom, new Vector2(0, 40), new Vector2(520, 66), OpenEdicts, 28f);
+            _edictsButton = _edictsPlate.Button;
+            _edictsPlate.Root.gameObject.SetActive(_edictsShown);
             RefreshEdictsButton();
             _ladder = new ArenaLadder(font);
             _ladder.Build(root, new Vector2(MenuLayout.Margin, MenuLayout.Bottom), steps, MetaProgress.Data, ChooseArena);
@@ -678,8 +753,10 @@ namespace Gladiator.UI
             if (_tablet != null) _tablet.Fit(tablet);
             if (_ladder != null) _ladder.Fit(MenuLayout.LadderScale(canvas, _ladder.Count));
             if (_arenaTablet != null) _arenaTablet.Fit(tablet);
-            if (Edicts != null) Edicts.Fit(GridMath.Fit(EdictsPanel.Size, canvas));
-            if (Daily != null) Daily.Fit(GridMath.Fit(DailyPanel.Size, new Vector2(canvas.x - 2f * MenuLayout.Margin, MenuLayout.BlockHeight(canvas))));
+            if (Edicts != null) Edicts.Fit(UiKit.FitScale(EdictsPanel.Size, canvas));
+            // the Daily screen's blocks sit between the header and the buttons, inside the side margins
+            if (Daily != null) Daily.Fit(UiKit.FitScale(DailyPanel.Size, new Vector2(canvas.x - 2f * MenuLayout.Margin, MenuLayout.BlockHeight(canvas)), 0f));
+            if (Codex != null) Codex.Fit(UiKit.FitScale(CodexPanel.Size, canvas));
         }
 
         /// <summary>Picks arena `r` if it's earned (tests). False if it's locked or unknown.</summary>
@@ -919,7 +996,7 @@ namespace Gladiator.UI
             if (up) _focus = (_focus + _menuButtons.Length - 1) % _menuButtons.Length;
             if (down) _focus = (_focus + 1) % _menuButtons.Length;
             if (!_menuButtons[_focus].interactable) _focus = down || !up ? (_focus + 1) % _menuButtons.Length : (_focus + _menuButtons.Length - 1) % _menuButtons.Length;
-            for (int i = 0; i < _menuFrames.Length; i++) _menuFrames[i].color = i == _focus ? Gold : Color.clear;
+            RefreshMenuFocus(); // the focused plate's gold ring (recoloured only when the focus moves)
             if (confirm) _menuButtons[_focus].onClick.Invoke();
             else if (back) Quit();
         }

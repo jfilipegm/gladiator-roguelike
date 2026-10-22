@@ -15,17 +15,33 @@ namespace Gladiator.UI
     /// name and bar take that space during the fight, so the row steps aside while they show.
     /// R8: in a daily, a small "DAILY" chip beside the timer (gold on the scored attempt, grey in practice), built once
     /// at Start.
+    /// U1 (docs/tracks/U1-design.md §5, §7): the Roman look through UiKit / UiTheme: HP, the special meter, gold and kills
+    /// on a riveted bronze plate; level and Favor on another; troughs for every bar; the build strip as dark-bronze chips
+    /// with a 2-unit rarity line; numbers in Luckiest Guy (Number), names in Marcellus SC (Title), shouts in Caesar
+    /// Dressing (Shout). The announcer splits in two: swarms, elites and whims drop a crimson vexillum banner, the boss's
+    /// beats a purple one (purple outranks crimson; a lower one waits in one slot); every other line is a one-line
+    /// callout under it (today's pop-and-fade and chatter rule). The debug line and dev tags stay Plain (UiFactory).
     /// </summary>
     public sealed class Hud : MonoBehaviour, ITickable
     {
+        [Tooltip("Unused since U1 (UiTheme decides the fonts) except by the Plain debug line and dev tags; kept so the scene builders' links stay valid.")]
         public TMP_FontAsset font;
         public Material fontMaterial;
         public bool showDebug = true;
 
+        // U1 layout (canvas units; top-left items from the top-left corner, top-right from the top-right)
+        const float XpH = 18f;
+        static readonly Vector2 PlatePos = new Vector2(12f, -22f), PlateSize = new Vector2(456f, 120f);
+        static readonly Vector2 LevelPlatePos = new Vector2(-12f, -22f), LevelPlateSize = new Vector2(300f, 112f);
+        const float StripLeft = 24f, WeaponRowY = -152f, BoonRowY = -210f, TilePitch = 58f;
+        const float TileSize = 52f, TileLine = 44f, TileInnerSize = 40f, TileIconSize = 40f;
+        static readonly Vector2 PlaqueSize = new Vector2(1560f, 220f);
+        const float PlaquePad = 48f;
+
         Image _xpFill, _hpFill;
         TextMeshProUGUI _objective; // a timed goal under the timer (Phase 5.6: the Bookmaker's wager)
         string _objectiveLabel, _objectiveFormat;
-        TextMeshProUGUI _timer, _level, _hpText, _gold, _kills, _toast, _announce, _pause, _debug, _tags;
+        TextMeshProUGUI _timer, _level, _hpText, _gold, _kills, _toast, _announce, _pause, _pauseHint, _debug, _tags;
         readonly char[] _timeBuf = new char[8];
         int _lastSecond = -1, _lastLevel = -1, _lastGold = -1, _lastKills = -1, _lastHp = -1, _lastMaxHp = -1;
         float _toastT = 10f, _announceT = 10f, _announceLen = 2f, _debugT;
@@ -33,27 +49,41 @@ namespace Gladiator.UI
         const float ChatterHoldOff = 1f;
         static bool Chatter(AnnounceKind k) => k == AnnounceKind.Streak || k == AnnounceKind.Roar || k == AnnounceKind.CloseCall;
 
+        // U1: the announcer's banner (crimson: swarms, elites, whims; purple: the boss's beats) and its one waiting slot
+        VexillumBanner _banner;
+        CanvasGroup _bannerGroup; // hides the banner while the game is paused
+        string _pendingText;
+        BannerCloth _pendingCloth;
+        float _pendingSeconds;
+        int _bannerRank;
+        static int Rank(BannerCloth c) => c == BannerCloth.Purple ? 2 : 1;
+
+        // theme colours read once (UiTheme.Current)
+        Color _ink, _goldColor, _goldBright, _crimson, _crimsonLight, _coin, _loss;
+
         // boss (M3.4): name + HP bar under the timer, phase-2 notch; the timer reads BOSS
         CanvasGroup _bossGroup;
         Image _bossFill;
+        Vector2 _bossInset; // the fill's left and right insets in its trough (phase notches sit on the fill's span)
         TextMeshProUGUI _bossName;
         TextMeshProUGUI _bossGuard; // the Gilded Patron's payroll (Phase 5.13)
         bool _bossGuardOn;
         BossController _bossShown;
         bool _timerBoss;
-        static readonly Color BossRed = new Color(0.86f, 0.16f, 0.12f);
+        const float BossBarW = 760f;
 
-        // arena intro (M3.5): name + tagline over a dim screen while the pools fill, then FIGHT!
+        // arena intro (M3.5): name + tagline on a mosaic plaque over a dim screen while the pools fill, then FIGHT!
         CanvasGroup _introGroup;
-        Image _introDim;
+        Image _introDim, _introPlaque;
         TextMeshProUGUI _introName, _introTag, _introFight;
         RunIntro _introShown;
         int _frames;
         int _lastTags = -1;
         float _lastSpeed = 1f;
 
-        // build strip: a row of weapon tiles, a row of Boon tiles (border = best rarity taken, glyph, level)
+        // build strip: a row of weapon tiles, a row of Boon tiles (line = best rarity taken, glyph, level)
         const int WeaponTiles = 4, BoonTiles = 6, StripTiles = WeaponTiles + BoonTiles;
+        readonly Image[] _tileChip = new Image[StripTiles];
         readonly Image[] _tileBorder = new Image[StripTiles];
         readonly Image[] _tileInner = new Image[StripTiles];
         readonly TextMeshProUGUI[] _tileGlyph = new TextMeshProUGUI[StripTiles];
@@ -68,9 +98,9 @@ namespace Gladiator.UI
         readonly Image[] _chip = new Image[SynergyChips];
         readonly TextMeshProUGUI[] _chipText = new TextMeshProUGUI[SynergyChips];
         readonly UpgradeIconView[] _chipIcon = new UpgradeIconView[SynergyChips];
-        static readonly Color ChipColor = new Color(0.06f, 0.16f, 0.2f, 0.85f), ChipText = new Color(0.55f, 0.95f, 1f);
+        static readonly Color ChipText = new Color(0.55f, 0.95f, 1f);
         // P1: each chip is its icon then its name, as wide as the name; they flow in rows under the Boon row (8 px gap)
-        const float ChipLeft = 24f, ChipTop = -240f, ChipH = 30f, ChipGap = 6f, ChipRowWidth = 380f;
+        const float ChipLeft = 24f, ChipTop = -270f, ChipH = 30f, ChipGap = 6f, ChipRowWidth = 380f;
         const float ChipIconLeft = 4f, ChipIconSize = 24f, ChipNameLeft = 33f, ChipNamePad = 9f;
         PlayerBuild _build;
         static readonly Color TileInner = new Color(0.1f, 0.12f, 0.15f, 0.92f);
@@ -86,14 +116,13 @@ namespace Gladiator.UI
         TextMeshProUGUI _bookTag;
         int _bookKey = int.MinValue;
         const float BookmakerTagHeight = 2.3f;
-        static readonly Color CantAfford = new Color(1f, 0.45f, 0.4f);
         static readonly Color AltarColor = new Color(1f, 0.4f, 0.55f);
 
         static readonly Color WeaponTileInner = new Color(0.2f, 0.13f, 0.07f, 0.92f); // warm bronze: weapons vs Boons
 
         // Favor (Phase 5.1): a gold bar under the level (pulses when a gift is near) + the loaned weapon's tile after the
         // weapon row, its inner draining as the loan runs out
-        Image _favorFill, _loanBorder, _loanInner;
+        Image _favorFill, _loanChip, _loanBorder, _loanInner;
         TextMeshProUGUI _loanGlyph, _loanTime;
         int _lastLoanSecond = -1;
         WeaponDef _loanShown;
@@ -125,121 +154,177 @@ namespace Gladiator.UI
         static readonly Color RageHot = new Color(1f, 0.93f, 0.7f);
         static readonly Color RageSpent = new Color(0.45f, 0.45f, 0.48f);
 
-        // R7: the edicts in effect, one 28 px icon each on a dark plate, centred under the timer
+        // R7: the edicts in effect, one 28 px icon each on a dark chip, centred under the timer
         Transform _canvas;
         RectTransform _edictRow;
         int _edictIcons;
         const float EdictIcon = 28f, EdictPlate = 30f, EdictGap = 4f, EdictTop = -88f;
-        static readonly Color EdictPlateColor = new Color(0.03f, 0.02f, 0.02f, 0.7f);
         static readonly Color EdictHurt = new Color(1f, 0.33f, 0.2f);
 
-        static readonly Color XpColor = new Color(0.31f, 0.89f, 0.82f);
-        static readonly Color HpColor = new Color(0.88f, 0.2f, 0.17f);
-        static readonly Color Gold = new Color(1f, 0.84f, 0.3f);
+        static TextMeshProUGUI AutoSize(TextMeshProUGUI t, float min, float max)
+        {
+            t.enableAutoSizing = true;
+            t.fontSizeMin = min;
+            t.fontSizeMax = max;
+            return t;
+        }
+
+        /// <summary>
+        /// A UiKit trough whose fill stretches inside it, so it follows the trough when that is stretched (the XP bar).
+        /// The insets are the trough's padding, capped so a thin bar keeps most of its height.
+        /// </summary>
+        static Image Trough(string name, Transform parent, Color fill, Vector2 anchor, Vector2 pivot, Vector2 pos, Vector2 size)
+        {
+            var f = UiKit.Bar(name, parent, fill, anchor, pivot, pos, size);
+            var pad = UiFrames.Padding(FrameKind.Trough);
+            float cap = size.y * 0.2f;
+            UiFactory.Stretch(f.rectTransform, Vector2.zero, Vector2.one,
+                new Vector2(Mathf.Min(pad.x, 6f), Mathf.Min(pad.y, cap)), new Vector2(-Mathf.Min(pad.z, 6f), -Mathf.Min(pad.w, cap)));
+            return f;
+        }
+
+        /// <summary>A build-strip tile: a dark-bronze chip, a 2-unit rarity line inside it, the dark inside, the icon (or its letter).</summary>
+        static void Tile(string name, Transform parent, Vector2 pos, out Image chip, out Image line, out Image inner, out UpgradeIconView icon,
+            out TextMeshProUGUI glyph)
+        {
+            var tl = new Vector2(0f, 1f);
+            var mid = new Vector2(0.5f, 0.5f);
+            chip = UiKit.Frame(name, parent, FrameKind.Chip, tl, tl, pos, new Vector2(TileSize, TileSize), Color.clear);
+            line = UiFactory.Image("Line", chip.transform, Color.clear, mid, mid, Vector2.zero, new Vector2(TileLine, TileLine), PixelIcons.White);
+            inner = UiFactory.Image("Inner", chip.transform, Color.clear, mid, mid, Vector2.zero, new Vector2(TileInnerSize, TileInnerSize), PixelIcons.White);
+            icon = new UpgradeIconView(inner.transform, "Icon", mid, Vector2.zero, TileIconSize, lively: false);
+            glyph = AutoSize(UiKit.Text("Glyph", inner.transform, "", TextRole.Title, 22f, Color.white, TextAlignmentOptions.Center, mid, mid,
+                new Vector2(0f, 2f), new Vector2(TileInnerSize, 30f), TextLook.Outline), 18f, 22f);
+        }
 
         void Awake()
         {
+            var th = UiTheme.Current;
+            _ink = th.ink;
+            _goldColor = th.gold;
+            _goldBright = th.goldBright;
+            _crimson = th.crimson;
+            _crimsonLight = th.crimsonLight;
+            _coin = th.coin;
+            _loss = th.loss;
             var canvas = UiFactory.Canvas("HudCanvas", transform, UiSortOrder.Hud).transform;
             _canvas = canvas;
             var top = new Vector2(0.5f, 1f);
-
-            // XP bar across the top
-            var xpBack = UiFactory.Image("XpBar", canvas, new Color(0f, 0f, 0f, 0.55f), top, top, Vector2.zero, new Vector2(10, 18), PixelIcons.White);
-            UiFactory.Stretch(xpBack.rectTransform, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, -18), Vector2.zero);
-            _xpFill = UiFactory.Image("XpFill", xpBack.transform, XpColor, Vector2.zero, Vector2.zero, Vector2.zero, Vector2.zero, PixelIcons.White);
-            UiFactory.Stretch(_xpFill.rectTransform, Vector2.zero, Vector2.one, new Vector2(2, 2), new Vector2(-2, -2));
-            _xpFill.type = Image.Type.Filled;
-            _xpFill.fillMethod = Image.FillMethod.Horizontal;
-
-            _timer = UiFactory.Text("Timer", canvas, "8:00", 58, Color.white, TextAlignmentOptions.Center, top, top, new Vector2(0, -26), new Vector2(300, 70), font, fontMaterial);
-            // P1: the dev switches in effect, spelled out, small, in the bottom-right corner (under the timer, a bare "BUFFS"
-            // read as part of the game)
-            _tags = UiFactory.Text("DevTags", canvas, "", 18, new Color(1f, 0.84f, 0.3f, 0.85f), TextAlignmentOptions.BottomRight, new Vector2(1, 0), new Vector2(1, 0), new Vector2(-16, 12), new Vector2(1100, 26), font, fontMaterial);
-            _objective = UiFactory.Text("Objective", canvas, "", 30, new Color(1f, 0.84f, 0.3f), TextAlignmentOptions.Center, top, top, new Vector2(0, -122), new Vector2(700, 40), font, fontMaterial);
-            _level = UiFactory.Text("Level", canvas, "LV 1", 46, Color.white, TextAlignmentOptions.Right, new Vector2(1, 1), new Vector2(1, 1), new Vector2(-28, -26), new Vector2(300, 60), font, fontMaterial);
-
-            // HP bar + icon
             var tl = new Vector2(0, 1);
-            UiFactory.Image("HpIcon", canvas, Color.white, tl, tl, new Vector2(24, -32), new Vector2(34, 34), PixelIcons.Heart);
-            _hpFill = UiFactory.Bar("HpBar", canvas, new Color(0.08f, 0.05f, 0.06f, 0.8f), HpColor, tl, tl, new Vector2(66, -32), new Vector2(340, 34));
-            _hpText = UiFactory.Text("HpText", _hpFill.transform.parent, "100 / 100", 24, Color.white, TextAlignmentOptions.Center, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(340, 34), font, fontMaterial);
+            var tr = new Vector2(1, 1);
+            var mid = new Vector2(0.5f, 0.5f);
 
-            _bloodFill = UiFactory.Bar("BloodBar", canvas, new Color(0.08f, 0.03f, 0.05f, 0.8f), BloodColor, tl, tl, new Vector2(66, -68), new Vector2(340, 12));
+            // XP: a thin trough across the top
+            _xpFill = Trough("XpBar", canvas, th.xp, top, top, Vector2.zero, new Vector2(10, XpH));
+            UiFactory.Stretch((RectTransform)_xpFill.transform.parent, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, -XpH), Vector2.zero);
+
+            _timer = UiKit.Text("Timer", canvas, "8:00", TextRole.Number, 64f, Color.white, TextAlignmentOptions.Center, top, top,
+                new Vector2(0, -22), new Vector2(320, 76), TextLook.Outline);
+            // P1: the dev switches in effect, spelled out, small, in the bottom-right corner (under the timer, a bare "BUFFS"
+            // read as part of the game). Plain: a dev tool, not the game's look.
+            _tags = UiFactory.Text("DevTags", canvas, "", 18, new Color(1f, 0.84f, 0.3f, 0.85f), TextAlignmentOptions.BottomRight, new Vector2(1, 0), new Vector2(1, 0), new Vector2(-16, 12), new Vector2(1100, 26), font, fontMaterial);
+            _objective = AutoSize(UiKit.Text("Objective", canvas, "", TextRole.Title, 28f, _goldColor, TextAlignmentOptions.Center, top, top,
+                new Vector2(0, -122), new Vector2(760, 40), TextLook.Outline), 20f, 28f);
+
+            // top left: a bronze plate holding HP, the special meter, gold and kills
+            UiKit.Frame("StatusPlate", canvas, FrameKind.Bronze, tl, tl, PlatePos, PlateSize, Color.white);
+            UiFactory.Image("HpIcon", canvas, Color.white, tl, tl, new Vector2(26, -32), new Vector2(32, 32), PixelIcons.Heart);
+            _hpFill = Trough("HpBar", canvas, th.hp, tl, tl, new Vector2(66, -32), new Vector2(388, 32));
+            _hpText = UiKit.Text("HpText", _hpFill.transform.parent, "100 / 100", TextRole.Number, 26f, Color.white, TextAlignmentOptions.Center, mid, mid,
+                Vector2.zero, new Vector2(388, 32), TextLook.Outline);
+
+            _bloodFill = Trough("BloodBar", canvas, BloodColor, tl, tl, new Vector2(66, -70), new Vector2(252, 12));
             _bloodFill.fillAmount = 0f;
             _bloodRoot = _bloodFill.transform.parent.gameObject;
-            _bloodText = UiFactory.Text("BloodText", canvas, "", 20, BloodColor, TextAlignmentOptions.Left, tl, tl, new Vector2(414, -60), new Vector2(170, 28), font, fontMaterial);
+            _bloodText = AutoSize(UiKit.Text("BloodText", canvas, "", TextRole.Number, 20f, BloodColor, TextAlignmentOptions.Left, tl, tl,
+                new Vector2(326, -64), new Vector2(128, 24), TextLook.Outline), 18f, 20f);
             PreSize(_bloodText, "+100% DMG");
+            PreSize(_bloodText, "UNCHAINED");
             _bloodRoot.SetActive(false);
             _bloodText.gameObject.SetActive(false);
 
-            UiFactory.Image("GoldIcon", canvas, Color.white, tl, tl, new Vector2(26, -82), new Vector2(30, 30), PixelIcons.Coin);
-            _gold = UiFactory.Text("Gold", canvas, "0", 32, Gold, TextAlignmentOptions.Left, tl, tl, new Vector2(66, -78), new Vector2(150, 40), font, fontMaterial);
-            UiFactory.Image("KillIcon", canvas, Color.white, tl, tl, new Vector2(200, -82), new Vector2(30, 30), PixelIcons.Skull);
+            UiFactory.Image("GoldIcon", canvas, Color.white, tl, tl, new Vector2(28, -100), new Vector2(28, 28), PixelIcons.Coin);
+            _gold = AutoSize(UiKit.Text("Gold", canvas, "0", TextRole.Number, 32f, _coin, TextAlignmentOptions.Left, tl, tl,
+                new Vector2(64, -96), new Vector2(148, 36), TextLook.Outline), 20f, 32f);
+            UiFactory.Image("KillIcon", canvas, Color.white, tl, tl, new Vector2(214, -100), new Vector2(28, 28), PixelIcons.Skull);
+            _kills = AutoSize(UiKit.Text("Kills", canvas, "0", TextRole.Number, 32f, Color.white, TextAlignmentOptions.Left, tl, tl,
+                new Vector2(250, -96), new Vector2(200, 36), TextLook.Outline), 20f, 32f);
 
-            var tr = new Vector2(1, 1);
-            UiFactory.Image("FavorIcon", canvas, Color.white, tr, tr, new Vector2(-292, -86), new Vector2(30, 26), PixelIcons.Laurel);
-            _favorFill = UiFactory.Bar("FavorBar", canvas, new Color(0.08f, 0.06f, 0.03f, 0.75f), FavorColor, tr, tr, new Vector2(-28, -90), new Vector2(256, 18));
+            // top right: the level and the crowd's Favor on a bronze plate
+            UiKit.Frame("LevelPlate", canvas, FrameKind.Bronze, tr, tr, LevelPlatePos, LevelPlateSize, Color.white);
+            _level = UiKit.Text("Level", canvas, "LV 1", TextRole.Number, 50f, Color.white, TextAlignmentOptions.Right, tr, tr,
+                new Vector2(-30, -28), new Vector2(260, 58), TextLook.Outline);
+            UiFactory.Image("FavorIcon", canvas, Color.white, tr, tr, new Vector2(-256, -94), new Vector2(30, 26), PixelIcons.Laurel);
+            _favorFill = Trough("FavorBar", canvas, th.favor, tr, tr, new Vector2(-30, -98), new Vector2(216, 18));
             _favorFill.fillAmount = 0f;
 
-            var loanPos = new Vector2(24 + WeaponTiles * 58 + 10, -122);
-            _loanBorder = UiFactory.Image("LoanTile", canvas, Color.clear, tl, tl, loanPos, new Vector2(52, 52), PixelIcons.White);
-            _loanInner = UiFactory.Image("Inner", _loanBorder.transform, Color.clear, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(44, 44), PixelIcons.White);
+            var loanPos = new Vector2(StripLeft + WeaponTiles * TilePitch + 10, WeaponRowY);
+            Tile("LoanTile", canvas, loanPos, out _loanChip, out _loanBorder, out _loanInner, out _loanIcon, out _loanGlyph);
             _loanInner.type = Image.Type.Filled;
             _loanInner.fillMethod = Image.FillMethod.Vertical;
-            _loanIcon = new UpgradeIconView(_loanBorder.transform, "Icon", new Vector2(0.5f, 0.5f), Vector2.zero, 40f, lively: false);
-            _loanGlyph = UiFactory.Text("Glyph", _loanBorder.transform, "", 22, Color.white, TextAlignmentOptions.Center, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 4), new Vector2(44, 30), font, fontMaterial);
-            _loanTime = UiFactory.Text("Time", _loanBorder.transform, "", 16, FavorHot, TextAlignmentOptions.BottomRight, new Vector2(1, 0), new Vector2(1, 0), new Vector2(-2, 0), new Vector2(30, 20), font, fontMaterial);
+            _loanTime = UiKit.Text("Time", _loanChip.transform, "", TextRole.Number, 18f, FavorHot, TextAlignmentOptions.BottomRight, new Vector2(1, 0), new Vector2(1, 0),
+                new Vector2(-3, 1), new Vector2(34, 22), TextLook.Outline);
             PreSize(_loanGlyph, "WWWW");
             PreSize(_loanTime, "88");
-            _kills = UiFactory.Text("Kills", canvas, "0", 32, Color.white, TextAlignmentOptions.Left, tl, tl, new Vector2(240, -78), new Vector2(150, 40), font, fontMaterial);
 
             for (int i = 0; i < StripTiles; i++)
             {
-                var pos = i < WeaponTiles ? new Vector2(24 + i * 58, -122) : new Vector2(24 + (i - WeaponTiles) * 58, -180);
-                _tileBorder[i] = UiFactory.Image("Tile" + i, canvas, Color.clear, tl, tl, pos, new Vector2(52, 52), PixelIcons.White);
-                var inner = _tileInner[i] = UiFactory.Image("Inner", _tileBorder[i].transform, Color.clear, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(44, 44), PixelIcons.White);
-                _tileIcon[i] = new UpgradeIconView(inner.transform, "Icon", new Vector2(0.5f, 0.5f), Vector2.zero, 40f, lively: false);
-                _tileGlyph[i] = UiFactory.Text("Glyph", inner.transform, "", 22, Color.white, TextAlignmentOptions.Center, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 4), new Vector2(44, 30), font, fontMaterial);
-                _tileLevel[i] = UiFactory.Text("Level", inner.transform, "", 16, Gold, TextAlignmentOptions.BottomRight, new Vector2(1, 0), new Vector2(1, 0), new Vector2(-2, 0), new Vector2(44, 20), font, fontMaterial);
+                var pos = i < WeaponTiles ? new Vector2(StripLeft + i * TilePitch, WeaponRowY) : new Vector2(StripLeft + (i - WeaponTiles) * TilePitch, BoonRowY);
+                Tile("Tile" + i, canvas, pos, out _tileChip[i], out _tileBorder[i], out _tileInner[i], out _tileIcon[i], out _tileGlyph[i]);
+                _tileLevel[i] = AutoSize(UiKit.Text("Level", _tileChip[i].transform, "", TextRole.Number, 20f, _goldBright, TextAlignmentOptions.BottomRight,
+                    new Vector2(1, 0), new Vector2(1, 0), new Vector2(-3, 1), new Vector2(TileSize - 2f, 22f), TextLook.Outline), 18f, 20f);
                 PreSize(_tileGlyph[i], "WWWW");
                 PreSize(_tileLevel[i], "EVO!");
             }
             var ml = new Vector2(0f, 0.5f);
             for (int j = 0; j < SynergyChips; j++)
             {
-                _chip[j] = UiFactory.Image("Synergy" + j, canvas, Color.clear, tl, tl, new Vector2(ChipLeft, ChipTop), new Vector2(144, ChipH), PixelIcons.White);
+                _chip[j] = UiKit.Frame("Synergy" + j, canvas, FrameKind.Chip, tl, tl, new Vector2(ChipLeft, ChipTop), new Vector2(144, ChipH), Color.clear);
                 _chipIcon[j] = new UpgradeIconView(_chip[j].transform, "Icon", ml, new Vector2(ChipIconLeft, 0), ChipIconSize, lively: false);
-                _chipText[j] = UiFactory.Text("Name", _chip[j].transform, "", 17, ChipText, TextAlignmentOptions.Left, ml, ml, new Vector2(ChipNameLeft, 1), new Vector2(110, 26), font, fontMaterial);
+                _chipText[j] = UiKit.Text("Name", _chip[j].transform, "", TextRole.Title, 18f, ChipText, TextAlignmentOptions.Left, ml, ml,
+                    new Vector2(ChipNameLeft, 1), new Vector2(110, 26));
                 PreSize(_chipText[j], "EXECUTIONER!");
             }
 
-            var mid = new Vector2(0.5f, 0.5f);
             for (int i = 0; i < Tags; i++)
             {
-                var root = UiFactory.Image("PriceTag" + i, canvas, Color.clear, mid, mid, Vector2.zero, new Vector2(120, 36), PixelIcons.White);
+                var root = UiFactory.Image("PriceTag" + i, canvas, Color.clear, mid, mid, Vector2.zero, new Vector2(150, 40), PixelIcons.White);
                 _tagRoot[i] = root.rectTransform;
-                _tagIcon[i] = UiFactory.Image("Coin", root.transform, Color.white, mid, mid, new Vector2(-26, 0), new Vector2(26, 26), PixelIcons.Coin);
-                _tagText[i] = UiFactory.Text("Price", root.transform, "", 30, Gold, TextAlignmentOptions.Left, mid, mid, new Vector2(30, 2), new Vector2(90, 36), font, fontMaterial);
+                _tagIcon[i] = UiFactory.Image("Coin", root.transform, Color.white, mid, mid, new Vector2(-40, 0), new Vector2(26, 26), PixelIcons.Coin);
+                _tagText[i] = AutoSize(UiKit.Text("Price", root.transform, "", TextRole.Number, 30f, _coin, TextAlignmentOptions.Left, mid, new Vector2(0f, 0.5f),
+                    new Vector2(-22, 2), new Vector2(120, 40), TextLook.Outline), 20f, 30f);
                 PreSize(_tagText[i], "ALTAR");
                 PreSize(_tagText[i], "88888");
                 _tagRoot[i].localScale = Vector3.zero;
                 _tagKey[i] = int.MinValue;
             }
-            _bookTag = UiFactory.Text("BookmakerTag", canvas, "", 28, Gold, TextAlignmentOptions.Center, mid, mid, Vector2.zero, new Vector2(460, 40), font, fontMaterial);
+            _bookTag = UiKit.Text("BookmakerTag", canvas, "", TextRole.Body, 28f, _coin, TextAlignmentOptions.Center, mid, mid, Vector2.zero, new Vector2(460, 40), TextLook.Outline);
             PreSize(_bookTag, "[E]  WAGER 8888 GOLD");
             PreSize(_bookTag, "NEED 8888 GOLD");
             _bookTag.rectTransform.localScale = Vector3.zero;
             var bottom = new Vector2(0.5f, 0f);
-            _prompt = UiFactory.Text("Prompt", canvas, "", 32, Color.white, TextAlignmentOptions.Center, bottom, bottom, new Vector2(0, 150), new Vector2(1300, 46), font, fontMaterial);
+            _prompt = AutoSize(UiKit.Text("Prompt", canvas, "", TextRole.Body, 30f, Color.white, TextAlignmentOptions.Center, bottom, bottom,
+                new Vector2(0, 150), new Vector2(1300, 46), TextLook.Outline), 22f, 30f);
             PreSize(_prompt, "[E] Blood Altar: lose 88% max HP for a Rare+ upgrade");
             PreSize(_prompt, "[E] Armory Chest  88888 gold  (not enough gold)");
             PreSize(_prompt, "[E] Wager 8888 gold: beat your own pace, win 8888");
 
-            _toast = UiFactory.Text("Toast", canvas, "LEVEL UP!", 84, Gold, TextAlignmentOptions.Center, top, top, new Vector2(0, -170), new Vector2(900, 110), font, fontMaterial);
+            _toast = UiKit.Text("Toast", canvas, "LEVEL UP!", TextRole.Shout, 84f, _goldBright, TextAlignmentOptions.Center, top, top,
+                new Vector2(0, -236), new Vector2(900, 110), TextLook.Outline);
             _toast.alpha = 0f;
-            // Director announcer (swarm / elite). Constant strings, so swapping them never allocates.
-            _announce = UiFactory.Text("Announce", canvas, "THE PACK IS LOOSE!", 56, Color.white, TextAlignmentOptions.Center, top, top, new Vector2(0, -280), new Vector2(1100, 80), font, fontMaterial);
+            // the callout: every announcer line that isn't a banner (streaks, roars, close calls, gifts, lines), under the
+            // banner. Constant strings, so swapping them never allocates.
+            _announce = AutoSize(UiKit.Text("Announce", canvas, "THE PACK IS LOOSE!", TextRole.Shout, 48f, Color.white, TextAlignmentOptions.Center, top, top,
+                new Vector2(0, -380), new Vector2(1100, 64), TextLook.Outline), 30f, 48f);
             _announce.alpha = 0f;
+            // the banner hangs under the boss bar: crossbar top at y 204 (it has its own canvas: its motion re-batches only itself)
+            // under a group that hides it while the game is paused: frozen mid-sway it would hang behind PAUSED or LEVEL UP!
+            var holder = new GameObject("BannerHolder", typeof(RectTransform), typeof(CanvasGroup));
+            holder.transform.SetParent(canvas, false);
+            UiFactory.Stretch((RectTransform)holder.transform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            _bannerGroup = holder.GetComponent<CanvasGroup>();
+            _bannerGroup.blocksRaycasts = _bannerGroup.interactable = false;
+            _banner = new VexillumBanner(holder.transform, top, new Vector2(0f, -204f));
 
             var introRoot = new GameObject("Intro", typeof(RectTransform), typeof(CanvasGroup));
             introRoot.transform.SetParent(canvas, false);
@@ -251,10 +336,15 @@ namespace Gladiator.UI
             var centre = new Vector2(0.5f, 0.5f);
             _introDim = UiFactory.Image("Dim", introRoot.transform, new Color(0.03f, 0.02f, 0.02f, 0.86f), centre, centre, Vector2.zero, Vector2.zero, PixelIcons.White);
             UiFactory.Stretch(_introDim.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            _introName = UiFactory.Text("ArenaName", introRoot.transform, "", 96, Gold, TextAlignmentOptions.Center, centre, centre, new Vector2(0, 70), new Vector2(1600, 120), font, fontMaterial);
-            _introTag = UiFactory.Text("Tagline", introRoot.transform, "", 34, new Color(1f, 1f, 1f, 0.8f), TextAlignmentOptions.Center, centre, centre, new Vector2(0, -20), new Vector2(1600, 50), font, fontMaterial);
-            _introTag.fontStyle = FontStyles.Italic;
-            _introFight = UiFactory.Text("Fight", introRoot.transform, "FIGHT!", 150, new Color(1f, 0.35f, 0.2f), TextAlignmentOptions.Center, centre, centre, new Vector2(0, 20), new Vector2(1600, 180), font, fontMaterial);
+            _introPlaque = UiKit.Frame("Plaque", introRoot.transform, FrameKind.Mosaic, centre, centre, new Vector2(0, 40), PlaqueSize, Color.clear);
+            _introName = AutoSize(UiKit.Text("ArenaName", introRoot.transform, "", TextRole.Title, 96f, _goldColor, TextAlignmentOptions.Center, centre, centre,
+                new Vector2(0, 70), new Vector2(PlaqueSize.x - 2f * PlaquePad, 120), TextLook.Flat), 56f, 96f);
+            var tagColor = _ink;
+            tagColor.a = 0.8f;
+            _introTag = AutoSize(UiKit.Text("Tagline", introRoot.transform, "", TextRole.Body, 34f, tagColor, TextAlignmentOptions.Center, centre, centre,
+                new Vector2(0, -20), new Vector2(PlaqueSize.x - 2f * PlaquePad, 50), TextLook.Flat), 22f, 34f);
+            _introFight = UiKit.Text("Fight", introRoot.transform, "FIGHT!", TextRole.Shout, 160f, _goldBright, TextAlignmentOptions.Center, centre, centre,
+                new Vector2(0, 20), new Vector2(1600, 190), TextLook.Outline);
             _introFight.alpha = 0f;
 
             var bossRoot = new GameObject("BossHud", typeof(RectTransform), typeof(CanvasGroup));
@@ -264,17 +354,25 @@ namespace Gladiator.UI
             _bossGroup = bossRoot.GetComponent<CanvasGroup>();
             _bossGroup.alpha = 0f;
             _bossGroup.blocksRaycasts = _bossGroup.interactable = false;
-            _bossName = UiFactory.Text("BossName", bossRoot.transform, "", 30, new Color(1f, 0.9f, 0.8f), TextAlignmentOptions.Center, top, top, new Vector2(0, -112), new Vector2(900, 36), font, fontMaterial);
+            _bossName = AutoSize(UiKit.Text("BossName", bossRoot.transform, "", TextRole.Title, 30f, _ink, TextAlignmentOptions.Center, top, top,
+                new Vector2(0, -112), new Vector2(900, 36), TextLook.Outline), 20f, 30f);
             PreSize(_bossName, "GORM, THE PIT MASTER OF THE SLAVE PITS");
-            _bossFill = UiFactory.Bar("BossBar", bossRoot.transform, new Color(0.08f, 0.05f, 0.06f, 0.85f), BossRed, top, top, new Vector2(0, -150), new Vector2(760, 26));
-            _bossGuard = UiFactory.Text("BossGuard", bossRoot.transform, GuardedText, 22, BossGold, TextAlignmentOptions.Center, top, top, new Vector2(0, -180), new Vector2(900, 28), font, fontMaterial);
+            _bossFill = Trough("BossBar", bossRoot.transform, _crimson, top, top, new Vector2(0, -150), new Vector2(BossBarW, 26));
+            _bossInset = new Vector2(_bossFill.rectTransform.offsetMin.x, -_bossFill.rectTransform.offsetMax.x);
+            _bossGuard = UiKit.Text("BossGuard", bossRoot.transform, GuardedText, TextRole.Title, 20f, _goldColor, TextAlignmentOptions.Center, top, top,
+                new Vector2(0, -178), new Vector2(900, 24), TextLook.Outline);
             _bossGuard.enabled = false;
             // P1: the stats page (StatsPanel) opens on the right with the pause menu, so PAUSED and its hint (on two short
             // lines) are centred in the space left of it. Stretched across the screen, so any aspect ratio works.
-            _pause = UiFactory.Text("Pause", canvas, PauseText, 90, Color.white, TextAlignmentOptions.Center, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(900, 300), font, fontMaterial);
+            // U1: PAUSED is a Shout, its hint a Body label under it (two fonts: two labels).
+            _pause = UiKit.Text("Pause", canvas, PausedWord, TextRole.Shout, 110f, Color.white, TextAlignmentOptions.Top, mid, mid,
+                Vector2.zero, new Vector2(900, 300), TextLook.Outline);
             UiFactory.Stretch(_pause.rectTransform, new Vector2(0f, 0.5f), new Vector2(1f, 0.5f), new Vector2(PauseInset, -150f), new Vector2(-PauseInset, 150f));
-            _pause.textWrappingMode = TextWrappingModes.Normal;
             _pause.alpha = 0f;
+            _pauseHint = UiKit.Text("Hint", _pause.transform, PauseHint, TextRole.Body, 32f, _ink, TextAlignmentOptions.Bottom, mid, mid,
+                Vector2.zero, new Vector2(900, 100), TextLook.Outline);
+            UiFactory.Stretch(_pauseHint.rectTransform, Vector2.zero, new Vector2(1f, 0f), Vector2.zero, new Vector2(0f, 100f));
+            _pauseHint.alpha = 0f;
             _debug = UiFactory.Text("Debug", canvas, "", 20, new Color(1f, 1f, 1f, 0.75f), TextAlignmentOptions.BottomLeft, Vector2.zero, Vector2.zero, new Vector2(16, 12), new Vector2(900, 30), font, fontMaterial);
             _debug.fontStyle = FontStyles.Normal;
             // Pre-size TMP buffers with the longest strings each label shows and parse them now: in players the first
@@ -286,9 +384,8 @@ namespace Gladiator.UI
             PreSize(_gold, "88888888");
             PreSize(_kills, "88888888");
             PreSize(_level, "LV 8888");
-            PreSize(_announce, SwarmText);
-            PreSize(_announce, EliteText);
-            PreSize(_announce, "GORM CALLS HIS GUARDS!");
+            PreSize(_announce, "THE CROWD IS ON ITS FEET FOR YOU!");
+            PreSize(_objective, "WAGER  8888 / 8888   888s");
         }
 
         // R7: RunModifiers.Set comes before the arena loads, so the edicts are known by every Start
@@ -302,10 +399,11 @@ namespace Gladiator.UI
         // R8: the daily chip, right of the timer's digits (and of "BOSS")
         RectTransform _dailyChip;
         TextMeshProUGUI _dailyChipText;
-        const float DailyChipLeft = 98f, DailyChipY = -61f;
+        // U1: a dark-bronze chip right of the timer's digits (Luckiest Guy is wider: a little further out), "DAILY" gold
+        // on the scored attempt, dust-grey on a dimmed chip in practice
+        const float DailyChipLeft = 108f, DailyChipY = -60f;
         static readonly Vector2 DailyChipSize = new Vector2(104f, 32f);
-        static readonly Color DailyScoredColor = new Color(1f, 0.84f, 0.3f, 0.95f);
-        static readonly Color DailyPracticeColor = new Color(0.42f, 0.42f, 0.46f, 0.9f);
+        static readonly Color DailyPracticeTint = new Color(0.7f, 0.7f, 0.72f, 1f);
 
         /// <summary>Tests: the daily chip is there, and its words ("DAILY") and colour.</summary>
         public bool DailyChipShown => _dailyChip != null && _dailyChip.gameObject.activeSelf;
@@ -318,10 +416,13 @@ namespace Gladiator.UI
             if (_canvas == null || _dailyChip != null) return;
             var top = new Vector2(0.5f, 1f);
             var mid = new Vector2(0.5f, 0.5f);
-            var plate = UiFactory.Image("DailyChip", _canvas, scored ? DailyScoredColor : DailyPracticeColor, top, new Vector2(0f, 0.5f), new Vector2(DailyChipLeft, DailyChipY), DailyChipSize, PixelIcons.White);
+            var th = UiTheme.Current;
+            var plate = UiKit.Frame("DailyChip", _canvas, FrameKind.Chip, top, new Vector2(0f, 0.5f), new Vector2(DailyChipLeft, DailyChipY), DailyChipSize,
+                scored ? Color.white : DailyPracticeTint);
             _dailyChip = plate.rectTransform;
             _dailyChip.SetSiblingIndex(_timer.transform.GetSiblingIndex() + 1); // under the intro's dim, the boss HUD and PAUSED
-            _dailyChipText = UiFactory.Text("Label", _dailyChip, "DAILY", 22, scored ? new Color(0.12f, 0.08f, 0.02f) : Color.white, TextAlignmentOptions.Center, mid, mid, Vector2.zero, DailyChipSize, font, fontMaterial);
+            _dailyChipText = UiKit.Text("Label", _dailyChip, "DAILY", TextRole.Title, 20f, scored ? _goldBright : th.dust, TextAlignmentOptions.Center, mid, mid,
+                Vector2.zero, DailyChipSize);
             DailyChipScored = scored;
         }
 
@@ -345,8 +446,14 @@ namespace Gladiator.UI
             {
                 var d = active[i];
                 if (d == null) continue;
-                var plate = UiFactory.Image("Edict_" + d.id, _edictRow, EdictPlateColor, left, left, new Vector2(i * (EdictPlate + EdictGap), 0f), new Vector2(EdictPlate, EdictPlate), PixelIcons.White);
-                if (d.icon != null && d.iconRow >= 0)
+                bool icon = d.icon != null && d.iconRow >= 0;
+                var slot = new Vector2(i * (EdictPlate + EdictGap), 0f);
+                var size = new Vector2(EdictPlate, EdictPlate);
+                // its icon on a dark-bronze chip; with no atlas row yet, its initial on an orange-red plate (it hurts you)
+                var plate = icon
+                    ? UiKit.Frame("Edict_" + d.id, _edictRow, FrameKind.Chip, left, left, slot, size, Color.white)
+                    : UiFactory.Image("Edict_" + d.id, _edictRow, EdictHurt, left, left, slot, size, PixelIcons.White);
+                if (icon)
                 {
                     var img = UiFactory.Rect("Icon", plate.transform, mid, mid, Vector2.zero, new Vector2(EdictIcon, EdictIcon)).gameObject.AddComponent<RawImage>();
                     img.raycastTarget = false;
@@ -354,11 +461,7 @@ namespace Gladiator.UI
                     float cw = (float)UpgradeIconView.Cell / d.icon.width, ch = (float)UpgradeIconView.Cell / d.icon.height;
                     img.uvRect = new Rect(0f, 1f - (d.iconRow + 1) * ch, cw, ch);
                 }
-                else // no atlas row yet: its initial on an orange-red plate (it hurts you)
-                {
-                    plate.color = EdictHurt;
-                    UiFactory.Text("Glyph", plate.transform, EdictsPanel.Initial(d), 18, Color.white, TextAlignmentOptions.Center, mid, mid, Vector2.zero, new Vector2(EdictPlate, EdictPlate), font, fontMaterial);
-                }
+                else UiKit.Text("Glyph", plate.transform, EdictsPanel.Initial(d), TextRole.Title, 18f, Color.white, TextAlignmentOptions.Center, mid, mid, Vector2.zero, size);
                 _edictIcons++;
             }
         }
@@ -391,6 +494,20 @@ namespace Gladiator.UI
 
         void OnAnnounce(in AnnounceEvent e)
         {
+            // U1 routing by kind, never by the sender's colour (spec §7.2): whims drop the crimson banner, the boss's
+            // beats the purple one; everything else is a callout
+            switch (e.Kind)
+            {
+                case AnnounceKind.Whim:
+                    RouteBanner(e.Text, BannerCloth.Crimson, e.Seconds);
+                    return;
+                case AnnounceKind.BossEnters:
+                case AnnounceKind.BossPhase:
+                case AnnounceKind.BossGuards:
+                case AnnounceKind.BossFalls:
+                    RouteBanner(e.Text, BannerCloth.Purple, e.Seconds);
+                    return;
+            }
             // Crowd chatter (streaks, roars, close calls) comes constantly in a big fight: it never cuts another line
             // (a Rite, a boss beat, a gift) off in its first second, or the player never reads it.
             if (Chatter(e.Kind) && !Chatter(_announceKind) && _announceT < ChatterHoldOff && _announce.alpha > 0f) return;
@@ -416,12 +533,19 @@ namespace Gladiator.UI
                 _introShown = intro;
                 _introName.text = intro.ArenaName; // once per arena
                 _introTag.text = intro.tagline;
+                // the mosaic plaque: as wide as the canvas allows (4:3 is 1663 wide)
+                float w = Mathf.Min(PlaqueSize.x, ((RectTransform)_canvas).rect.width - 48f);
+                if (w < 200f) w = PlaqueSize.x;
+                _introPlaque.rectTransform.sizeDelta = new Vector2(w, PlaqueSize.y);
+                _introName.rectTransform.sizeDelta = new Vector2(w - 2f * PlaquePad, _introName.rectTransform.sizeDelta.y);
+                _introTag.rectTransform.sizeDelta = new Vector2(w - 2f * PlaquePad, _introTag.rectTransform.sizeDelta.y);
             }
             _introGroup.alpha = 1f;
             if (intro.Current == RunIntro.Stage.Holding)
             {
                 _introDim.color = new Color(0.03f, 0.02f, 0.02f, 0.86f);
                 _introName.alpha = Mathf.Clamp01(intro.T * 3f);
+                _introPlaque.color = new Color(1f, 1f, 1f, _introName.alpha);
                 _introTag.alpha = Mathf.Clamp01(intro.T * 2f - 0.6f) * 0.8f;
                 _introFight.alpha = 0f;
             }
@@ -430,6 +554,7 @@ namespace Gladiator.UI
                 float k = Mathf.Clamp01(intro.T / Mathf.Max(0.1f, intro.fightBanner));
                 _introDim.color = new Color(0.03f, 0.02f, 0.02f, 0.86f * (1f - k));
                 _introName.alpha = _introTag.alpha = 0f;
+                _introPlaque.color = Color.clear;
                 _introFight.alpha = 1f - k * k;
                 float sc = 1.6f - 0.6f * Mathf.Min(1f, k * 5f);
                 _introFight.rectTransform.localScale = new Vector3(sc, sc, 1f);
@@ -457,20 +582,15 @@ namespace Gladiator.UI
 
         void DrawBoss(RunState run)
         {
-            if (run != null && run.TimerDone && !_timerBoss) { _timerBoss = true; _timer.text = "BOSS"; _timer.color = BossRed; }
+            if (run != null && run.TimerDone && !_timerBoss) { _timerBoss = true; _timer.text = "BOSS"; _timer.color = _crimsonLight; }
             var b = BossController.Active;
             bool show = b != null && b.Alive && b.def != null;
             if (show && _bossShown != b)
             {
                 _bossShown = b;
                 _bossName.text = b.def.displayName + ", " + b.def.title; // once per boss
-                var notch = UiFactory.Image("Phase2", _bossFill.transform.parent, new Color(1f, 0.85f, 0.4f, 0.9f), new Vector2(0f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(760f * b.def.phase2At, 0f), new Vector2(3f, 30f), PixelIcons.White);
-                notch.raycastTarget = false;
-                if (b.def.phase3At > 0f) // a third phase (the Emperor's Champion)
-                {
-                    var notch3 = UiFactory.Image("Phase3", _bossFill.transform.parent, new Color(1f, 0.85f, 0.4f, 0.9f), new Vector2(0f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(760f * b.def.phase3At, 0f), new Vector2(3f, 30f), PixelIcons.White);
-                    notch3.raycastTarget = false;
-                }
+                Notch("Phase2", b.def.phase2At);
+                if (b.def.phase3At > 0f) Notch("Phase3", b.def.phase3At); // a third phase (the Emperor's Champion)
             }
             float a = show ? 1f : 0f;
             if (!Mathf.Approximately(_bossGroup.alpha, a))
@@ -484,27 +604,81 @@ namespace Gladiator.UI
             {
                 _bossGuardOn = guard;
                 _bossGuard.enabled = guard;
-                _bossFill.color = guard ? BossGold : BossRed; // a gilded bar: he's paying someone to take the hits
+                _bossFill.color = guard ? _goldColor : _crimson; // a gilded bar: he's paying someone to take the hits
             }
         }
 
+        /// <summary>A gold phase notch on the boss bar's fill, at `at` (0-1) of its span (once per boss).</summary>
+        void Notch(string name, float at)
+        {
+            float span = BossBarW - _bossInset.x - _bossInset.y;
+            var notch = UiFactory.Image(name, _bossFill.transform.parent, _goldColor, new Vector2(0f, 0.5f), new Vector2(0.5f, 0.5f),
+                new Vector2(_bossInset.x + span * at, 0f), new Vector2(3f, 30f), PixelIcons.White);
+            notch.raycastTarget = false;
+        }
+
         const string GuardedText = "GUARDED: KILL HIS HIRED SWORDS";
-        static readonly Color BossGold = new Color(1f, 0.82f, 0.3f);
         public bool BossGuardShown => _bossGuardOn;
 
         const string SwarmText = "SWARM INCOMING!";
         const string EliteText = "AN ELITE ENTERS!";
 
-        void OnDirector(in DirectorEvent e)
+        void OnDirector(in DirectorEvent e) => RouteBanner(e.Kind == DirectorEventKind.Swarm ? SwarmText : EliteText, BannerCloth.Crimson, 0f);
+
+        /// <summary>
+        /// Purple outranks crimson. The same rank or higher while a banner is down: it rolls up quickly and the new one
+        /// drops (VexillumBanner.Show). A lower one waits in the one slot (the newest wins) until the banner is hidden.
+        /// Nothing once the run has ended (the end screen owns the centre).
+        /// </summary>
+        void RouteBanner(string text, BannerCloth cloth, float seconds)
         {
-            _announceLen = 2f;
-            _announceKind = AnnounceKind.Line;
-            _announce.text = e.Kind == DirectorEventKind.Swarm ? SwarmText : EliteText;
-            var c = e.Color;
-            c.a = 1f;
-            _announce.color = c;
-            _announceT = 0f;
+            var run = RunState.Current;
+            if (run != null && run.Ended) return;
+            int rank = Rank(cloth);
+            if (!_banner.Visible || rank >= _bannerRank)
+            {
+                _banner.Show(text, cloth, seconds);
+                _bannerRank = rank;
+                return;
+            }
+            _pendingText = text;
+            _pendingCloth = cloth;
+            _pendingSeconds = seconds;
         }
+
+        /// <summary>Ticks the banner on game time (it freezes under the level-up and the pause), then drops the waiting one.</summary>
+        void TickBanner(float dt, RunState run)
+        {
+            if (run != null && run.Ended)
+            {
+                if (_banner.Visible) _banner.Clear();
+                _pendingText = null;
+                return;
+            }
+            _banner.Tick(dt);
+            float shown = TimeController.IsPaused ? 0f : 1f;
+            if (_bannerGroup.alpha != shown) _bannerGroup.alpha = shown;
+            if (_banner.Visible || _pendingText == null) return;
+            string text = _pendingText;
+            _pendingText = null;
+            _banner.Show(text, _pendingCloth, _pendingSeconds);
+            _bannerRank = Rank(_pendingCloth);
+        }
+
+        /// <summary>Tests: the banner, the line waiting for it (null when none), and the callout's words and whether it shows.</summary>
+        public VexillumBanner Banner => _banner;
+        public string PendingBanner => _pendingText;
+        public string CalloutText => _announce != null ? _announce.text : "";
+        public bool CalloutShown => _announce != null && _announce.alpha > 0f;
+        /// <summary>Tests: themed labels (role checks) and the HUD's canvas (truncation checks; the debug line is Plain).</summary>
+        public Component TimerLabel => _timer;
+        public Component LevelLabel => _level;
+        public Component GoldLabel => _gold;
+        public Component KillsLabel => _kills;
+        public Component CalloutLabel => _announce;
+        public Component BossNameLabel => _bossName;
+        public Component DebugLabel => _debug;
+        public RectTransform CanvasRect => (RectTransform)_canvas;
 
         /// <summary>Tests: the icon in build-strip tile `i` (weapons 0-3, Boons 4-9).</summary>
         public UpgradeIconView TileIcon(int i) => _tileIcon[i];
@@ -517,7 +691,12 @@ namespace Gladiator.UI
             for (int i = 0; i < StripTiles; i++) _tileIcon[i].Tick(now); // a rare shine; frames change a few times a minute
             for (int j = 0; j < SynergyChips; j++) _chipIcon[j].Tick(now);
             for (int i = 0; i < WeaponTiles; i++)
-                if (_tileReady[i]) _tileBorder[i].color = Color.Lerp(_tileColor[i], Color.white, 0.5f + 0.5f * Mathf.Sin(now * 6f));
+            {
+                if (!_tileReady[i]) continue;
+                float pulse = 0.5f + 0.5f * Mathf.Sin(now * 6f);
+                _tileBorder[i].color = Color.Lerp(_tileColor[i], Color.white, pulse);
+                _tileChip[i].color = Color.Lerp(Color.white, _goldBright, pulse); // the chip glows gold too
+            }
             _loanIcon.Tick(now);
             if (run != null)
             {
@@ -537,11 +716,15 @@ namespace Gladiator.UI
                     int hp = Mathf.CeilToInt(h.Hp), max = Mathf.CeilToInt(h.MaxHp);
                     if (hp != _lastHp || max != _lastMaxHp) { _lastHp = hp; _lastMaxHp = max; _hpText.SetText("{0} / {1}", (float)hp, (float)max); }
                 }
-                _pause.alpha = player.IsPaused ? 1f : 0f;
+                _pause.alpha = _pauseHint.alpha = player.IsPaused ? 1f : 0f;
                 LayoutPause(player.IsPaused && StatsPanel.Instance != null); // the page shows whenever the pause menu does
                 if (_build == null) _build = player.GetComponent<PlayerBuild>();
                 if (_build != null && _build.State.Version != _lastBuildVersion) RefreshStrip();
             }
+
+            // the clock is frozen under the cards and LEVEL UP! sits over it: hide it until they close
+            float timerAlpha = LevelUpController.Instance != null && LevelUpController.Instance.IsOpen ? 0f : 1f;
+            if (_timer.alpha != timerAlpha) _timer.alpha = timerAlpha;
 
             DrawInteractables(run);
             DrawFavor(unscaledDt);
@@ -554,7 +737,7 @@ namespace Gladiator.UI
                 if (Keyboard.current.qKey.wasPressedThisFrame) GameSession.ToMenu();
                 else if (Keyboard.current.oKey.wasPressedThisFrame && OptionsPanel.Instance != null) OptionsPanel.Instance.Open();
             }
-            if (OptionsPanel.IsOpen && _pause.alpha > 0f) _pause.alpha = 0f;
+            if (OptionsPanel.IsOpen && _pause.alpha > 0f) _pause.alpha = _pauseHint.alpha = 0f;
 
             // Dev switches in effect (so a test never silently runs with God mode on). Rebuilt only when they change.
             int tags = (DevSettings.GodMode ? 1 : 0) | (DevSettings.Timeless ? 2 : 0) | (DevSettings.AnyBuff ? 4 : 0) |
@@ -577,7 +760,9 @@ namespace Gladiator.UI
             }
             else _toast.alpha = 0f;
 
-            // announcer: slide in, hold, fade (game time, so it waits during level-ups)
+            TickBanner(dt, run);
+
+            // the callout: pop in, hold, fade (game time, so it waits during level-ups)
             _announceT += dt;
             if (_announceT < _announceLen)
             {
@@ -602,7 +787,8 @@ namespace Gladiator.UI
             }
         }
 
-        const string PauseText = "PAUSED\n<size=36>click to resume\nO: options  \u00B7  Q: main menu</size>";
+        const string PausedWord = "PAUSED";
+        const string PauseHint = "click to resume\nO: options  \u00B7  Q: main menu";
         const float PauseInset = 40f;
         int _pauseBeside = -1;
 
@@ -616,10 +802,19 @@ namespace Gladiator.UI
             _pause.rectTransform.offsetMax = new Vector2(-right - PauseInset, 150f);
         }
 
-        /// <summary>Tests: the pause text's box and the widest line it needs (canvas units).</summary>
+        /// <summary>Tests: the pause text's box and the widest line it needs (canvas units): PAUSED or its hint.</summary>
         public RectTransform PauseRect => _pause.rectTransform;
-        public float PauseTextWidth => _pause.GetPreferredValues(PauseText).x;
-        public int PauseLineCount { get { _pause.ForceMeshUpdate(); return _pause.textInfo.lineCount; } }
+        public float PauseTextWidth => Mathf.Max(_pause.GetPreferredValues(PausedWord).x, _pauseHint.GetPreferredValues(PauseHint).x);
+        /// <summary>PAUSED's lines plus the hint's (3 when nothing wraps).</summary>
+        public int PauseLineCount
+        {
+            get
+            {
+                _pause.ForceMeshUpdate();
+                _pauseHint.ForceMeshUpdate();
+                return _pause.textInfo.lineCount + _pauseHint.textInfo.lineCount;
+            }
+        }
 
         /// <summary>"ADMIN: GOD MODE  ·  BUFFS ON  (F1)": every dev switch in effect, spelled out (P1: a bare "BUFFS"
         /// under the timer confused the producer).</summary>
@@ -792,6 +987,7 @@ namespace Gladiator.UI
             {
                 _loanShown = def;
                 var card = def != null && _build != null ? _build.FindWeaponCard(def) : null;
+                _loanChip.color = def != null ? Color.white : Color.clear;
                 _loanBorder.color = def != null ? FavorColor : Color.clear;
                 _loanInner.color = def != null ? WeaponTileInner : Color.clear;
                 if (card != null && _loanIcon.Set(card, FavorColor)) _loanGlyph.text = "";
@@ -831,7 +1027,7 @@ namespace Gladiator.UI
                     if (chest)
                     {
                         _tagText[shown].SetText("{0}", price);
-                        _tagText[shown].color = afford ? Gold : CantAfford;
+                        _tagText[shown].color = afford ? _coin : _loss;
                         _tagIcon[shown].color = Color.white;
                     }
                     else
@@ -859,7 +1055,7 @@ namespace Gladiator.UI
             {
                 if (pkey == -3) _prompt.SetText("[E] Wager {0} gold: beat your own pace, win {1}", (float)bm.stake, (float)bm.payout);
                 else _prompt.SetText("[E] Wager {0} gold  (not enough gold)", bm.stake);
-                _prompt.color = pkey == -3 ? Gold : CantAfford;
+                _prompt.color = pkey == -3 ? _coin : _loss;
                 return;
             }
             if (pkey == -2)
@@ -870,7 +1066,7 @@ namespace Gladiator.UI
             }
             if (afford) _prompt.SetText("[E] Armory Chest  {0} gold", price);
             else _prompt.SetText("[E] Armory Chest  {0} gold  (not enough gold)", price);
-            _prompt.color = afford ? Gold : CantAfford;
+            _prompt.color = afford ? _coin : _loss;
         }
 
         /// <summary>The Bookmaker's world prompt over his head while he calls you (chests show their price the same way).</summary>
@@ -898,7 +1094,7 @@ namespace Gladiator.UI
             _bookKey = key;
             if (afford) _bookTag.SetText("[E]  WAGER {0} GOLD", bm.stake);
             else _bookTag.SetText("NEED {0} GOLD", bm.stake);
-            _bookTag.color = afford ? Gold : CantAfford;
+            _bookTag.color = afford ? _coin : _loss;
         }
 
         /// <summary>The Bookmaker's world prompt ("" when hidden) and the bottom prompt (tests).</summary>
@@ -915,7 +1111,7 @@ namespace Gladiator.UI
             for (int j = 0; j < SynergyChips; j++)
             {
                 bool on = j < state.SynergyCount;
-                _chip[j].color = on ? ChipColor : Color.clear;
+                _chip[j].color = on ? Color.white : Color.clear;
                 _chipText[j].text = on ? state.GetSynergy(j).displayName : "";
                 if (!on) { _chipIcon[j].Clear(); continue; }
                 _chipIcon[j].Set(state.GetSynergy(j).icon, state.GetSynergy(j).iconRow, ChipText, j * 0.4f);
@@ -959,6 +1155,7 @@ namespace Gladiator.UI
                 var o = state.GetOwned(i);
                 if (o.Def.kind != kind) continue;
                 var rarity = _build.config.RarityColor(o.BestRarity);
+                _tileChip[k].color = Color.white;
                 _tileBorder[k].color = rarity;
                 _tileInner[k].color = inner;
                 _tileGlyph[k].text = _tileIcon[k].Set(o.Def, rarity, k * 0.137f) ? "" : o.Def.glyph;
@@ -972,6 +1169,7 @@ namespace Gladiator.UI
             for (; k < end; k++)
             {
                 if (kind == UpgradeKind.Weapon) _tileReady[k] = false;
+                _tileChip[k].color = Color.clear;
                 _tileBorder[k].color = Color.clear;
                 _tileInner[k].color = Color.clear;
                 _tileGlyph[k].text = "";

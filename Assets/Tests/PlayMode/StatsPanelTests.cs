@@ -11,7 +11,7 @@ namespace Gladiator.Tests
 {
     /// <summary>
     /// P1 part C in the test arena: the stats page opens with the pause and names its sources (admin buffs marked), the
-    /// level-up cards make room for the "your stats" column, the selected card's preview is exactly the stats after the
+    /// level-up cards sit where LevelUpLayout puts them beside the "your stats" column (U1 layout A), the selected card's preview is exactly the stats after the
     /// pick, a Vow wears its split frame and previews its price in red, and the Blood Altar's prompt shows the max-HP cut
     /// that using it takes.
     /// </summary>
@@ -142,7 +142,9 @@ namespace Gladiator.Tests
             BanishAllBut(StatCard);
             yield return OpenCards();
             Assert.AreEqual(StatsPanel.Mode.Pick, _page.Current, "the page sits beside the cards");
-            Assert.Less(_cards.Content.anchoredPosition.x, 0f, "the cards moved left for it");
+            var canvas = ((RectTransform)_cards.Content.parent).rect.size; // U1 layout A: centred unless the column needs room
+            Assert.AreEqual(LevelUpLayout.For(canvas, _lvl.ChoiceCount).ContentX, _cards.Content.anchoredPosition.x, 1f,
+                "the content sits where LevelUpLayout puts it");
             var pageCorners = new Vector3[4];
             var cardCorners = new Vector3[4];
             _page.Page.GetWorldCorners(pageCorners);

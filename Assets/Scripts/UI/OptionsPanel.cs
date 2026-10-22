@@ -12,6 +12,9 @@ namespace Gladiator.UI
     /// shake, render scale. Opened from the main menu and the pause screen; changes apply live (GameOptions.Apply) and
     /// are saved on close. Mouse drags the sliders; keyboard / gamepad: up-down picks a row, left-right adjusts,
     /// Esc / B / Enter closes.
+    /// U1: a riveted `Bronze` panel (scaled down with UiKit.FitScale on small canvases), the header in Title 48; each row a
+    /// Title 24 label, a bronze trough with a knob, the value in Number 26; the focused row in a gold focus ring; BACK is
+    /// the panel's main action (bronze).
     /// </summary>
     public sealed class OptionsPanel : MonoBehaviour
     {
@@ -21,8 +24,9 @@ namespace Gladiator.UI
         public TMP_FontAsset font;
         public Material fontMaterial;
 
-        static readonly Color Gold = new Color(1f, 0.84f, 0.3f);
-        static readonly Color Soft = new Color(1f, 1f, 1f, 0.75f);
+        /// <summary>The panel's box at 1:1 (scaled down, never up, to fit the canvas).</summary>
+        public static readonly Vector2 Size = new Vector2(1240f, 960f);
+        const float RowTop = 320f, RowPitch = 70f, TroughH = 24f, KnobW = 18f, KnobH = 30f;
 
         struct Row
         {
@@ -32,15 +36,26 @@ namespace Gladiator.UI
             public Action<float> Set;
             public Func<float, string> Show;
             public Slider Slider;
+            public Image Fill;
             public TextMeshProUGUI Value;
             public Image Focus;
         }
 
         Row[] _rows;
         CanvasGroup _group;
+        RectTransform _panel;
         bool _open, _syncing;
-        int _focus;
+        int _focus, _screenW, _screenH;
         float _openedAt;
+
+        // ---- tests (UiMenuLookTests) ------------------------------------------------------------------------------
+        /// <summary>The frame the panel is drawn on (`FrameKind.Bronze`).</summary>
+        public int PanelFrame => _panel != null ? UiFrames.KindOf(_panel.GetComponent<Image>()) : -1;
+        public RectTransform Panel => _panel;
+        public int RowCount => _rows != null ? _rows.Length : 0;
+        /// <summary>Row `i`'s value label (its theme role) and its trough's fill (0–1).</summary>
+        public Component ValueLabel(int i) => _rows[i].Value;
+        public float FillAmount(int i) => _rows[i].Fill.fillAmount;
 
         void Awake()
         {
@@ -51,11 +66,18 @@ namespace Gladiator.UI
             UiFactory.Stretch((RectTransform)go.transform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             _group = go.GetComponent<CanvasGroup>();
             var root = go.transform;
-            var dim = UiFactory.Image("Dim", root, new Color(0.02f, 0.02f, 0.04f, 0.85f), Vector2.zero, Vector2.zero, Vector2.zero, Vector2.zero, PixelIcons.White);
+            var th = UiTheme.Current;
+            var night = th.night;
+            night.a = 0.85f;
+            var dim = UiFactory.Image("Dim", root, night, Vector2.zero, Vector2.zero, Vector2.zero, Vector2.zero, PixelIcons.White);
             UiFactory.Stretch(dim.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             dim.raycastTarget = true;
             var mid = new Vector2(0.5f, 0.5f);
-            UiFactory.Text("Title", root, "OPTIONS", 64, Gold, TextAlignmentOptions.Center, mid, mid, new Vector2(0, 400), new Vector2(1000, 90), font, fontMaterial).fontStyle = FontStyles.Bold;
+            var panel = UiKit.Frame("Panel", root, FrameKind.Bronze, mid, mid, Vector2.zero, Size, Color.white);
+            panel.raycastTarget = true;
+            _panel = panel.rectTransform;
+            var box = _panel.transform;
+            UiKit.Text("Title", box, "OPTIONS", TextRole.Title, 48f, th.gold, TextAlignmentOptions.Center, mid, mid, new Vector2(0, 410), new Vector2(1000, 62));
 
             var o = GameOptions.Data;
             _rows = new[]
@@ -70,9 +92,9 @@ namespace Gladiator.UI
                 Pct("Screen shake", () => o.screenShake, v => o.screenShake = v),
                 new Row { Label = "Render scale", Min = 0.5f, Max = 1f, Step = 0.05f, Get = () => o.renderScale, Set = v => o.renderScale = v, Show = v => Mathf.RoundToInt(v * 100f) + "%" },
             };
-            for (int i = 0; i < _rows.Length; i++) BuildRow(root, i);
-            UiFactory.Button("Back", root, "BACK", mid, mid, new Vector2(0, -420), new Vector2(240, 76), font, fontMaterial, Close, 34f);
-            UiFactory.Text("Keys", root, "Up / Down: pick     Left / Right: adjust     Esc / B: back", 22, new Color(1f, 1f, 1f, 0.45f), TextAlignmentOptions.Center, mid, mid, new Vector2(0, -480), new Vector2(1200, 34), font, fontMaterial).fontStyle = FontStyles.Normal;
+            for (int i = 0; i < _rows.Length; i++) BuildRow(box, i);
+            UiKit.Button("Back", box, "BACK", ButtonStyle.Primary, mid, mid, new Vector2(0, -372), new Vector2(240, 66), Close, 30f);
+            UiKit.Text("Keys", box, "Up / Down: pick     Left / Right: adjust     Esc / B: back", TextRole.Body, 22f, th.dust, TextAlignmentOptions.Center, mid, mid, new Vector2(0, -432), new Vector2(1100, 30));
             Set(false);
         }
 
@@ -83,49 +105,58 @@ namespace Gladiator.UI
 
         void BuildRow(Transform root, int i)
         {
+            var th = UiTheme.Current;
             var mid = new Vector2(0.5f, 0.5f);
-            float y = 300f - i * 76f;
+            float y = RowTop - i * RowPitch;
             ref var r = ref _rows[i];
-            r.Focus = UiFactory.Image("Focus", root, new Color(1f, 0.84f, 0.3f, 0.12f), mid, mid, new Vector2(0, y), new Vector2(1180, 66), PixelIcons.White);
-            r.Focus.raycastTarget = false;
-            var l = UiFactory.Text("Label", root, r.Label, 30, Soft, TextAlignmentOptions.Left, mid, mid, new Vector2(-330, y), new Vector2(500, 50), font, fontMaterial);
-            l.fontStyle = FontStyles.Normal;
-            r.Slider = MakeSlider(root, new Vector2(170, y), new Vector2(380, 18));
+            r.Focus = UiKit.Frame("Focus", root, FrameKind.Focus, mid, mid, new Vector2(0, y), new Vector2(1180, 62), th.gold);
+            r.Focus.enabled = false;
+            UiKit.Text("Label", root, r.Label, TextRole.Title, 24f, th.ink, TextAlignmentOptions.Left, mid, mid, new Vector2(-330, y), new Vector2(500, 34));
+            r.Slider = MakeSlider(root, new Vector2(170, y), new Vector2(380, TroughH), out r.Fill);
             r.Slider.minValue = r.Min;
             r.Slider.maxValue = r.Max;
             r.Slider.wholeNumbers = false;
-            r.Value = UiFactory.Text("Value", root, "", 30, Color.white, TextAlignmentOptions.Right, mid, mid, new Vector2(490, y), new Vector2(160, 50), font, fontMaterial);
+            r.Value = UiKit.Text("Value", root, "", TextRole.Number, 26f, th.ink, TextAlignmentOptions.Right, mid, mid, new Vector2(490, y), new Vector2(160, 34), TextLook.Outline);
             int index = i;
             r.Slider.onValueChanged.AddListener(v => OnSlider(index, v));
         }
 
-        Slider MakeSlider(Transform parent, Vector2 pos, Vector2 size)
+        /// <summary>A bronze trough (UiKit.Bar: its fill follows the value) with a knob the mouse drags. The Slider has no
+        /// fill rect of its own: the trough's Filled image shows the value.</summary>
+        Slider MakeSlider(Transform parent, Vector2 pos, Vector2 size, out Image fill)
         {
             var mid = new Vector2(0.5f, 0.5f);
-            var bg = UiFactory.Image("Slider", parent, new Color(0.16f, 0.18f, 0.24f, 1f), mid, mid, pos, size, PixelIcons.White);
-            bg.raycastTarget = true;
-            var fillArea = UiFactory.Rect("FillArea", bg.transform, mid, mid, Vector2.zero, size);
-            UiFactory.Stretch(fillArea, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            var fill = UiFactory.Image("Fill", fillArea, Gold, mid, mid, Vector2.zero, Vector2.zero, PixelIcons.White);
-            fill.raycastTarget = false;
-            var handleArea = UiFactory.Rect("HandleArea", bg.transform, mid, mid, Vector2.zero, size);
-            UiFactory.Stretch(handleArea, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            var handle = UiFactory.Image("Handle", handleArea, Color.white, mid, mid, Vector2.zero, new Vector2(16f, 16f), PixelIcons.White);
-            var s = bg.gameObject.AddComponent<Slider>();
-            s.fillRect = fill.rectTransform;
-            s.handleRect = handle.rectTransform;
-            s.targetGraphic = handle;
+            var hit = UiFactory.Image("Slider", parent, Color.clear, mid, mid, pos, size + new Vector2(0f, 12f), PixelIcons.White);
+            hit.raycastTarget = true; // the pointer grabs the whole row of the trough, not just its few pixels
+            fill = UiKit.Bar("Trough", hit.transform, UiTheme.Current.gold, mid, mid, Vector2.zero, size);
+            var handleArea = UiFactory.Rect("HandleArea", hit.transform, mid, mid, Vector2.zero, size);
+            UiFactory.Stretch(handleArea, Vector2.zero, Vector2.one, new Vector2(KnobW * 0.5f, 0f), new Vector2(-KnobW * 0.5f, 0f));
+            var knob = UiKit.Frame("Knob", handleArea, FrameKind.Knob, mid, mid, Vector2.zero, new Vector2(KnobW, KnobH), Color.white);
+            var s = hit.gameObject.AddComponent<Slider>();
+            s.handleRect = knob.rectTransform;
+            s.targetGraphic = knob;
             s.direction = Slider.Direction.LeftToRight;
             s.navigation = new Navigation { mode = Navigation.Mode.None };
-            fill.rectTransform.sizeDelta = Vector2.zero;
-            handle.rectTransform.sizeDelta = new Vector2(16f, 16f);
+            // the Slider stretches the handle over its area's height: keep the knob's own size on top of that
+            knob.rectTransform.sizeDelta = new Vector2(KnobW, KnobH - (size.y + 12f));
             return s;
+        }
+
+        /// <summary>Scales the panel down to the canvas (MenuLayout's canvas maths; never up).</summary>
+        void Refit()
+        {
+            _screenW = Screen.width;
+            _screenH = Screen.height;
+            var canvas = Gladiator.Core.GridMath.CanvasSize(_screenW, _screenH, Gladiator.Core.MenuLayout.Reference, Gladiator.Core.MenuLayout.Match);
+            float k = UiKit.FitScale(Size, canvas);
+            _panel.localScale = new Vector3(k, k, 1f);
         }
 
         public void Open()
         {
             _openedAt = Time.unscaledTime;
             _focus = 0;
+            Refit();
             Sync();
             Set(true);
         }
@@ -152,6 +183,7 @@ namespace Gladiator.UI
             {
                 float v = _rows[i].Get();
                 _rows[i].Slider.value = v;
+                _rows[i].Fill.fillAmount = Mathf.InverseLerp(_rows[i].Min, _rows[i].Max, v);
                 _rows[i].Value.text = _rows[i].Show(v);
             }
             _syncing = false;
@@ -163,6 +195,7 @@ namespace Gladiator.UI
             ref var r = ref _rows[i];
             if (r.Step > 0f) v = Mathf.Clamp(Mathf.Round((v - r.Min) / r.Step) * r.Step + r.Min, r.Min, r.Max);
             r.Set(v);
+            r.Fill.fillAmount = Mathf.InverseLerp(r.Min, r.Max, v);
             r.Value.text = r.Show(v);
             _focus = i;
             GameOptions.Apply();
@@ -171,6 +204,7 @@ namespace Gladiator.UI
         void Update()
         {
             if (!_open) return;
+            if (Screen.width != _screenW || Screen.height != _screenH) Refit();
             for (int i = 0; i < _rows.Length; i++) _rows[i].Focus.enabled = i == _focus;
             if (Time.unscaledTime - _openedAt < 0.15f) return; // the key that opened the panel
             var kb = Keyboard.current;

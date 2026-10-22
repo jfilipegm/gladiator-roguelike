@@ -17,6 +17,10 @@ namespace Gladiator.UI
     /// only when what it shows changes (stats, offers, selection) into a char buffer handed to TMP: no allocation per
     /// frame. Hidden with a CanvasGroup, never SetActive (LevelUpPanel's note on canvas rebuilds).
     /// R8: the Pause face's header names the run's seed ("SEED 7F3A-91C2"), written digit by digit (no allocation).
+    /// U1: the Pick and Prompt faces sit on riveted bronze, the Pause face on carved marble (UiFrames, one Image whose
+    /// frame changes with the face). The page is one Body (Marcellus) label; on marble its colour tags are swapped in
+    /// place for darker inks of the same hues (MarbleInks: same length, no allocation), the text itself unchanged.
+    /// Layout A: the Pick column is 410 wide, hangs from LevelUpLayout.ColumnTop and scales by SetPickScale.
     /// </summary>
     public sealed class StatsPanel : MonoBehaviour, ITickable
     {
@@ -29,17 +33,18 @@ namespace Gladiator.UI
         [Tooltip("The level-up cards whose selection this previews (LevelUpPanel sets itself).")]
         public LevelUpPanel cards;
 
-        public const float PageWidth = 560f, PickWidth = 380f, Margin = 24f;
-
-        static readonly Color Back = new Color(0.05f, 0.06f, 0.09f, 0.9f);
-        static readonly Color Edge = new Color(1f, 0.84f, 0.3f, 0.55f);
-        static readonly Color PromptBack = new Color(0.05f, 0.06f, 0.09f, 0.82f);
+        public const float PageWidth = 560f, PickWidth = LevelUpLayout.StatsW, Margin = 24f;
+        const float PageHeight = 920f, PromptWidth = 680f, PromptHeight = 60f;
+        // the text's insets inside the frame, at least (left, bottom, right, top); the frame's padding wins if larger
+        static readonly Vector4 MinInset = new Vector4(20f, 16f, 18f, 16f);
 
         Canvas _canvas;
         CanvasGroup _group, _promptGroup;
         RectTransform _box, _promptBox;
-        Image _edge;
+        Image _frame, _promptFrame;
         TextMeshProUGUI _body, _prompt;
+        Color _ink, _marbleInk;
+        float _pickScale = 1f;
         readonly CharBuffer _text = new CharBuffer(6144);
         readonly CharBuffer _promptText = new CharBuffer(160);
         readonly StatShare[] _shares = new StatShare[24];
@@ -57,8 +62,23 @@ namespace Gladiator.UI
         public int Rewrites { get; private set; }
         /// <summary>The page's box (tests: the cards never run under it).</summary>
         public RectTransform Page => _box;
-        /// <summary>The width the Pick face takes from the right of the screen (LevelUpPanel moves its cards left by it).</summary>
-        public float PickReserve => PickWidth + Margin;
+        /// <summary>The width the Pick face takes from the right of the screen at its current scale.</summary>
+        public float PickReserve => PickWidth * _pickScale + Margin;
+        /// <summary>The Pick face's scale (LevelUpLayout: 0.7-1).</summary>
+        public float PickScale => _pickScale;
+        /// <summary>Tests: the FrameKind the page shows (Bronze for Pick, Marble for Pause; UiFrames.KindOf), and the prompt's.</summary>
+        public int FrameShown => UiFrames.KindOf(_frame);
+        public int PromptFrameShown => UiFrames.KindOf(_promptFrame);
+        public Component BodyLabel => _body;
+
+        /// <summary>Layout A: the level-up scales the Pick face to fit the right margin (it hangs from its top-right corner).</summary>
+        public void SetPickScale(float k)
+        {
+            _pickScale = Mathf.Clamp(k, 0.1f, 1f);
+            if (_layoutMode != Mode.Pick) return;
+            _box.localScale = new Vector3(_pickScale, _pickScale, 1f);
+            _box.anchoredPosition = new Vector2(-Margin, LevelUpLayout.ColumnTop(((RectTransform)_canvas.transform).rect.height)); // the canvas may have changed size
+        }
 
         int _key = int.MinValue, _promptKey = int.MinValue;
         Mode _layoutMode = (Mode)255;
@@ -72,38 +92,58 @@ namespace Gladiator.UI
         void Awake()
         {
             Instance = this;
+            var th = UiTheme.Current;
+            _ink = th.ink;
+            _marbleInk = th.marbleInk;
             _canvas = UiFactory.Canvas("StatsCanvas", transform, UiSortOrder.LevelUp + 1); // over the card dim, under menus
             var root = _canvas.transform;
             var right = new Vector2(1f, 0.5f);
-            _box = UiFactory.Rect("Page", root, right, right, new Vector2(-Margin, -10f), new Vector2(PageWidth, 900f));
-            _edge = UiFactory.Image("Edge", _box, Edge, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, PixelIcons.White);
-            UiFactory.Stretch(_edge.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            var bg = UiFactory.Image("Back", _box, Back, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, PixelIcons.White);
-            UiFactory.Stretch(bg.rectTransform, Vector2.zero, Vector2.one, new Vector2(3f, 3f), new Vector2(-3f, -3f));
-            _body = UiFactory.Text("Body", _box, "", 21, Color.white, TextAlignmentOptions.TopLeft, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, font, fontMaterial);
-            UiFactory.Stretch(_body.rectTransform, Vector2.zero, Vector2.one, new Vector2(20f, 16f), new Vector2(-18f, -16f));
-            _body.fontStyle = FontStyles.Normal;
-            _body.richText = true;
-            _body.textWrappingMode = TextWrappingModes.Normal;
-            _body.overflowMode = TextOverflowModes.Truncate;
-            _body.enableAutoSizing = true; // a late-run build has many sources: shrink to fit, never below 13
-            _body.fontSizeMin = 13f;
-            _body.fontSizeMax = 21f;
+            var mid = new Vector2(0.5f, 0.5f);
+            _box = UiFactory.Rect("Page", root, right, right, new Vector2(-Margin, -16f), new Vector2(PageWidth, PageHeight));
+            _frame = UiKit.Frame("Frame", _box, FrameKind.Bronze, mid, mid, Vector2.zero, Vector2.zero, Color.white);
+            UiFactory.Stretch(_frame.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            _body = UiKit.Text("Body", _box, "", TextRole.Body, 21f, _ink, TextAlignmentOptions.TopLeft, mid, mid, Vector2.zero, Vector2.zero);
+            StyleBody(TextLook.Flat);
+            Inset(_body.rectTransform, FrameKind.Bronze);
             _group = _box.gameObject.AddComponent<CanvasGroup>();
 
             var bottom = new Vector2(0.5f, 0f);
-            _promptBox = UiFactory.Rect("Prompt", root, bottom, bottom, new Vector2(0f, 196f), new Vector2(640f, 46f));
-            var pbg = UiFactory.Image("Back", _promptBox, PromptBack, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, PixelIcons.White);
-            UiFactory.Stretch(pbg.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            _prompt = UiFactory.Text("Text", _promptBox, "", 28, Color.white, TextAlignmentOptions.Center, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, font, fontMaterial);
-            UiFactory.Stretch(_prompt.rectTransform, Vector2.zero, Vector2.one, new Vector2(10f, 0f), new Vector2(-10f, 0f));
+            _promptBox = UiFactory.Rect("Prompt", root, bottom, bottom, new Vector2(0f, 196f), new Vector2(PromptWidth, PromptHeight));
+            _promptFrame = UiKit.Frame("Frame", _promptBox, FrameKind.Bronze, mid, mid, Vector2.zero, Vector2.zero, Color.white);
+            UiFactory.Stretch(_promptFrame.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            _prompt = UiKit.Text("Text", _promptBox, "", TextRole.Body, 28f, _ink, TextAlignmentOptions.Center, mid, mid, Vector2.zero, Vector2.zero);
+            UiFactory.Stretch(_prompt.rectTransform, Vector2.zero, Vector2.one, new Vector2(18f, 0f), new Vector2(-18f, 0f));
             _prompt.richText = true;
+            _prompt.enableAutoSizing = true; // "BLOOD ALTAR   Max HP 120 → 102" in Marcellus: shrink before it's cut
+            _prompt.fontSizeMin = 20f;
+            _prompt.fontSizeMax = 28f;
             _promptGroup = _promptBox.gameObject.AddComponent<CanvasGroup>();
 
             foreach (var g in new[] { _group, _promptGroup }) { g.blocksRaycasts = false; g.interactable = false; }
             Presize();
             Show(_group, false);
             Show(_promptGroup, false);
+        }
+
+        /// <summary>The page's look (Flat on bronze, Engraved on marble), then its own rules back (UiKit.Style sets NoWrap).</summary>
+        void StyleBody(TextLook look)
+        {
+            UiKit.Style(_body, TextRole.Body, look);
+            _body.richText = true;
+            _body.textWrappingMode = TextWrappingModes.Normal;
+            _body.overflowMode = TextOverflowModes.Truncate;
+            _body.enableAutoSizing = true; // a late-run build has many sources: shrink to fit, never below 13 (a dense data page)
+            _body.fontSizeMin = 13f;
+            _body.fontSizeMax = 21f;
+        }
+
+        /// <summary>Stretch `rt` over its parent, inset by the frame's padding (at least MinInset).</summary>
+        static void Inset(RectTransform rt, FrameKind kind)
+        {
+            var pad = UiFrames.Padding(kind);
+            UiFactory.Stretch(rt, Vector2.zero, Vector2.one,
+                new Vector2(Mathf.Max(pad.x, MinInset.x), Mathf.Max(pad.y, MinInset.y)),
+                new Vector2(-Mathf.Max(pad.z, MinInset.z), -Mathf.Max(pad.w, MinInset.w)));
         }
 
         static void Show(CanvasGroup g, bool on) { if (g.alpha != (on ? 1f : 0f)) g.alpha = on ? 1f : 0f; }
@@ -179,7 +219,7 @@ namespace Gladiator.UI
                     _key = key;
                     Layout(mode);
                     if (mode == Mode.Pick) WritePick(lvl);
-                    else WritePage();
+                    else { WritePage(); Remap(_text, StatColors, MarbleInks); } // the page's colours, readable on marble
                     _body.SetCharArray(_text.Chars, 0, _text.Length);
                     Rewrites++;
                 }
@@ -204,14 +244,61 @@ namespace Gladiator.UI
             return k;
         }
 
+        /// <summary>
+        /// Pick: the 410-wide bronze column hanging from LevelUpLayout.ColumnTop at the Pick scale. Pause: the 560-wide
+        /// marble page, centred on the right edge. Only when the face changes.
+        /// </summary>
         void Layout(Mode mode)
         {
             if (mode == _layoutMode) return;
             _layoutMode = mode;
             bool pick = mode == Mode.Pick;
-            _box.sizeDelta = new Vector2(pick ? PickWidth : PageWidth, pick ? 760f : 920f);
-            _box.anchoredPosition = new Vector2(-Margin, pick ? 0f : -16f);
+            var kind = pick ? FrameKind.Bronze : FrameKind.Marble;
+            UiFrames.Apply(_frame, kind);
+            Inset(_body.rectTransform, kind);
+            StyleBody(pick ? TextLook.Flat : TextLook.Engraved);
+            _body.color = pick ? _ink : _marbleInk;
+            float h = ((RectTransform)_canvas.transform).rect.height;
+            _box.pivot = pick ? new Vector2(1f, 1f) : new Vector2(1f, 0.5f);
+            _box.sizeDelta = pick ? new Vector2(PickWidth, LevelUpLayout.StatsH) : new Vector2(PageWidth, PageHeight);
+            _box.anchoredPosition = pick ? new Vector2(-Margin, LevelUpLayout.ColumnTop(h)) : new Vector2(-Margin, -16f);
+            float k = pick ? _pickScale : 1f;
+            _box.localScale = new Vector3(k, k, 1f);
             _body.fontSizeMax = pick ? 22f : 21f;
+        }
+
+        // StatText's colours are made for a dark page; on marble each becomes a darker ink of its hue (same 7 characters)
+        static readonly string[] StatColors =
+        {
+            StatText.ValueCol, StatText.CardCol, StatText.Dim, StatText.Head, StatText.Gain, StatText.Loss, StatText.SynergyCol,
+            StatText.TraitCol, StatText.TempCol, StatText.AltarCol, StatText.AdminCol, StatText.VowCol, StatText.EdictCol,
+        };
+        static readonly string[] MarbleInks =
+        {
+            "#3D342B", "#3D342B", "#6E6253", "#5A3A1B", "#2F7A3A", "#A8321F", "#1D6A78",
+            "#8A5A10", "#9A4A0E", "#9B2E4E", "#8E2A80", "#9B3A26", "#C23A1E", // edicts stay orange-red: they hurt you
+        };
+
+        /// <summary>Swaps every "&lt;color=#RRGGBB" whose hex is in `from` for the same-index `to`, in place (no allocation).</summary>
+        public static void Remap(CharBuffer t, string[] from, string[] to)
+        {
+            var c = t.Chars;
+            int n = t.Length;
+            for (int i = 1; i + 7 <= n; i++)
+            {
+                if (c[i] != '#' || c[i - 1] != '=') continue;
+                for (int k = 0; k < from.Length; k++)
+                {
+                    var f = from[k];
+                    if (f.Length != 7 || to[k].Length != 7) continue;
+                    int j = 1;
+                    while (j < 7 && char.ToUpperInvariant(c[i + j]) == char.ToUpperInvariant(f[j])) j++;
+                    if (j < 7) continue;
+                    for (j = 1; j < 7; j++) c[i + j] = to[k][j];
+                    break;
+                }
+                i += 6;
+            }
         }
 
         // ---------- the Pick face: a "your stats" column with the selected card's preview ----------

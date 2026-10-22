@@ -37,6 +37,9 @@ namespace Gladiator.EditorTools
         /// <summary>Arenas: from the south-west, high (the player spawns in the south facing north).</summary>
         static readonly Quaternion ArenaView = Quaternion.Euler(38f, 25f, 0f);
         static readonly Color32 Ink = new Color32(0x1E, 0x1B, 0x19, 0xFF);
+        /// <summary>Model parts the bakes hide (R3: Asterion's trailing chain would shrink his full-body Codex picture to
+        /// ~60 %, and it isn't his face). A model with none of these bakes as before.</summary>
+        public static readonly string[] PortraitHidden = { "Chain" };
 
         [MenuItem("Gladiator/Setup/UI/Bake Portraits")]
         public static string BakeAll()
@@ -115,7 +118,8 @@ namespace Gladiator.EditorTools
             }
 
             /// <summary>Renders `model` (its renderers set to `material` unless null): head and shoulders from the
-            /// front-left, or the whole body (the Codex atlas). A model with no "Head" part is cropped to its top.</summary>
+            /// front-left, or the whole body (the Codex atlas). A model with no "Head" part is cropped to its top. Parts
+            /// named in PortraitHidden are left out of both.</summary>
             public void Render(GameObject model, Material material, bool headAndShoulders)
             {
                 var inst = Object.Instantiate(model);
@@ -124,6 +128,7 @@ namespace Gladiator.EditorTools
                 try
                 {
                     var rends = inst.GetComponentsInChildren<Renderer>(true);
+                    if (HideParts(inst.transform)) rends = Array.FindAll(rends, r => r.gameObject.activeInHierarchy);
                     if (material != null) foreach (var r in rends) r.sharedMaterial = material;
                     var all = Bounds(rends, inst.transform.position + Vector3.up);
                     Vector3 centre;
@@ -199,6 +204,15 @@ namespace Gladiator.EditorTools
                 else b.Encapsulate(r.bounds);
             }
             return b;
+        }
+
+        /// <summary>Sets every part named in PortraitHidden inactive under `root`; true if any was.</summary>
+        static bool HideParts(Transform root)
+        {
+            bool any = false;
+            foreach (var t in root.GetComponentsInChildren<Transform>(true))
+                if (t != root && Array.IndexOf(PortraitHidden, t.name) >= 0) { t.gameObject.SetActive(false); any = true; }
+            return any;
         }
 
         /// <summary>The part named `name` (else the first whose name starts with it), anywhere under `root`.</summary>

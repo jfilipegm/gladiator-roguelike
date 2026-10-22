@@ -21,6 +21,8 @@ namespace Gladiator.Gameplay
         public float reach = 0.5f;
         [Tooltip("Degrees either side of his velocity.")]
         [Range(0f, 180f)] public float halfAngle = 60f;
+        [Tooltip("The enemy query's centre, metres ahead along his velocity (the hit test itself is from his centre).")]
+        public float ahead = 0.35f;
         [Tooltip("Damage before the player's Damage multiplier.")]
         public float damage = 8f;
         [Tooltip("Before the player's Knockback multiplier: the toss, sideways out of his path.")]
@@ -141,7 +143,8 @@ namespace Gladiator.Gameplay
             }
 
             Vector3 at = transform.position;
-            int n = em.QueryAlive(at, reach, _hits); // every enemy whose body is within `reach` of his centre (XZ)
+            float ahead = Mathf.Max(0f, trait.ahead);
+            int n = em.QueryAlive(at + heading * ahead, reach + ahead, _hits);
             for (int k = 0; k < n; k++)
             {
                 int i = _hits[k];
@@ -150,6 +153,8 @@ namespace Gladiator.Gameplay
                 Vector3 to = ep - at;
                 to.y = 0f;
                 float dist = to.magnitude;
+                float rr = reach + em.GetRadius(i);
+                if (dist > rr) continue; // the horns reach `reach` past his capsule (plus the enemy's radius), from his centre
                 Vector3 dir = dist > 1e-3f ? to / dist : heading;
                 if (Vector3.Dot(dir, heading) < cosHalf) continue;
                 int uid = em.GetUid(i);

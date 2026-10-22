@@ -22,7 +22,7 @@ namespace Gladiator.Gameplay
         [Tooltip("Rage per second for each enemy in the press.")]
         public float pressPerEnemy = 1f;
         [Tooltip("An elite or a Scripted enemy (a boss) counts as this many.")]
-        [Min(1)] public int pressHeavy = 4;
+        [Min(1f)] public float pressHeavy = 4f;
         [Tooltip("The press's cap (Rage per second): \"CORNERED\" by the bar.")]
         public float pressMaxPerSecond = 5f;
         [Tooltip("Rage per hit taken (status ticks don't count).")]
@@ -207,7 +207,7 @@ namespace Gladiator.Gameplay
 
         void CountPress()
         {
-            int pressing = 0;
+            int pressing = 0, heavyCount = Mathf.Max(1, Mathf.RoundToInt(trait.pressHeavy));
             var em = EnemyManager.Instance;
             if (em != null)
             {
@@ -217,7 +217,7 @@ namespace Gladiator.Gameplay
                     int i = _hits[k];
                     var def = em.GetDef(i);
                     bool heavy = em.IsElite(i) || (def != null && def.behaviour == EnemyBehaviour.Scripted);
-                    pressing += heavy ? trait.pressHeavy : 1;
+                    pressing += heavy ? heavyCount : 1;
                 }
             }
             Pressing = pressing;

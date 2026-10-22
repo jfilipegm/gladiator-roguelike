@@ -5,7 +5,7 @@ namespace Gladiator.Core
     {
         /// <summary>Bumped in the PR that cuts a GitHub release; <c>Tools/release</c> refuses a tag that doesn't match.</summary>
         public const string Version = "0.21.0";
-        public const int SaveVersion = 1;
+        public const int SaveVersion = 2; // mirrors SaveData.CurrentVersion (Gameplay), which the save uses
 
         /// <summary>"v0.1.0", or "v0.1.0 dev" in development builds and the Editor.</summary>
         public static string VersionLabel => UnityEngine.Debug.isDebugBuild ? "v" + Version + " dev" : "v" + Version;

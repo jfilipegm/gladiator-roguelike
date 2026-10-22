@@ -38,6 +38,7 @@ namespace Gladiator.Gameplay
 
         Transform _figure;
         float _at, _t, _read, _puff;
+        int _spot;
         Vector3 _pos;
 
         public static AshenStranger Instance { get; private set; }
@@ -50,10 +51,14 @@ namespace Gladiator.Gameplay
 
         void Start()
         {
+            // R8: whether, when and where, forked from the run seed (the same seed brings him at the same time and spot)
+            var rng = GameRandom.Fork(RngStream.Map, GameRandom.KeyOf("ashen_stranger"));
             if (spots == null || spots.Length == 0 || (!alwaysAppear && MetaProgress.Data.HasFlag(flag))) return;
-            if (!alwaysAppear && Random.value > chance) return; // not GameRandom: that one replays the same rolls every launch
+            bool comes = rng.Next01() <= chance; // rolled even when alwaysAppear, so a test sees the seed's own time and spot
+            if (!alwaysAppear && !comes) return;
             State = Phase.Waiting;
-            _at = Random.Range(window.x, window.y);
+            _at = rng.Range(window.x, window.y);
+            _spot = rng.Range(0, spots.Length);
         }
 
         /// <summary>He appears now at spot `index` (tests; the run's clock does it otherwise).</summary>
@@ -87,7 +92,7 @@ namespace Gladiator.Gameplay
             if (State == Phase.Waiting)
             {
                 var run = RunState.Current;
-                if (run != null && run.Elapsed >= _at) Appear(Random.Range(0, spots.Length));
+                if (run != null && run.Elapsed >= _at) Appear(_spot);
                 return;
             }
             if (State != Phase.Here) return;

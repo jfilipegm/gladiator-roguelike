@@ -75,7 +75,7 @@ namespace Gladiator.Gameplay
         void OnKill(in KillEvent e)
         {
             if (e.Xp > 0f) SpawnXp(e.Position, e.Xp);
-            if (e.GoldChance > 0f && GameRandom.Chance(e.GoldChance)) Spawn(Kind.Gold, e.Position, config.goldPerCoin);
+            if (e.GoldChance > 0f && GameRandom.Chance(RngStream.Loot, e.GoldChance)) Spawn(Kind.Gold, e.Position, config.goldPerCoin);
         }
 
         public void SpawnXp(Vector3 pos, float amount)

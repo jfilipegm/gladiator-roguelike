@@ -55,10 +55,14 @@ namespace Gladiator.Gameplay
         Phase _phase = Phase.NotThisRun;
         float _appearAt, _t, _nextSniff, _sniffLeft, _nextSparkle, _nextSqueak, _wanderSeed;
         Vector3 _pos, _dir;
+        Rng _rng; // R8: whether, when, which hole and the wander, forked from the run seed in Start
 
         public Phase State => _phase;
         public Vector3 Position => _pos;
+        /// <summary>When it comes out this run (run seconds; 0 = not this run).</summary>
         public float AppearAt => _appearAt;
+        /// <summary>The hole it comes out of (rolled with the time, at Start; -1 = not this run).</summary>
+        public int Hole { get; private set; } = -1;
         public int Caught { get; private set; }
         public static GoldenRat Instance { get; private set; }
 
@@ -67,9 +71,12 @@ namespace Gladiator.Gameplay
 
         void Start()
         {
+            _rng = GameRandom.Fork(RngStream.Map, GameRandom.KeyOf("golden_rat"));
             if (holes == null || holes.Length == 0) return;
-            if (!alwaysAppear && Random.value > chance) return; // not GameRandom: that one replays the same rolls every launch
-            _appearAt = Random.Range(window.x, window.y);
+            bool comes = _rng.Next01() <= chance; // rolled even when alwaysAppear, so a test sees the seed's own time and hole
+            if (!alwaysAppear && !comes) return;
+            _appearAt = _rng.Range(window.x, window.y);
+            Hole = _rng.Range(0, holes.Length);
             _phase = Phase.Waiting;
         }
 
@@ -77,7 +84,8 @@ namespace Gladiator.Gameplay
         public void Appear(int index)
         {
             if (holes == null || holes.Length == 0) return;
-            _pos = holes[Mathf.Clamp(index, 0, holes.Length - 1)];
+            Hole = Mathf.Clamp(index, 0, holes.Length - 1);
+            _pos = holes[Hole];
             var em = EnemyManager.Instance;
             if (em != null)
             {
@@ -91,7 +99,7 @@ namespace Gladiator.Gameplay
             _t = 0f;
             _nextSniff = sniffEvery;
             _sniffLeft = 0f;
-            _wanderSeed = Random.value * 100f;
+            _wanderSeed = _rng.Next01() * 100f;
             Vector3 toCenter = em != null ? em.arenaCenter - _pos : -_pos;
             toCenter.y = 0f;
             _dir = toCenter.sqrMagnitude > 0.01f ? toCenter.normalized : Vector3.forward;
@@ -118,7 +126,7 @@ namespace Gladiator.Gameplay
             if (_phase == Phase.Waiting)
             {
                 var run = RunState.Current;
-                if (run != null && run.Elapsed >= _appearAt && !run.Ended) Appear(Random.Range(0, holes.Length));
+                if (run != null && run.Elapsed >= _appearAt && !run.Ended) Appear(Hole);
                 return;
             }
             if (_phase != Phase.Running) return;

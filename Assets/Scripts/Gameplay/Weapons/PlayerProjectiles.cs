@@ -498,7 +498,7 @@ namespace Gladiator.Gameplay
                 float dx = ep.x - at.x, dz = ep.z - at.z, rr = blast + em.GetRadius(e);
                 if (dx * dx + dz * dz > rr * rr) continue;
                 float d = Mathf.Sqrt(dx * dx + dz * dz);
-                bool crit = GameRandom.Chance(_crit[i]);
+                bool crit = GameRandom.Chance(RngStream.Combat, _crit[i]);
                 em.ApplyDamage(e, new DamageInfo
                 {
                     Amount = _damage[i] * (crit ? _critMul[i] : 1f),
@@ -529,7 +529,7 @@ namespace Gladiator.Gameplay
                 int uid = em.GetUid(e);
                 if (Remembered(i, uid)) continue;
                 Remember(i, uid);
-                bool crit = GameRandom.Chance(_crit[i]);
+                bool crit = GameRandom.Chance(RngStream.Combat, _crit[i]);
                 Vector3 push = _kind[i] == Kind.Straight ? _dir[i] : new Vector3(dx, 0f, dz);
                 float pl = push.magnitude;
                 em.ApplyDamage(e, new DamageInfo

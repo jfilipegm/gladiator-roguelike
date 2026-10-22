@@ -28,8 +28,7 @@ namespace Gladiator.Gameplay
         readonly float[] _kills = new float[Ring];
         int _head, _count;
         float _clock, _lastWhim = -9999f;
-        const uint RngSalt = 0xB0BA5u;
-        uint _rng = RngSalt;
+        Rng _rng; // R8: which whim, the champion's spot, forked from the run seed in Awake
 
         int _championUid = -1, _championSlot = -1;
         float _championUntil;
@@ -45,9 +44,8 @@ namespace Gladiator.Gameplay
         void Awake()
         {
             Instance = this;
-            // Q14 (R7): seeded from the run's GameRandom (GameSession seeds it per run), so the whims change from run to run
-            _rng = GameRandom.NextUInt() ^ RngSalt;
-            if (_rng == 0u) _rng = RngSalt;
+            // R8: a fork of the run seed, so the whims change from run to run and come in the same order for the same seed
+            _rng = GameRandom.Fork(RngStream.Whims, GameRandom.KeyOf("arena_master"));
         }
 
         void OnEnable()
@@ -61,12 +59,6 @@ namespace Gladiator.Gameplay
             GameLoop.Unregister(this);
             GameEvents.OnKill.Unsubscribe(OnKill);
             if (Instance == this) Instance = null;
-        }
-
-        float Rand01()
-        {
-            _rng ^= _rng << 13; _rng ^= _rng >> 17; _rng ^= _rng << 5;
-            return (_rng & 0xFFFFFF) / (float)0x1000000;
         }
 
         void OnKill(in KillEvent e)
@@ -112,7 +104,7 @@ namespace Gladiator.Gameplay
         {
             var em = EnemyManager.Instance;
             if (config == null || em == null || Player.Main == null || config.whims == null || config.whims.Length == 0) return false;
-            var whim = config.whims[Mathf.Min(config.whims.Length - 1, (int)(Rand01() * config.whims.Length))];
+            var whim = config.whims[Mathf.Min(config.whims.Length - 1, (int)(_rng.Next01() * config.whims.Length))];
             if (whim == WhimKind.ChampionChallenge && _championUid >= 0) whim = WhimKind.GatesOpen; // one challenge at a time
             bool ok = whim == WhimKind.GatesOpen ? OpenGates(em) : StartChallenge(em);
             if (!ok) return false;
@@ -143,7 +135,7 @@ namespace Gladiator.Gameplay
             bool found = false;
             for (int attempt = 0; attempt < 12 && !found; attempt++)
             {
-                float a = Rand01() * Mathf.PI * 2f;
+                float a = _rng.Next01() * Mathf.PI * 2f;
                 spot = player + new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * config.challengeDistance;
                 if (em.EdgeDistance01(spot, 2f) > 1f) continue;
                 if (em.Obstacles != null && em.Obstacles.Overlaps(new Vector2(spot.x, spot.z), 1f)) continue;

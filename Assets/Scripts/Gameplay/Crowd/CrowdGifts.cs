@@ -36,8 +36,7 @@ namespace Gladiator.Gameplay
         }
 
         Slot[] _slots;
-        const uint RngSalt = 0x6A11F7u;
-        uint _rng = RngSalt;
+        Rng _rng; // R8: the gifts' kinds, loaned weapons and landing spots, forked from the run seed in Awake
         PlayerHealth _health;
         WeaponSystem _weapons;
         PlayerBuild _build;
@@ -53,9 +52,8 @@ namespace Gladiator.Gameplay
         void Awake()
         {
             Instance = this;
-            // Q14 (R7): seeded from the run's GameRandom (GameSession seeds it per run), so the gifts change from run to run
-            _rng = GameRandom.NextUInt() ^ RngSalt;
-            if (_rng == 0u) _rng = RngSalt;
+            // R8: a fork of the run seed, so the gifts change from run to run and come in the same order for the same seed
+            _rng = GameRandom.Fork(RngStream.Gifts, GameRandom.KeyOf("crowd_gifts"));
             int n = config != null ? Mathf.Max(1, config.maxGifts) : 3;
             _slots = new Slot[n];
             for (int i = 0; i < n; i++)
@@ -91,12 +89,6 @@ namespace Gladiator.Gameplay
             if (Instance == this) Instance = null;
         }
 
-        float Rand01()
-        {
-            _rng ^= _rng << 13; _rng ^= _rng >> 17; _rng ^= _rng << 5;
-            return (_rng & 0xFFFFFF) / (float)0x1000000;
-        }
-
         void FindPlayer()
         {
             if (_health != null || Player.Main == null) return;
@@ -119,7 +111,7 @@ namespace Gladiator.Gameplay
                 if (_build.State.IsLocked(u) || _weapons.Find(u.weapon) != null) continue;
                 _candidates[n++] = u.weapon;
             }
-            return n > 0 ? _candidates[Mathf.Min(n - 1, (int)(Rand01() * n))] : null;
+            return n > 0 ? _candidates[Mathf.Min(n - 1, (int)(_rng.Next01() * n))] : null;
         }
 
         /// <summary>Throws a gift now (a full Favor meter; admin and tests). Returns the slot, or -1 without a player or arena.</summary>
@@ -133,7 +125,7 @@ namespace Gladiator.Gameplay
             if (config == null || em == null || Player.Main == null) return -1;
             var weapon = PickLoanWeapon();
             float hp = _health != null ? _health.Hp01 : 1f;
-            var k = kind ?? config.PickGift(Rand01(), hp, weapon != null);
+            var k = kind ?? config.PickGift(_rng.Next01(), hp, weapon != null);
             if (k == GiftKind.WeaponInSand && weapon == null) k = GiftKind.Amphora;
 
             int slot = -1;
@@ -178,7 +170,7 @@ namespace Gladiator.Gameplay
             var c = config;
             for (int attempt = 0; attempt < 16; attempt++)
             {
-                float a = Rand01() * Mathf.PI * 2f, r = Mathf.Lerp(c.landDistance.x, c.landDistance.y, Rand01());
+                float a = _rng.Next01() * Mathf.PI * 2f, r = Mathf.Lerp(c.landDistance.x, c.landDistance.y, _rng.Next01());
                 var p = player + new Vector3(Mathf.Cos(a) * r, 0f, Mathf.Sin(a) * r);
                 if (em.EdgeDistance01(p, 2f) > 1f) continue;
                 if (em.Obstacles != null && em.Obstacles.Overlaps(new Vector2(p.x, p.z), 0.8f)) continue;

@@ -493,7 +493,7 @@ namespace Gladiator.Gameplay
 
         DamageInfo Hit(WeaponInstance w, EnemyManager em, int i, Vector3 dir, DamageFlags kind, bool forceCrit = false)
         {
-            bool crit = forceCrit || GameRandom.Chance(Crit(w));
+            bool crit = forceCrit || GameRandom.Chance(RngStream.Combat, Crit(w));
             return new DamageInfo
             {
                 Amount = Damage(w) * (crit ? CritMul(w) : 1f),

@@ -170,7 +170,7 @@ namespace Gladiator.Gameplay
                 switch (a.E.kind)
                 {
                     case EffectKind.StatusOnHit:
-                        if (alive && GameRandom.Chance(a.E.chance * a.Potency))
+                        if (alive && GameRandom.Chance(RngStream.Combat, a.E.chance * a.Potency))
                             em.ApplyStatus(e.Index, a.E.status, e.Damage * a.E.power, Mathf.Max(1, a.E.stacks));
                         break;
                     case EffectKind.ChainSpark:

@@ -1219,6 +1219,25 @@ ICONS["vow_gambler"] = grid([  # Gambler's Vow: a white die and a red one
     "................",
 ])
 
+ICONS["weapon_labyrinth_chain"] = grid([  # Labyrinth Chain (R3): bronze links down to a block of the labyrinth's wall, a pale meander on it
+    "................",
+    ".nnY............",
+    ".n.Y............",
+    ".YYYb...........",
+    "....bB..........",
+    ".....nnY........",
+    ".....n.Y........",
+    ".....YYYb.......",
+    "........bY......",
+    ".....llllYlll...",
+    "....lllllllllld.",
+    "...ssssssssssdd.",
+    "...swwwswwwwsdd.",
+    "...ssswsssswsdd.",
+    "...swwwswwwwsd..",
+    "...dddddddddd...",
+])
+
 
 # ---------- frames ----------
 def to_rgba(g):

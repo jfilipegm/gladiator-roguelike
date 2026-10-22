@@ -116,6 +116,10 @@ namespace Gladiator.UI
         // Golden Idol (Phase 5.11): the same bar is Midas Body's damage bonus from gold carried ("+N% DMG").
         static readonly Color MidasColor = new Color(1f, 0.8f, 0.25f);
         static readonly Color MidasHot = new Color(1f, 0.97f, 0.7f);
+        // Asterion (R3): the same bar is his Rage (bronze; white-gold while Unchained, draining; grey while Spent).
+        static readonly Color RageColor = new Color(0.80f, 0.56f, 0.30f);
+        static readonly Color RageHot = new Color(1f, 0.93f, 0.7f);
+        static readonly Color RageSpent = new Color(0.45f, 0.45f, 0.48f);
 
         static readonly Color XpColor = new Color(0.31f, 0.89f, 0.82f);
         static readonly Color HpColor = new Color(0.88f, 0.2f, 0.17f);
@@ -552,15 +556,18 @@ namespace Gladiator.UI
             var verdict = Verdict.Instance;
             var storm = Stormcaller.Instance;
             var midas = MidasBody.Instance;
+            var rage = Rage.Instance;
             bool wrath = rite == null && verdict != null && verdict.trait != null;
             bool charge = rite == null && !wrath && storm != null && storm.trait != null;
             bool gold = rite == null && !wrath && !charge && midas != null && midas.trait != null;
-            bool on = (rite != null && rite.trait != null) || wrath || charge || gold;
+            bool raging = rite == null && !wrath && !charge && !gold && rage != null && rage.trait != null;
+            bool on = (rite != null && rite.trait != null) || wrath || charge || gold || raging;
             if (_bloodRoot.activeSelf != on) { _bloodRoot.SetActive(on); _bloodText.gameObject.SetActive(on); }
             if (!on) return;
             if (wrath) { DrawWrath(verdict, unscaledDt); return; }
             if (charge) { DrawCharge(storm, unscaledDt); return; }
             if (gold) { DrawMidas(midas, unscaledDt); return; }
+            if (raging) { DrawRage(rage, unscaledDt); return; }
             if (_riteShown != rite) { _riteShown = rite; _lust = rite.GetComponent<Bloodlust>(); _bloodKey = int.MinValue; }
             float target = rite.Frenzied ? rite.FrenzyLeft / Mathf.Max(0.01f, rite.trait.frenzySeconds) : rite.Fill01;
             _bloodFill.fillAmount = Mathf.MoveTowards(_bloodFill.fillAmount, target, unscaledDt * 2f);
@@ -625,6 +632,59 @@ namespace Gladiator.UI
             }
             _bloodText.color = v.Full ? Color.Lerp(WrathColor, WrathHot, pulse) : WrathColor;
         }
+
+        /// <summary>
+        /// Asterion's Rage on the Blood bar: the meter while calm (pulsing hot when CORNERED or nearly full), draining
+        /// white-gold while Unchained, empty and grey while Spent; "SLIDE!" when a full meter waits for a slide
+        /// (triggerOnSlide).
+        /// </summary>
+        void DrawRage(Rage r, float unscaledDt)
+        {
+            float t = Time.unscaledTime;
+            float target, rate;
+            Color fill;
+            int key;
+            switch (r.Current)
+            {
+                case Rage.Mode.Unchained:
+                    target = r.Unchained01;
+                    rate = 6f;
+                    fill = Color.Lerp(RageHot, RageColor, 0.35f * (0.5f + 0.5f * Mathf.Sin(t * 14f)));
+                    key = RageKeyUnchained;
+                    break;
+                case Rage.Mode.Spent:
+                    target = 0f;
+                    rate = 6f;
+                    fill = RageSpent;
+                    key = RageKeySpent;
+                    break;
+                default:
+                    target = r.Fill01;
+                    rate = 3f;
+                    bool hot = r.Cornered || r.Fill01 > 0.85f || r.WaitingForSlide;
+                    fill = hot ? Color.Lerp(RageColor, RageHot, 0.5f + 0.5f * Mathf.Sin(t * 8f)) : RageColor;
+                    key = r.WaitingForSlide ? RageKeySlide : r.Cornered ? RageKeyCornered : RageKeyNone;
+                    break;
+            }
+            _bloodFill.fillAmount = Mathf.MoveTowards(_bloodFill.fillAmount, target, unscaledDt * rate);
+            _bloodFill.color = fill;
+            if (key != _bloodKey)
+            {
+                _bloodKey = key;
+                if (key == RageKeyUnchained) _bloodText.SetText("UNCHAINED");
+                else if (key == RageKeySpent) _bloodText.SetText("SPENT");
+                else if (key == RageKeySlide) _bloodText.SetText("SLIDE!");
+                else if (key == RageKeyCornered) _bloodText.SetText("CORNERED");
+                else _bloodText.SetText("");
+            }
+            _bloodText.color = key == RageKeyNone ? RageColor : fill;
+        }
+
+        // the Rage bar's label keys (the Blood bar's other gladiators use 0 and up, -1, -2, -3)
+        const int RageKeyNone = -20, RageKeyCornered = -21, RageKeyUnchained = -22, RageKeySpent = -23, RageKeySlide = -24;
+
+        /// <summary>The Blood bar's label right now (tests).</summary>
+        public string BloodLabel => _bloodText != null ? _bloodText.text : "";
 
         /// <summary>The Favor bar (pulses gold-white when a gift is close) and the loaned weapon's tile + seconds left.</summary>
         void DrawFavor(float unscaledDt)

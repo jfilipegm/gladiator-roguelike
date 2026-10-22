@@ -6,7 +6,8 @@ namespace Gladiator.Gameplay
     /// A boss's tuning (docs/BOSSES.md). The body (HP, radius, model, shield arc) is its EnemyDef (behaviour Scripted);
     /// this holds his words, which attacks he uses in each phase, movement, each attack's wind-up / damage / size, the
     /// guards he calls, what phase 2 does to the arena, an optional phase 3 (the Emperor's Champion), an optional rise
-    /// and false death (the Eternal Victor) and the reward. Every number here is a starting guess for a playtest. Defaults
+    /// and false death (the Eternal Victor), the reward and an optional tease at his fall (R3: the Eternal Victor's
+    /// chain snapping while Asterion is locked). Every number here is a starting guess for a playtest. Defaults
     /// are Gorm's, so his asset predates most of these fields; every newer field defaults to "off".
     /// </summary>
     [CreateAssetMenu(menuName = "Gladiator/Boss", fileName = "BD_")]
@@ -253,5 +254,17 @@ namespace Gladiator.Gameplay
 
         [Header("Defeat")]
         public Rarity rewardFloor = Rarity.Rare;
+
+        [Header("Reveal (R3: a tease at his fall)")]
+        [Tooltip("A line after the fall line (the Eternal Victor: \"BELOW THE SAND, A CHAIN SNAPS.\"); empty = none.")]
+        public string revealText = "";
+        [Tooltip("The line shows only while this unlock is locked (none = always).")]
+        public UnlockDef revealUnlock;
+        [Tooltip("Seconds into the fall (real time) before the line.")]
+        public float revealDelay = 1.2f;
+        [Tooltip("Seconds the fall is held longer when the line shows, so it's read before the reward pick.")]
+        public float revealHold;
+        [Tooltip("Parchment, not orange-red: it doesn't hurt.")]
+        public Color revealColor = new Color(0.86f, 0.78f, 0.62f);
     }
 }

@@ -265,6 +265,18 @@ namespace Gladiator.Gameplay
             var pack = CompanionPack.Instance;
             if (pack != null && pack.Bites > 0)
                 sb.Append(" wolves ").Append(pack.Count).Append(" bites ").Append(pack.Bites).Append(" pounces ").Append(pack.Pounces).Append(" frenzies ").Append(pack.Frenzies);
+            if (weapons != null && weapons.Sweeps > 0)
+                sb.Append(" sweeps ").Append(weapons.Sweeps).Append(" (whirls ").Append(weapons.Whirls).Append(", hits ").Append(weapons.SweepHits)
+                  .Append(", stone ").Append(weapons.WeightHits).Append(')');
+            var rage = player.GetComponent<Rage>();
+            if (rage != null)
+            {
+                sb.Append(" unchained ").Append(rage.Unchains).Append(" (").Append(rage.UnchainedTime.ToString("0")).Append("s, bellow ")
+                  .Append(rage.BellowHits).Append(") peakPress ").Append(rage.PeakPress);
+                if (health != null && health.FlatReduction <= 0f) sb.Append(" damageTaken ").Append(health.DamageTaken.ToString("0")); // Q10: tunes his HP and the Rage rates
+            }
+            var gore = player.GetComponent<Gore>();
+            if (gore != null) sb.Append(" gored ").Append(gore.Gored).Append(" (kills ").Append(gore.GoreKills).Append(')');
             var thirst = player.GetComponent<Bloodthirst>();
             if (thirst != null) sb.Append(" kill-healed ").Append(thirst.Healed.ToString("0")).Append(" HP");
             sb.Append(" | hitstops ").Append(TimeController.HitStopCount).Append(" (").Append(TimeController.HitStopSeconds.ToString("0.0")).Append(" s)");

@@ -33,6 +33,22 @@ namespace Gladiator.Gameplay
         public int Target = -1, TargetUid;
         /// <summary>P1: game seconds since the player went down (an Orbit weapon's balls fall to the sand).</summary>
         public float DownT;
+        /// <summary>Sweep (R3): seconds into the current sweep (-1 = none); its start, end and last-stepped bearings
+        /// (degrees relative to AimDir, positive to the right); +1 = right to left (the first one), flipped after every
+        /// sweep; backswings still to come; whether this one is a whirl (360°); its serial number.</summary>
+        public float SweepT = -1f, SweepFrom, SweepTo, SweepPrev;
+        public int SweepDir = 1, SweepLeft, SweepId;
+        public bool SweepWhirl;
+        /// <summary>Sweep: the arm's swing is mirrored (a right-to-left sweep is the profile's swing; a left-to-right one
+        /// mirrors it). Set at the swing's start and at each sweep, kept until the swing ends (no snap at its tail).</summary>
+        public bool SweepMirror;
+        /// <summary>Sweep: per enemy slot, the last SweepId that hit it (allocated once, at the pool's capacity).</summary>
+        public int[] SweepSeen;
+        /// <summary>Sweep: the link mesh's draw index (-2 = not registered yet), the model part it swings and whether
+        /// that was looked up.</summary>
+        public int LinkMesh = -2;
+        public Transform Part;
+        public bool PartLooked;
 
         /// <summary>Reuses this slot object for `def` at level 1 (slots are allocated once, so equipping is GC-free).</summary>
         internal void Init(WeaponDef def)
@@ -52,6 +68,16 @@ namespace Gladiator.Gameplay
             AreaBoost = 1f;
             InEcho = false;
             DownT = 0f;
+            SweepT = -1f;
+            SweepFrom = SweepTo = SweepPrev = 0f;
+            SweepDir = 1;
+            SweepLeft = SweepId = 0;
+            SweepWhirl = SweepMirror = false;
+            if (SweepSeen != null) System.Array.Clear(SweepSeen, 0, SweepSeen.Length);
+            LinkMesh = -2;
+            if (Part != null) Part.gameObject.SetActive(true); // a slot reused mid-sweep: the model's part comes back
+            Part = null;
+            PartLooked = false;
         }
     }
 
@@ -60,9 +86,11 @@ namespace Gladiator.Gameplay
     /// enemy spatial hash (never Physics.Overlap), damage through EnemyManager.ApplyDamage. Up to 4 slots.
     /// Every weapon runs the same timeline (acquire → wind-up → impact → cooldown); the impact is the pattern:
     /// MeleeArc (arc hit around the aim), Thrust (line hit + spear visual), Projectile (javelin volley at the nearest
-    /// enemies), Returning (chakram out and back), Lob (bombs at the densest groups in reach, exploding after a fuse).
-    /// Orbit (Gorm's Flail) has no timeline: its balls always circle the player and hit whatever they pass, each enemy at
-    /// most once per cooldown. Numbers = weapon base × its level modifiers × player stats.
+    /// enemies), Returning (chakram out and back), Lob (bombs at the densest groups in reach, exploding after a fuse),
+    /// Sweep (the Labyrinth Chain, R3: the impact starts a sweep that carries the chain across its arc over sweepTime,
+    /// hitting each enemy it passes once; Amount = backswings straight after, the other way; no new swing until the
+    /// last one ends). Orbit (Gorm's Flail) has no timeline: its balls always circle the player and hit whatever they
+    /// pass, each enemy at most once per cooldown. Numbers = weapon base × its level modifiers × player stats.
     /// </summary>
     public sealed class WeaponSystem : MonoBehaviour, ITickable
     {
@@ -84,6 +112,11 @@ namespace Gladiator.Gameplay
         [Tooltip("Chain: height of the spear's tip the lightning leaves from (m).")]
         public float chainTipHeight = 1.7f;
         public Color slamDustA = new Color(0.78f, 0.68f, 0.5f), slamDustB = new Color(0.82f, 0.97f, 1f);
+        [Header("Sweep (the Labyrinth Chain)")]
+        [Tooltip("Sweep: the hand's distance from the player's centre along the chain (m).")]
+        public float chainHandOffset = 0.45f;
+        [Tooltip("Sweep: the stone's tumble about the chain's line while it swings (deg/s), for show.")]
+        public float stoneTumble = 360f;
         const int MaxOrbiters = 8;
 
         PlayerStats _stats;
@@ -108,6 +141,7 @@ namespace Gladiator.Gameplay
         readonly int[] _targets = new int[16];
         readonly int[] _lobQuery = new int[256];
         readonly int[] _lobPick = new int[8];
+        readonly int[] _sweepHits = new int[512]; // a 7 m disc can hold more than 256 at 450 alive
         [Tooltip("Lob: nearest enemies considered as bomb targets (the one whose blast would catch the most wins).")]
         public int lobCandidates = 8;
 
@@ -124,6 +158,14 @@ namespace Gladiator.Gameplay
         public int Slams { get; private set; }
         /// <summary>Enemies struck by Chain lightning, the first strikes and the jumps (tests, bot log).</summary>
         public int ChainStrikes { get; private set; }
+        /// <summary>R3: every sweep is a whirl (360°, at sweepTime × whirlTimeMul) while on. Asterion's Rage sets it while
+        /// Unchained; only Sweep weapons read it, so the chain in anyone else's hands never whirls.</summary>
+        public bool WhirlSweeps { get; set; }
+        /// <summary>Sweep: every sweep, backswings included; whirls among them; enemies hit; stone hits (tests, bot log).</summary>
+        public int Sweeps { get; private set; }
+        public int Whirls { get; private set; }
+        public int SweepHits { get; private set; }
+        public int WeightHits { get; private set; }
         /// <summary>The crowd's weapon in the sand (Phase 5.1): fights beside the slots for a while (null = none).</summary>
         public WeaponInstance Temporary => TemporaryLeft > 0f ? _loan : null;
         public float TemporaryLeft { get; private set; }
@@ -152,8 +194,12 @@ namespace Gladiator.Gameplay
             return inst;
         }
 
-        /// <summary>Drops every weapon (tests, dev showcase, a future gladiator swap).</summary>
-        public void RemoveAll() => _weapons.Clear();
+        /// <summary>Drops every weapon (tests, dev showcase, a future gladiator swap). A model part a sweep hid comes back.</summary>
+        public void RemoveAll()
+        {
+            for (int i = 0; i < _weapons.Count; i++) ShowPart(_weapons[i]);
+            _weapons.Clear();
+        }
 
         public WeaponInstance Find(WeaponDef def)
         {
@@ -170,7 +216,7 @@ namespace Gladiator.Gameplay
             var w = Find(from);
             if (w == null || to == null) return null;
             w.Def = to;
-            w.Mesh = -2;
+            w.Mesh = w.LinkMesh = -2;
             w.EchoT = -1f;
             return w;
         }
@@ -205,7 +251,11 @@ namespace Gladiator.Gameplay
         }
 
         /// <summary>Ends the loan now (tests, run reset).</summary>
-        public void EndTemporary() => TemporaryLeft = 0f;
+        public void EndTemporary()
+        {
+            TemporaryLeft = 0f;
+            StopSweep(_loan);
+        }
 
         // ---------- effective numbers ----------
         public float Damage(WeaponInstance w) => w.Def.damage * w.Local[StatId.Damage] * DamageMul;
@@ -229,18 +279,23 @@ namespace Gladiator.Gameplay
             {
                 var w = _weapons[i];
                 TickWeapon(w, em, dt);
-                if (w.SwingT >= 0f && animator != null && !anySwing)
+                if ((w.SwingT >= 0f || w.SweepT >= 0f) && animator != null && !anySwing)
                 {
                     anySwing = true;
-                    animator.AttackT = w.SwingT;
-                    animator.AttackDirection = w.AimDir;
+                    Animate(w);
                 }
             }
-            if (!anySwing && animator != null) animator.AttackT = -1f;
+            if (!anySwing && animator != null)
+            {
+                animator.AttackT = -1f;
+                animator.AttackMirror = false;
+                animator.AttackSpin = 0f;
+            }
             if (TemporaryLeft > 0f)
             {
                 TemporaryLeft = Mathf.Max(0f, TemporaryLeft - dt);
                 if (TemporaryLeft > 0f) TickWeapon(_loan, em, dt);
+                else StopSweep(_loan);
             }
         }
 
@@ -251,7 +306,12 @@ namespace Gladiator.Gameplay
         /// </summary>
         void Hold(EnemyManager em, float dt)
         {
-            if (animator != null) animator.AttackT = -1f;
+            if (animator != null)
+            {
+                animator.AttackT = -1f;
+                animator.AttackMirror = false;
+                animator.AttackSpin = 0f;
+            }
             for (int i = 0; i < _weapons.Count; i++) HoldWeapon(_weapons[i], em, dt);
             if (TemporaryLeft > 0f) HoldWeapon(_loan, em, dt);
         }
@@ -263,6 +323,7 @@ namespace Gladiator.Gameplay
             w.ProngLeft = 0;
             w.BurstLeft = 0;
             w.DownT += dt;
+            StopSweep(w); // a chain stops mid-sweep: no more hits, the model's chain is back
             var d = w.Def;
             if (d.pattern == WeaponPattern.Orbit) DropOrbit(w, em);
             else if (d.pattern == WeaponPattern.Summon && _pack != null) _pack.Hold(dt);
@@ -307,6 +368,7 @@ namespace Gladiator.Gameplay
                 while (w.ProngLeft > 0 && w.ProngT <= 0f && em != null) { Prong(w, em, w.ProngNext++); w.ProngLeft--; w.ProngT += Mathf.Max(0.01f, d.prongInterval); }
             }
             w.Cooldown -= dt;
+            if (w.SweepT >= 0f && em != null) StepSweep(w, em, dt);
             if (w.SwingT >= 0f)
             {
                 w.SwingT += dt / Mathf.Max(0.01f, d.swingDuration);
@@ -319,6 +381,7 @@ namespace Gladiator.Gameplay
                 }
                 return;
             }
+            if (w.SweepT >= 0f) return; // Sweep: no new swing while the chain is still going round (the cooldown counts on)
             if (w.Cooldown > 0f || em == null) return;
             if (!StartSwing(w, em)) return;
             w.Cooldown = CooldownOf(w);
@@ -358,6 +421,11 @@ namespace Gladiator.Gameplay
                 SfxPlayer.Play(SfxId.Thrust, origin);
             }
             else if (d.pattern == WeaponPattern.GroundSlam) SfxPlayer.Play(SfxId.Swing, origin); // raised over the head
+            else if (d.pattern == WeaponPattern.Sweep)
+            {
+                w.SweepMirror = w.SweepDir < 0; // the pull goes to the side the sweep starts from
+                SfxPlayer.Play(SfxId.Swing, origin);
+            }
             return true;
         }
 
@@ -380,6 +448,7 @@ namespace Gladiator.Gameplay
                 case WeaponPattern.GroundSlam: SlamHit(w, em); break;
                 case WeaponPattern.Chain: ChainHit(w, em); break;
                 case WeaponPattern.MultiHit: StartFlurry(w, em); break;
+                case WeaponPattern.Sweep: w.SweepLeft = AmountOf(w) - 1; BeginSweep(w); break;
             }
             var d = w.Def;
             bool echoes = d.pattern == WeaponPattern.MeleeArc || d.pattern == WeaponPattern.Thrust || d.pattern == WeaponPattern.Returning;
@@ -607,6 +676,239 @@ namespace Gladiator.Gameplay
             ThrustHit(w, em);
             Prongs++;
             w.AimDir = aim;
+        }
+
+        // ---------- Sweep (the Labyrinth Chain, R3) ----------
+
+        /// <summary>
+        /// The animator follows the weapon that drives it. A sweep plays the sweep part of the profile's swing (windup to
+        /// windup + sweepTime of swingDuration) once per sweep, backswings included, mirrored for a left-to-right one; a
+        /// whirl turns the whole model with the chain. Every other weapon leaves the mirror and the spin off.
+        /// </summary>
+        void Animate(WeaponInstance w)
+        {
+            var d = w.Def;
+            if (w.SweepT >= 0f)
+            {
+                float dur = Mathf.Max(0.01f, d.swingDuration);
+                float w0 = d.windup / dur, w1 = (d.windup + d.sweepTime) / dur;
+                animator.AttackT = w0 + (w1 - w0) * Mathf.Clamp01(w.SweepT / SweepTimeOf(w));
+                animator.AttackSpin = w.SweepWhirl ? w.SweepPrev - w.SweepFrom : 0f;
+            }
+            else
+            {
+                animator.AttackT = w.SwingT;
+                animator.AttackSpin = 0f;
+            }
+            animator.AttackMirror = d.pattern == WeaponPattern.Sweep && w.SweepMirror;
+            animator.AttackDirection = w.AimDir;
+        }
+
+        float SweepTimeOf(WeaponInstance w) => Mathf.Max(0.01f, w.Def.sweepTime * (w.SweepWhirl ? Mathf.Max(0.01f, w.Def.whirlTimeMul) : 1f));
+
+        /// <summary>
+        /// A sweep starts (at the impact, and at once for each backswing): from one end of the arc to the other, the way
+        /// SweepDir says (+1 = right to left); a whirl (WhirlSweeps) goes all the way round. The model's chain part is
+        /// hidden while the swung one is drawn.
+        /// </summary>
+        void BeginSweep(WeaponInstance w)
+        {
+            w.SweepWhirl = WhirlSweeps;
+            float half = w.SweepWhirl ? 180f : w.Def.arcDegrees * 0.5f;
+            w.SweepFrom = half * w.SweepDir;
+            w.SweepTo = -half * w.SweepDir;
+            w.SweepPrev = w.SweepFrom;
+            w.SweepT = 0f;
+            w.SweepId++;
+            w.SweepMirror = w.SweepDir < 0;
+            HidePart(w);
+            SfxPlayer.Play(SfxId.Rattle, transform.position);
+            Sweeps++;
+            if (w.SweepWhirl) Whirls++;
+        }
+
+        /// <summary>
+        /// One frame of a sweep: the chain's bearing moves on (SweepFrom to SweepTo over the sweep's time), every enemy it
+        /// passed since the last frame is hit (each once per sweep), and the chain is drawn where it is. At the end every
+        /// sweep flips SweepDir; a backswing then starts at once (no wind-up), re-aimed at the nearest enemy (the aim kept
+        /// if there's none), or the sweeps are over and the model's chain comes back.
+        /// </summary>
+        void StepSweep(WeaponInstance w, EnemyManager em, float dt)
+        {
+            w.SweepT += dt;
+            float u = Mathf.Clamp01(w.SweepT / SweepTimeOf(w));
+            float cur = Mathf.Lerp(w.SweepFrom, w.SweepTo, u);
+            SweepStrikes(w, em, w.SweepPrev, cur);
+            w.SweepPrev = cur;
+            if (u < 1f) { DrawChain(w, cur); return; }
+            w.SweepDir = -w.SweepDir; // the next sweep (a backswing, or the next trigger) comes back the other way
+            if (w.SweepLeft > 0)
+            {
+                w.SweepLeft--;
+                Vector3 origin = transform.position;
+                if (em.TryGetNearest(origin, Acquire(w), out int target))
+                {
+                    Vector3 aim = em.GetPosition(target) - origin;
+                    aim.y = 0f;
+                    if (aim.sqrMagnitude > 1e-4f) w.AimDir = aim.normalized;
+                }
+                BeginSweep(w);
+                DrawChain(w, w.SweepPrev);
+                return;
+            }
+            w.SweepT = -1f;
+            ShowPart(w); // not drawn this frame: the model's chain is back instead
+        }
+
+        /// <summary>Ends a sweep at once (halted, a loan running out): no more hits, no backswings, the model's chain back.</summary>
+        static void StopSweep(WeaponInstance w)
+        {
+            w.SweepT = -1f;
+            w.SweepLeft = 0;
+            ShowPart(w);
+        }
+
+        /// <summary>
+        /// Hits every enemy the chain passed between bearings a0 and a1 this frame and not yet this sweep: within the reach
+        /// (+ its radius), its bearing inside [a0, a1] padded by the angle its body and half the chain's width span at that
+        /// distance. The stone (the last tipLength × √Area m) always crits and shoves tipKnockbackMul harder. The push is
+        /// the chain's tangent plus a little outward, so a shield facing the player misses it; a boss's push is radial
+        /// (its shield blocks as before).
+        /// </summary>
+        void SweepStrikes(WeaponInstance w, EnemyManager em, float a0, float a1)
+        {
+            var d = w.Def;
+            if (w.SweepSeen == null || w.SweepSeen.Length < em.capacity) w.SweepSeen = new int[em.capacity];
+            float area = AreaOf(w);
+            float reach = d.range * area, tip = d.tipLength * Mathf.Sqrt(area), halfWidth = d.width * 0.5f;
+            float sign = a1 < a0 ? -1f : 1f;
+            Vector3 origin = transform.position;
+            int n = em.QueryAlive(origin, reach, _sweepHits);
+            for (int k = 0; k < n; k++)
+            {
+                int i = _sweepHits[k];
+                if (i >= w.SweepSeen.Length || w.SweepSeen[i] == w.SweepId) continue;
+                Vector3 to = em.GetPosition(i) - origin;
+                to.y = 0f;
+                float dist = to.magnitude, r = em.GetRadius(i);
+                if (dist > reach + r) continue;
+                bool atCentre = dist < 1e-3f;
+                Vector3 outward = atCentre ? Quaternion.Euler(0f, a1, 0f) * w.AimDir : to / dist;
+                float bearing = atCentre ? a1 : SweepBearing(w.AimDir, to);
+                float body = r + halfWidth;
+                float pad = Mathf.Asin(Mathf.Min(1f, body / Mathf.Max(dist, body))) * Mathf.Rad2Deg;
+                if (!SweepCovers(a0, a1, bearing, pad)) continue;
+                w.SweepSeen[i] = w.SweepId;
+                bool stone = tip > 0f && dist >= reach - tip;
+                var def = em.GetDef(i);
+                bool boss = def != null && def.behaviour == EnemyBehaviour.Scripted;
+                var info = Hit(w, em, i, boss ? outward : SweepPush(outward, sign, d.sweepOutward), DamageFlags.Melee, forceCrit: stone);
+                if (stone) info.Knockback *= d.tipKnockbackMul;
+                Strike(w, em, i, info);
+                SweepHits++;
+                if (stone) WeightHits++;
+            }
+        }
+
+        /// <summary>
+        /// The swung chain at `bearing`: Link meshes laid end to end from the hand to weightOffset short of the stone, each
+        /// rolled 90° from the last and stretched along Z to fit exactly, then the stone, tumbling about the chain's line,
+        /// with a streak behind it the way it moves. Never a fan: the floor's telegraphs round him stay readable. A
+        /// missing mesh draws nothing.
+        /// </summary>
+        void DrawChain(WeaponInstance w, float bearing)
+        {
+            var pp = PlayerProjectiles.Instance;
+            if (pp == null) return;
+            var d = w.Def;
+            float area = AreaOf(w);
+            Vector3 origin = transform.position, dir = Quaternion.Euler(0f, bearing, 0f) * w.AimDir;
+            Vector3 hand = origin + Vector3.up * d.chainHeight.x + dir * chainHandOffset;
+            Vector3 stone = origin + dir * (d.range * area) + Vector3.up * d.chainHeight.y;
+            Vector3 line = stone - hand;
+            float len = line.magnitude;
+            if (len < 1e-3f) return;
+            Vector3 along = line / len;
+            var look = Quaternion.LookRotation(along, Vector3.up);
+            if (w.LinkMesh == -2) w.LinkMesh = pp.RegisterMesh(d.linkMesh);
+            float run = len - d.weightOffset;
+            if (w.LinkMesh >= 0 && run > 0f && d.linkLength > 1e-3f)
+            {
+                int links = Mathf.CeilToInt(run / d.linkLength);
+                float each = run / links;
+                var stretch = new Vector3(1f, 1f, each / d.linkLength);
+                for (int k = 0; k < links; k++)
+                    pp.Orbiter(w.LinkMesh, hand + along * (each * k), look * Quaternion.Euler(0f, 0f, (k & 1) * 90f), stretch, Vector3.zero);
+            }
+            int mesh = MeshOf(w, pp);
+            if (mesh < 0) return;
+            Vector3 travel = Quaternion.Euler(0f, w.SweepTo < w.SweepFrom ? -90f : 90f, 0f) * dir;
+            pp.Orbiter(mesh, stone, look * Quaternion.Euler(0f, 0f, w.SweepT * stoneTumble), d.meshScale * Mathf.Sqrt(area), travel);
+        }
+
+        /// <summary>The model part this weapon swings (WeaponDef.modelPart, found once under the visual root) is hidden.
+        /// Only for a starting weapon: the model carries its own weapon, and another gladiator who takes the card may
+        /// have a part of the same name (the Ashen Oracle's censer has a "Chain").</summary>
+        void HidePart(WeaponInstance w)
+        {
+            if (!w.PartLooked)
+            {
+                w.PartLooked = true;
+                var root = animator != null ? animator.visualRoot : null;
+                if (root != null && !string.IsNullOrEmpty(w.Def.modelPart) && IsStarting(w.Def))
+                    w.Part = FindPart(root, w.Def.modelPart);
+            }
+            if (w.Part != null && w.Part.gameObject.activeSelf) w.Part.gameObject.SetActive(false);
+        }
+
+        bool IsStarting(WeaponDef def)
+        {
+            if (startingWeapons != null)
+                for (int i = 0; i < startingWeapons.Length; i++)
+                    if (startingWeapons[i] == def) return true;
+            return false;
+        }
+
+        static void ShowPart(WeaponInstance w)
+        {
+            if (w.Part != null && !w.Part.gameObject.activeSelf) w.Part.gameObject.SetActive(true);
+        }
+
+        static Transform FindPart(Transform t, string name)
+        {
+            if (t.name == name) return t;
+            for (int i = 0; i < t.childCount; i++)
+            {
+                var r = FindPart(t.GetChild(i), name);
+                if (r != null) return r;
+            }
+            return null;
+        }
+
+        /// <summary>The bearing of `to` seen from `aim`, on the ground (degrees, −180..180, positive to the right).</summary>
+        public static float SweepBearing(Vector3 aim, Vector3 to)
+        {
+            aim.y = 0f;
+            to.y = 0f;
+            return Vector3.SignedAngle(aim, to, Vector3.up);
+        }
+
+        /// <summary>True if `bearing` (or the same bearing a turn either way) lies between a0 and a1, in either order,
+        /// widened by `pad` degrees on each side: a chain that moved from a0 to a1 passed it.</summary>
+        public static bool SweepCovers(float a0, float a1, float bearing, float pad)
+        {
+            float lo = Mathf.Min(a0, a1) - pad, hi = Mathf.Max(a0, a1) + pad;
+            return (bearing >= lo && bearing <= hi)
+                   || (bearing - 360f >= lo && bearing - 360f <= hi)
+                   || (bearing + 360f >= lo && bearing + 360f <= hi);
+        }
+
+        /// <summary>The way a point of the chain at `outward` moves while it turns toward `sign` (+1 = toward positive
+        /// bearings, the right; −1 = the left), plus a little outward: normalize(tangent + outward × outwardMix).</summary>
+        public static Vector3 SweepPush(Vector3 outward, float sign, float outwardMix)
+        {
+            Vector3 v = Quaternion.Euler(0f, sign < 0f ? -90f : 90f, 0f) * outward + outward * outwardMix;
+            return v.sqrMagnitude > 1e-8f ? v.normalized : outward;
         }
 
         /// <summary>Throws AmountOf(w) projectiles at the nearest distinct enemies; extra shots fan out around them.</summary>

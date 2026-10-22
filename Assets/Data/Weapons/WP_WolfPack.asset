@@ -47,6 +47,15 @@ MonoBehaviour:
   prongs: 3
   prongInterval: 0.07
   summon: {fileID: 919132149155446097, guid: 26b328bae7ba8fbb286203cdbda9d515, type: 3}
+  sweepTime: 0.3
+  whirlTimeMul: 1.5
+  sweepOutward: 0.35
+  tipKnockbackMul: 1.6
+  linkMesh: {fileID: 0}
+  linkLength: 0.6
+  chainHeight: {x: 1.05, y: 0.55}
+  weightOffset: 0.33
+  modelPart: 
   hitEffects: []
   levels:
   - mods:

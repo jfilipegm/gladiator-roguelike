@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 37249f0a38d8b1b8ca6fe56af0089e43, type: 3}
+  m_Name: TR_Gore
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.GoreTrait
+  id: gore
+  displayName: Gore
+  description: 'Run into enemies head-first and you gore them: they''re hurt and tossed out of your way.'
+  minSpeed: 4
+  reach: 0.5
+  halfAngle: 60
+  ahead: 0.35
+  damage: 8
+  knockback: 10
+  forward: 0.25
+  interval: 1
+  maxHeight: 1.2
+  unchainedMinSpeed: 2.5
+  unchainedReach: 0.8
+  unchainedHalfAngle: 180
+  unchainedDamage: 14
+  unchainedInterval: 0.5
+  puff: {r: 0.95, g: 0.95, b: 0.92, a: 1}

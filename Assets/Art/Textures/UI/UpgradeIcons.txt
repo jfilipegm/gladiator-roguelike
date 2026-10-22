@@ -62,3 +62,4 @@ vow_greed 60
 vow_titans_grip 61
 vow_scholar 62
 vow_gambler 63
+weapon_labyrinth_chain 64

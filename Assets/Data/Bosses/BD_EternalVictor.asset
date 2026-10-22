@@ -151,3 +151,8 @@ MonoBehaviour:
   riseBurstWarn: 1
   remainsColor: {r: 0.89, g: 0.84, b: 0.74, a: 0.85}
   rewardFloor: 2
+  revealText: BELOW THE SAND, A CHAIN SNAPS.
+  revealUnlock: {fileID: 11400000, guid: 9c0e8f712af9a0e05b4ef59b4e1f8ed8, type: 2}
+  revealDelay: 1.2
+  revealHold: 1.8
+  revealColor: {r: 0.86, g: 0.78, b: 0.62, a: 1}

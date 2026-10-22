@@ -71,6 +71,12 @@ stubs if needed, as the boss part did). If only cards are possible, ask the prod
 "start the R2 art workers" (probably because a background bot run was still going), so a click on the card is the
 reliable path. At 19:15 a plain "please continue" from the producer (no background task running) started both waiting cards (`start_session` with their `proposal_id`) and four new `user_asked` workers at once.
 
+**Pausing and resuming workers (2026-10-21):** `stop_session` pauses a worker mid-turn (its context and worktree stay);
+`SendMessage` resumes it, and that works on any turn, not only the producer's. Use it to stay under the 5-hour limit:
+six workers at once burned ~80 %/h for their first 15 minutes (each reads the contract and design notes), then ~40 %/h.
+A worker's message to a paused peer also resumes it. Since 2026-10-22, even turns the producer started were sometimes
+treated as automated: cards are the dependable path, and the producer clicks them.
+
 ## 4. The parts of each item
 The exact split is fixed in each item's contract. This is the starting proposal, with file ownership.
 

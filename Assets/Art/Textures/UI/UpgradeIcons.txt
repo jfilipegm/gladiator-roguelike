@@ -63,3 +63,14 @@ vow_titans_grip 61
 vow_scholar 62
 vow_gambler 63
 weapon_labyrinth_chain 64
+ed_iron_hides 65
+ed_hungry_horde 66
+ed_blood_sport 67
+ed_glass_jaw 68
+ed_swift_foes 69
+ed_empty_purses 70
+ed_fickle_crowd 71
+ed_meagre_choices 72
+ed_impatient_emperor 73
+ed_champions_day 74
+ed_no_mercy 75

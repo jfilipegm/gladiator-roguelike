@@ -27,7 +27,7 @@ namespace Gladiator.UI
         /// <summary>The name slot 0 shows: the gladiator's own colours.</summary>
         public const string ClassicName = "CLASSIC";
 
-        const float ArrowX = 302f, ContentW = 536f, ChipEdge = 18f, ChipGap = 4f, ChipsToName = 12f, NameY = 21f, StatusY = -21f;
+        const float ArrowX = 302f, ContentW = 536f, ChipEdge = 18f, ChipGap = 4f, ChipsToName = 12f, NameY = 18f, StatusY = -21f; // P3: 18, not 21: a long name's ink reached 2.7 into the top padding
         const float BuyW = 420f, BuyX = -40f, BuyH = 44f;
         static readonly Vector2 ArrowHit = new Vector2(64f, 96f);
 

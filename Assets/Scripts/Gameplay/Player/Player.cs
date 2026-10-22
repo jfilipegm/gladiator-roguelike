@@ -64,9 +64,7 @@ namespace Gladiator.Gameplay
             var frame = _source.Read();
 
             if (frame.PausePressed && !IsBotControlled && !GameOptions.PanelOwnsInput && (InputEnabled || _paused)) SetPaused(!_paused); // screens that block input own Esc
-            if (_paused && !IsBotControlled && !GameOptions.PanelOwnsInput && UnityEngine.InputSystem.Mouse.current != null &&
-                UnityEngine.InputSystem.Mouse.current.leftButton.wasPressedThisFrame)
-                SetPaused(false);
+            // P3: a click no longer resumes: the pause page's RESUME / OPTIONS / MAIN MENU plates are the commands
 
             if (!InputEnabled || _paused) frame = default;
             Input = frame;

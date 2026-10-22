@@ -246,6 +246,7 @@ namespace Gladiator.UI
             _hpFill = Trough("HpBar", canvas, th.hp, tl, ml, new Vector2(barLeft, hpY), new Vector2(right - barLeft, HpRowH));
             _hpText = UiKit.Text("HpText", _hpFill.transform.parent, "100 / 100", TextRole.Number, 26f, Color.white, TextAlignmentOptions.Midline, mid, mid,
                 Vector2.zero, new Vector2(right - barLeft, HpRowH), TextLook.Outline);
+            UiAudit.ExemptPadding(_hpText); // a readout printed on its bar (outlined), not a label inside the trough's padding
 
             _bloodFill = Trough("BloodBar", canvas, BloodColor, tl, ml, new Vector2(barLeft, bloodY), new Vector2(BloodBarW, BloodBarH));
             _bloodFill.fillAmount = 0f;
@@ -767,10 +768,12 @@ namespace Gladiator.UI
         {
             var t = label as TMP_Text;
             if (t == null) return default;
-            t.ForceMeshUpdate();
-            var b = t.textBounds;
-            var a = t.rectTransform.TransformPoint(b.min);
-            var c = t.rectTransform.TransformPoint(b.max);
+            // the glyphs' ink (as UiAudit measures), not TMP's ascent-to-descent textBounds: the icons centre on what you see
+            Vector3 min, max;
+            if (UiAudit.TryInkBounds(t, out var ink)) { min = ink.min; max = ink.max; }
+            else { t.ForceMeshUpdate(); min = t.textBounds.min; max = t.textBounds.max; }
+            var a = t.rectTransform.TransformPoint(min);
+            var c = t.rectTransform.TransformPoint(max);
             return Rect.MinMaxRect(Mathf.Min(a.x, c.x), Mathf.Min(a.y, c.y), Mathf.Max(a.x, c.x), Mathf.Max(a.y, c.y));
         }
 

@@ -85,3 +85,7 @@ MonoBehaviour:
   bannerQuickRoll: 0.15
   bannerSwayDegrees: 1.4
   bannerOvershoot: 0.05
+  bannerWaveAmplitude: 0.07
+  bannerWaveLength: 0.55
+  bannerWaveSpeed: 1.8
+  bannerWaveDecay: 0.45

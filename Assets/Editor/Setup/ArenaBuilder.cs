@@ -286,6 +286,10 @@ namespace Gladiator.EditorTools
                 bookie.arenaCenter = layout.center;
                 bookie.model = AssetDatabase.LoadAssetAtPath<GameObject>(BookmakerModel);
                 bookie.material = AssetDatabase.LoadAssetAtPath<Material>(LookSetup.CharMat);
+                // W1: his book (E in his ring) beside the run's other panels; only arenas with a bookmaker have one
+                var book = new GameObject("WagerPanel").AddComponent<Gladiator.UI.WagerPanel>();
+                var runRoot = GameObject.Find("[Run]");
+                book.transform.SetParent(runRoot != null ? runRoot.transform : arena, false);
             }
 
             if (spots && (layout.secrets & ArenaSecrets.AshenStranger) != 0) // Phase 5.12: the Ashen Oracle's secret

@@ -227,7 +227,7 @@ namespace Gladiator.Tests
             var first = ScreenRect(ladder.Tile(0));
             var next = ScreenRect(ladder.Tile(1));
             var below = ScreenRect(ladder.Tile(ArenaLadder.Columns));
-            Assert.AreEqual(first.center.y, next.center.y, 6f, "the Slave Pit and the next arena share the top row (the pick stands a little lifted)");
+            Assert.AreEqual(first.center.y, next.center.y, 10f, "the Slave Pit and the next arena share the top row (the pick stands 8 lifted)");
             Assert.Less(first.center.x, next.center.x, "climb order runs left to right");
             Assert.Less(below.center.y, first.center.y, "the fourth arena starts the second row");
             Assert.AreEqual(first.center.x, below.center.x, 0.5f, "under the first");

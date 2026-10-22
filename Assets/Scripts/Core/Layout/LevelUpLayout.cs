@@ -22,8 +22,8 @@ namespace Gladiator.Core
 
         /// <summary>Room kept above and below the content: its scale is (H − 40) / 900, at most 1.</summary>
         public const float VerticalMargin = 40f;
-        /// <summary>The columns at scale 1: their height at most, and their top above the canvas centre (y 186 at 1080).</summary>
-        public const float StatsH = 730f, StatsTop = 354f;
+        /// <summary>The columns at scale 1: their height at most, and their top above the canvas centre (y 207 at 1080).</summary>
+        public const float StatsH = 730f, StatsTop = 333f; // P3 integration: 333, not 354, so both columns clear the HUD's plates (top at y 207 at 1080)
 
         /// <summary>The pause lines up with a level-up of this many cards (the same fit: P3-contract item 1).</summary>
         public const int PauseCards = 3;

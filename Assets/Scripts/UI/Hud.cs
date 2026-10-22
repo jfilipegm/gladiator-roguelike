@@ -174,6 +174,7 @@ namespace Gladiator.UI
         // R7: the edicts in effect, one 28 px icon each on a dark chip, centred under the timer
         Transform _canvas;
         RectTransform _edictRow;
+        CanvasGroup _edictGroup, _stripGroup;
         int _edictIcons;
         const float EdictIcon = 28f, EdictPlate = 30f, EdictGap = 4f, EdictTop = -91f;
         static readonly Color EdictHurt = new Color(1f, 0.33f, 0.2f);
@@ -336,8 +337,16 @@ namespace Gladiator.UI
             BuildStatusPlate(canvas, th);
             BuildLevelPlate(canvas, th);
 
+            // P3 integration: the build strip and synergy chips under one fading group (the level-up's and the pause's
+            // inventory column stands where they are and shows the same items)
+            var stripRoot = UiFactory.Rect("Strip", canvas, Vector2.zero, Vector2.zero, Vector2.zero, Vector2.zero);
+            UiFactory.Stretch(stripRoot, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            _stripGroup = stripRoot.gameObject.AddComponent<CanvasGroup>();
+            _stripGroup.blocksRaycasts = false;
+            var strip = (Transform)stripRoot;
+
             var loanPos = new Vector2(StripLeft + WeaponTiles * TilePitch + 10, _weaponRowY);
-            Tile("LoanTile", canvas, loanPos, out _loanChip, out _loanBorder, out _loanInner, out _loanIcon, out _loanGlyph);
+            Tile("LoanTile", strip, loanPos, out _loanChip, out _loanBorder, out _loanInner, out _loanIcon, out _loanGlyph);
             _loanInner.type = Image.Type.Filled;
             _loanInner.fillMethod = Image.FillMethod.Vertical;
             _loanTime = UiKit.Text("Time", _loanChip.transform, "", TextRole.Number, 18f, FavorHot, TextAlignmentOptions.BottomRight, new Vector2(1, 0), new Vector2(1, 0),
@@ -348,7 +357,7 @@ namespace Gladiator.UI
             for (int i = 0; i < StripTiles; i++)
             {
                 var pos = i < WeaponTiles ? new Vector2(StripLeft + i * TilePitch, _weaponRowY) : new Vector2(StripLeft + (i - WeaponTiles) * TilePitch, _boonRowY);
-                Tile("Tile" + i, canvas, pos, out _tileChip[i], out _tileBorder[i], out _tileInner[i], out _tileIcon[i], out _tileGlyph[i]);
+                Tile("Tile" + i, strip, pos, out _tileChip[i], out _tileBorder[i], out _tileInner[i], out _tileIcon[i], out _tileGlyph[i]);
                 _tileLevel[i] = AutoSize(UiKit.Text("Level", _tileChip[i].transform, "", TextRole.Number, 20f, _goldBright, TextAlignmentOptions.BottomRight,
                     new Vector2(1, 0), new Vector2(1, 0), new Vector2(-3, 1), new Vector2(TileSize - 2f, 22f), TextLook.Outline), 18f, 20f);
                 PreSize(_tileGlyph[i], "WWWW");
@@ -357,7 +366,7 @@ namespace Gladiator.UI
             var ml = new Vector2(0f, 0.5f);
             for (int j = 0; j < SynergyChips; j++)
             {
-                _chip[j] = UiKit.Frame("Synergy" + j, canvas, FrameKind.Chip, tl, tl, new Vector2(ChipLeft, _chipTop), new Vector2(144, ChipH), Color.clear);
+                _chip[j] = UiKit.Frame("Synergy" + j, strip, FrameKind.Chip, tl, tl, new Vector2(ChipLeft, _chipTop), new Vector2(144, ChipH), Color.clear);
                 _chipIcon[j] = new UpgradeIconView(_chip[j].transform, "Icon", ml, new Vector2(ChipIconLeft, 0), ChipIconSize, lively: false);
                 _chipText[j] = UiKit.Text("Name", _chip[j].transform, "", TextRole.Title, 18f, ChipText, TextAlignmentOptions.Left, ml, ml,
                     new Vector2(ChipNameLeft, 1), new Vector2(110, 26));
@@ -392,16 +401,17 @@ namespace Gladiator.UI
             _toast.alpha = 0f;
             // the callout: every announcer line that isn't a banner (streaks, roars, close calls, gifts, lines), under the
             // banner. Constant strings, so swapping them never allocates.
-            _announce = AutoSize(UiKit.Text("Announce", canvas, "THE PACK IS LOOSE!", TextRole.Shout, 48f, Color.white, TextAlignmentOptions.Center, top, top,
-                new Vector2(0, -383), new Vector2(1100, 64), TextLook.Outline), 30f, 48f);
-            _announce.alpha = 0f;
             // the banner hangs under the boss bar: crossbar top at y 207 (it has its own canvas: its motion re-batches only itself)
             // under a group that hides it while the game is paused: frozen mid-sway it would hang behind PAUSED or LEVEL UP!
+            // P3 integration: the callout sits in the same group (a frozen "GORM FALLS!" showed between the reward's cards)
             var holder = new GameObject("BannerHolder", typeof(RectTransform), typeof(CanvasGroup));
             holder.transform.SetParent(canvas, false);
             UiFactory.Stretch((RectTransform)holder.transform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             _bannerGroup = holder.GetComponent<CanvasGroup>();
             _bannerGroup.blocksRaycasts = _bannerGroup.interactable = false;
+            _announce = AutoSize(UiKit.Text("Announce", holder.transform, "THE PACK IS LOOSE!", TextRole.Shout, 48f, Color.white, TextAlignmentOptions.Center, top, top,
+                new Vector2(0, -383), new Vector2(1100, 64), TextLook.Outline), 30f, 48f);
+            _announce.alpha = 0f;
             _banner = new VexillumBanner(holder.transform, top, new Vector2(0f, -207f));
 
             var introRoot = new GameObject("Intro", typeof(RectTransform), typeof(CanvasGroup));
@@ -510,6 +520,8 @@ namespace Gladiator.UI
             var left = new Vector2(0f, 0.5f);
             var mid = new Vector2(0.5f, 0.5f);
             _edictRow = UiFactory.Rect("Edicts", _canvas, top, top, new Vector2(0f, EdictTop), new Vector2(w, EdictPlate));
+            _edictGroup = _edictRow.gameObject.AddComponent<CanvasGroup>(); // hides with the timer (LEVEL UP! / PAUSED sit there)
+            _edictGroup.blocksRaycasts = false;
             for (int i = 0; i < n; i++)
             {
                 var d = active[i];
@@ -836,6 +848,8 @@ namespace Gladiator.UI
             // the clock is frozen under the cards and LEVEL UP! (or PAUSED) sits over it: hide it until they close
             float timerAlpha = (LevelUpController.Instance != null && LevelUpController.Instance.IsOpen) || (player != null && player.IsPaused) ? 0f : 1f;
             if (_timer.alpha != timerAlpha) _timer.alpha = timerAlpha;
+            if (_edictGroup != null && _edictGroup.alpha != timerAlpha) _edictGroup.alpha = timerAlpha;
+            if (_stripGroup.alpha != timerAlpha) _stripGroup.alpha = timerAlpha;
 
             DrawInteractables(run);
             DrawFavor(unscaledDt);

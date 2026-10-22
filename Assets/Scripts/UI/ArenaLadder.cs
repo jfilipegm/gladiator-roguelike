@@ -51,13 +51,16 @@ namespace Gladiator.UI
         public const float DioramaRoom = 300f;
         /// <summary>How much an arena's palette colour is lightened on its tile (the names stay ≥ 3:1 on every family).</summary>
         const float FaceLighten = 0.35f;
-        const float Lift = 4f, NameMax = 22f, NameMin = 18f, NumeralSize = 26f;
+        const float ThumbRest = 0.55f, ThumbHover = 0.8f;
+        const float Lift = 8f, NameMax = 22f, NameMin = 18f, NumeralSize = 26f;
         static readonly Vector2 Thumb = new Vector2(192f, 108f);
 
         Step[] _steps = Array.Empty<Step>();
         RectTransform[] _tiles = Array.Empty<RectTransform>();
         Image[] _faces = Array.Empty<Image>(), _wreaths = Array.Empty<Image>();
         Color[] _faceColors = Array.Empty<Color>();
+        RawImage[] _thumbs = Array.Empty<RawImage>();
+        Color[] _thumbColors = Array.Empty<Color>();
         Button[] _buttons = Array.Empty<Button>();
         TextMeshProUGUI[] _names = Array.Empty<TextMeshProUGUI>();
         Vector2[] _home = Array.Empty<Vector2>();
@@ -144,6 +147,8 @@ namespace Gladiator.UI
             _tiles = new RectTransform[n];
             _faces = new Image[n];
             _faceColors = new Color[n];
+            _thumbs = new RawImage[n];
+            _thumbColors = new Color[n];
             _wreaths = new Image[n];
             _buttons = new Button[n];
             _names = new TextMeshProUGUI[n];
@@ -190,6 +195,8 @@ namespace Gladiator.UI
             var thumb = UiFactory.Rect("Thumbnail", t, mid, mid, thumbAt, Thumb).gameObject.AddComponent<RawImage>();
             thumb.raycastTarget = false;
             SetThumbnail(thumb, s.Run, s.Open, Accent[family]);
+            _thumbs[i] = thumb;
+            _thumbColors[i] = thumb.color;
             if (!s.Open) UiFactory.Image("Padlock", t, Color.white, mid, mid, thumbAt, new Vector2(28f, 36f), PixelIcons.Lock);
 
             // under it: the numeral (in the laurel once the boss has fallen), then the name on up to two lines; every word
@@ -279,6 +286,11 @@ namespace Gladiator.UI
                 _faces[i].color = new Color(c.r * k, c.g * k, c.b * k, 1f);
                 var at = _home[i] + (picked ? new Vector2(0f, Lift) : Vector2.zero);
                 if (_tiles[i].anchoredPosition != at) _tiles[i].anchoredPosition = at;
+                // P3 integration: the picked arena's picture stays bright and the rest dim (a 10 % brighter face read
+                // as nothing against the arenas' own tints)
+                float d = picked ? 1f : i == _hover ? ThumbHover : ThumbRest;
+                var tc = _thumbColors[i];
+                if (_thumbs[i] != null) _thumbs[i].color = new Color(tc.r * d, tc.g * d, tc.b * d, tc.a);
             }
         }
     }

@@ -69,6 +69,7 @@ namespace Gladiator.Gameplay
         public static string LastLoadPath { get; private set; }
         /// <summary>Tests: stands in for -runSeed's parsed value (null = read the command line). Clear() resets it.</summary>
         public static uint? RunSeedOverride;
+        public static SkinDef Skin { get; set; } // R6-STUB(b)
 
         static uint _freshCount;
 

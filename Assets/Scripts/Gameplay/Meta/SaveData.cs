@@ -83,6 +83,7 @@ namespace Gladiator.Gameplay
         // R7 Edicts (save v2; filled by Migrate in older files).
         /// <summary>RunModifierDef ids the player last chose on the arena screen (remembered between runs).</summary>
         public List<string> edictsChosen = new List<string>();
+        public List<string> equippedSkins = new List<string>(); // R6-STUB(b)
         /// <summary>RunModifierDef id → won runs with that edict on.</summary>
         public List<IdCount> edictWins = new List<IdCount>();
         /// <summary>The most edicts on in one won run (the WinWithEdicts condition, the Codex's Records).</summary>

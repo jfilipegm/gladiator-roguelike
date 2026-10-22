@@ -439,5 +439,38 @@ namespace Gladiator.Gameplay
             Debug.Log("[Meta] daily " + date + ": the scored attempt starts");
             return true;
         }
+
+        // R6-STUB(b) begin: stand-ins for R6-B's skin rules (docs/tracks/R7-contract.md, "R6-B data + loadout")
+        public static bool IsOwned(SkinDef s, SaveData d) => s != null && (s.unlock == null || d.IsUnlocked(s.unlock.id));
+        public static bool IsOwned(SkinDef s) => IsOwned(s, Data);
+        public static SkinDef EquippedSkin(GladiatorDef g, MetaConfig meta, SaveData d)
+        {
+            if (g == null || meta == null || d?.equippedSkins == null) return null;
+            foreach (var s in meta.skins) if (s != null && s.gladiator == g && d.equippedSkins.Contains(s.id) && IsOwned(s, d)) return s;
+            return null;
+        }
+        public static SkinDef EquippedSkin(GladiatorDef g, MetaConfig meta) => EquippedSkin(g, meta, Data);
+        public static bool Equip(SkinDef s)
+        {
+            if (s == null || !IsOwned(s)) return false;
+            Data.equippedSkins.RemoveAll(id => id.StartsWith(s.gladiator.id + "_"));
+            Data.equippedSkins.Add(s.id);
+            SaveSystem.Save(Data);
+            return true;
+        }
+        public static void Unequip(GladiatorDef g)
+        {
+            if (g == null) return;
+            Data.equippedSkins.RemoveAll(id => id.StartsWith(g.id + "_"));
+            SaveSystem.Save(Data);
+        }
+        public static int SkinsOf(GladiatorDef g, MetaConfig meta, List<SkinDef> into)
+        {
+            int n = 0;
+            if (g == null || meta == null) return 0;
+            foreach (var s in meta.skins) if (s != null && s.gladiator == g) { into?.Add(s); n++; }
+            return n;
+        }
+        // R6-STUB(b) end
     }
 }

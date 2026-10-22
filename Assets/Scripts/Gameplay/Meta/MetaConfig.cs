@@ -42,6 +42,8 @@ namespace Gladiator.Gameplay
         [Tooltip("Scored dailies kept in the save's ledger (the oldest drop off).")]
         public int dailyLedger = 30;
 
+        [Header("Skins (R6)")] public SkinDef[] skins = Array.Empty<SkinDef>(); // R6-STUB(b)
+
         /// <summary>The run's Renown before its edicts: time, kills, the boss, victory, × the arena's depth.</summary>
         public int BaseRenownFor(in RunSummary run) => Mathf.Max(0, Mathf.RoundToInt(BaseRenown(run)));
 

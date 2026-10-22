@@ -8,7 +8,9 @@ namespace Gladiator.UI
     /// <summary>
     /// U1 dev scene (Assets/Scenes/Dev/UiGallery.unity, built by Gladiator/Setup/Dev/Build UI Gallery): the theme on one
     /// screen per page, for tuning the frames, fonts and material looks and for the producer's screenshots.
-    /// Pages 1-2 FRAMES: every FrameKind at two sizes with its name (buttons to cards; shields to laurels). Page 3 TYPE:
+    /// Pages 1-2 FRAMES: every FrameKind at two sizes with its name (buttons to cards; shields to the P3 icons); page 2
+    /// ends with the P3 row (focused bronze and marble plates in their AnsataGlow, a Codex-style tab with the NEW seal, the
+    /// pilum arrows, the HUD row with each icon at 32×32 beside its trough or number). Page 3 TYPE:
     /// each role in each look, plates in the four states and with key chips, a trough at 70 %, laurels beside VICTORY!,
     /// meander, rule, chips, scuta, wax and mosaic. Page 4 CARDS: the four card frames at 300×520 with a live icon, the
     /// selected one ringed. A banner drops at the top every few seconds, crimson then purple. Tab / PageDown / 1-4 switch
@@ -32,12 +34,14 @@ namespace Gladiator.UI
         [Tooltip("Seconds between banners (they alternate crimson and purple).")]
         public float bannerEvery = 4f;
 
-        static readonly string[] PageNames = { "FRAMES: PLATES, PANELS, CARDS", "FRAMES: SHIELDS, BANNER, BARS, LAUREL", "TYPE AND PLATES", "CARDS" };
+        static readonly string[] PageNames = { "FRAMES: PLATES, PANELS, CARDS", "FRAMES: SHIELDS, BANNER, BARS, LAUREL, P3", "TYPE AND PLATES", "CARDS" };
 
         public int Page { get; private set; }
         public VexillumBanner Banner { get; private set; }
         /// <summary>Plates on the TYPE page: Primary Normal/Focused/Pressed/Disabled, then Secondary, then the keyed three.</summary>
         public UiPlate[] Plates { get; private set; }
+        /// <summary>The P3 row's focused plates (bronze, marble) with the AnsataGlow, and its Codex-style tab.</summary>
+        public UiPlate[] P3Plates { get; private set; }
 
         Canvas _canvas;
         RectTransform _canvasRt;
@@ -114,7 +118,8 @@ namespace Gladiator.UI
                 _groups[i] = _pages[i].gameObject.AddComponent<CanvasGroup>();
             }
             BuildFrames(_pages[0], theme, 0, (int)FrameKind.Scutum);
-            BuildFrames(_pages[1], theme, (int)FrameKind.Scutum, UiFrames.KindCount);
+            float p3Top = BuildFrames(_pages[1], theme, (int)FrameKind.Scutum, UiFrames.KindCount);
+            BuildP3(_pages[1], theme, p3Top);
             BuildType(_pages[2], theme);
             BuildCards(_pages[3], theme);
             Banner = new VexillumBanner(_canvas.transform, Top, new Vector2(0f, -16f));
@@ -147,11 +152,17 @@ namespace Gladiator.UI
                 case FrameKind.Trough: return new[] { new Vector2(200, 24), new Vector2(300, 36) };
                 case FrameKind.Chip: return new[] { new Vector2(60, 30), new Vector2(120, 36) };
                 case FrameKind.KeyChip: return new[] { new Vector2(36, 36), new Vector2(48, 48) };
+                case FrameKind.AnsataGlow: return new[] { new Vector2(252, 78), new Vector2(312, 92) }; // round 240×66 and 300×80 plates
+                case FrameKind.SealNew: return new[] { new Vector2(36, 36), new Vector2(24, 24) };
+                case FrameKind.ArrowLeft: case FrameKind.ArrowRight: return new[] { new Vector2(48, 36), new Vector2(32, 24) };
+                case FrameKind.IconHeart: case FrameKind.IconAureus: case FrameKind.IconSkullGalea:
+                    return new[] { new Vector2(48, 48), new Vector2(32, 32) }; // the HUD shows them at 32×32 (2 units per art px)
                 default: return new[] { n, n * (2f / 3f) }; // simple kinds: native and two thirds
             }
         }
 
-        void BuildFrames(RectTransform page, UiTheme theme, int from, int to)
+        /// <summary>Lays the kinds out in rows below the banner; returns the y below the last row's names.</summary>
+        float BuildFrames(RectTransform page, UiTheme theme, int from, int to)
         {
             float x = 24f, y = -170f, rowH = 0f; // below the banner
             for (int i = from; i < to; i++)
@@ -169,7 +180,7 @@ namespace Gladiator.UI
                     }
                     var tint = Color.white;
                     if (k == FrameKind.Halo) tint = rarityColors[s == 0 ? 2 : 3];
-                    if (k == FrameKind.Focus) tint = s == 0 ? Color.white : theme.gold;
+                    if (k == FrameKind.Focus || k == FrameKind.AnsataGlow) tint = s == 0 ? Color.white : theme.gold;
                     if (k == FrameKind.TroughFill) tint = theme.hp;
                     var img = UiKit.Frame(k + "_" + s, page, k, TopLeft, TopLeft, new Vector2(x, y), size, tint);
                     if (k == FrameKind.LaurelBranch && s == 1) img.rectTransform.localScale = new Vector3(-1f, 1f, 1f);
@@ -181,6 +192,52 @@ namespace Gladiator.UI
                     rowH = Mathf.Max(rowH, size.y + (k == FrameKind.Trough ? 30f : 0f));
                 }
             }
+            return y - rowH - 30f;
+        }
+
+        // ---- page 2's P3 row: the new kinds where they are used ------------------------------------------------------
+
+        void BuildP3(RectTransform page, UiTheme theme, float top)
+        {
+            UiKit.Text("P3Title", page, "P3", TextRole.Title, 18f, theme.ink, TextAlignmentOptions.TopLeft, TopLeft, TopLeft,
+                new Vector2(24f, top), new Vector2(150f, 24f), TextLook.Outline);
+            float cy = top - 80f; // the row's centre line: every piece is vertically centred on it
+            P3Plates = new UiPlate[3];
+            var plate = new Vector2(240f, 66f);
+            P3Plates[0] = UiKit.Plate("P3Bronze", page, "PLAY", ButtonStyle.Primary, TopLeft, TopLeft, new Vector2(30f, cy + 33f), plate);
+            P3Plates[1] = UiKit.Plate("P3Marble", page, "CODEX", ButtonStyle.Secondary, TopLeft, TopLeft, new Vector2(312f, cy + 33f), plate);
+            for (int i = 0; i < 2; i++)
+            {
+                UiFrames.Apply(P3Plates[i].Focus, FrameKind.AnsataGlow); // the shape-following glow, plate size + 12
+                P3Plates[i].Focus.rectTransform.sizeDelta = plate + new Vector2(12f, 12f);
+                P3Plates[i].SetState(UiState.Focused);
+            }
+
+            // a Codex-style tab with the NEW seal on its top-right corner, over the last letter
+            var tab = new Vector2(200f, 56f);
+            P3Plates[2] = UiKit.Plate("P3Tab", page, "ARSENAL", ButtonStyle.Secondary, TopLeft, TopLeft, new Vector2(600f, cy + 28f), tab, 26f);
+            UiKit.Frame("P3Seal", P3Plates[2].Root, FrameKind.SealNew, Vector2.one, Mid, new Vector2(-39f, -4f),
+                UiFrames.NativeSize(FrameKind.SealNew), Color.white);
+
+            // the pager: the pilum arrows round a page count
+            UiKit.Frame("P3ArrowLeft", page, FrameKind.ArrowLeft, TopLeft, TopLeft, new Vector2(840f, cy + 18f), new Vector2(48f, 36f), Color.white);
+            UiKit.Text("P3Page", page, "1 / 3", TextRole.Title, 24f, theme.ink, TextAlignmentOptions.Center, TopLeft, TopLeft,
+                new Vector2(888f, cy + 18f), new Vector2(88f, 36f), TextLook.Outline);
+            UiKit.Frame("P3ArrowRight", page, FrameKind.ArrowRight, TopLeft, TopLeft, new Vector2(976f, cy + 18f), new Vector2(48f, 36f), Color.white);
+
+            // the HUD row on a bronze plate: icon (32×32) + trough + number, icon + gold, icon + kills
+            UiKit.Frame("P3Hud", page, FrameKind.Bronze, TopLeft, TopLeft, new Vector2(1060f, cy + 46f), new Vector2(820f, 92f), Color.white);
+            var icon = new Vector2(32f, 32f);
+            UiKit.Frame("P3Heart", page, FrameKind.IconHeart, TopLeft, TopLeft, new Vector2(1090f, cy + 16f), icon, Color.white);
+            UiKit.Bar("P3Hp", page, theme.hp, TopLeft, TopLeft, new Vector2(1132f, cy + 15f), new Vector2(260f, 30f)).fillAmount = 0.7f;
+            UiKit.Text("P3HpText", page, "86 / 120", TextRole.Number, 24f, theme.ink, TextAlignmentOptions.Center, TopLeft, TopLeft,
+                new Vector2(1132f, cy + 15f), new Vector2(260f, 30f), TextLook.Outline);
+            UiKit.Frame("P3Coin", page, FrameKind.IconAureus, TopLeft, TopLeft, new Vector2(1420f, cy + 16f), icon, Color.white);
+            UiKit.Text("P3Gold", page, "1,250", TextRole.Number, 28f, theme.coin, TextAlignmentOptions.MidlineLeft, TopLeft, TopLeft,
+                new Vector2(1462f, cy + 18f), new Vector2(150f, 36f), TextLook.Outline);
+            UiKit.Frame("P3Skull", page, FrameKind.IconSkullGalea, TopLeft, TopLeft, new Vector2(1630f, cy + 16f), icon, Color.white);
+            UiKit.Text("P3Kills", page, "2,417", TextRole.Number, 28f, theme.ink, TextAlignmentOptions.MidlineLeft, TopLeft, TopLeft,
+                new Vector2(1672f, cy + 18f), new Vector2(150f, 36f), TextLook.Outline);
         }
 
         // ---- page 3: type in each role and look, plates, bars, laurels ------------------------------------------------

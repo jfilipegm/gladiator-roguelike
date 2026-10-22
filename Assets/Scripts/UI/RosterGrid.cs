@@ -8,10 +8,11 @@ using UnityEngine.UI;
 namespace Gladiator.UI
 {
     /// <summary>
-    /// The roster as a grid of tesserae (R9, the producer's playtest: "a square with their face"). A tessera gladiatoria
-    /// was the bone token a gladiator got after his first fights: each tile is one, a cord hole in its head, the portrait
-    /// set into it and the name carved below. Open: ivory. Locked: dark and cracked, the portrait a black silhouette,
-    /// "???". Picked: a gold frame, a gold wreath hung on the cord and a small lift. Hovered: a pale frame.
+    /// The roster as a grid of shields (U1, the producer's pick; R9 had bone tesserae): each tile is a scutum, the
+    /// legionary's curved shield, with the portrait set into a round clipeus at its centre (the Roman portrait shield),
+    /// the gold spine above it and the name on the shield's lower band. Open: the gold-rimmed `Scutum`. Locked: dark iron
+    /// (`ScutumLocked`, `ClipeusLocked`), the portrait a black silhouette, "???". Picked: a gold focus ring, a gold
+    /// wreath on the shield's top and a small lift. Hovered: a pale ring.
     /// The gladiator select and the Codex's GLADIATORS tab both use it. Nothing slides: the grid is scaled to fit its
     /// column (MenuLayout). Built once; picks and hovers only recolour and move tiles (no allocation).
     /// Open tiles' buttons are named "Card" and locked ones "Locked" (a test clicks the earned gladiators' cards).
@@ -35,19 +36,15 @@ namespace Gladiator.UI
         public static readonly Color Pale = new Color32(0xF5, 0xF1, 0xE8, 0xC0);
         public static readonly Color Carved = new Color32(0x4A, 0x33, 0x24, 0xFF);
         public static readonly Color CarvedLocked = new Color(0.9f, 0.86f, 0.78f, 0.45f);
-        static readonly Color Backdrop = new Color32(0xD2, 0xAE, 0x78, 0xFF);
-        static readonly Color BackdropLocked = new Color32(0x5F, 0x5C, 0x58, 0xFF);
-        static readonly Color WindowRim = new Color32(0x94, 0x65, 0x3F, 0xFF);
-        static readonly Color WindowRimLocked = new Color32(0x1E, 0x1B, 0x19, 0xFF);
         /// <summary>A locked picture: the portrait tinted to ink.</summary>
         public static readonly Color Silhouette = new Color32(0x1E, 0x1B, 0x19, 0xFF);
 
-        const float Face = 128f, Lift = 4f, FrameBand = 7f; // lift + band stay inside the 12-unit gap
+        // the shield's bands (canvas units, the tile's centre at 0): the name on the lower band, the clipeus above it
+        const float Lift = 4f, Ring = 6f, TopInset = 14f, BottomInset = 12f, NameH = 48f, NameW = 132f, SpineW = 6f;
 
-        readonly TMP_FontAsset _font;
         Slot[] _slots = Array.Empty<Slot>();
         RectTransform[] _tiles = Array.Empty<RectTransform>(), _frames = Array.Empty<RectTransform>();
-        Image[] _frameImages = Array.Empty<Image>(), _wreaths = Array.Empty<Image>(), _dots = Array.Empty<Image>();
+        Image[] _frameImages = Array.Empty<Image>(), _wreaths = Array.Empty<Image>(), _dots = Array.Empty<Image>(), _shields = Array.Empty<Image>();
         Button[] _buttons = Array.Empty<Button>();
         TextMeshProUGUI[] _names = Array.Empty<TextMeshProUGUI>();
         RawImage[] _faces = Array.Empty<RawImage>();
@@ -57,7 +54,8 @@ namespace Gladiator.UI
         int _pick = -1, _hover = -1;
         Action<int> _onClick;
 
-        public RosterGrid(TMP_FontAsset font) => _font = font;
+        /// <summary>The font argument is ignored (U1: the theme decides).</summary>
+        public RosterGrid(TMP_FontAsset font) { }
 
         /// <summary>The roster in the screens' order: the earned gladiators, then the locked ones (both in roster order),
         /// then those that aren't data yet.</summary>
@@ -97,6 +95,12 @@ namespace Gladiator.UI
         public bool HasNew(int i) => i >= 0 && i < _dots.Length && _dots[i].enabled;
         /// <summary>The name carved on tile `i` ("???" while locked).</summary>
         public string NameOf(int i) => i >= 0 && i < _names.Length ? _names[i].text : null;
+        /// <summary>Tests: the shield tile `i` is drawn on (`FrameKind.Scutum` open, `ScutumLocked` locked; -1 out of range).</summary>
+        public int TileFrame(int i) => i >= 0 && i < _shields.Length ? UiFrames.KindOf(_shields[i]) : -1;
+        /// <summary>Tests: tile `i`'s name label (its theme role).</summary>
+        public Component NameLabel(int i) => i >= 0 && i < _names.Length ? _names[i] : null;
+        /// <summary>Tests: the colour of tile `i`'s focus ring (gold picked, pale hovered, clear otherwise).</summary>
+        public Color RingColor(int i) => _frameImages[i].color;
         /// <summary>Tests: the picture tile `i` shows: what SetPortrait put there, else its gladiator's baked portrait.</summary>
         public Sprite PortraitOf(int i)
         {
@@ -122,6 +126,7 @@ namespace Gladiator.UI
             _tiles = new RectTransform[n];
             _frames = new RectTransform[n];
             _frameImages = new Image[n];
+            _shields = new Image[n];
             _wreaths = new Image[n];
             _dots = new Image[n];
             _buttons = new Button[n];
@@ -136,57 +141,66 @@ namespace Gladiator.UI
         void BuildTile(int i, CodexConfig codex)
         {
             var s = _slots[i];
+            var th = UiTheme.Current;
             var tile = MenuLayout.Tile;
             var topLeft = new Vector2(0f, 1f);
             var mid = new Vector2(0.5f, 0.5f);
             var c = GridMath.Cell(i, Columns, tile, MenuLayout.Gap);
             _home[i] = c;
 
-            // the frame behind: a band round the tessera while it's hovered or picked
-            var frame = UiFactory.Image("Frame", Root, Color.clear, topLeft, mid, c, tile + new Vector2(FrameBand * 2f, FrameBand * 2f), PixelIcons.Plate);
-            frame.type = Image.Type.Sliced;
+            // the focus ring round the shield while it's hovered or picked
+            var frame = UiKit.Frame("Frame", Root, FrameKind.Focus, topLeft, mid, c, tile + new Vector2(Ring * 2f, Ring * 2f), Color.clear);
             _frameImages[i] = frame;
             _frames[i] = frame.rectTransform;
 
-            // the tessera; its Button takes the click (the pictures and words on it ignore the pointer)
-            var bone = UiFactory.Image(s.Open ? "Card" : "Locked", Root, s.Open ? Bone : BoneLocked, topLeft, mid, c, tile, PixelIcons.Tessera);
-            bone.type = Image.Type.Sliced;
-            bone.raycastTarget = true;
-            var button = bone.gameObject.AddComponent<Button>();
+            // the shield; its Button takes the click (the pictures and words on it ignore the pointer)
+            var shield = UiKit.Frame(s.Open ? "Card" : "Locked", Root, s.Open ? FrameKind.Scutum : FrameKind.ScutumLocked, topLeft, mid, c, tile, Color.white);
+            shield.raycastTarget = true;
+            var button = shield.gameObject.AddComponent<Button>();
             button.transition = Selectable.Transition.None;
             button.navigation = new Navigation { mode = Navigation.Mode.None };
             int index = i;
             button.onClick.AddListener(() => _onClick?.Invoke(index));
-            var hover = bone.gameObject.AddComponent<UiHover>();
+            var hover = shield.gameObject.AddComponent<UiHover>();
             hover.Target = this;
             hover.Id = i;
+            _shields[i] = shield;
             _buttons[i] = button;
-            _tiles[i] = bone.rectTransform;
+            _tiles[i] = shield.rectTransform;
 
-            var t = bone.transform;
-            float top = tile.y * 0.5f;
-            UiFactory.Image("Hole", t, Color.white, mid, mid, new Vector2(0f, top - 11f), new Vector2(15f, 15f), PixelIcons.Hole);
-            float wy = top - 20f - (Face + 4f) * 0.5f;
-            UiFactory.Image("Window", t, s.Open ? WindowRim : WindowRimLocked, mid, mid, new Vector2(0f, wy), new Vector2(Face + 4f, Face + 4f), PixelIcons.White);
-            UiFactory.Image("Backdrop", t, s.Open ? Backdrop : BackdropLocked, mid, mid, new Vector2(0f, wy), new Vector2(Face, Face), PixelIcons.White);
-            var face = UiFactory.Rect("Portrait", t, mid, mid, new Vector2(0f, wy), new Vector2(Face, Face)).gameObject.AddComponent<RawImage>();
+            var t = shield.transform;
+            float top = tile.y * 0.5f, bottom = -top;
+            float nameTop = bottom + BottomInset + NameH;
+            // the clipeus between the shield's top and the name band, at its art's size (never larger than the room)
+            var ringKind = s.Open ? FrameKind.Clipeus : FrameKind.ClipeusLocked;
+            var native = UiFrames.NativeSize(ringKind);
+            float room = top - TopInset - (nameTop + 2f);
+            float edge = Mathf.Min(native.y, room);
+            float k = native.y > 0f ? edge / native.y : 1f;
+            float cy = (top - TopInset + nameTop + 2f) * 0.5f;
+            var pad = UiFrames.Padding(ringKind) * k;
+            var window = new Vector2(native.x * k - pad.x - pad.z, edge - pad.y - pad.w);
+            var windowAt = new Vector2((pad.x - pad.z) * 0.5f, cy + (pad.y - pad.w) * 0.5f);
+
+            UiKit.Frame("Spine", t, FrameKind.ScutumSpine, mid, new Vector2(0.5f, 0f), new Vector2(0f, nameTop), new Vector2(SpineW, top - TopInset - nameTop), s.Open ? Color.white : th.dust);
+            var face = UiFactory.Rect("Portrait", t, mid, mid, windowAt, window).gameObject.AddComponent<RawImage>();
             face.raycastTarget = false;
             _faces[i] = face;
             SetPortrait(face, s.Def, s.Open, codex);
-            if (!s.Open)
-                UiFactory.Image("Cracks", t, Color.white, mid, mid, new Vector2(0f, wy + 2f), new Vector2(Face * 0.75f, Face), PixelIcons.Crack);
+            UiKit.Frame("Clipeus", t, ringKind, mid, mid, new Vector2(0f, cy), new Vector2(native.x * k, edge), Color.white);
 
-            var name = UiFactory.Text("Name", t, s.Open ? TileName(s.Def) : "???", 18f, s.Open ? Carved : CarvedLocked, TextAlignmentOptions.Center,
-                mid, mid, new Vector2(0f, -top + 23f), new Vector2(tile.x - 16f, 28f), _font, null);
+            var name = UiKit.Text("Name", t, s.Open ? TileName(s.Def) : "???", TextRole.Title, 20f, s.Open ? th.ink : th.dust, TextAlignmentOptions.Center,
+                mid, mid, new Vector2(0f, bottom + BottomInset + NameH * 0.5f), new Vector2(NameW, NameH));
+            name.textWrappingMode = TextWrappingModes.Normal;
             name.enableAutoSizing = true;
-            name.fontSizeMin = 11f;
-            name.fontSizeMax = 18f;
+            name.fontSizeMin = 18f;
+            name.fontSizeMax = 20f;
             _names[i] = name;
 
             var wreath = UiFactory.Image("Wreath", t, Color.white, mid, mid, new Vector2(0f, top - 6f), new Vector2(48f, 36f), PixelIcons.Wreath);
             wreath.enabled = false;
             _wreaths[i] = wreath;
-            var dot = UiFactory.Image("New", t, Gold, mid, mid, new Vector2(tile.x * 0.5f - 16f, top - 16f), new Vector2(14f, 14f), PixelIcons.White);
+            var dot = UiFactory.Image("New", t, th.gold, mid, mid, new Vector2(tile.x * 0.5f - 18f, top - 18f), new Vector2(14f, 14f), PixelIcons.White);
             dot.enabled = false;
             _dots[i] = dot;
         }
@@ -271,10 +285,11 @@ namespace Gladiator.UI
 
         void Refresh()
         {
+            var gold = UiTheme.Current.gold;
             for (int i = 0; i < _tiles.Length; i++)
             {
                 bool picked = i == _pick;
-                _frameImages[i].color = picked ? Gold : i == _hover ? Pale : Color.clear;
+                _frameImages[i].color = picked ? gold : i == _hover ? Pale : Color.clear;
                 _wreaths[i].enabled = picked && _slots[i].Open;
                 var at = _home[i] + (picked ? new Vector2(0f, Lift) : Vector2.zero);
                 if (_tiles[i].anchoredPosition != at)

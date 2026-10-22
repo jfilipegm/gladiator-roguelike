@@ -26,20 +26,20 @@ namespace Gladiator.UI
     /// icon; RECORDS adds "Most edicts in a win". R8: RECORDS adds "Dailies played" and "Dailies won" (scored dailies).
     /// R6: a skin's unlock (MARKET or CHALLENGES) names it as its reward ("Reward: Skin — Freedman (The Nobody)") and
     /// shows its baked portrait.
+    /// U1: the tabs are marble tabulae ansatae, the active one bronze with a gold meander under it; entries are carved
+    /// `Marble` (names Title 28, text Body 22 in marble ink), still-locked ones dark `Stone` with their hint in dust;
+    /// progress in bronze troughs; BUY a bronze plate; RECORDS on a `Wax` tablet with its values in Number; GLADIATORS is
+    /// the scutum roster beside the wax tablet; &lt; &gt; and BACK marble. The whole page (1640 × 980) scales down with
+    /// UiKit.FitScale (MainMenu.Refit).
     /// </summary>
     public sealed class CodexPanel
     {
         public enum Tab { Records, Gladiators, Arsenal, Bestiary, Challenges, Secrets, Market }
         static readonly string[] TabNames = { "RECORDS", "GLADIATORS", "ARSENAL", "BESTIARY", "CHALLENGES", "SECRETS", "MARKET" };
         const int TabCount = 7;
+        /// <summary>The page's box at 1:1 (the menu scales it down, never up, to fit the canvas).</summary>
+        public static readonly Vector2 Size = new Vector2(1640f, 980f);
 
-        static readonly Color Gold = new Color(1f, 0.84f, 0.3f);
-        static readonly Color Soft = new Color(1f, 1f, 1f, 0.78f);
-        static readonly Color Dim = new Color(1f, 1f, 1f, 0.42f);
-        static readonly Color CardColor = new Color(0.08f, 0.1f, 0.14f, 1f); // opaque: the NEW/focus border must not tint it
-        static readonly Color Border = new Color(0.3f, 0.3f, 0.34f, 0.9f);
-        static readonly Color Done = new Color(0.43f, 0.9f, 0.5f);
-        static readonly Color HintGold = new Color(1f, 0.84f, 0.3f, 0.7f);
         static readonly Color Silhouette = new Color(0f, 0f, 0f, 0.9f);
 
         struct Entry
@@ -58,8 +58,6 @@ namespace Gladiator.UI
             public bool New;
         }
 
-        readonly TMP_FontAsset _font;
-        readonly Material _fontMat;
         SaveData _save;
         CodexConfig _codex;
         MetaConfig _meta;
@@ -67,10 +65,13 @@ namespace Gladiator.UI
         MainMenu.Locked[] _locked;
         Action _back;
         Transform _root;
-        RectTransform _content;
+        RectTransform _box, _content;
         TextMeshProUGUI _renown, _page;
         Button[] _tabButtons;
-        Image[] _tabFrames, _tabDots;
+        UiPlate[] _tabPlates;
+        Image[] _tabDots;
+        Image _tabMeander, _recordsFrame;
+        readonly List<Image> _cardFrames = new List<Image>(); // the entries drawn on the page (tests)
         readonly List<Entry>[] _tabs = new List<Entry>[TabCount];
         Tab _tab;
         int _pageIndex, _focus;
@@ -82,11 +83,8 @@ namespace Gladiator.UI
         int _rosterFocus;
         readonly Dictionary<string, string> _records = new Dictionary<string, string>(); // RECORDS: label → value (tests)
 
-        public CodexPanel(TMP_FontAsset font, Material fontMat)
-        {
-            _font = font;
-            _fontMat = fontMat;
-        }
+        /// <summary>The font arguments are ignored (U1: the theme decides).</summary>
+        public CodexPanel(TMP_FontAsset font, Material fontMat) { }
 
         public Tab Current => _tab;
         public int Page => _pageIndex;
@@ -108,6 +106,22 @@ namespace Gladiator.UI
         public RosterGrid Roster => _roster;
         public GladiatorTablet RosterTablet => _rosterTablet;
         public int RosterFocus => _rosterFocus;
+        // ---- tests (U1): the look
+        /// <summary>Tab `t`'s plate (AnsataBronze while active, AnsataMarble otherwise: UiFrames.KindOf(plate.Frame)).</summary>
+        public UiPlate TabPlate(Tab t) => _tabPlates[(int)t];
+        /// <summary>The RECORDS page's tablet (`FrameKind.Wax`; -1 off that tab).</summary>
+        public int RecordsFrame => _tab == Tab.Records && _recordsFrame != null ? UiFrames.KindOf(_recordsFrame) : -1;
+        /// <summary>The entries drawn on the current page and entry `k`'s frame (`Marble`, or `Stone` while it's dark).</summary>
+        public int DrawnEntries => _cardFrames.Count;
+        public int EntryFrame(int k) => k >= 0 && k < _cardFrames.Count ? UiFrames.KindOf(_cardFrames[k]) : -1;
+        /// <summary>The page box the menu scales (MainMenu.Refit).</summary>
+        public RectTransform Box => _box;
+
+        /// <summary>Scales the page about the screen's centre (UiKit.FitScale: down, never up).</summary>
+        public void Fit(float scale)
+        {
+            if (_box != null) _box.localScale = new Vector3(scale, scale, 1f);
+        }
         /// <summary>NEW entries not shown yet this visit.</summary>
         public int RemainingNew
         {
@@ -131,34 +145,36 @@ namespace Gladiator.UI
             _locked = locked ?? Array.Empty<MainMenu.Locked>();
             _back = back;
             var mid = new Vector2(0.5f, 0.5f);
+            var th = UiTheme.Current;
+            _box = UiFactory.Rect("Box", root, mid, mid, Vector2.zero, Size);
+            var box = _box.transform;
 
-            Text(root, "CODEX", 64, Gold, new Vector2(-560, 430), new Vector2(500, 90), TextAlignmentOptions.Left).fontStyle = FontStyles.Bold;
-            _renown = Text(root, "", 34, Gold, new Vector2(560, 430), new Vector2(500, 60), TextAlignmentOptions.Right);
+            Text(box, "CODEX", TextRole.Title, 60, th.gold, new Vector2(-560, 430), new Vector2(500, 80), TextAlignmentOptions.Left, TextLook.Outline);
+            _renown = Text(box, "", TextRole.Number, 34, th.goldBright, new Vector2(560, 430), new Vector2(500, 50), TextAlignmentOptions.Right, TextLook.Outline);
 
             _tabButtons = new Button[TabCount];
-            _tabFrames = new Image[TabCount];
+            _tabPlates = new UiPlate[TabCount];
             _tabDots = new Image[TabCount];
             for (int i = 0; i < TabCount; i++)
             {
                 int t = i;
                 var pos = new Vector2(-690f + i * 230f, 345f);
-                _tabButtons[i] = UiFactory.Button("Tab" + TabNames[i], root, TabNames[i], mid, mid, pos, new Vector2(218, 62), _font, _fontMat, () => Select((Tab)t), 26f);
-                var frame = UiFactory.Image("Frame", _tabButtons[i].transform, Gold, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0, -4), new Vector2(200, 6), PixelIcons.White);
-                frame.raycastTarget = false;
-                _tabFrames[i] = frame;
-                var dot = UiFactory.Image("New", _tabButtons[i].transform, Gold, new Vector2(1f, 1f), new Vector2(0.5f, 0.5f), new Vector2(-12, -12), new Vector2(14, 14), PixelIcons.White);
+                _tabPlates[i] = UiKit.Button("Tab" + TabNames[i], box, TabNames[i], ButtonStyle.Secondary, mid, mid, pos, new Vector2(218, 62), () => Select((Tab)t), 24f);
+                _tabButtons[i] = _tabPlates[i].Button;
+                var dot = UiFactory.Image("New", _tabButtons[i].transform, th.gold, new Vector2(1f, 1f), new Vector2(0.5f, 0.5f), new Vector2(-14, -12), new Vector2(14, 14), PixelIcons.White);
                 dot.raycastTarget = false;
                 _tabDots[i] = dot;
             }
+            _tabMeander = UiKit.Meander("TabMeander", box, true, mid, new Vector2(0.5f, 1f), new Vector2(-690f, 345f - 31f - 4f), 200f);
 
-            _content = UiFactory.Rect("Content", root, mid, mid, new Vector2(0, -40), new Vector2(1600, 660));
-            BuildRoster(root);
-            UiFactory.Button("Back", root, "BACK", mid, mid, new Vector2(-640, -440), new Vector2(220, 66), _font, _fontMat, () => Close(), 30f);
-            UiFactory.Button("Prev", root, "<", mid, mid, new Vector2(-150, -440), new Vector2(70, 66), _font, _fontMat, () => Turn(-1), 34f);
-            UiFactory.Button("Next", root, ">", mid, mid, new Vector2(150, -440), new Vector2(70, 66), _font, _fontMat, () => Turn(1), 34f);
-            _page = Text(root, "", 26, Soft, new Vector2(0, -440), new Vector2(220, 50), TextAlignmentOptions.Center);
-            var keys = Text(root, "Left / Right: tab    Up / Down: page or gladiator    Esc / B: back", 22, Dim, new Vector2(520, -440), new Vector2(640, 40), TextAlignmentOptions.Right);
-            keys.fontStyle = FontStyles.Normal;
+            _content = UiFactory.Rect("Content", box, mid, mid, new Vector2(0, -40), new Vector2(1600, 660));
+            BuildRoster(box);
+            UiKit.Button("Back", box, "BACK", ButtonStyle.Secondary, mid, mid, new Vector2(-640, -440), new Vector2(220, 66), () => Close(), 30f);
+            UiKit.Button("Prev", box, "<", ButtonStyle.Secondary, mid, mid, new Vector2(-150, -440), new Vector2(96, 66), () => Turn(-1), 30f);
+            UiKit.Button("Next", box, ">", ButtonStyle.Secondary, mid, mid, new Vector2(150, -440), new Vector2(96, 66), () => Turn(1), 30f);
+            _page = Text(box, "", TextRole.Title, 26, th.ink, new Vector2(0, -440), new Vector2(200, 40), TextAlignmentOptions.Center, TextLook.Outline);
+            Text(box, "Left / Right: tab    Up / Down: page or gladiator    Esc / B: back", TextRole.Body, 22, th.dust, new Vector2(530, -440), new Vector2(640, 32),
+                TextAlignmentOptions.Right, TextLook.Outline);
 
             Collect();
             Select(Tab.Records);
@@ -225,10 +241,10 @@ namespace Gladiator.UI
             float gridW = GridMath.Size(MenuLayout.Columns, MenuLayout.Columns, MenuLayout.Tile, MenuLayout.Gap).x;
             var area = new Vector2(gridW + 60f + MenuLayout.Tablet.x * tabletScale, height);
             _rosterRoot = UiFactory.Rect("Gladiators", root, mid, mid, new Vector2(0f, -56f), area);
-            _roster = new RosterGrid(_font);
+            _roster = new RosterGrid(null);
             _roster.Build(_rosterRoot, new Vector2(0f, 1f), Vector2.zero, _slots, MenuLayout.Columns, _codex, FocusRoster);
             _roster.Fit(GridMath.Fit(GridMath.Size(_slots.Length, MenuLayout.Columns, MenuLayout.Tile, MenuLayout.Gap), new Vector2(gridW, area.y)));
-            _rosterTablet = new GladiatorTablet(_font);
+            _rosterTablet = new GladiatorTablet(null);
             var corner = new Vector2(1f, 1f);
             _rosterTablet.Build(_rosterRoot, corner, corner, Vector2.zero, _codex);
             _rosterTablet.Fit(tabletScale);
@@ -537,12 +553,25 @@ namespace Gladiator.UI
 
         void Draw()
         {
+            var th = UiTheme.Current;
             for (int i = _content.childCount - 1; i >= 0; i--) UnityEngine.Object.Destroy(_content.GetChild(i).gameObject);
+            _cardFrames.Clear();
+            _recordsFrame = null;
             for (int i = 0; i < TabCount; i++)
             {
-                _tabFrames[i].color = i == (int)_tab ? Gold : Color.clear;
+                bool active = i == (int)_tab;
+                var plate = _tabPlates[i];
+                if (plate.Style != (active ? ButtonStyle.Primary : ButtonStyle.Secondary))
+                {
+                    // the active tab is the page's bronze plate, the rest marble (re-skinned in place: same button, same label)
+                    plate.Style = active ? ButtonStyle.Primary : ButtonStyle.Secondary;
+                    if (plate.Frame != null) UiFrames.Apply(plate.Frame, active ? FrameKind.AnsataBronze : FrameKind.AnsataMarble);
+                    if (plate.Label != null) plate.Label.color = active ? th.bronzeInk : th.marbleInk;
+                }
                 _tabDots[i].enabled = TabHasNew((Tab)i);
             }
+            var at = _tabMeander.rectTransform.anchoredPosition;
+            _tabMeander.rectTransform.anchoredPosition = new Vector2(-690f + (int)_tab * 230f, at.y);
             bool roster = _tab == Tab.Gladiators;
             _rosterRoot.gameObject.SetActive(roster);
             _page.text = _tab == Tab.Records || roster ? "" : "PAGE " + (_pageIndex + 1) + " / " + PageCount;
@@ -562,7 +591,7 @@ namespace Gladiator.UI
                 DrawCard(e, pos, size, wide, _tab == Tab.Market && k == _focus);
                 if (e.New) { e.New = false; list[i] = e; MetaProgress.MarkSeen(e.Id, _save); } // seen now: not NEW next time
             }
-            if (list.Count == 0) Text(_content, "Nothing here yet.", 28, Dim, Vector2.zero, new Vector2(800, 60), TextAlignmentOptions.Center);
+            if (list.Count == 0) Text(_content, "Nothing here yet.", TextRole.Body, 28, th.dust, Vector2.zero, new Vector2(800, 60), TextAlignmentOptions.Center, TextLook.Outline);
         }
 
         /// <summary>The roster's NEW marks for this visit (then they're seen), and the picked tile on the tablet.</summary>
@@ -578,48 +607,59 @@ namespace Gladiator.UI
             FocusRoster(_rosterFocus);
         }
 
-        /// <summary>A card: the picture on the left (portrait or icon, black while locked), the text on the right.</summary>
+        /// <summary>A card: the picture on the left (portrait or icon, black while locked), the text on the right. Carved
+        /// marble while open or lit (the Market shows what you buy), dark stone while it's still a hint.</summary>
         void DrawCard(in Entry e, Vector2 pos, Vector2 size, bool wide, bool focused)
         {
+            var th = UiTheme.Current;
             var mid = new Vector2(0.5f, 0.5f);
-            var border = UiFactory.Image("Card", _content, focused ? Gold : e.New ? HintGold : Border, mid, mid, pos, size, PixelIcons.White);
-            var card = UiFactory.Image("Inner", border.transform, CardColor, mid, mid, Vector2.zero, size - new Vector2(6, 6), PixelIcons.White).transform;
-            float pic = wide ? 150f : 120f, halfW = size.x * 0.5f, halfH = size.y * 0.5f;
-            bool hasPic = DrawPicture(card, e, new Vector2(-halfW + 14f + pic * 0.5f, 0f), pic);
-            float x0 = hasPic ? -halfW + 28f + pic : -halfW + 16f, x1 = halfW - 14f;
+            bool lit = e.Open || e.Lit;
+            if (focused) UiKit.Frame("Focus", _content, FrameKind.Focus, mid, mid, pos, size + new Vector2(12f, 12f), th.gold);
+            var frame = UiKit.Frame("Card", _content, lit ? FrameKind.Marble : FrameKind.Stone, mid, mid, pos, size, Color.white);
+            _cardFrames.Add(frame);
+            var card = frame.transform;
+            float pic = wide ? 150f : 100f, halfW = size.x * 0.5f, halfH = size.y * 0.5f; // an icon shows at 80 either way
+            bool hasPic = DrawPicture(card, e, new Vector2(-halfW + 18f + pic * 0.5f, 0f), pic);
+            float x0 = hasPic ? -halfW + 32f + pic : -halfW + 20f, x1 = halfW - 18f;
             float w = x1 - x0, cx = (x0 + x1) * 0.5f;
             bool bar = e.Progress >= 0f;
             bool buy = e.Buy != null && !e.Open;
             bool footer = !string.IsNullOrEmpty(e.Footer);
+            var ink = lit ? th.marbleInk : th.ink;
+            var hint = lit ? th.marbleInk : th.dust;
+            var look = lit ? TextLook.Engraved : TextLook.Flat;
 
-            bool lit = e.Open || e.Lit;
-            Text(card, e.Kind, 17, lit ? Gold : HintGold, new Vector2(cx, halfH - 22f), new Vector2(w, 24), TextAlignmentOptions.Left).fontStyle = FontStyles.Bold;
-            var title = Text(card, e.Title, wide ? 30 : 26, lit ? Color.white : Dim, new Vector2(cx - (e.New ? 32f : 0f), halfH - 52f), new Vector2(w - (e.New ? 64f : 0f), 36), TextAlignmentOptions.Left);
-            title.fontStyle = FontStyles.Bold;
-            title.enableAutoSizing = true; title.fontSizeMin = 18; title.fontSizeMax = wide ? 30 : 26;
+            Text(card, "Kind", e.Kind, TextRole.Title, 18, lit ? th.bronzeDark : th.dust, new Vector2(cx, halfH - 26f), new Vector2(w, 24), TextAlignmentOptions.Left, look);
+            float newW = e.New ? 64f : 0f;
+            var title = Text(card, "Title", e.Title, TextRole.Title, 28, lit ? ink : th.dust, new Vector2(cx - newW * 0.5f, halfH - 56f), new Vector2(w - newW, 36), TextAlignmentOptions.Left, look);
+            title.textWrappingMode = TextWrappingModes.NoWrap;
+            title.enableAutoSizing = true; title.fontSizeMin = 18; title.fontSizeMax = 28;
 
-            float bodyTop = halfH - 74f, bodyBottom = -halfH + (bar || buy ? 70f : footer ? 36f : 14f);
-            var body = Text(card, e.Body, 19, lit ? Soft : HintGold, new Vector2(cx, (bodyTop + bodyBottom) * 0.5f), new Vector2(w, bodyTop - bodyBottom), TextAlignmentOptions.TopLeft);
-            body.fontStyle = lit ? FontStyles.Normal : FontStyles.Italic;
-            body.enableAutoSizing = true; body.fontSizeMin = 13; body.fontSizeMax = 19;
+            float bodyTop = halfH - 76f, bodyBottom = -halfH + (bar || buy ? 70f : footer ? 38f : 20f);
+            var body = Text(card, "Body", e.Body, TextRole.Body, 22, hint, new Vector2(cx, (bodyTop + bodyBottom) * 0.5f), new Vector2(w, bodyTop - bodyBottom), TextAlignmentOptions.TopLeft, look);
+            body.enableAutoSizing = true; body.fontSizeMin = 18; body.fontSizeMax = 22;
 
             if (bar)
             {
-                var fill = UiFactory.Bar("Progress", card, new Color(0.03f, 0.04f, 0.06f, 0.9f), e.Open ? Done : Gold, mid, mid,
-                    new Vector2(cx - 85f, -halfH + 50f), new Vector2(w - 170f, 16));
+                float barW = w - (buy ? 260f : 170f);
+                var fill = UiKit.Bar("Progress", card, e.Open ? th.gain : th.gold, mid, mid,
+                    new Vector2(x0 + barW * 0.5f, -halfH + 50f), new Vector2(barW, 24));
                 fill.fillAmount = Mathf.Clamp01(e.Progress);
-                Text(card, e.ProgressText ?? "", 18, Soft, new Vector2(x1 - 80f, -halfH + 50f), new Vector2(160, 26), TextAlignmentOptions.Right).fontStyle = FontStyles.Normal;
+                Text(card, "ProgressText", e.ProgressText ?? "", TextRole.Number, 20, th.ink, new Vector2(x0 + barW + 84f, -halfH + 50f), new Vector2(160, 28), TextAlignmentOptions.Left, TextLook.Outline);
             }
             if (footer)
-                Text(card, e.Footer, 17, e.Open ? Gold : HintGold, new Vector2(cx, -halfH + 20f), new Vector2(w, 24), TextAlignmentOptions.Left).fontStyle = FontStyles.Normal;
-            if (e.New) Text(card, "NEW", 20, Gold, new Vector2(halfW - 44f, halfH - 22f), new Vector2(70, 26), TextAlignmentOptions.Right).fontStyle = FontStyles.Bold;
+                Text(card, "Footer", e.Footer, TextRole.Body, 18, lit ? th.bronzeDark : th.dust, new Vector2(cx, -halfH + 26f), new Vector2(w, 24), TextAlignmentOptions.Left, look);
+            if (e.New) Text(card, "New", "NEW", TextRole.Title, 20, lit ? th.bronze : th.gold, new Vector2(halfW - 50f, halfH - 26f), new Vector2(70, 26), TextAlignmentOptions.Right, look);
             if (buy)
             {
                 var u = e.Buy;
                 bool afford = _save.renown >= u.renownCost;
-                var b = UiFactory.Button("Buy", card, afford ? "BUY " + u.renownCost : "NEED " + (u.renownCost - _save.renown) + " MORE", mid, mid,
-                    new Vector2(halfW - 112f, -halfH + 36f), new Vector2(196, 48), _font, _fontMat, () => Buy(u), 22f);
-                b.interactable = afford;
+                var plate = UiKit.Button("Buy", card, afford ? "BUY " + u.renownCost : "NEED " + (u.renownCost - _save.renown) + " MORE", ButtonStyle.Primary, mid, mid,
+                    new Vector2(halfW - 136f, -halfH + 40f), new Vector2(240, 48), () => Buy(u), 22f);
+                var label = UiFactory.Label(plate.Button);
+                label.enableAutoSizing = true; label.fontSizeMin = 18f; label.fontSizeMax = 22f;
+                plate.Button.interactable = afford;
+                plate.SetState(afford ? UiState.Normal : UiState.Disabled);
             }
         }
 
@@ -682,18 +722,23 @@ namespace Gladiator.UI
                 ("Dailies played", s.dailiesPlayed.ToString()), ("Dailies won", s.dailiesWon.ToString()),
                 ("Most edicts in a win", s.bestEdictWin.ToString()),
             };
-            // two columns; the rows close up when there are more than eight of them (the page is 660 tall)
+            // a wax tablet; two columns; the rows close up when there are more than eight of them (the page is 660 tall)
             _records.Clear();
             foreach (var row in rows) _records[row.Item1] = row.Item2;
+            var th = UiTheme.Current;
+            var mid = new Vector2(0.5f, 0.5f);
+            _recordsFrame = UiKit.Frame("Records", _content, FrameKind.Wax, mid, mid, Vector2.zero, new Vector2(1600, 660), Color.white);
             int lines = (rows.Length + 1) / 2;
-            float pitch = Mathf.Min(76f, 548f / Mathf.Max(1, lines - 1)), rowH = Mathf.Min(64f, pitch - 4f);
+            float pitch = Mathf.Min(76f, 528f / Mathf.Max(1, lines - 1)), rowH = Mathf.Min(64f, pitch - 8f);
+            float top = (lines - 1) * pitch * 0.5f;
+            var band = th.night;
+            band.a = 0.3f;
             for (int i = 0; i < rows.Length; i++)
             {
-                float x = i % 2 == 0 ? -400f : 400f, y = 250f - (i / 2) * pitch;
-                var mid = new Vector2(0.5f, 0.5f);
-                UiFactory.Image("Row", _content, new Color(0.08f, 0.1f, 0.14f, 0.96f), mid, mid, new Vector2(x, y), new Vector2(740, rowH), PixelIcons.White).raycastTarget = false;
-                Text(_content, rows[i].Item1, 28, Soft, new Vector2(x - 120f, y), new Vector2(460, 50), TextAlignmentOptions.Left).fontStyle = FontStyles.Normal;
-                Text(_content, rows[i].Item2, 32, Color.white, new Vector2(x + 210f, y), new Vector2(280, 50), TextAlignmentOptions.Right).fontStyle = FontStyles.Bold;
+                float x = i % 2 == 0 ? -390f : 390f, y = top - (i / 2) * pitch;
+                UiFactory.Image("Row", _content, band, mid, mid, new Vector2(x, y), new Vector2(740, rowH), PixelIcons.White).raycastTarget = false;
+                Text(_content, "Label", rows[i].Item1, TextRole.Title, 26, th.waxInk, new Vector2(x - 120f, y), new Vector2(460, 36), TextAlignmentOptions.Left, TextLook.Flat);
+                Text(_content, "Value", rows[i].Item2, TextRole.Number, 30, th.goldBright, new Vector2(x + 210f, y), new Vector2(280, 36), TextAlignmentOptions.Right, TextLook.Outline);
             }
         }
 
@@ -765,12 +810,17 @@ namespace Gladiator.UI
             return false;
         }
 
-        TextMeshProUGUI Text(Transform parent, string text, float size, Color color, Vector2 pos, Vector2 box, TextAlignmentOptions align)
+        static TextMeshProUGUI Text(Transform parent, string text, TextRole role, float size, Color color, Vector2 pos, Vector2 box,
+            TextAlignmentOptions align, TextLook look) => Text(parent, "Line", text, role, size, color, pos, box, align, look);
+
+        /// <summary>A themed label named `name` (a failing fit test names what was cut).</summary>
+        static TextMeshProUGUI Text(Transform parent, string name, string text, TextRole role, float size, Color color, Vector2 pos, Vector2 box,
+            TextAlignmentOptions align, TextLook look)
         {
             var mid = new Vector2(0.5f, 0.5f);
-            var t = UiFactory.Text("Line", parent, text, size, color, align, mid, mid, pos, box, _font, _fontMat);
+            var t = UiKit.Text(name, parent, text, role, size, color, align, mid, mid, pos, box, look);
             t.textWrappingMode = TextWrappingModes.Normal;
-            t.overflowMode = TextOverflowModes.Truncate;
+            t.overflowMode = TextOverflowModes.Truncate; // never Ellipsis
             return t;
         }
     }

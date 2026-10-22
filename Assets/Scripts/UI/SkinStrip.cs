@@ -78,6 +78,9 @@ namespace Gladiator.UI
         public RectTransform PrevRect => (RectTransform)_prev.transform;
         public RectTransform NextRect => (RectTransform)_next.transform;
         public RectTransform BuyRect => (RectTransform)_buy.transform;
+        /// <summary>Tests (P3): the arrows' pictures (`ArrowLeft`, `ArrowRight`).</summary>
+        public Component PrevArrow => _prev.targetGraphic;
+        public Component NextArrow => _next.targetGraphic;
         public int ChipCount { get { int n = 0; foreach (var c in _chips) if (c.transform.parent.gameObject.activeSelf) n++; return n; } }
         public Color Chip(int i) => _chips[i].color;
         /// <summary>Tests (U1): the plate the strip is drawn on (`FrameKind.Bronze`), BUY's plate, the name label.</summary>

@@ -41,7 +41,6 @@ namespace Gladiator.UI
         const float LedgerRowH = 88f, LedgerPitch = 96f, LedgerTop = 300f, LedgerHeadY = 350f;
 
         static readonly Color Hurt = EdictsPanel.Hurt;
-        static readonly Color Pale = new Color(1f, 1f, 1f, 0.55f);
         static readonly Color PlateColor = new Color(0.02f, 0.02f, 0.03f, 1f);
         static readonly Color ArenaFallback = new Color(0.45f, 0.32f, 0.22f, 1f);
         const string GoldHex = "#FFD84A", HurtHex = "#FF5433", StruckHex = "#FFFFFF66";

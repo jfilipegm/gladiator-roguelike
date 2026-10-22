@@ -87,6 +87,8 @@ namespace Gladiator.UI
         public Color FaceTint(int i) => i >= 0 && i < _faces.Length ? _faces[i].color : Color.clear;
         /// <summary>Tests: tile `i` stands lifted (it's the pick).</summary>
         public bool Lifted(int i) => i >= 0 && i < _tiles.Length && _tiles[i].anchoredPosition != _home[i];
+        /// <summary>Tests: tile `i`'s laurel (`FrameKind.LaurelWreath`).</summary>
+        public Component WreathImage(int i) => i >= 0 && i < _wreaths.Length ? _wreaths[i] : null;
         /// <summary>Tests: the frame the tiles sit in (`FrameKind.Bronze`).</summary>
         public int FrameKindShown => UiFrames.KindOf(_frame);
 

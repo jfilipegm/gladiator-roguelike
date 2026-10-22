@@ -22,6 +22,11 @@ namespace Gladiator.Tests
     /// (UiKit.TruncatedLabels: every tablet page, every ladder step, every Codex page). The test assembly has no TMP or
     /// UGUI reference of its own: the look is read through UiKit.HasRole, UiFrames.KindOf and the screens' hooks.
     /// Needs U1-A's theme (Gladiator/Setup/UI/All): with the stand-ins every frame reads -1 and every role false.
+    /// P3 (docs/tracks/P3-contract.md "P3-C"): the title stands over a gold meander rule (no mosaic plaque); the focused
+    /// plate shows the ansata's glow; the CODEX plate wears the NEW seal; tiles have no rings (the pick is lifted, crowned
+    /// with the laurel wreath and brighter, a hover brighter); the arenas are marble tiles in a bronze frame; the skin
+    /// strip's arrows are pilum tips; the Codex tabs carry seals and no meander, its pager pilum tips; the Options' focus
+    /// is a band and a marker.
     /// </summary>
     public class UiMenuLookTests
     {
@@ -143,8 +148,15 @@ namespace Gladiator.Tests
             for (int i = 1; i < 5; i++) AssertKind(_menu.MenuPlate(i).Frame, FrameKind.AnsataMarble, MenuNames[i]);
             AssertRole(_menu.TitleLabel, TextRole.Title, "the title");
             AssertRole(_menu.RenownLabel, TextRole.Number, "the Renown");
-            AssertKind(_menu.TitlePlaque, FrameKind.Mosaic, "the title's plaque");
+            AssertKind(_menu.TitlePlaque, FrameKind.MeanderGold, "the gold rule under the title (P3: no plaque)");
             AssertKind(_menu.RenownPlate, FrameKind.Bronze, "the Renown's plate");
+            Assert.IsNotNull(_menu.TitleLabel.transform.Find("Laurels"), "laurels either side of the title");
+            for (int i = 0; i < _menu.MenuPlateCount; i++)
+                AssertKind(_menu.MenuPlate(i).Focus, FrameKind.AnsataGlow, MenuNames[i] + "'s focus follows the ansata's shape");
+            Assert.Greater(_menu.MenuPlate(0).Focus.color.a, 0.5f, "PLAY is focused: its glow shows");
+            Assert.AreEqual(0f, _menu.MenuPlate(2).Focus.color.a, "CODEX isn't: no glow");
+            AssertKind(_menu.CodexSeal, FrameKind.SealNew, "the CODEX plate's NEW mark");
+            Assert.IsFalse(_menu.CodexSealShown, "a fresh save has nothing new");
 
             // a fresh save: DAILY is shut (dimmed) and the arrows skip it
             Assert.IsFalse(_menu.DailyButtonOpen);
@@ -199,12 +211,29 @@ namespace Gladiator.Tests
             }
             Assert.GreaterOrEqual(open, 1, "the Nobody is earned");
             Assert.Greater(locked, 0, "a fresh save has locked gladiators");
-            Assert.AreEqual(UiTheme.Current.gold, grid.RingColor(_menu.Slot), "the picked tile's ring is gold");
-            Assert.IsTrue(grid.HasWreath(_menu.Slot), "and it wears the wreath");
+            // P3 (note 10): no rings; the pick is lifted, crowned and brighter, a hover brighter
+            int pick = _menu.Slot, other = pick == 0 ? 1 : 0;
+            for (int i = 0; i < grid.Count; i++) Assert.AreEqual(Color.clear, grid.RingColor(i), "tile " + i + " has no ring");
+            Assert.IsTrue(grid.HasWreath(pick), "the pick wears the wreath");
+            AssertKind(grid.WreathImage(pick), FrameKind.LaurelWreath, "the redrawn gold laurel");
+            Assert.IsTrue(grid.Lifted(pick), "and stands lifted");
+            Assert.IsFalse(grid.Lifted(other));
+            grid.Hover(other, false); // whatever the real mouse is over
+            Assert.Greater(grid.FaceTint(pick).r, grid.FaceTint(other).r, "the pick is brighter");
+            grid.Hover(other, true);
+            Assert.AreEqual(grid.FaceTint(pick).r, grid.FaceTint(other).r, 1e-4f, "a hover brightens a tile");
+            Assert.IsFalse(grid.Lifted(other), "but doesn't lift it");
+            grid.Hover(other, false);
+            AssertKind(grid.NewSeal(pick), FrameKind.SealNew, "the NEW mark is the seal");
             AssertKind(_menu.FightPlateOf("Select").Frame, FrameKind.AnsataBronze, "FIGHT!");
             AssertKind(_menu.BackPlateOf("Select").Frame, FrameKind.AnsataMarble, "BACK");
             AssertKind(_menu.Tablet.FrameKindShown, FrameKind.Wax, "the lanista's tablet");
-            if (_menu.Skins.Shown) AssertKind(_menu.Skins.PlateFrame, FrameKind.Bronze, "the skin strip");
+            if (_menu.Skins.Shown)
+            {
+                AssertKind(_menu.Skins.PlateFrame, FrameKind.Bronze, "the skin strip");
+                AssertKind(_menu.Skins.PrevArrow, FrameKind.ArrowLeft, "the strip's left arrow is a pilum tip");
+                AssertKind(_menu.Skins.NextArrow, FrameKind.ArrowRight, "and the right one");
+            }
             AssertNothingCut(MenuCanvas, "the gladiator select");
 
             // every locked page (the silhouette, ???, the hint) fits the wax
@@ -257,8 +286,14 @@ namespace Gladiator.Tests
             AssertKind(_menu.BackPlateOf("Arena").Frame, FrameKind.AnsataMarble, "BACK");
             AssertKind(_menu.ArenaTablet.FrameKindShown, FrameKind.Wax, "the arena tablet");
             var ladder = _menu.Ladder;
-            for (int i = 0; i < ladder.Count; i++) AssertRole(ladder.NameLabel(i), TextRole.Title, "step " + i + "'s name");
-            AssertNothingCut(ladder.Root, "the ladder");
+            AssertKind(ladder.FrameKindShown, FrameKind.Bronze, "the arena grid's frame");
+            for (int i = 0; i < ladder.Count; i++)
+            {
+                AssertRole(ladder.NameLabel(i), TextRole.Title, "tile " + i + "'s name");
+                AssertKind(ladder.TileFrame(i), ladder.IsOpen(i) ? FrameKind.Marble : FrameKind.Stone, "tile " + i);
+            }
+            Assert.IsTrue(ladder.Lifted(_menu.Step), "the pick stands lifted");
+            AssertNothingCut(ladder.Root, "the arena grid");
             for (int i = 0; i < ladder.Count; i++)
             {
                 _menu.PickStep(i);
@@ -358,6 +393,10 @@ namespace Gladiator.Tests
             yield return Settle();
             AssertTabs(c, CodexPanel.Tab.Records);
             AssertKind(c.RecordsFrame, FrameKind.Wax, "RECORDS");
+            for (int t = 0; t < 7; t++) AssertKind(c.TabSeal((CodexPanel.Tab)t), FrameKind.SealNew, (CodexPanel.Tab)t + "'s NEW mark");
+            AssertKind(c.PrevArrow, FrameKind.ArrowLeft, "the pager's left arrow");
+            AssertKind(c.NextArrow, FrameKind.ArrowRight, "the pager's right arrow");
+            Assert.IsNull(c.Box.Find("TabMeander"), "no meander under the active tab (note 9)");
 
             for (int t = 0; t < 7; t++)
             {
@@ -412,6 +451,7 @@ namespace Gladiator.Tests
             Assert.Greater(o.RowCount, 0);
             for (int i = 0; i < o.RowCount; i++) AssertRole(o.ValueLabel(i), TextRole.Number, "row " + i + "'s value");
             Assert.AreEqual(GameOptions.Data.master, o.FillAmount(0), 0.001f, "the trough shows the master volume");
+            for (int i = 0; i < o.RowCount; i++) Assert.AreEqual(i == o.Focused, o.RowFocusShown(i), "row " + i + ": only the focused row has the band and the marker");
             AssertNothingCut(o.Panel, "options");
             o.Close();
             Assert.IsFalse(OptionsPanel.IsOpen);

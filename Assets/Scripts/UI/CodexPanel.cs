@@ -127,8 +127,9 @@ namespace Gladiator.UI
         public bool TabSealShown(Tab t) => _tabDots[(int)t].enabled;
         /// <summary>Tests (P3): the drawn entries that wear the NEW seal; the pager's arrows.</summary>
         public int SealedEntries { get; private set; }
-        public RectTransform PrevArrow { get; private set; }
-        public RectTransform NextArrow { get; private set; }
+        public Component PrevArrow => _prev != null ? _prev.targetGraphic : null;
+        public Component NextArrow => _next != null ? _next.targetGraphic : null;
+        Button _prev, _next;
 
         /// <summary>Scales the page about the screen's centre (UiKit.FitScale: down, never up).</summary>
         public void Fit(float scale)
@@ -184,8 +185,8 @@ namespace Gladiator.UI
             BuildRoster(box);
             UiKit.Button("Back", box, "BACK", ButtonStyle.Secondary, mid, mid, new Vector2(-640, -446), new Vector2(220, 66), () => Close(), 30f);
             // P3 (note 11): pilum-tip arrows, no plates
-            PrevArrow = (RectTransform)UiKit.Arrow("Prev", box, false, mid, mid, new Vector2(-150, -446), new Vector2(96, 66), () => Turn(-1)).transform;
-            NextArrow = (RectTransform)UiKit.Arrow("Next", box, true, mid, mid, new Vector2(150, -446), new Vector2(96, 66), () => Turn(1)).transform;
+            _prev = UiKit.Arrow("Prev", box, false, mid, mid, new Vector2(-150, -446), new Vector2(96, 66), () => Turn(-1));
+            _next = UiKit.Arrow("Next", box, true, mid, mid, new Vector2(150, -446), new Vector2(96, 66), () => Turn(1));
             // P3 (note 8): light and flat on the dark dim (an outline made the thin letters read dark)
             _page = Text(box, "", TextRole.Title, 26, th.ink, new Vector2(0, -446), new Vector2(200, 40), TextAlignmentOptions.Center, TextLook.Flat);
             Text(box, "Left / Right: tab    Up / Down: page or gladiator    Esc / B: back", TextRole.Body, 22, th.dust, new Vector2(530, -446), new Vector2(640, 32),
@@ -688,7 +689,7 @@ namespace Gladiator.UI
                     var u = e.Buy;
                     bool afford = _save.renown >= u.renownCost;
                     var plate = UiKit.Button("Buy", card, afford ? "BUY " + u.renownCost : "NEED " + (u.renownCost - _save.renown) + " MORE", ButtonStyle.Primary, mid, mid,
-                        new Vector2(x1 - 120f, rowY), new Vector2(240, 48), () => Buy(u), 22f);
+                        new Vector2(x1 - 130f, rowY), new Vector2(260, 48), () => Buy(u), 22f); // "NEED 4700 MORE" fits its content rect at 18
                     var label = UiFactory.Label(plate.Button);
                     label.enableAutoSizing = true; label.fontSizeMin = 18f; label.fontSizeMax = 22f;
                     plate.Button.interactable = afford;

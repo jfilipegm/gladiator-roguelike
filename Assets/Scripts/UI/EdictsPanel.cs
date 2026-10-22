@@ -36,13 +36,12 @@ namespace Gladiator.UI
         /// <summary>The panel's box at 1:1 (the menu scales it down to fit smaller canvases).</summary>
         public static readonly Vector2 Size = new Vector2(1640f, 980f);
         static readonly Vector2 Card = new Vector2(780f, 100f);
-        const float GapX = 20f, GapY = 12f, Ring = 6f, GridTop = 340f, RightW = 250f, Lift = 4f;
+        const float GapX = 20f, GapY = 12f, Ring = 6f, GridTop = 340f, RightW = 270f, Lift = 4f; // RightW: "BUY · 250 RENOWN" inside the plate's content rect
         /// <summary>The read-only page's word for the day's edicts.</summary>
         public const string TodaysEdict = "TODAY'S EDICT";
 
         /// <summary>Anything that hurts the player (CLAUDE.md §5): the edicts that are on.</summary>
         public static readonly Color Hurt = new Color(1f, 0.33f, 0.2f);
-        static readonly Color Pale = new Color(1f, 1f, 1f, 0.55f);
         /// <summary>A locked card's stone: the plate darkened.</summary>
         static readonly Color StoneDark = new Color(0.55f, 0.55f, 0.55f, 1f);
         static readonly Color PlateColor = new Color(0.02f, 0.02f, 0.03f, 1f);

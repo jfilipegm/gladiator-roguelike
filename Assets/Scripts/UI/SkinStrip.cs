@@ -28,7 +28,9 @@ namespace Gladiator.UI
         public const string ClassicName = "CLASSIC";
 
         const float ArrowX = 302f, ContentW = 536f, ChipEdge = 18f, ChipGap = 4f, ChipsToName = 12f, NameY = 18f, StatusY = -21f; // P3: 18, not 21: a long name's ink reached 2.7 into the top padding
-        const float BuyW = 420f, BuyX = -40f, BuyH = 44f;
+        // the producer's note 22 (after P3): the plate centred under the name (it sat 40 left to make room for the key hint;
+        // the hint still fits between it and the right arrow)
+        const float BuyW = 420f, BuyX = 0f, BuyH = 44f;
         static readonly Vector2 ArrowHit = new Vector2(64f, 96f);
 
         static readonly Color ChipRim = new Color(0.89f, 0.84f, 0.74f, 0.85f); // bone: a black chip still reads on the plate

@@ -74,7 +74,7 @@ Every reward is **content** (a weapon or Boon entering the pool) or **Renown** (
 W1 (the producer's note 23, docs/tracks/W1-wager.md) replaced his single 30-gold bet with **his book**.
 - **The call:** within 9 m he calls "PSST! A WAGER, CHAMPION?", "[E]  THE BOOK" shows over him, and his gold chalk ring glows.
 - **The book:** E (gamepad North) in his ring opens it, costing nothing; a chest in reach still takes the press. The run pauses
-  under "THE BOOKMAKER'S BOOK": 1–4 wager cards in the level-up's row, and WALK AWAY (Esc, gamepad East) to leave. With no
+  under "THE BOOK" ("the Bookmaker takes your wager"): 1–4 wager cards in the level-up's row, and WALK AWAY (Esc, gamepad East) to leave. With no
   gold he still opens it: a card you can't pay shows "Need n gold" on its disabled BET plate.
 - **The wagers** (the stake doubling; N is worked out from your kills of the last 30 s each time the book opens, at most 600):
 

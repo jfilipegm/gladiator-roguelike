@@ -44,6 +44,8 @@ namespace Gladiator.UI
         const float BloodBarW = 220f, BloodBarH = 12f, KillsX = 219f;
         const float LevelRowH = 44f, FavorRowH = 26f, LevelGap = 10f, LevelMinW = 220f, GoldTextW = 130f;
         static readonly Vector2 FavorIconSize = new Vector2(30f, 26f);
+        /// <summary>The top-left plate's right edge from the screen's left (canvas units): titles over the HUD stay clear of it.</summary>
+        public const float TopLeftPlateRight = PlateX + PlateW;
         /// <summary>The level plate's word (P3, the producer's note 14: "LV" or "LEVEL"); read once at Awake.</summary>
         public static string LevelWord = "LEVEL";
         const float StripLeft = 24f, StripGap = 10f, TilePitch = 58f;
@@ -898,7 +900,7 @@ namespace Gladiator.UI
                 if (_build != null && _build.State.Version != _lastBuildVersion) RefreshStrip();
             }
 
-            // the clock is frozen under the cards and LEVEL UP! (or PAUSED, or W1's THE BOOKMAKER'S BOOK) sits over it: hide it until they close
+            // the clock is frozen under the cards and LEVEL UP! (or PAUSED, or W1's THE BOOK) sits over it: hide it until they close
             float timerAlpha = (LevelUpController.Instance != null && LevelUpController.Instance.IsOpen) || (player != null && player.IsPaused)
                                || (Bookmaker.Instance != null && Bookmaker.Instance.BookOpen) ? 0f : 1f;
             if (_timer.alpha != timerAlpha) _timer.alpha = timerAlpha;

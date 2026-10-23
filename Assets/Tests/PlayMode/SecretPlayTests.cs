@@ -284,6 +284,30 @@ namespace Gladiator.Tests
             Assert.AreEqual(Bookmaker.Phase.Cooldown, bm.State);
         }
 
+        /// <summary>W1 integration: an open, idle book allocates nothing per frame (its panel, him and the HUD under it;
+        /// the mouse moving over the cards included, through the same Tick the frame runs).</summary>
+        [UnityTest, Timeout(60000)]
+        public IEnumerator Bookmaker_AnOpenBooksIdleFrames_AllocateNothing()
+        {
+            yield return Boot(ProvincialPit);
+            var bm = Bookmaker.Instance;
+            var panel = Panel();
+            var hud = Object.FindAnyObjectByType<Hud>();
+            for (int i = 1; i < bm.tiers.Length; i++) bm.tiers[i].unlockKills = 0;
+            yield return AtHisBooth(bm, 0, 25);
+            Assert.IsTrue(bm.OpenBook());
+            yield return null;
+            yield return null;
+            Assert.AreEqual(4, panel.CardCount);
+            for (int i = 0; i < 8; i++) { panel.Tick(0f, 0.016f); bm.Tick(0f, 0.016f); if (hud != null) hud.Tick(0f, 0.016f); } // warm up
+            // this thread's allocations only (the Mono heap's size also grows by whole pages for the Editor's own work)
+            long before = System.GC.GetAllocatedBytesForCurrentThread();
+            for (int i = 0; i < 2000; i++) { panel.Tick(0f, 0.016f); bm.Tick(0f, 0.016f); if (hud != null) hud.Tick(0f, 0.016f); }
+            long bytes = System.GC.GetAllocatedBytesForCurrentThread() - before;
+            Assert.LessOrEqual(bytes, 0, "the open book's idle frames allocate nothing");
+            bm.CloseBook();
+        }
+
         [UnityTest, Timeout(60000)]
         public IEnumerator Bookmaker_TierIII_NoHits_OneHitLosesIt()
         {

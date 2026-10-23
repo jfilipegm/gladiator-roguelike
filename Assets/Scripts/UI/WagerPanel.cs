@@ -9,7 +9,7 @@ namespace Gladiator.UI
 {
     /// <summary>
     /// W1 (the producer's note 23, docs/tracks/W1-wager.md): the Bookmaker's book, open while Bookmaker.BookOpen (E in his
-    /// ring; the run is paused). THE BOOKMAKER'S BOOK in the level-up title's place, "place your wager" under it, 1–4 cards
+    /// ring; the run is paused). THE BOOK in the level-up title's place, "the Bookmaker takes your wager" under it, 1–4 cards
     /// in the level-up's row (LevelUpLayout, centred; at a three-card level-up's fit or wider, like the level-up), and a
     /// WALK AWAY plate. Each card: the odds in its band, the tier's numeral, the challenge, the time, the stake beside the
     /// aureus, WINS n, and a bronze BET plate (Disabled with "Need n gold" when you can't pay it). The frame's material
@@ -25,7 +25,9 @@ namespace Gladiator.UI
         const int MaxCards = Bookmaker.MaxTiers;
         /// <summary>Hover / Click ids (UiHit; tests click them the way the mouse does): card i is i, its plate 20 + i.</summary>
         public const int WalkAwayId = 10, PlateIdBase = 20;
-        public const string TitleWord = "THE BOOKMAKER'S BOOK", SubWord = "place your wager", MoreLine = "MORE KILLS, BIGGER WAGERS";
+        // W1 integration: "THE BOOK" (the tag over him says the same), not "THE BOOKMAKER'S BOOK": the long title ran over
+        // the HUD's top-left plate at 16:9 and 4:3; the sub-line names him instead
+        public const string TitleWord = "THE BOOK", SubWord = "the Bookmaker takes your wager", MoreLine = "MORE KILLS, BIGGER WAGERS";
         const string WalkWord = "Walk away", WalkKey = "ESC";
         static readonly string[] BandWords = { "SMALL BET", "FAIR BET", "LONG SHOT", "HIGH STAKES" };
         static readonly FrameKind[] TierFrames = { FrameKind.CardStone, FrameKind.CardBronze, FrameKind.CardSilver, FrameKind.CardGold };
@@ -319,7 +321,8 @@ namespace Gladiator.UI
             else Park();
         }
 
-        /// <summary>Layout A on this canvas for a row of `cards` (at least three, as the level-up: the same fit, the same card size).</summary>
+        /// <summary>Layout A on this canvas for a row of `cards` (at least three, as the level-up: the same card size), as
+        /// wide as the screen allows (no side columns).</summary>
         void Layout(int cards)
         {
             var size = ((RectTransform)_canvas.transform).rect.size;
@@ -327,11 +330,16 @@ namespace Gladiator.UI
             if (size.x < 1f || size.y < 1f) size = MenuLayout.Reference;
             int fitCards = Mathf.Max(LevelUpLayout.PauseCards, cards);
             _fit = LevelUpLayout.For(size, fitCards);
-            float s = _fit.ContentScale;
+            // W1 integration: the book has no side columns, so its row takes the screen's width (the level-up's fit kept
+            // room for columns it doesn't have: at 4:3 the cards and their words came out 28 % smaller)
+            float s = Mathf.Min(LevelUpLayout.HeightScale(size.y), (size.x - 2f * LevelUpLayout.Edge) / LevelUpLayout.RowWidth(fitCards));
+            _fit.ContentScale = s;
             _content.localScale = new Vector3(s, s, 1f);
             _content.anchoredPosition = new Vector2(_fit.ContentX, 0f);
             float titleW = Mathf.Min(TitleMaxW, LevelUpLayout.RowWidth(fitCards));
-            _title.rectTransform.sizeDelta = new Vector2(titleW, TitleH);
+            // the title stays between the HUD's two top plates (it is as high as they are; the left one is the wider)
+            float between = (size.x - 2f * (Hud.TopLeftPlateRight + LevelUpLayout.Edge)) / Mathf.Max(0.01f, s);
+            _title.rectTransform.sizeDelta = new Vector2(Mathf.Max(10f, Mathf.Min(titleW, between)), TitleH);
             _sub.rectTransform.sizeDelta = new Vector2(titleW, SubH);
             _more.rectTransform.sizeDelta = new Vector2(titleW, MoreH);
         }

@@ -325,6 +325,63 @@ def hoop(name, centre, r, thick, swatch, axis="Y", sides=8, rot_z=0.0):
     return o
 
 
+def lean_humanoid(ox=0.0, oy=0.0, p=None, skin="skin_tan", skin_shade="skin_dark", loin="cloth_white",
+                  foot="leather_d", cap=None, eyes="ink", name="B"):
+    """A cheap kit body for extras (a litter's bearers): the simple_kit proportions and sections with fewer rings
+    (2-ring limbs, block hands and feet, a 4-ring head, eyes only): ~270 tris instead of ~650. Built at (ox, oy).
+    cap: a swatch painted over the head's top (a felt cap). Returns {"parts", "a"} like simple_kit.humanoid."""
+    p = dict(A.CHIBI, **(p or {}))
+    H, Sz, SX, N, HH, HW, TW = p["H"], p["S"], p["SX"], p["N"], p["HH"], p["HW"], p["TW"]
+    LR, LX, AR, AL, HS, FL = p["LR"], p["LX"], p["AR"], p["AL"], p["HS"], p["FL"]
+    parts = []
+    T = Matrix.Translation((ox, oy, 0))
+
+    def put(o):
+        o.data.transform(T)
+        parts.append(o)
+        return o
+    for s, sx in (("L", 1), ("R", -1)):
+        x = LX * sx
+        put(A.loft(name + "Leg" + s, [(0.07, A.hex6(LR * 0.66, LR * 0.72, x, 0.004)), (H + 0.02, A.hex6(LR, LR * 1.04, x))],
+                   skin, cap_top=False))
+        f = A.box(name + "Foot" + s, (0.12, FL * 0.85, 0.08), (x, -0.045, 0.0), foot, pivot=(0, 0, -1), taper=(0.85, 0.8))
+        bake([f])
+        put(f)
+    waist = H + (Sz - H) * 0.32
+    t = put(A.loft(name + "Torso", [(H - 0.02, A.oct8(TW * 0.95, TW * 0.7)), (waist, A.oct8(TW * 0.86, TW * 0.62)),
+                                    (Sz + 0.03, A.oct8(TW * 1.06, TW * 0.62)), (N + 0.02, A.oct8(0.085, 0.075))], skin,
+                   cap_top=False))
+    if loin:
+        put(A.loft(name + "Loin", [(H - 0.12, A.oct8(TW * 1.1, TW * 0.8)), (H + 0.05, A.oct8(TW * 0.99, TW * 0.72))],
+                   loin, 0.0, False, False))
+    wz = Sz - AL
+    for s, sx in (("L", 1), ("R", -1)):
+        x = (SX + 0.02) * sx
+        put(A.loft(name + "Arm" + s, [(wz, A.hex6(AR * 0.74, AR * 0.72, x, -0.015)),
+                                      (Sz + 0.03, A.hex6(AR * 1.0, AR * 0.98, x - 0.015 * sx))], skin, cap_bottom=False))
+        fi = A.box(name + "Fist" + s, (HS * 1.7, HS * 1.8, HS * 1.6), (x, -0.02, wz - HS * 0.55), skin)
+        bake([fi])
+        put(fi)
+
+    def hz(f):
+        return N + HH * f
+    ry = HW * 0.93
+    hd = put(A.loft(name + "Head", [(hz(0.04), A.oct8(HW * 0.5, ry * 0.48, 0.66, 0, -ry * 0.14)),
+                                    (hz(0.24), A.oct8(HW * 0.95, ry * 0.93, 0.64)), (hz(0.74), A.oct8(HW, ry, 0.62)),
+                                    (hz(1.0), A.oct8(HW * 0.44, ry * 0.44, 0.6))], skin))
+    A.paint(hd, skin_shade, lambda c, n: c.z < hz(0.2) and n.y < -0.3, ox)
+    if cap:
+        A.paint(hd, cap, lambda c, n: c.z > hz(0.76), ox)
+    for s, x in (("L", HW * 0.38), ("R", -HW * 0.38)):
+        e = A.box(name + "Eye" + s, (HW * 0.24, 0.014, HH * 0.075), (x, -ry - 0.002, hz(0.5)), eyes)
+        bake([e])
+        put(e)
+    a = dict(p=p, hand_r=(ox - (SX + 0.02), oy - 0.02, wz - HS * 0.55), hand_l=(ox + (SX + 0.02), oy - 0.02, wz - HS * 0.55),
+             shoulder_l=(ox + SX + 0.02, oy, Sz), shoulder_r=(ox - SX - 0.02, oy, Sz), hz=hz, head_w=HW,
+             head_back_y=ry)
+    return {"parts": parts, "a": a}
+
+
 def ring_rows(name, rows, swatch, cap_bottom=True, cap_top=True):
     """A loft from (z, rx, ry, cx, cy[, k]) rows in oct8 sections (a shortcut for bodies)."""
     rings = [(r[0], A.oct8(r[1], r[2], r[5] if len(r) > 5 else 0.62, r[3] if len(r) > 3 else 0.0,

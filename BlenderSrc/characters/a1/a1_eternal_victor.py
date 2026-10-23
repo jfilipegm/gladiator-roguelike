@@ -10,6 +10,9 @@ crimson kilt with bronze straps, the magenta sash (the enemy accent) with its en
 two-handed crescent held low across his body, right fist at the pommel, left fist lower on the haft, the blade
 rising beside his left leg. The hook of the crest and the crescent of the blade are his read.
 Built at kit size (stretched), then scaled x1.85 about the feet.
+In-game (export=1): Assets/Art/Models/A1/Enemies/EN_EternalVictor.fbx with the six parts plus "Falx" (haft, wrap,
+pommel, collar, crescent) under ArmR, its pivot in the right fist (the part BossController throws, def.discPart); the
+shoulder guard and plates on ArmL, the manica on ArmR, the helm, laurel and crest on Head, the ribbons on Body.
 """
 import importlib
 import math
@@ -27,10 +30,13 @@ import simple_kit as A
 importlib.reload(A)
 import a1_tier3boss_lib as L
 importlib.reload(L)
+import a1_export as X
+importlib.reload(X)
 
 SCALE = 1.85
 GAP = 2.6
-OX = -GAP / 2
+EXPORT = ARGS.get("export") == "1"
+OX = 0.0 if EXPORT else -GAP / 2
 P = dict(H=0.5, S=0.98, N=1.07, SX=0.24, TW=0.16, AR=0.042, LR=0.048, LX=0.1, HS=0.06, AL=0.4, HW=0.25)
 UPPER, FORE = 0.25, 0.25
 GRIP_R = Vector((-0.1, -0.2, 0.6))       # right fist at the pommel end of the haft
@@ -208,10 +214,24 @@ def build():
     parts.append(A.box("Collar", (0.04, 0.05, 0.05), root, "bronze_l"))
     dxz = Vector((dvec.x, dvec.z)).normalized()
     parts.append(crescent("Blade", (root.x, root.z), (dxz.x, dxz.y), 0.22, 175.0, 0.17, root.y))
-    return parts
+    J = dict(X.joints(p))
+    J["Falx"] = GRIP_R
+    return parts, L.scaled_joints(J, SCALE)
 
 
-parts = build()
+parts, J = build()
 L.finish(parts, SCALE, OX)
-result = A.review("eternal_victor", parts, original_blend="en_eternalvictor", original_root="EN_EternalVictor",
-                  height=3.9, gap=GAP)
+if EXPORT:
+    result = L.export_rig("EN_EternalVictor", parts, J, nest={"Falx": "ArmR"},
+                          rules=[("KneeCap", "side"), ("Knee", "side"), ("Kilt", "Body"), ("Strap", "Body"),
+                                 ("Spine", "Body"), ("Ribs", "Body"), ("Cuirass", "Body"), ("Yoke", "Body"),
+                                 ("Ribbon", "Body"), ("Visor", "Head"), ("Dark", "Head"), ("Grille", "Head"),
+                                 ("Jaw", "Head"), ("Teeth", "Head"), ("Brim", "Head"), ("Laurel", "Head"),
+                                 ("Leaf", "Head"), ("Griffin", "Head"), ("Fringe", "Head"), ("ShoulderL", "ArmL"),
+                                 ("ShoulderR", "ArmR"), ("UpperL", "ArmL"), ("UpperR", "ArmR"), ("ElbowL", "ArmL"),
+                                 ("ElbowR", "ArmR"), ("ForeL", "ArmL"), ("ForeR", "ArmR"), ("Manica", "ArmR"),
+                                 ("Pauldron", "ArmL"), ("Guard", "ArmL"), ("Haft", "Falx"), ("Wrap", "Falx"),
+                                 ("Pommel", "Falx"), ("Collar", "Falx"), ("Blade", "Falx")])
+else:
+    result = A.review("eternal_victor", parts, original_blend="en_eternalvictor", original_root="EN_EternalVictor",
+                      height=3.9, gap=GAP)

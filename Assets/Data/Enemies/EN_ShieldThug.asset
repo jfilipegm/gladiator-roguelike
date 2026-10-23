@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.EnemyDef
   id: shieldthug
   displayName: Shield Thug
-  model: {fileID: 919132149155446097, guid: f2fd39e784894c109a71306562c69f1b, type: 3}
+  model: {fileID: 919132149155446097, guid: 61ec5a5489b6e7bf4b3c44045220273a, type: 3}
   anim: {fileID: 11400000, guid: 13cb1487eb00393ca8898bf49cbdecec, type: 2}
   scale: 1
   maxHp: 45

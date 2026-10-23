@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.EnemyDef
   id: assassin
   displayName: Assassin
-  model: {fileID: 919132149155446097, guid: 5f450797f7a4d525ea97f4007435c38c, type: 3}
+  model: {fileID: 919132149155446097, guid: d9a47c112ac88fef2a91a9e1effccc0a, type: 3}
   anim: {fileID: 11400000, guid: 0dd120200d240b3d4b4c30e67911cc53, type: 2}
   scale: 1
   maxHp: 24

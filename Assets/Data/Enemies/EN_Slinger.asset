@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.EnemyDef
   id: slinger
   displayName: Slinger
-  model: {fileID: 919132149155446097, guid: 197b3715f236054739e82aa3d3d40404, type: 3}
+  model: {fileID: 919132149155446097, guid: 32dbcc8c90d26e0c28f09d6a61259859, type: 3}
   anim: {fileID: 11400000, guid: 13cb1487eb00393ca8898bf49cbdecec, type: 2}
   scale: 1
   maxHp: 16

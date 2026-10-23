@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.EnemyDef
   id: murmillo
   displayName: Murmillo
-  model: {fileID: 919132149155446097, guid: a342882d146d79731a6144e958f9eaeb, type: 3}
+  model: {fileID: 919132149155446097, guid: 30f0fc43f34ed1d3c8d294107eee71f7, type: 3}
   anim: {fileID: 11400000, guid: e5d474139ad75bf5185bf4f27ffd2c8f, type: 2}
   scale: 1
   maxHp: 135

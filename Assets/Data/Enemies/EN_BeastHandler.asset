@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.EnemyDef
   id: beasthandler
   displayName: Beast Handler
-  model: {fileID: 919132149155446097, guid: 9b2eebbebe7036593b72a38cd67fc057, type: 3}
+  model: {fileID: 919132149155446097, guid: 8dae47b888af3d1b994bc4f71f73939b, type: 3}
   anim: {fileID: 11400000, guid: 13cb1487eb00393ca8898bf49cbdecec, type: 2}
   scale: 1
   maxHp: 110

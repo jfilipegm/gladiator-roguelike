@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.EnemyDef
   id: netthrower
   displayName: Net-Thrower
-  model: {fileID: 919132149155446097, guid: e95d49d23bb2834ab82d57a17b43de0d, type: 3}
+  model: {fileID: 919132149155446097, guid: 1114ce33f476201eea71b69a234bbc96, type: 3}
   anim: {fileID: 11400000, guid: 13cb1487eb00393ca8898bf49cbdecec, type: 2}
   scale: 1
   maxHp: 26

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.EnemyDef
   id: brute
   displayName: Brute
-  model: {fileID: 919132149155446097, guid: 3a345e36596873a78aac47d07cb48d83, type: 3}
+  model: {fileID: 919132149155446097, guid: 428273590b78e1bb6b60ee1a50b2811d, type: 3}
   anim: {fileID: 11400000, guid: 41d5b0713bd44288396d05dc71b5d015, type: 2}
   scale: 1
   maxHp: 180

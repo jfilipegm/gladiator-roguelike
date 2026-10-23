@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.EnemyDef
   id: pitcur
   displayName: Pit Cur
-  model: {fileID: 919132149155446097, guid: 5364678d5d8ce69068f2ce633647eb41, type: 3}
+  model: {fileID: 919132149155446097, guid: 3d49e783c84b4bac398179b37f159cf0, type: 3}
   anim: {fileID: 11400000, guid: 5fd5cc54310089be19819b3f5e699010, type: 2}
   scale: 1
   maxHp: 12

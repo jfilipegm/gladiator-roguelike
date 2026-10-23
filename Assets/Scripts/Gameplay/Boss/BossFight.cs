@@ -26,6 +26,12 @@ namespace Gladiator.Gameplay
         public float fallSeconds = 1.8f;
 
         public Stage Current { get; private set; }
+
+        // note 25 (v0.27.0, "the bosses are too easy"): one log line per fight, for tuning from bot and playtest logs
+        float _fightTime, _dealtAtStart, _takenInFight;
+        int _hitsInFight;
+        public float FightSeconds => _fightTime;
+        public float DamageTakenInFight => _takenInFight;
         /// <summary>The boss's reveal line was raised during his fall (tests).</summary>
         public bool RevealShown { get; private set; }
         float _t;
@@ -40,8 +46,15 @@ namespace Gladiator.Gameplay
             _rig = FindAnyObjectByType<PlayerCameraRig>();
         }
 
-        void OnEnable() => GameLoop.Register(this, TickGroup.Director, 60);
-        void OnDisable() => GameLoop.Unregister(this);
+        void OnEnable() { GameLoop.Register(this, TickGroup.Director, 60); GameEvents.OnDamaged.Subscribe(OnPlayerDamaged); }
+        void OnDisable() { GameLoop.Unregister(this); GameEvents.OnDamaged.Unsubscribe(OnPlayerDamaged); }
+
+        void OnPlayerDamaged(in DamagedEvent e)
+        {
+            if (Current != Stage.Fight) return;
+            _takenInFight += e.Damage;
+            _hitsInFight++;
+        }
 
         /// <summary>Starts the boss now (admin "boss now", tests): jumps the run timer to its end.</summary>
         public void StartNow()
@@ -54,7 +67,12 @@ namespace Gladiator.Gameplay
         {
             var run = RunState.Current;
             if (run == null || boss == null || controller == null) return;
-            if (run.Ended && Current != Stage.Done) { Current = Stage.Done; TimeController.SlowMotion = 1f; return; }
+            if (run.Ended && Current != Stage.Done)
+            {
+                if (Current == Stage.Fight)
+                    Debug.Log($"[Boss] {boss.id} won after {_fightTime:0.0}s: the player took {_takenInFight:0} in {_hitsInFight} hits, dealt {run.DamageDealt - _dealtAtStart:0}, level {run.Level}");
+                Current = Stage.Done; TimeController.SlowMotion = 1f; return;
+            }
             _t += unscaledDt;
             switch (Current)
             {
@@ -62,10 +80,13 @@ namespace Gladiator.Gameplay
                     if (run.TimerDone) Begin();
                     break;
                 case Stage.Fight:
+                    _fightTime += dt;
                     if (_t < cameraBeat && _rig != null && controller.Alive) TurnCamera(unscaledDt);
                     if (controller.Defeated)
                     {
                         var hp = Player.Main != null ? Player.Main.GetComponent<PlayerHealth>() : null;
+                        Debug.Log($"[Boss] {boss.id} down after {_fightTime:0.0}s: dealt {run.DamageDealt - _dealtAtStart:0} ({(run.DamageDealt - _dealtAtStart) / Mathf.Max(1f, _fightTime):0}/s), " +
+                                  $"the player took {_takenInFight:0} in {_hitsInFight} hits, HP {(hp != null ? hp.Hp01 : 1f) * 100f:0}% left, level {run.Level}");
                         run.MarkBossDefeated(boss.id, hp != null ? hp.Hp01 : 1f);
                         if (boss.scatterOnDefeat && EnemyManager.Instance != null) EnemyManager.Instance.DespawnAll(); // the beasts scatter
                         Current = Stage.Falling;
@@ -105,6 +126,10 @@ namespace Gladiator.Gameplay
         {
             Current = Stage.Fight;
             _t = 0f;
+            _fightTime = 0f;
+            _takenInFight = 0f;
+            _hitsInFight = 0;
+            _dealtAtStart = RunState.Current != null ? RunState.Current.DamageDealt : 0f;
             if (Director.Instance != null) Director.Instance.enabled = false;
             var em = EnemyManager.Instance;
             if (em != null) em.DespawnAll(); // the horde is dragged off (no XP shower: no cards mid-entrance)

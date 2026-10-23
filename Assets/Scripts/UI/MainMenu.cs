@@ -760,15 +760,14 @@ namespace Gladiator.UI
                 : "<color=" + MarbleHurtHex + ">EDICTS</color> · RENOWN <color=" + MarbleGoldHex + ">" + EdictsPanel.MulText(mul) + "</color>"; // orange-red: it hurts you (the marble's darker one)
         }
 
-        /// <summary>P3 (note 6): the crimson NEW seal on the CODEX plate's top-right corner while anything is new.</summary>
+        /// <summary>P3 (note 6), note 27: the round NEW seal after the word CODEX while anything is new.</summary>
         void RefreshCodexButton()
         {
             int n = Codex != null ? Codex.RemainingNew : 0;
             var label = UiFactory.Label(_codexButton);
             label.text = "CODEX";
             if (_codexSeal == null) return;
-            _codexSeal.enabled = n > 0;
-            if (n > 0) UiKit.PlaceSeal(_codexSeal, (RectTransform)_codexButton.transform, label);
+            UiKit.ShowSeal(_codexSeal, (RectTransform)_codexButton.transform, label, n > 0);
         }
 
         void Awake()

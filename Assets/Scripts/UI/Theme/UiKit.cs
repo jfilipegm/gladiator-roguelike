@@ -285,6 +285,47 @@ namespace Gladiator.UI
             rt.anchoredPosition = new Vector2(x, y) - r.center; // from the plate's centre (its anchor)
         }
 
+        sealed class LabelHome { public float X, Width, Size, Min, Max; public bool Auto; }
+        static readonly ConditionalWeakTable<RectTransform, LabelHome> _labelHome = new ConditionalWeakTable<RectTransform, LabelHome>();
+
+        /// <summary>Shows or hides `seal` beside `label` on `plate` (note 27): while it shows, the word's box gives up the
+        /// seal's room on its right and moves left by half of it, so the word and its seal sit centred on the plate together,
+        /// the word shrinking (to 80 %) only if it no longer fits; hidden, the word is back as it was.</summary>
+        public static void ShowSeal(Image seal, RectTransform plate, TMP_Text label, bool on)
+        {
+            if (seal == null) return;
+            seal.enabled = on;
+            if (label != null)
+            {
+                var lr = label.rectTransform;
+                var home = _labelHome.GetValue(lr, r => new LabelHome
+                {
+                    X = r.anchoredPosition.x, Width = r.sizeDelta.x, Size = label.fontSize, Auto = label.enableAutoSizing,
+                    Min = label.fontSizeMin, Max = label.fontSizeMax,
+                });
+                float room = seal.rectTransform.sizeDelta.x * (1f + 0.35f);
+                if (on)
+                {
+                    lr.anchoredPosition = new Vector2(home.X - room * 0.5f, lr.anchoredPosition.y);
+                    lr.sizeDelta = new Vector2(home.Width - room, lr.sizeDelta.y);
+                    label.enableAutoSizing = true;
+                    label.fontSizeMax = home.Auto ? home.Max : home.Size;
+                    label.fontSizeMin = label.fontSizeMax * 0.8f;
+                }
+                else
+                {
+                    lr.anchoredPosition = new Vector2(home.X, lr.anchoredPosition.y);
+                    lr.sizeDelta = new Vector2(home.Width, lr.sizeDelta.y);
+                    label.enableAutoSizing = home.Auto;
+                    label.fontSizeMin = home.Min;
+                    label.fontSizeMax = home.Max;
+                    if (!home.Auto) label.fontSize = home.Size;
+                }
+                label.ForceMeshUpdate();
+            }
+            if (on) PlaceSeal(seal, plate, label);
+        }
+
         /// <summary>A pager arrow (note 11): a bronze pilum tip (`ArrowLeft` / `ArrowRight` at their art's size), no plate
         /// behind. The Button sits on a clear hit area of `hit` units; the arrow is its target graphic, a little dim at rest
         /// and full bright when hovered.</summary>

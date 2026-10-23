@@ -43,6 +43,13 @@ namespace Gladiator.UI
     /// bronze plate; the CODEX plate wears a crimson NEW seal on its top-right corner instead of "• n NEW"; the plates'
     /// focus is the ansata's glow (UiKit). The arena screen is a grid of arena tiles (ArenaLadder, three to a row) moved
     /// in 2D like the gladiator grid. Every label sits inside its frame's content rect (UiAudit).
+    /// T1 (docs/tracks/T1-playground.md): admin mode (AdminMode). Typing A-D-M-I-N on the main menu (at most 3 s between
+    /// keys, no hint) switches it, with a short toast; a gold ADMIN tag sits in the top-left corner while it's on. While
+    /// it's on, every gladiator, skin and arena can be picked (IsPickable, the skin on the strip): a view, never written to
+    /// the save (IsAvailable stays the save's rule: the Codex and the Daily Games read it). The column then shows
+    /// PLAYGROUND under PLAY (when `playgroundRun` is set): the gladiator screen, whose FIGHT! starts the Playground
+    /// (GameSession.StartPlayground). On Start the menu hands its arenas to GameSession.KnownRuns (the admin panel's boss
+    /// fights).
     /// </summary>
     public sealed class MainMenu : MonoBehaviour
     {
@@ -59,6 +66,8 @@ namespace Gladiator.UI
         public RunDef run;
         [Tooltip("Every arena the menu can offer, in ladder order. Locked ones show their unlock's hint.")]
         public RunDef[] runs = Array.Empty<RunDef>();
+        [Tooltip("T1: the Playground (the PLAYGROUND button, admin mode only; hidden while empty). Gladiator/Setup/Dev/Build Playground assigns it.")]
+        public RunDef playgroundRun;
         public MetaConfig meta;
         [Tooltip("The Codex's Bestiary, portraits and Arsenal source (Phase 5.6).")]
         public CodexConfig codex;
@@ -129,9 +138,47 @@ namespace Gladiator.UI
         GameObject _heroPrefab, _heroShown;
         TextMeshProUGUI _selectKeys;
 
-        /// <summary>Earned: no unlock, or its unlock is in the save.</summary>
+        // T1: admin mode. The column's plates in screen order (PLAYGROUND, the last plate built, stands under PLAY while
+        // it shows); the typed code, the tag and its toast; the earned lists the Daily Games draw from (the pickers may
+        // offer more while admin mode is on)
+        const int PlaygroundPlate = 5;
+        static readonly int[] PlainOrder = { 0, 1, 2, 3, 4 }, PlaygroundOrder = { 0, PlaygroundPlate, 1, 2, 3, 4 };
+        const float ToastTime = 1.6f;
+        const string SelectTitle = "CHOOSE YOUR GLADIATOR", PlaygroundTitle = "THE PLAYGROUND";
+        int[] _menuOrder = PlainOrder;
+        int _menuCount = PlaygroundPlate;
+        bool _playgroundShown, _playgroundPick, _adminView;
+        AdminCode _adminCode;
+        TextMeshProUGUI _adminTag, _adminToast, _selectHeader;
+        float _toastT = ToastTime;
+        GladiatorDef[] _earned = Array.Empty<GladiatorDef>();
+        RunDef[] _earnedRuns = Array.Empty<RunDef>();
+
+        /// <summary>Earned: no unlock, or its unlock is in the save. The save's rule, admin mode or not (the Codex, the Daily
+        /// Games and the unlock tests read it).</summary>
         public static bool IsAvailable(GladiatorDef g) => g != null && (g.unlock == null || MetaProgress.IsUnlocked(g.unlock));
         public static bool IsAvailable(RunDef r) => r != null && (r.unlock == null || MetaProgress.IsUnlocked(r.unlock));
+
+        /// <summary>T1: can it be picked on the select screens? Earned, or anything while admin mode is on (a view: nothing
+        /// is unlocked or written; switch admin mode off and the save's locks are back).</summary>
+        public static bool IsPickable(GladiatorDef g) => g != null && (AdminMode.On || IsAvailable(g));
+        public static bool IsPickable(RunDef r) => r != null && (AdminMode.On || IsAvailable(r));
+
+        /// <summary>The gladiator screen's tiles: RosterGrid.Slots (earned, then locked, then not yet data). T1: while admin
+        /// mode is on every gladiator that is data is open, in roster order (only the placeholders stay locked).</summary>
+        public static RosterGrid.Slot[] PickSlots(GladiatorDef[] gladiators, Locked[] locked)
+        {
+            if (!AdminMode.On) return RosterGrid.Slots(gladiators, locked);
+            gladiators ??= Array.Empty<GladiatorDef>();
+            locked ??= Array.Empty<Locked>();
+            int n = locked.Length;
+            foreach (var g in gladiators) if (g != null) n++;
+            var slots = new RosterGrid.Slot[n];
+            int k = 0;
+            foreach (var g in gladiators) if (g != null) slots[k++] = new RosterGrid.Slot { Def = g, Open = true };
+            foreach (var l in locked) slots[k++] = new RosterGrid.Slot { Def = null, Open = false, Hint = l.hint };
+            return slots;
+        }
 
         /// <summary>The arena FIGHT! starts in.</summary>
         public RunDef SelectedRun => _openRuns.Length > 0 ? _openRuns[Mathf.Clamp(_runPick, 0, _openRuns.Length - 1)] : run;
@@ -155,9 +202,10 @@ namespace Gladiator.UI
         public bool ArenaFightEnabled => _arenaFight != null && _arenaFight.interactable;
 
         // ---- tests (UiMenuLookTests) ---------------------------------------------------------------------------------
-        /// <summary>The main menu's plate `i` (PLAY = 0, DAILY, CODEX, OPTIONS, QUIT), or null.</summary>
-        public UiPlate MenuPlate(int i) => _menuPlates != null && i >= 0 && i < _menuPlates.Length ? _menuPlates[i] : null;
-        public int MenuPlateCount => _menuPlates != null ? _menuPlates.Length : 0;
+        /// <summary>The main menu's plate `i` (PLAY = 0, DAILY, CODEX, OPTIONS, QUIT; T1: PLAYGROUND = 5 while it shows),
+        /// or null.</summary>
+        public UiPlate MenuPlate(int i) => _menuPlates != null && i >= 0 && i < _menuCount ? _menuPlates[i] : null;
+        public int MenuPlateCount => _menuPlates != null ? _menuCount : 0;
         /// <summary>The main menu's keyboard / gamepad focus (a MenuPlate index).</summary>
         public int MenuFocus => _focus;
         /// <summary>The arena screen's EDICTS plate (null before the arena screen is built).</summary>
@@ -179,10 +227,182 @@ namespace Gladiator.UI
         public void MoveMenuFocus(int d)
         {
             if (_menuButtons == null || _menuButtons.Length == 0 || d == 0) return;
-            int n = _menuButtons.Length;
-            _focus = (_focus + (d > 0 ? 1 : n - 1)) % n;
-            if (!_menuButtons[_focus].interactable) _focus = (_focus + (d > 0 ? 1 : n - 1)) % n;
+            StepMenuFocus(d);
             RefreshMenuFocus();
+        }
+
+        /// <summary>The next (d &gt; 0) or previous plate in the column's screen order, round the ends, past shut ones
+        /// (DAILY before Gorm). No allocation.</summary>
+        void StepMenuFocus(int d)
+        {
+            int n = _menuOrder.Length, at = 0;
+            for (int i = 0; i < n; i++) if (_menuOrder[i] == _focus) at = i;
+            for (int k = 0; k < n; k++)
+            {
+                at = (at + (d > 0 ? 1 : n - 1)) % n;
+                if (_menuButtons[_menuOrder[at]].interactable) break;
+            }
+            _focus = _menuOrder[at];
+        }
+
+        // ---- admin mode (T1) -------------------------------------------------------------------------------------------
+
+        /// <summary>PLAYGROUND is in the column (admin mode is on and the Playground's run is set).</summary>
+        public bool PlaygroundButtonShown => _playgroundShown;
+        /// <summary>The gladiator screen was opened by PLAYGROUND (its FIGHT! starts the Playground).</summary>
+        public bool PlaygroundPicking => _playgroundPick;
+        /// <summary>The gold ADMIN tag in the top-left corner shows.</summary>
+        public bool AdminTagShown => _adminTag != null && _adminTag.gameObject.activeSelf;
+        /// <summary>The toast typing the code shows ("ADMIN MODE ON" / "OFF"), "" once it has faded.</summary>
+        public string AdminToastText => _adminToast != null && _adminToast.alpha > 0f ? _adminToast.text : "";
+        /// <summary>The gladiator screen's header ("CHOOSE YOUR GLADIATOR", or "THE PLAYGROUND").</summary>
+        public string SelectHeaderText => _selectHeader != null ? _selectHeader.text : "";
+
+        /// <summary>One key of the typed code at `time` (unscaled seconds): Update's A, D, M, I, N, and tests without a
+        /// keyboard. True when it completed the code: admin mode switched (Changed redraws the menu) and the toast says how
+        /// it stands.</summary>
+        public bool FeedAdminKey(char c, float time)
+        {
+            if (!_adminCode.Feed(c, time)) return false;
+            AdminMode.Toggle();
+            ShowToast(AdminMode.StatusText);
+            SfxPlayer.Play2D(SfxId.Pick);
+            return true;
+        }
+
+        /// <summary>The code's letters pressed this frame, in the code's order (each checked on its own: keys rolled while
+        /// typing fast or under Shift still count). The US positions, as the menu's other keys. No allocation.</summary>
+        void WatchAdminCode(Keyboard kb)
+        {
+            if (kb == null) return;
+            float t = Time.unscaledTime;
+            if (kb.aKey.wasPressedThisFrame) FeedAdminKey('A', t);
+            if (kb.dKey.wasPressedThisFrame) FeedAdminKey('D', t);
+            if (kb.mKey.wasPressedThisFrame) FeedAdminKey('M', t);
+            if (kb.iKey.wasPressedThisFrame) FeedAdminKey('I', t);
+            if (kb.nKey.wasPressedThisFrame) FeedAdminKey('N', t);
+        }
+
+        void ShowToast(string text)
+        {
+            if (_adminToast == null) return;
+            _adminToast.text = text;
+            _adminToast.alpha = 1f;
+            _toastT = 0f;
+        }
+
+        /// <summary>The toast holds, then fades (alpha only, while it shows).</summary>
+        void TickToast()
+        {
+            if (_adminToast == null || _toastT >= ToastTime) return;
+            _toastT += Time.unscaledDeltaTime;
+            float t = _toastT / ToastTime;
+            _adminToast.alpha = t >= 1f ? 0f : t < 0.75f ? 1f : (1f - t) / 0.25f;
+        }
+
+        /// <summary>Admin mode switched: the tag and the column follow, and the select screens are built again when what
+        /// they may offer changed (the earned lists, and so the Daily Games, don't change).</summary>
+        void OnAdminChanged()
+        {
+            if (_menuPlates == null) return;
+            LayoutMenuColumn();
+            if (AdminMode.On == _adminView) return;
+            _adminView = AdminMode.On;
+            var g = Selected;
+            var r = SelectedRun;
+            Empty(_select.transform);
+            Empty(_arena.transform);
+            BuildSelect(_select.transform);
+            BuildArena(_arena.transform);
+            if (g != null) Pick(g);      // still pickable: still picked
+            if (r != null) PickArena(r);
+            Refit();
+        }
+
+        /// <summary>Takes a screen's blocks down before it's built again (detached first: Destroy waits for the frame's end,
+        /// and the builders find their pieces by name).</summary>
+        static void Empty(Transform root)
+        {
+            for (int i = root.childCount - 1; i >= 0; i--)
+            {
+                var child = root.GetChild(i);
+                child.gameObject.SetActive(false);
+                child.SetParent(null, false);
+                Destroy(child.gameObject);
+            }
+        }
+
+        /// <summary>The column top to bottom. T1: while PLAYGROUND shows it stands under PLAY and the column steps 78
+        /// instead of 92 from a little higher, so six plates clear both the title's line and the key line (on 21:9 too).
+        /// On build and on a switch only.</summary>
+        void LayoutMenuColumn()
+        {
+            if (_menuPlates == null) return;
+            _playgroundShown = AdminMode.On && playgroundRun != null;
+            _menuPlates[PlaygroundPlate].Root.gameObject.SetActive(_playgroundShown);
+            _menuOrder = _playgroundShown ? PlaygroundOrder : PlainOrder;
+            _menuCount = _playgroundShown ? _menuPlates.Length : PlaygroundPlate;
+            float top = _playgroundShown ? 60f : 10f, step = _playgroundShown ? 78f : 92f;
+            for (int k = 0; k < _menuOrder.Length; k++)
+            {
+                var rt = _menuPlates[_menuOrder[k]].Root;
+                float y = top - k * step;
+                rt.anchoredPosition = new Vector2(rt.anchoredPosition.x, y);
+                if (_menuOrder[k] == 1 && _dailyHint != null) // the greyed DAILY's hint stays beside it
+                    _dailyHint.rectTransform.anchoredPosition = new Vector2(_dailyHint.rectTransform.anchoredPosition.x, y);
+            }
+            if (_focus >= _menuCount) _focus = 0;
+            if (_adminTag != null) _adminTag.gameObject.SetActive(AdminMode.On);
+            _shownFocus = -1; // the plates moved or changed: draw their states again
+            RefreshMenuFocus();
+        }
+
+        /// <summary>PLAYGROUND: the gladiator screen (any gladiator, any skin), whose FIGHT! goes straight into the Playground.</summary>
+        public void OpenPlayground()
+        {
+            if (!_playgroundShown)
+            {
+                SfxPlayer.Play2D(SfxId.Blocked);
+                return;
+            }
+            SfxPlayer.Play2D(SfxId.Card);
+            _playgroundPick = true;
+            SetSelectHeader();
+            Show(Screen.Select);
+        }
+
+        /// <summary>FIGHT! after PLAYGROUND: the picked gladiator, in the skin on the strip, into the Playground (no edicts),
+        /// with GameSession.Playground set. Refused once admin mode is off or without a gladiator.</summary>
+        public void LaunchPlayground()
+        {
+            var g = Selected;
+            if (!_playgroundShown || g == null)
+            {
+                SfxPlayer.Play2D(SfxId.Blocked);
+                return;
+            }
+            SfxPlayer.Play2D(SfxId.Pick);
+            if (Edicts != null && Edicts.IsOpen) Edicts.Close();
+            RunModifiers.Set(Array.Empty<RunModifierDef>());
+            GameSession.Skin = LaunchSkin(g, null);
+            GameSession.StartPlayground(g, playgroundRun);
+        }
+
+        void SetSelectHeader()
+        {
+            if (_selectHeader != null) _selectHeader.text = _playgroundPick ? PlaygroundTitle : SelectTitle;
+        }
+
+        /// <summary>The arenas for GameSession.KnownRuns: the ladder without gaps (allocates once, on Start).</summary>
+        RunDef[] KnownRunList()
+        {
+            var all = AllRuns;
+            int n = 0;
+            foreach (var r in all) if (r != null) n++;
+            var list = new RunDef[n];
+            n = 0;
+            foreach (var r in all) if (r != null) list[n++] = r;
+            return list;
         }
 
         /// <summary>Moves the grid's cursor to `slot`, earned or locked (a keyboard/gamepad move; never fights).</summary>
@@ -307,6 +527,11 @@ namespace Gladiator.UI
             return g != null && meta != null ? MetaProgress.EquippedSkin(g, meta) : null;
         }
 
+        /// <summary>The skin FIGHT! fights in: SkinFor's (`-skin`, else the equipped one). T1: in admin mode the one on the
+        /// strip, owned or not, as the diorama shows it (nothing is bought or equipped for it).</summary>
+        SkinDef LaunchSkin(GladiatorDef g, SkinDef commandLine) =>
+            commandLine == null && AdminMode.On && _skins != null && _skins.Shown && _skins.Gladiator == g ? _skins.Current : SkinFor(g, commandLine);
+
         /// <summary>Drops equipped skin ids no SkinDef knows (a skin taken out of the data; spec §5). Not while there are
         /// no skins as data at all (before SkinSetup has run), which would wipe every choice.</summary>
         void PruneSkins()
@@ -355,8 +580,9 @@ namespace Gladiator.UI
         public DailyPlan TodayPlan => _todayPlan;
         public bool DailyFightEnabled => _dailyFight != null && _dailyFight.interactable;
 
-        /// <summary>The plan for `date` from the earned arenas and gladiators (DailyGames sorts them by id itself).</summary>
-        DailyPlan PlanFor(int date) => DailyGames.For(date, meta, _openRuns, _available);
+        /// <summary>The plan for `date` from the earned arenas and gladiators (DailyGames sorts them by id itself). T1: the
+        /// earned ones, not what admin mode lets the pickers offer.</summary>
+        DailyPlan PlanFor(int date) => DailyGames.For(date, meta, _earnedRuns, _earned);
 
         /// <summary>Opens the Daily screen on today's plan (DAILY). Refused (a blocked sound) before the Daily Games are earned.</summary>
         public void OpenDaily()
@@ -548,6 +774,7 @@ namespace Gladiator.UI
             _edictsShown = meta != null && meta.edicts != null && meta.edicts.Length > 0 && MetaProgress.EdictsOpen(meta);
             _chosenEdicts = _edictsShown ? MetaProgress.ChosenEdicts(meta) : Array.Empty<RunModifierDef>();
             _dailyOpen = meta != null && MetaProgress.DailyOpen(meta);
+            _adminView = AdminMode.On; // T1: what the pickers offer (built again when it switches)
             var canvas = UiFactory.Canvas("MenuCanvas", transform, UiSortOrder.Menus).transform;
             _menu = Group("Menu", canvas);
             _select = Group("Select", canvas);
@@ -587,11 +814,15 @@ namespace Gladiator.UI
             else RefreshDailyButton();
         }
 
+        void OnEnable() => AdminMode.Changed += OnAdminChanged;
+        void OnDisable() => AdminMode.Changed -= OnAdminChanged;
+
         void Start()
         {
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
             TimeController.ResetForNewRun();
+            GameSession.KnownRuns = KnownRunList(); // T1: the admin panel's boss fights
             if (CommandLine.Has("-daily") && LaunchDailyFromCommandLine()) return; // R8: a practice daily, at once
             if (CommandLine.Has("-bot") || CommandLine.Has("-stress")) StartRun(); // perf runs skip the menu
         }
@@ -630,6 +861,8 @@ namespace Gladiator.UI
                 UiKit.Button("Codex", root, "CODEX", ButtonStyle.Secondary, left, left, new Vector2(110, -174), size, OpenCodex, 34f),
                 UiKit.Button("Options", root, "OPTIONS", ButtonStyle.Secondary, left, left, new Vector2(110, -266), size, OpenOptions, 34f),
                 UiKit.Button("Quit", root, "QUIT", ButtonStyle.Secondary, left, left, new Vector2(110, -358), size, Quit, 34f),
+                // T1: admin mode only; LayoutMenuColumn shows it under PLAY and places the column
+                UiKit.Button("Playground", root, "PLAYGROUND", ButtonStyle.Secondary, left, left, new Vector2(110, 10), size, OpenPlayground, 34f),
             };
             _menuButtons = new Button[_menuPlates.Length];
             for (int i = 0; i < _menuPlates.Length; i++) _menuButtons[i] = _menuPlates[i].Button;
@@ -668,7 +901,17 @@ namespace Gladiator.UI
             if (save.runs > 0)
                 UiKit.Text("Runs", root, save.runs + (save.runs == 1 ? " run  ·  " : " runs  ·  ") + save.victories + (save.victories == 1 ? " victory" : " victories"),
                     TextRole.Body, 22f, th.ink, TextAlignmentOptions.Right, corner, corner, new Vector2(-MenuLayout.Margin, -40f - RenownPlateSize.y - 10f), new Vector2(600, 30), TextLook.Outline);
-            RefreshMenuFocus();
+
+            // T1: the gold ADMIN tag in the top-left corner while admin mode is on; the toast typing the code shows, top centre
+            var topLeft = new Vector2(0f, 1f);
+            _adminTag = UiKit.Text("AdminTag", root, "ADMIN", TextRole.Title, 30f, th.gold, TextAlignmentOptions.Left, topLeft, topLeft,
+                new Vector2(MenuLayout.Margin, -40f), new Vector2(240f, 44f), TextLook.Outline);
+            var top = new Vector2(0.5f, 1f);
+            _adminToast = UiKit.Text("AdminToast", root, "", TextRole.Title, 44f, th.goldBright, TextAlignmentOptions.Center, top, top,
+                new Vector2(0f, -48f), new Vector2(900f, 60f), TextLook.Outline);
+            _adminToast.enableAutoSizing = true; _adminToast.fontSizeMin = 28f; _adminToast.fontSizeMax = 44f;
+            _adminToast.alpha = 0f;
+            LayoutMenuColumn(); // places the column (and PLAYGROUND, the tag) and draws the focus
         }
 
         /// <summary>The Renown plate's number (after a purchase or an edict changed it).</summary>
@@ -708,16 +951,23 @@ namespace Gladiator.UI
 
         void BuildSelect(Transform root)
         {
-            var slots = RosterGrid.Slots(gladiators, locked);
+            var slots = PickSlots(gladiators, locked); // T1: every gladiator while admin mode is on
             int open = 0;
             while (open < slots.Length && slots[open].Open) open++;
             _available = new GladiatorDef[open];
             for (int i = 0; i < open; i++) _available[i] = slots[i].Def;
+            int earned = 0;
+            var roster = gladiators ?? Array.Empty<GladiatorDef>();
+            foreach (var g in roster) if (IsAvailable(g)) earned++;
+            _earned = new GladiatorDef[earned];
+            earned = 0;
+            foreach (var g in roster) if (IsAvailable(g)) _earned[earned++] = g;
 
             bool skins = meta != null && meta.skins != null && meta.skins.Length > 0; // R6: once they exist as data
-            _fight = Chrome(root, "CHOOSE YOUR GLADIATOR", skins
+            _fight = Chrome(root, _playgroundPick ? PlaygroundTitle : SelectTitle, skins
                 ? "Arrows / d-pad: move     Q / E: skin     Enter / A: fight     Esc / B: back"
                 : "Arrows / d-pad: move     Enter / A: fight     Esc / B: back", StartRun, CloseSelect);
+            _selectHeader = root.Find("Header").GetComponent<TextMeshProUGUI>();
             _selectKeys = root.Find("Keys").GetComponent<TextMeshProUGUI>();
             _roster = new RosterGrid(font);
             // P3: the picked tile's wreath rises over the grid's top: the grid starts that much lower
@@ -741,19 +991,22 @@ namespace Gladiator.UI
         void BuildArena(Transform root)
         {
             var all = AllRuns;
-            int open = 0, n = 0;
-            foreach (var r in all) if (r != null) { n++; if (IsAvailable(r)) open++; }
+            int open = 0, n = 0, earned = 0;
+            foreach (var r in all)
+                if (r != null) { n++; if (IsPickable(r)) open++; if (IsAvailable(r)) earned++; }
             _openRuns = new RunDef[open];
+            _earnedRuns = new RunDef[earned];
             _stepToOpen = new int[n];
             var steps = new ArenaLadder.Step[n];
-            int k = 0, a = 0;
+            int k = 0, a = 0, e = 0;
             foreach (var r in all)
             {
                 if (r == null) continue;
-                bool earned = IsAvailable(r);
-                _stepToOpen[k] = earned ? a : -1;
-                if (earned) _openRuns[a++] = r;
-                steps[k++] = new ArenaLadder.Step { Run = r, Open = earned };
+                bool pickable = IsPickable(r); // T1: every arena while admin mode is on
+                if (IsAvailable(r)) _earnedRuns[e++] = r;
+                _stepToOpen[k] = pickable ? a : -1;
+                if (pickable) _openRuns[a++] = r;
+                steps[k++] = new ArenaLadder.Step { Run = r, Open = pickable };
             }
 
             _arenaFight = Chrome(root, "CHOOSE YOUR ARENA", _edictsShown
@@ -920,21 +1173,27 @@ namespace Gladiator.UI
             g.interactable = g.blocksRaycasts = on;
         }
 
-        void OpenSelect() { SfxPlayer.Play2D(SfxId.Card); Show(Screen.Select); }
-        void CloseSelect() => Show(Screen.Menu);
+        void OpenSelect() { SfxPlayer.Play2D(SfxId.Card); _playgroundPick = false; SetSelectHeader(); Show(Screen.Select); }
+        void CloseSelect() { _playgroundPick = false; Show(Screen.Menu); }
         void BackToSelect() => Show(Screen.Select);
         public void OpenCodex() { SfxPlayer.Play2D(SfxId.Card); Show(Screen.Codex); }
         void OpenOptions() { SfxPlayer.Play2D(SfxId.Card); if (OptionsPanel.Instance != null) OptionsPanel.Instance.Open(); }
         void CloseCodex() { Show(Screen.Menu); RefreshCodexButton(); }
 
-        /// <summary>FIGHT! on the gladiator screen: on to the arena screen when there's a choice, else straight in.
-        /// Refused while a locked tile is picked. Bot and perf runs always go straight in.</summary>
+        /// <summary>FIGHT! on the gladiator screen: on to the arena screen when there's a choice, else straight in (T1: into
+        /// the Playground when PLAYGROUND opened the screen). Refused while a locked tile is picked. Bot and perf runs always
+        /// go straight in.</summary>
         void StartRun()
         {
             bool bot = CommandLine.Has("-bot") || CommandLine.Has("-stress");
             if (!bot && _slot >= _available.Length)
             {
                 SfxPlayer.Play2D(SfxId.Blocked);
+                return;
+            }
+            if (!bot && _playgroundPick)
+            {
+                LaunchPlayground();
                 return;
             }
             if (!bot && AsksForArena && _screen != Screen.Arena)
@@ -963,7 +1222,7 @@ namespace Gladiator.UI
                 foreach (var d in AllRuns) if (d != null && d.id == arena) r = d;
             if (Edicts != null && Edicts.IsOpen) Edicts.Close(); // the page covers FIGHT!, but a launch from code keeps its choice
             RunModifiers.Set(EdictsForLaunch());
-            GameSession.Skin = SkinFor(g, cmdSkin); // R6: the equipped (owned) skin, never the strip's preview
+            GameSession.Skin = LaunchSkin(g, cmdSkin); // R6: the equipped (owned) skin, not the strip's preview (T1: admin mode: the strip's)
             GameSession.StartRun(g, r);
         }
 
@@ -979,6 +1238,7 @@ namespace Gladiator.UI
         void Update()
         {
             if (UnityEngine.Screen.width != _screenW || UnityEngine.Screen.height != _screenH) Refit();
+            TickToast();
             if (GameOptions.PanelOwnsInput) return;
             var kb = Keyboard.current;
             var pad = Gamepad.current;
@@ -1048,9 +1308,9 @@ namespace Gladiator.UI
                 Codex.HandleInput(left, right, up, down, confirm, back);
                 return;
             }
-            if (up) _focus = (_focus + _menuButtons.Length - 1) % _menuButtons.Length;
-            if (down) _focus = (_focus + 1) % _menuButtons.Length;
-            if (!_menuButtons[_focus].interactable) _focus = down || !up ? (_focus + 1) % _menuButtons.Length : (_focus + _menuButtons.Length - 1) % _menuButtons.Length;
+            WatchAdminCode(kb); // T1: A-D-M-I-N switches admin mode (no key here uses those letters)
+            if (up != down) StepMenuFocus(down ? 1 : -1); // in screen order, past a shut DAILY
+            else if (!_menuButtons[_focus].interactable) StepMenuFocus(1);
             RefreshMenuFocus(); // the focused plate's gold ring (recoloured only when the focus moves)
             if (confirm) _menuButtons[_focus].onClick.Invoke();
             else if (back) Quit();

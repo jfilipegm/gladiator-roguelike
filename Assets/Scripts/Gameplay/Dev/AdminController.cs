@@ -5,8 +5,8 @@ using UnityEngine.InputSystem;
 namespace Gladiator.Gameplay
 {
     /// <summary>
-    /// Test-arena admin tools (F1 in the Editor and development builds): % buffs, god mode / timeless, run shortcuts,
-    /// spawning any enemy type from the EnemyCatalog, crowd size and game speed. Opening it pauses the game.
+    /// Admin tools (F1 in any arena: the Editor, development builds, or any build in admin mode, AdminMode.PanelAllowed): % buffs, god mode / timeless, run shortcuts, spawning any enemy type from the EnemyCatalog, freezing
+    /// the enemies, fighting any boss (T1), crowd size and game speed. Opening it pauses the game.
     /// The UI (Gladiator.UI.AdminPanel) only draws this state and calls these methods; tests call them directly.
     /// </summary>
     public sealed class AdminController : MonoBehaviour, ITickable
@@ -20,8 +20,6 @@ namespace Gladiator.Gameplay
         public DebugEnemySpawner crowd;
         public PlayerHealth health;
         public PickupSystem pickups;
-        [Tooltip("Allow F1 outside development builds (keep off for release).")]
-        public bool allowInReleaseBuilds = false;
 
         public static readonly int[] SpawnCounts = { 1, 5, 10, 25, 50, 100 };
         public static readonly float[] Speeds = { 0.25f, 0.5f, 1f, 1.5f, 2f };
@@ -34,7 +32,8 @@ namespace Gladiator.Gameplay
         /// <summary>0 = normal enemies, k = catalog.affixes[k-1] (every spawn from the menu is that elite).</summary>
         public int SelectedAffix { get; private set; }
         public AffixDef Affix => catalog != null && SelectedAffix > 0 && SelectedAffix <= catalog.affixes.Length ? catalog.affixes[SelectedAffix - 1] : null;
-        public bool Available => allowInReleaseBuilds || Debug.isDebugBuild;
+        /// <summary>F1 opens the panel (T1: admin mode, in any build).</summary>
+        public bool Available => AdminMode.PanelAllowed;
 
         void Awake()
         {
@@ -43,6 +42,13 @@ namespace Gladiator.Gameplay
             if (catalog != null && crowd != null && crowd.enemy != null)
                 SelectedEnemy = Mathf.Max(0, System.Array.IndexOf(catalog.enemies, crowd.enemy));
         }
+
+        /// <summary>A FIGHT A BOSS load is under way (FightBoss): this arena's run timer jumps to its boss.</summary>
+        void Start()
+        {
+            if (PendingBossFight) TakeBossFight();
+        }
+
         void OnEnable() => GameLoop.Register(this, TickGroup.Input, -10);
 
         void OnDisable()
@@ -223,6 +229,14 @@ namespace Gladiator.Gameplay
 
         public void KillAllEnemies() => EnemyManager.Instance?.KillAll();
 
+        /// <summary>FREEZE: enemies (bosses too) stand still and don't attack, shoot or touch-damage; they still take hits,
+        /// flash and die (DevSettings.FreezeEnemies). Turning it on also drops the enemy shots already in the air.</summary>
+        public void ToggleFreeze()
+        {
+            DevSettings.FreezeEnemies = !DevSettings.FreezeEnemies;
+            if (DevSettings.FreezeEnemies && EnemyProjectiles.Instance != null) EnemyProjectiles.Instance.Clear();
+        }
+
         public bool DirectorOn => Director.Instance != null && Director.Instance.enabled;
         public void ToggleDirector()
         {
@@ -235,6 +249,71 @@ namespace Gladiator.Gameplay
 
         public int CrowdSize => crowd != null ? crowd.targetAlive : 0;
         public void AdjustCrowd(int delta) { if (crowd != null) crowd.targetAlive = Mathf.Clamp(crowd.targetAlive + delta, 0, 300); }
+
+        // ---------- fight a boss (T1) ----------
+
+        /// <summary>
+        /// Set by FightBoss before the boss's arena loads; that arena's AdminController takes it on Start and jumps the run
+        /// timer to BossJumpSeconds. Static: it survives the scene load.
+        /// </summary>
+        public static bool PendingBossFight;
+        /// <summary>Run clock left after a boss jump. The clock waits for the arena intro's FIGHT!, so the boss's entrance
+        /// starts this long after it.</summary>
+        public const float BossJumpSeconds = 3f;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics() => PendingBossFight = false;
+
+        /// <summary>The menu's runs (GameSession.KnownRuns): one FIGHT A BOSS button each. 0 when no menu ran (an arena
+        /// started straight from the Editor).</summary>
+        public static int BossRunCount => GameSession.KnownRuns != null ? GameSession.KnownRuns.Length : 0;
+
+        public static RunDef BossRun(int k) => k >= 0 && k < BossRunCount ? GameSession.KnownRuns[k] : null;
+
+        /// <summary>Can run k be fought from here: it exists, has an arena to load and a boss at the end of it.</summary>
+        public static bool CanFightBoss(int k)
+        {
+            var run = BossRun(k);
+            return run != null && run.arenas.Length > 0 && !string.IsNullOrEmpty(run.arenas[0].scenePath) && run.Boss != null;
+        }
+
+        /// <summary>
+        /// FIGHT A BOSS: starts run k of GameSession.KnownRuns as the gladiator and skin you have on now (a normal run, a
+        /// fresh seed); its arena then brings the boss in BossJumpSeconds after FIGHT! (TakeBossFight). God mode and the
+        /// buffs stay as they are (DevSettings survives the load). False when run k can't be fought.
+        /// </summary>
+        public bool FightBoss(int k)
+        {
+            if (!CanFightBoss(k)) return false;
+            var run = BossRun(k);
+            var loadout = Player.Main != null ? Player.Main.GetComponent<GladiatorLoadout>() : null;
+            var gladiator = loadout != null && loadout.Current != null ? loadout.Current : GameSession.Gladiator;
+            if (loadout != null) GameSession.Skin = loadout.CurrentSkin; // what you wear now (null = the default look)
+            SetOpen(false);
+            PendingBossFight = true;
+            Debug.Log("[Admin] fight a boss: " + run.id + (gladiator != null ? " as " + gladiator.id : ""));
+            GameSession.StartRun(gladiator, run);
+            return true;
+        }
+
+        /// <summary>
+        /// The arena side of FightBoss (Start): the run timer jumps to BossJumpSeconds, and BossFight brings the boss in
+        /// when it runs out, the real fight (entrance, phases, hazards). Timeless is switched off: with it the clock never
+        /// runs out. The flag is spent here even in an arena without a boss.
+        /// </summary>
+        void TakeBossFight()
+        {
+            PendingBossFight = false;
+            var fight = FindAnyObjectByType<BossFight>();
+            if (fight == null || fight.boss == null || RunState.Current == null)
+            {
+                Debug.LogWarning("[Admin] fight a boss: this arena has no boss fight");
+                return;
+            }
+            DevSettings.Timeless = false;
+            SetTimer(BossJumpSeconds);
+            Debug.Log("[Admin] fight a boss: " + fight.boss.id + " in " + BossJumpSeconds + " s");
+        }
 
         // ---------- game speed ----------
         public int SpeedIndex

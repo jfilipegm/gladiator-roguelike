@@ -48,7 +48,8 @@ def finish(objs, scale=1.0, ox=0.0):
 
 
 def xform(objs, m):
-    """Applies matrix m to baked meshes."""
+    """Applies matrix m to the meshes (baked first)."""
+    bake(objs)
     for o in objs:
         o.data.transform(m)
     return objs
@@ -58,6 +59,7 @@ def shear_forward(objs, z0, k, rigid=None):
     """A hunch: vertices above z0 move forward (-Y) by (z - z0) * k. `rigid` {obj: joint_z}: those move as one piece
     by their joint's offset (arms, held weapons), so they don't skew. Call on baked meshes."""
     rigid = rigid or {}
+    bake(objs)
     for o in objs:
         me = o.data
         if o in rigid:
@@ -75,6 +77,7 @@ def swing(objs, pivot, angle, axis="X"):
     """Rotates meshes (vertex data in world space: lofts, or baked) about a joint, e.g. an arm about its shoulder:
     axis X with a negative angle swings the hand forward (-Y)."""
     m = Matrix.Translation(Vector(pivot)) @ Matrix.Rotation(angle, 4, axis) @ Matrix.Translation(-Vector(pivot))
+    bake(objs)
     for o in objs:
         o.data.transform(m)
     return objs

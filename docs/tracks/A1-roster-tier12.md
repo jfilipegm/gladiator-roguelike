@@ -31,3 +31,33 @@ Helpers worth knowing for the other workers: `simple_kit.cone` is a frustum with
 pyramid); `a1_tier12_lib.spike()` / `octa()` are the cheap true pyramid / octahedron. `simple_kit.box` pivots at the
 centre by default (pass `pivot=(0, 0, -1)` to grow up from `loc`). A ring (open band) seen end-on is invisible: a
 collar/harness that must read from the front needs a front ring smaller than the next (a frustum).
+
+## In-game models (export=1)
+`Tools/bheadless BlenderSrc/characters/a1/a1_<tag>.py export=1` writes `Assets/Art/Models/A1/Enemies/<root>.fbx` with the
+original's root and its six parts (Body, Head, ArmL, ArmR under Body; LegL, LegR under the root; the beasts' front
+legs are ArmL/ArmR), one mesh per part with its origin at the joint, and a pose sheet
+`Screenshots/a1/ingame/a1_<root>_poses.png` (rest, run, swing, hit). Running without `export=1` still makes the review
+sheet as before (same tris). The lean body's joints are `a1_export.joints(p)`, moved with the same transforms as the
+pieces (`a1_tier12_lib.move_joints`: the Convict's and the Fire-Pot's hunch; the Brute's and Centurion's x1.4/x1.1),
+the beasts' joints written per script. Size: `fit_height` measures the exact height (vertices, not bound boxes) and
+scales pieces + joints to the original's height when they're more than 8 % off. The chibi heads made most of them
+taller than the originals, so 10 of 13 are scaled down (x0.76-0.90). Every pose sheet checked: every piece follows
+its part (shields, weapons, nets, the whip and chains with their arm; loincloths, cloak, harness, pauldrons, back
+frame with the body; helmets, hoods, crests with the head; hooves, paws, greaves, wraps with their leg). Each model is
+6 renderers, and its tris are the same as its review sheet's. The exporter (`a1_export.py`) needed no change.
+
+| Model | Tris | Renderers | Height (original) | Scale | Doubts |
+|---|---|---|---|---|---|
+| EN_Convict | 437 | 6 | 1.295 (1.295) | x0.836 | the hunch is baked into the rest pose (as in the original), so the run cycle swings hunched arms |
+| EN_PitCur | 392 | 6 | 0.762 (0.762) | x0.903 | the shared pose sheet tips the whole dog nose-down for "hit" (a humanoid pose); fine for a check |
+| EN_ShieldThug | 444 | 6 | 1.500 (1.500) | x0.896 | the door-shield swings with ArmL in the run (as the original's; the game damps the shield arm) |
+| EN_Slinger | 444 | 6 | 1.437 (1.437) | x0.839 | none |
+| EN_Brute | 711 | 6 | 1.786 (1.786) | x0.890 (of the x1.4 build) | pauldrons on Body (as the original), so a raised arm passes under them |
+| EN_FirePot | 442 | 6 | 1.163 (1.163) | x0.761 | the most shrunk: he reads small next to the Convict (as the original did) |
+| EN_Assassin | 408 | 6 | 1.430 (1.430) | x0.850 | none |
+| EN_Murmillo | 454 | 6 | 1.820 (1.720) | x1 (+6 %, inside the rule) | none |
+| EN_NetThrower | 455 | 6 | 1.955 (2.001) | x0.85, forced | its height is the trident: the body is matched to the original's and the trident lengthened in the game model only (top 2.02 instead of 1.62 before the scale), so the review sheet keeps the old trident |
+| EN_ShieldArcher | 447 | 6 | 1.230 (1.230) | x0.770 | the pavise swings with ArmL in the run (as the original's) |
+| EN_BeastHandler | 455 | 6 | 1.300 (1.300) | x0.839 | none |
+| EN_WarBoar | 388 | 6 | 1.108 (1.020) | x0.86, forced (+9 %) | the tall mane makes the height: a plain fit left the barrel 17 % shorter than the original's; x0.86 splits it (height +9 %, length 1.62 vs 1.79, -9 %) |
+| EN_Centurion | 539 | 6 | 1.850 (1.850) | x0.885 (of the x1.1 build) | none |

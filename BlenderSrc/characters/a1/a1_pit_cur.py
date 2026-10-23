@@ -5,6 +5,8 @@ pointed dark ears, a pale snout with a black nose and bone fangs, yellow eyes (a
 the magenta collar with iron spikes (the enemy accent), the tail up, light paws, a lunge stance (front legs reaching,
 hind legs pushing back). Changed: chibi, so a big chamfered head; oct8 body sections lofted along Y with a pale belly,
 hex6 legs.
+export=1: the game model Assets/Art/Models/A1/Enemies/EN_PitCur.fbx (front legs = ArmL/ArmR, hind legs = LegL/LegR,
+as in the original).
 """
 import importlib
 import math
@@ -19,7 +21,11 @@ importlib.reload(A)
 import a1_tier12_lib as L
 importlib.reload(L)
 
-OX = -0.55
+EXPORT = ARGS.get("export") == "1"
+OX = 0.0 if EXPORT else -0.55
+RULES = [("Body", "Body"), ("Hackles", "Body"), ("Collar", "Body"), ("Spike", "Body"), ("Tail", "Body"),
+         ("Snout", "Head"), ("Fang", "Head"), ("PawLArm", "ArmL"), ("PawRArm", "ArmR"), ("PawLLeg", "LegL"),
+         ("PawRLeg", "LegR")]
 
 
 def build():
@@ -78,8 +84,14 @@ def build():
     tail.rotation_euler = (-0.75, 0, 0)
     tail.location = (OX, 0.25, 0.47)
     add(tail)
-    return parts
+    # the joints: the body at its middle, the head at the neck, each leg at the top where its stance was turned
+    J = {"Body": (0.0, 0.0, bz), "Head": (0.0, hy - 0.02, 0.56), "ArmL": (0.075, -0.15, bz), "ArmR": (-0.075, -0.15, bz),
+         "LegL": (0.075, 0.17, bz), "LegR": (-0.075, 0.17, bz)}
+    return parts, {k: L.Vector(v) for k, v in J.items()}
 
 
-parts = build()
-result = A.review("pit_cur", parts, original_blend="en_pitcur", original_root="EN_PitCur", height=0.9)
+parts, J = build()
+if EXPORT:
+    result = L.export_enemy("EN_PitCur", parts, J, 0.762, RULES)
+else:
+    result = A.review("pit_cur", parts, original_blend="en_pitcur", original_root="EN_PitCur", height=0.9)

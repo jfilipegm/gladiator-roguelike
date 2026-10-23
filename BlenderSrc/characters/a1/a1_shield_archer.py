@@ -5,6 +5,7 @@ wicker pavise with wooden bands standing from the ground to his chin (from the f
 "flank this one") with the magenta boss (the enemy accent); the bow carried flat in the right hand along the walk
 direction, a glowing orange-red arrowhead nocked. Changed: the variant-A body (lean); the pavise has a pointed top
 (it tells it from the Shield Thug's square door at a glance); the bow is one bent plate with a string and an arrow.
+export=1: the game model Assets/Art/Models/A1/Enemies/EN_ShieldArcher.fbx (docs/tracks/A1-ingame-contract.md).
 """
 import importlib
 import math
@@ -18,8 +19,13 @@ import simple_kit as A
 importlib.reload(A)
 import a1_tier12_lib as L
 importlib.reload(L)
+import a1_export as X
+importlib.reload(X)
 
-OX = -0.55
+EXPORT = ARGS.get("export") == "1"
+OX = 0.0 if EXPORT else -0.55
+RULES = [("Cap", "Head"), ("Brim", "Head"), ("Pavise", "ArmL"), ("Band", "ArmL"), ("Boss", "ArmL"), ("Bow", "ArmR"),
+         ("String", "ArmR"), ("Arrow", "ArmR")]
 
 
 def build():
@@ -64,8 +70,12 @@ def build():
                    rot=(math.pi / 2, 0, 0))
     parts += [st, arrow, head]
     L.xform(L.by_name(parts, "ArmR", "FistR", "Bow", "String", "Arrow"), L.rot_x(-0.15), (-a["arm_x"], 0, S), OX)
-    return parts
+    J = X.joints(p)
+    return parts, J
 
 
-parts = build()
-result = A.review("shield_archer", parts, original_blend="en_shieldarcher", original_root="EN_ShieldArcher")
+parts, J = build()
+if EXPORT:
+    result = L.export_enemy("EN_ShieldArcher", parts, J, 1.23, RULES)
+else:
+    result = A.review("shield_archer", parts, original_blend="en_shieldarcher", original_root="EN_ShieldArcher")

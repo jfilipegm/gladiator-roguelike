@@ -4,6 +4,7 @@ Identity kept from en_shieldthug.py: a stocky brawler in dark leather, an iron p
 nose guard, a dark beard, iron-shod boots; a big light wooden door-shield held square in front on the left arm (it IS
 the gameplay, so it owns the front silhouette) with iron rims and the magenta boss (the enemy accent); a knobbed
 club up and forward in the right fist. Changed: the variant-A body (lean), the pot helmet a chamfered frustum.
+export=1: the game model Assets/Art/Models/A1/Enemies/EN_ShieldThug.fbx (docs/tracks/A1-ingame-contract.md).
 """
 import importlib
 import os
@@ -16,8 +17,12 @@ import simple_kit as A
 importlib.reload(A)
 import a1_tier12_lib as L
 importlib.reload(L)
+import a1_export as X
+importlib.reload(X)
 
-OX = -0.55
+EXPORT = ARGS.get("export") == "1"
+OX = 0.0 if EXPORT else -0.55
+RULES = [("Brim", "Head"), ("Spike", "Head"), ("Shield", "ArmL"), ("Plank", "ArmL"), ("Boss", "ArmL"), ("Club", "ArmR")]
 
 
 def build():
@@ -63,12 +68,16 @@ def build():
     club.rotation_euler = (0.75, 0, 0)
     parts.append(club)
     L.xform(L.by_name(parts, "ArmR", "FistR", "Club"), L.rot_x(-0.25), (-xl, 0, p["S"]), OX)
-    return parts
+    J = X.joints(p)
+    return parts, J
 
 
 def HH(p):
     return p["HH"]
 
 
-parts = build()
-result = A.review("shield_thug", parts, original_blend="en_shieldthug", original_root="EN_ShieldThug")
+parts, J = build()
+if EXPORT:
+    result = L.export_enemy("EN_ShieldThug", parts, J, 1.5, RULES)
+else:
+    result = A.review("shield_thug", parts, original_blend="en_shieldthug", original_root="EN_ShieldThug")

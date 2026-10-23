@@ -4,6 +4,7 @@ Identity kept from en_assassin.py: lean and all charcoal (the strongest contrast
 ink tip over a dark slate face and a white eye slit, a leather sash, two steel daggers held low in reverse grip, and
 the long magenta scarf streaming down the back (the silhouette tell and the enemy accent). Changed: the variant-A body
 (lean); the hooded head is one chamfered loft (head and hood in one), the face a painted panel.
+export=1: the game model Assets/Art/Models/A1/Enemies/EN_Assassin.fbx (docs/tracks/A1-ingame-contract.md).
 """
 import importlib
 import os
@@ -16,8 +17,12 @@ import simple_kit as A
 importlib.reload(A)
 import a1_tier12_lib as L
 importlib.reload(L)
+import a1_export as X
+importlib.reload(X)
 
-OX = -0.55
+EXPORT = ARGS.get("export") == "1"
+OX = 0.0 if EXPORT else -0.55
+RULES = [("Scarf", "Body"), ("DaggerL", "ArmL"), ("DaggerR", "ArmR")]
 
 
 def build():
@@ -60,8 +65,12 @@ def build():
         parts.append(L.flat(d))
         L.xform(L.by_name(parts, "Arm" + s, "Fist" + s, "Dagger" + s), L.Matrix.Rotation(-0.1 * sg, 4, "Y"),
                 (a["arm_x"] * sg, 0, p["S"]), OX)
-    return parts
+    J = X.joints(p)
+    return parts, J
 
 
-parts = build()
-result = A.review("assassin", parts, original_blend="en_assassin", original_root="EN_Assassin")
+parts, J = build()
+if EXPORT:
+    result = L.export_enemy("EN_Assassin", parts, J, 1.43, RULES)
+else:
+    result = A.review("assassin", parts, original_blend="en_assassin", original_root="EN_Assassin")

@@ -5,6 +5,7 @@ hide with a bristling mud-brown mane along the spine, a big wedge head held low 
 bone tusks curving up, small glaring red eyes (angry brows, like the other enemies), the magenta war harness round
 the barrel (the enemy accent; now with two iron studs), ink hooves, a short tail. Changed: chibi, so a big chamfered
 head; oct8 sections lofted along Y with a slate belly; the mane a saw-tooth crest.
+export=1: the game model Assets/Art/Models/A1/Enemies/EN_WarBoar.fbx (docs/tracks/A1-ingame-contract.md).
 """
 import importlib
 import math
@@ -18,9 +19,15 @@ import simple_kit as A
 importlib.reload(A)
 import a1_tier12_lib as L
 importlib.reload(L)
+import a1_export as X
+importlib.reload(X)
 
+EXPORT = ARGS.get("export") == "1"
 GAP = 1.7
-OX = -GAP / 2
+OX = 0.0 if EXPORT else -GAP / 2
+RULES = [("Body", "Body"), ("Mane", "Body"), ("Harness", "Body"), ("Stud", "Body"), ("Tail", "Body"),
+         ("Snout", "Head"), ("Nostril", "Head"), ("Tusk", "Head"), ("HoofLArm", "ArmL"), ("HoofRArm", "ArmR"),
+         ("HoofLLeg", "LegL"), ("HoofRLeg", "LegR")]
 
 
 def build():
@@ -72,8 +79,17 @@ def build():
     tail.location = (OX, 0.5, 0.64)
     add(tail)
     L.xform(parts, L.Matrix.Scale(1.15, 4), (0, 0, 0), OX)   # elite bulk, as big as the original
-    return parts
+    # the joints: the barrel's middle, the neck, the top of each leg (front legs = ArmL/ArmR), scaled like the pieces
+    J = {"Body": (0, 0, 0.6), "Head": (0, -0.4, 0.55), "ArmL": (0.17, -0.25, 0.5), "ArmR": (-0.17, -0.25, 0.5),
+         "LegL": (0.17, 0.32, 0.5), "LegR": (-0.17, 0.32, 0.5)}
+    J = {k: L.Vector(v) * 1.15 for k, v in J.items()}
+    return parts, J
 
 
-parts = build()
-result = A.review("war_boar", parts, original_blend="en_warboar", original_root="EN_WarBoar", height=1.2, gap=GAP)
+parts, J = build()
+if EXPORT:
+    # x0.86, not the plain fit (x0.79): the tall mane makes the height, so the plain fit left the barrel 17 % shorter
+    # than the original's; x0.86 splits it (height +9 %, length -9 %)
+    result = L.export_enemy("EN_WarBoar", parts, J, 1.02, RULES, scale=0.86)
+else:
+    result = A.review("war_boar", parts, original_blend="en_warboar", original_root="EN_WarBoar", height=1.2, gap=GAP)

@@ -6,6 +6,7 @@ white loincloth under the magenta belt (the enemy accent), leather boots; the ta
 spine held square in front from knee to chin (the door), and a short gladius pointing forward. Changed: the
 variant-A body (lean); the helm is one chamfered loft standing in for the head; the scutum is a two-facet bent plate
 (it reads curved in flat shading), rims and spine painted on it.
+export=1: the game model Assets/Art/Models/A1/Enemies/EN_Murmillo.fbx (docs/tracks/A1-ingame-contract.md).
 """
 import importlib
 import os
@@ -18,8 +19,13 @@ import simple_kit as A
 importlib.reload(A)
 import a1_tier12_lib as L
 importlib.reload(L)
+import a1_export as X
+importlib.reload(X)
 
-OX = -0.55
+EXPORT = ARGS.get("export") == "1"
+OX = 0.0 if EXPORT else -0.55
+RULES = [("Bar", "Head"), ("Brim", "Head"), ("Loincloth", "Body"), ("Scutum", "ArmL"), ("Boss", "ArmL"),
+         ("Gladius", "ArmR")]
 
 
 def scutum(name, cx, cy, w, z0, z1, ox, bulge=0.06, t=0.035, sw="cloth_blue", rim="bronze", spine="bronze_l"):
@@ -74,8 +80,12 @@ def build():
     L.paint(g, "bronze_d", lambda c, n: c.y > -0.1, 0.0)
     parts.append(L.flat(g))
     L.xform(L.by_name(parts, "ArmR", "FistR", "Gladius"), L.rot_x(-0.3), (-xl, 0, S), OX)
-    return parts
+    J = X.joints(p)
+    return parts, J
 
 
-parts = build()
-result = A.review("murmillo", parts, original_blend="en_murmillo", original_root="EN_Murmillo")
+parts, J = build()
+if EXPORT:
+    result = L.export_enemy("EN_Murmillo", parts, J, 1.72, RULES)
+else:
+    result = A.review("murmillo", parts, original_blend="en_murmillo", original_root="EN_Murmillo")

@@ -5,6 +5,7 @@ smoke, an ash cloth cap, yellow eyes, the magenta sash (the enemy accent), slate
 carrying clay pots, and a burning clay pot held out in the right hand (glowing top, orange flame: this one throws
 fire). Changed: the variant-A body (lean); the mask and cap are painted on the head (no extra triangles); two pots on
 the back instead of three.
+export=1: the game model Assets/Art/Models/A1/Enemies/EN_FirePot.fbx (docs/tracks/A1-ingame-contract.md).
 """
 import importlib
 import os
@@ -19,8 +20,12 @@ import simple_kit as A
 importlib.reload(A)
 import a1_tier12_lib as L
 importlib.reload(L)
+import a1_export as X
+importlib.reload(X)
 
-OX = -0.55
+EXPORT = ARGS.get("export") == "1"
+OX = 0.0 if EXPORT else -0.55
+RULES = [("Frame", "Body"), ("Pot", "Body"), ("HandPot", "ArmR"), ("Flame", "ArmR")]
 
 
 def pot(name, r, base, ox, burning=False, clay="rust_light"):
@@ -64,8 +69,12 @@ def build():
     head_grp = L.by_name(parts, "Head", "Eye", "Brow")
     L.xform(head_grp, L.rot_x(-0.12), (0, 0, a["neck_z"]), OX)
     L.xform(upper, L.rot_x(0.24), (0, 0, p["H"] - 0.06), OX)
-    return parts
+    J = L.move_joints(X.joints(p), ("Head", "ArmL", "ArmR"), L.rot_x(0.24), (0, 0, p["H"] - 0.06))   # the hunch
+    return parts, J
 
 
-parts = build()
-result = A.review("fire_pot", parts, original_blend="en_firepot", original_root="EN_FirePot")
+parts, J = build()
+if EXPORT:
+    result = L.export_enemy("EN_FirePot", parts, J, 1.163, RULES)
+else:
+    result = A.review("fire_pot", parts, original_blend="en_firepot", original_root="EN_FirePot")

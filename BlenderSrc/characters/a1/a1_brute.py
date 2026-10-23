@@ -6,6 +6,7 @@ pauldrons, a small shaved head sunk between them with an ink topknot, yellow eye
 jaw, long arms ending in huge iron-banded fists, rusty shackle cuffs with broken chains, a leather chest strap, the
 magenta loincloth (the enemy accent), thick legs with sack-cloth wraps, bare dark feet. Changed: the variant-A body
 (lean) with brute proportions (wide torso, thick limbs, small head: ~33 % of the height instead of 37 %).
+export=1: the game model Assets/Art/Models/A1/Enemies/EN_Brute.fbx (docs/tracks/A1-ingame-contract.md).
 """
 import importlib
 import os
@@ -18,9 +19,15 @@ import simple_kit as A
 importlib.reload(A)
 import a1_tier12_lib as L
 importlib.reload(L)
+import a1_export as X
+importlib.reload(X)
 
+EXPORT = ARGS.get("export") == "1"
 GAP = 1.5
-OX = -GAP / 2
+OX = 0.0 if EXPORT else -GAP / 2
+RULES = [("Belly", "Body"), ("Loincloth", "Body"), ("Strap", "Body"), ("Topknot", "Head"), ("Pauldron", "Body"),
+         ("Spike", "Body"), ("BandL", "ArmL"), ("BandR", "ArmR"), ("CuffL", "ArmL"), ("CuffR", "ArmR"),
+         ("LinkL", "ArmL"), ("LinkR", "ArmR"), ("WrapL", "LegL"), ("WrapR", "LegR")]
 SCALE = 1.4
 
 
@@ -75,8 +82,12 @@ def build():
     for s, sg in (("L", 1), ("R", -1)):
         parts.append(L.ring("Wrap" + s, 0.17, 0.30, hx6(LR * 0.93, LR * 0.99, p["LX"] * sg, 0.004), "cloth_sack", OX))
     L.xform(parts, L.Matrix.Scale(SCALE, 4), (0, 0, 0), OX)
-    return parts
+    J = X.joints(p, scale=SCALE)
+    return parts, J
 
 
-parts = build()
-result = A.review("brute", parts, original_blend="en_brute", original_root="EN_Brute", height=2.1, gap=GAP)
+parts, J = build()
+if EXPORT:
+    result = L.export_enemy("EN_Brute", parts, J, 1.786, RULES)
+else:
+    result = A.review("brute", parts, original_blend="en_brute", original_root="EN_Brute", height=2.1, gap=GAP)

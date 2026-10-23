@@ -15,6 +15,9 @@ namespace Gladiator.UI
         Scutum, ScutumLocked, ScutumSpine, Clipeus, ClipeusLocked,
         VexillumBar, VexillumCrimson, VexillumPurple,
         Trough, TroughFill, Knob, Chip, KeyChip, LaurelBranch, LaurelWreath,
+        // P3 (docs/tracks/P3-contract.md): the shape-following focus glow for both ansata plates, the NEW seal, the pilum
+        // arrows and the HUD's 16 px icons
+        AnsataGlow, SealNew, ArrowLeft, ArrowRight, IconHeart, IconAureus, IconSkullGalea,
     }
 
     /// <summary>One line of the frame index: the cell (from the PNG's top-left), borders and paddings (left, bottom,
@@ -142,10 +145,10 @@ namespace Gladiator.UI
         /// <summary>The border (left, bottom, right, top) in canvas units.</summary>
         public static Vector4 Border(FrameKind k) => TryEntry(k, out var e) ? e.Border * ArtScale : Vector4.zero;
 
-        /// <summary>Card frames and the focus ring are rims: their centre stays empty.</summary>
+        /// <summary>Card frames, the focus ring and the ansata glow are rims: their centre stays empty.</summary>
         public static bool FillsCenter(FrameKind k) =>
             k != FrameKind.CardStone && k != FrameKind.CardBronze && k != FrameKind.CardSilver && k != FrameKind.CardGold
-            && k != FrameKind.Focus;
+            && k != FrameKind.Focus && k != FrameKind.AnsataGlow;
 
         /// <summary>Gives `img` the frame: sprite, type, fillCenter (false for card frames and Focus). Keeps its colour.</summary>
         public static Image Apply(Image img, FrameKind k)
@@ -247,6 +250,10 @@ namespace Gladiator.UI
                 case FrameKind.Chip: case FrameKind.KeyChip: return new Vector2(8, 8);
                 case FrameKind.LaurelBranch: return new Vector2(20, 24);
                 case FrameKind.LaurelWreath: return new Vector2(60, 30);
+                case FrameKind.AnsataGlow: return new Vector2(34, 26);
+                case FrameKind.SealNew: return new Vector2(12, 12);
+                case FrameKind.ArrowLeft: case FrameKind.ArrowRight: return new Vector2(16, 12);
+                case FrameKind.IconHeart: case FrameKind.IconAureus: case FrameKind.IconSkullGalea: return new Vector2(16, 16);
                 default: return new Vector2(16, 16);
             }
         }

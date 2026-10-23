@@ -12,13 +12,17 @@ namespace Gladiator.UI
 
     public enum UiState : byte { Normal, Focused, Pressed, Disabled }
 
-    /// <summary>A themed plate (tabula ansata + engraved label, an optional key chip and a hidden focus ring), from
-    /// UiKit.Plate / UiKit.Button. SetState changes colours and alpha only: no allocation, no SetActive.</summary>
+    /// <summary>A themed plate (tabula ansata + engraved label, an optional key chip and a hidden focus glow), from
+    /// UiKit.Plate / UiKit.Button. SetState changes colours and alpha only: no allocation, no SetActive.
+    /// P3 (the producer's note 1): the focus is a gold glow that follows the ansata's silhouette (`FrameKind.AnsataGlow`,
+    /// the plate's size + 12), not a rectangle.</summary>
     public sealed class UiPlate
     {
         // UI tints can only darken (vertex colours clamp at 1), so a resting face sits at 1/1.1 and Focused can be ×1.1.
         public const float FaceNormal = 1f / 1.1f, FaceFocused = 1f, FacePressed = FaceNormal * 0.85f;
-        public const float DisabledGrey = 0.6f, DisabledAlpha = 0.45f;
+        // P3: 0.8, not 0.6: a disabled plate fades (alpha) but its words must still read (a BUY price you can't afford
+        // yet was 2.1:1 bronzeInk on the darkened bronze; 3.1:1 now)
+        public const float DisabledGrey = 0.8f, DisabledAlpha = 0.45f;
 
         public RectTransform Root;
         public Image Frame, Focus;
@@ -27,7 +31,7 @@ namespace Gladiator.UI
         public ButtonStyle Style;
         /// <summary>The key chip behind `Key` (null without a key).</summary>
         public Image KeyChip;
-        /// <summary>The focus ring's colour when Focused (gold by default; set it before SetState).</summary>
+        /// <summary>The focus glow's colour when Focused (gold by default; set it before SetState).</summary>
         public Color FocusColor;
         /// <summary>The label's and key's resting colours (Disabled fades them).</summary>
         public Color LabelColor, KeyColor;
@@ -62,7 +66,7 @@ namespace Gladiator.UI
     {
         static readonly Vector2 Mid = new Vector2(0.5f, 0.5f);
 
-        sealed class RoleTag { public TextRole Role; }
+        sealed class RoleTag { public TextRole Role; public TextLook Look; }
         static readonly ConditionalWeakTable<TMP_Text, RoleTag> _roles = new ConditionalWeakTable<TMP_Text, RoleTag>();
 
         /// <summary>A label in the role's font, the look's material and the role's spacing; FontStyles.Normal (no faux
@@ -88,7 +92,9 @@ namespace Gladiator.UI
             t.fontStyle = FontStyles.Normal;
             t.overflowMode = TextOverflowModes.Truncate;
             t.raycastTarget = false;
-            _roles.GetOrCreateValue(t).Role = role;
+            var tag = _roles.GetOrCreateValue(t);
+            tag.Role = role;
+            tag.Look = look;
         }
 
         /// <summary>An Image showing the frame, tinted; raycast off.</summary>
@@ -100,8 +106,9 @@ namespace Gladiator.UI
         }
 
         /// <summary>A tabula ansata plate: the frame (bronze for Primary, marble for Secondary), the label (Title,
-        /// Engraved; bronzeInk on bronze, marbleInk on marble; autosized down to 75 %, floor 18), an optional key chip
-        /// left of the label (Number on KeyChip) and a hidden focus ring 6 units outside. The label is the plate's FIRST
+        /// Engraved; bronzeInk on bronze, marbleInk on marble; autosized down to 75 %, floor 18) as wide as the plate's
+        /// ContentRect (P3: the padding rule), an optional key chip left of the label (Number on KeyChip) and a hidden
+        /// focus glow round the plate's silhouette (`AnsataGlow`, the plate's size + 12). The label is the plate's FIRST
         /// TMP child, so UiFactory.Label(plate.Button) still finds it. No Button component (see Button).</summary>
         public static UiPlate Plate(string name, Transform parent, string label, ButtonStyle style, Vector2 anchor, Vector2 pivot,
             Vector2 pos, Vector2 size, float fontSize = 30f, string key = null)
@@ -110,15 +117,17 @@ namespace Gladiator.UI
             var kind = style == ButtonStyle.Primary ? FrameKind.AnsataBronze : FrameKind.AnsataMarble;
             var frame = Frame(name, parent, kind, anchor, pivot, pos, size, Color.white);
             var pad = UiFrames.Padding(kind);
+            var content = ContentRect(kind, size);
             bool hasKey = !string.IsNullOrEmpty(key);
             float chip = hasKey ? Mathf.Clamp(Mathf.Round(size.y * 0.55f), 24f, 42f) : 0f;
             float gap = hasKey ? 8f : 0f;
-            float left = -size.x * 0.5f + pad.x, right = size.x * 0.5f - pad.z;
+            float left = -size.x * 0.5f + pad.x, right = content.xMax;
 
-            // the label first: it must be the first TMP child
-            float labelLeft = left + (hasKey ? 6f + chip + gap : 0f);
+            // the label first: it must be the first TMP child. Its box spans the content rect's width (the chip, when
+            // there is one, takes the left of it), so autosize keeps the words inside the padding.
+            float labelLeft = hasKey ? Mathf.Max(content.xMin, left + 6f + chip + gap) : content.xMin;
             var ink = style == ButtonStyle.Primary ? theme.bronzeInk : theme.marbleInk;
-            var text = Text("Label", frame.transform, label, TextRole.Title, fontSize, ink, TextAlignmentOptions.Center, Mid, Mid,
+            var text = Text("Label", frame.transform, label, TextRole.Title, fontSize, ink, TextAlignmentOptions.Midline, Mid, Mid, // glyph-centred (P3)
                 new Vector2((labelLeft + right) * 0.5f, 0f), new Vector2(Mathf.Max(10f, right - labelLeft), size.y), TextLook.Engraved);
             text.enableAutoSizing = true;
             text.fontSizeMax = fontSize;
@@ -134,9 +143,11 @@ namespace Gladiator.UI
                 plate.KeyChip = Frame("KeyChip", frame.transform, FrameKind.KeyChip, Mid, Mid,
                     new Vector2(left + 6f + chip * 0.5f, 0f), new Vector2(chip, chip), Color.white);
                 plate.Key = Text("Key", plate.KeyChip.transform, key, TextRole.Number, Mathf.Min(22f, Mathf.Round(chip * 0.62f)),
-                    theme.ink, TextAlignmentOptions.Center, Mid, Mid, new Vector2(0f, 1f), new Vector2(chip, chip));
+                    theme.ink, TextAlignmentOptions.Midline, Mid, Mid, Vector2.zero, new Vector2(chip, chip));
+                UiAudit.ExemptPadding(plate.Key); // a keycap: its letter fills the chip by design (its contrast is still checked)
             }
-            plate.Focus = Frame("Focus", frame.transform, FrameKind.Focus, Mid, Mid, Vector2.zero, size + new Vector2(12f, 12f),
+            // the glow: AnsataGlow's 2-art-px ring round the plate's silhouette (both ansatas share it), FocusColor-tinted
+            plate.Focus = Frame("Focus", frame.transform, FrameKind.AnsataGlow, Mid, Mid, Vector2.zero, size + GlowGrow,
                 new Color(theme.gold.r, theme.gold.g, theme.gold.b, 0f));
             plate.SetState(UiState.Normal);
             return plate;
@@ -225,6 +236,128 @@ namespace Gladiator.UI
         /// <summary>The crimson rule under a title on marble (3 units tall).</summary>
         public static Image Rule(string name, Transform parent, Vector2 anchor, Vector2 pivot, Vector2 pos, float width) =>
             UiFactory.Image(name, parent, UiTheme.Current.crimson, anchor, pivot, pos, new Vector2(width, 3f), PixelIcons.White);
+
+        // ------------------------------------------------------------------ P3 (docs/tracks/P3-contract.md)
+
+        /// <summary>How much a plate's focus glow grows past the plate: 2 art px × 3 on every side.</summary>
+        public static readonly Vector2 GlowGrow = new Vector2(12f, 12f);
+
+        /// <summary>Tests: was this label themed (Text / Style) with `look`?</summary>
+        public static bool HasLook(Component text, TextLook look)
+        {
+            var t = text as TMP_Text;
+            return t != null && _roles.TryGetValue(t, out var tag) && tag.Look == look;
+        }
+
+        /// <summary>The NEW seal's size on plates, tabs and tiles (12 art px at 3 units each); Codex entries use 24 (2 each).</summary>
+        public const float SealSize = 36f;
+
+        /// <summary>The NEW mark (note 6): a crimson wax seal with a gold N (`FrameKind.SealNew`), hidden until enabled;
+        /// PlaceSeal puts it on a plate's corner.</summary>
+        public static Image Seal(string name, Transform parent, float size = SealSize)
+        {
+            var img = Frame(name, parent, FrameKind.SealNew, Mid, Mid, Vector2.zero, new Vector2(size, size), Color.white);
+            img.enabled = false;
+            return img;
+        }
+
+        /// <summary>Puts `seal` (a child of `plate`) on the plate's top-right corner over the last letter of `label`: its
+        /// centre a fifth of the seal right of the last letter's ink and a little under the plate's top edge, never past
+        /// the plate's right edge. Call after the text is set (menu-only: it measures).</summary>
+        public static void PlaceSeal(Image seal, RectTransform plate, TMP_Text label)
+        {
+            if (seal == null || plate == null) return;
+            var r = plate.rect;
+            float size = seal.rectTransform.sizeDelta.x;
+            float x = r.xMax - size * 0.5f;
+            if (label != null && UiAudit.TryInkBounds(label, out var ink))
+                x = plate.InverseTransformPoint(label.transform.TransformPoint(new Vector3(ink.xMax, 0f, 0f))).x + size * 0.2f;
+            x = Mathf.Min(x, r.xMax - size * 0.5f);
+            var rt = seal.rectTransform;
+            rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.anchoredPosition = new Vector2(x, r.yMax - size * 0.15f) - r.center; // from the plate's centre (its anchor)
+        }
+
+        /// <summary>A pager arrow (note 11): a bronze pilum tip (`ArrowLeft` / `ArrowRight` at their art's size), no plate
+        /// behind. The Button sits on a clear hit area of `hit` units; the arrow is its target graphic, a little dim at rest
+        /// and full bright when hovered.</summary>
+        public static Button Arrow(string name, Transform parent, bool right, Vector2 anchor, Vector2 pivot, Vector2 pos, Vector2 hit,
+            UnityAction onClick)
+        {
+            var area = UiFactory.Image(name, parent, Color.clear, anchor, pivot, pos, hit, PixelIcons.White);
+            area.raycastTarget = true;
+            var kind = right ? FrameKind.ArrowRight : FrameKind.ArrowLeft;
+            var arrow = Frame("Arrow", area.transform, kind, Mid, Mid, Vector2.zero, UiFrames.NativeSize(kind), Color.white);
+            var btn = area.gameObject.AddComponent<Button>();
+            btn.targetGraphic = arrow;
+            var colors = btn.colors;
+            colors.normalColor = new Color(ArrowRest, ArrowRest, ArrowRest, 1f);
+            colors.highlightedColor = Color.white;
+            colors.pressedColor = new Color(0.62f, 0.62f, 0.62f, 1f);
+            colors.selectedColor = colors.normalColor;
+            colors.disabledColor = new Color(0.5f, 0.5f, 0.5f, 0.45f);
+            colors.colorMultiplier = 1f;
+            colors.fadeDuration = 0.05f;
+            btn.colors = colors;
+            btn.navigation = new Navigation { mode = Navigation.Mode.None };
+            if (onClick != null) btn.onClick.AddListener(onClick);
+            return btn;
+        }
+
+        /// <summary>A pager arrow's brightness at rest (hovered = 1).</summary>
+        public const float ArrowRest = 0.78f;
+
+        /// <summary>A list row's focus (no rectangles on menus): a soft band behind the row's words and a pilum marker
+        /// (`ArrowRight`, 2 units per art px) pointing at the row's left edge. Build it before the row's words (it must
+        /// draw under them); Show only enables and disables (no allocation).</summary>
+        public sealed class RowFocus
+        {
+            public RectTransform Root;
+            public Image Band, Marker;
+            public bool Shown { get; private set; }
+
+            public void Show(bool on)
+            {
+                Shown = on;
+                if (Band != null) Band.enabled = on;
+                if (Marker != null) Marker.enabled = on;
+            }
+        }
+
+        /// <summary>A soft white band: lighter on dark faces (wax, bronze plates, stone).</summary>
+        public static readonly Color BandLight = new Color(1f, 1f, 1f, 0.08f);
+
+        /// <summary>Builds a hidden RowFocus over a row at `pos` (`size`, from `anchor` / `pivot`): the band fills it (in
+        /// `band`'s colour: BandLight on dark faces, a warm shade on marble), the marker's tip 4 units left of it.</summary>
+        public static RowFocus Row(string name, Transform parent, Vector2 anchor, Vector2 pivot, Vector2 pos, Vector2 size, Color band)
+        {
+            var root = UiFactory.Rect(name, parent, anchor, pivot, pos, size);
+            var b = UiFactory.Image("Band", root, band, Mid, Mid, Vector2.zero, Vector2.zero, PixelIcons.White);
+            UiFactory.Stretch(b.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            b.raycastTarget = false;
+            var marker = UiFrames.NativeSize(FrameKind.ArrowRight) * (2f / UiFrames.ArtScale);
+            var left = new Vector2(0f, 0.5f);
+            var m = Frame("Marker", root, FrameKind.ArrowRight, left, new Vector2(1f, 0.5f), new Vector2(-4f, 0f), marker, Color.white);
+            var f = new RowFocus { Root = root, Band = b, Marker = m };
+            f.Show(false);
+            return f;
+        }
+
+        /// <summary>P3 (the producer's note 4): the gap every label keeps inside its frame's padding, canvas units.</summary>
+        public const float ContentPad = 8f;
+
+        /// <summary>P3: where labels may sit inside a frame of `kind` and `size`: the frame less its padding
+        /// (UiFrames.Padding) and ContentPad on every side, in the frame's local units with (0, 0) at its centre. Never
+        /// negative: a frame too small for its padding gives a zero-size rect at its centre.</summary>
+        public static Rect ContentRect(FrameKind kind, Vector2 size)
+        {
+            var p = UiFrames.Padding(kind);
+            float xMin = -size.x * 0.5f + p.x + ContentPad, xMax = size.x * 0.5f - p.z - ContentPad;
+            float yMin = -size.y * 0.5f + p.y + ContentPad, yMax = size.y * 0.5f - p.w - ContentPad;
+            if (xMax < xMin) xMin = xMax = (xMin + xMax) * 0.5f;
+            if (yMax < yMin) yMin = yMax = (yMin + yMax) * 0.5f;
+            return Rect.MinMaxRect(xMin, yMin, xMax, yMax);
+        }
 
         /// <summary>The scale that fits a `size` block in `canvas` with `margin` on every side, never above 1 (spec §8.2).</summary>
         public static float FitScale(Vector2 size, Vector2 canvas, float margin = 24f)

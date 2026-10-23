@@ -11,8 +11,10 @@ namespace Gladiator.UI
     /// The roster as a grid of shields (U1, the producer's pick; R9 had bone tesserae): each tile is a scutum, the
     /// legionary's curved shield, with the portrait set into a round clipeus at its centre (the Roman portrait shield),
     /// the gold spine above it and the name on the shield's lower band. Open: the gold-rimmed `Scutum`. Locked: dark iron
-    /// (`ScutumLocked`, `ClipeusLocked`), the portrait a black silhouette, "???". Picked: a gold focus ring, a gold
-    /// wreath on the shield's top and a small lift. Hovered: a pale ring.
+    /// (`ScutumLocked`, `ClipeusLocked`), the portrait a black silhouette, "???". P3 (the producer's note 10: no rings
+    /// on tiles): picked = the gold laurel wreath (`LaurelWreath`, redrawn with green shading and a red ribbon) crowning the
+    /// shield, a small lift and a brighter face; hovered = a brighter face. The Codex's NEW mark is the crimson seal
+    /// (`SealNew`) on the shield's top-right corner.
     /// The gladiator select and the Codex's GLADIATORS tab both use it. Nothing slides: the grid is scaled to fit its
     /// column (MenuLayout). Built once; picks and hovers only recolour and move tiles (no allocation).
     /// Open tiles' buttons are named "Card" and locked ones "Locked" (a test clicks the earned gladiators' cards).
@@ -40,11 +42,18 @@ namespace Gladiator.UI
         public static readonly Color Silhouette = new Color32(0x1E, 0x1B, 0x19, 0xFF);
 
         // the shield's bands (canvas units, the tile's centre at 0): the name on the lower band, the clipeus above it
-        const float Lift = 4f, Ring = 6f, TopInset = 14f, BottomInset = 12f, NameH = 48f, NameW = 132f, SpineW = 6f;
+        const float Lift = 4f, TopInset = 14f, BottomInset = 12f, NameH = 48f, NameW = 132f, SpineW = 6f;
+        /// <summary>The wreath at 2 canvas units per art pixel (whole screen pixels at 1080p, like the HUD's icons), its
+        /// ribbon on the shield's top band and its branches rising above it.</summary>
+        static Vector2 WreathSize => UiFrames.NativeSize(FrameKind.LaurelWreath) * (2f / UiFrames.ArtScale);
+        const float WreathAbove = 32f;
+        /// <summary>How far the picked tile's wreath (and its lift) rises above the grid's top: callers leave this much
+        /// room under whatever sits above the grid.</summary>
+        public const float WreathRoom = WreathAbove + Lift;
 
         Slot[] _slots = Array.Empty<Slot>();
-        RectTransform[] _tiles = Array.Empty<RectTransform>(), _frames = Array.Empty<RectTransform>();
-        Image[] _frameImages = Array.Empty<Image>(), _wreaths = Array.Empty<Image>(), _dots = Array.Empty<Image>(), _shields = Array.Empty<Image>();
+        RectTransform[] _tiles = Array.Empty<RectTransform>();
+        Image[] _wreaths = Array.Empty<Image>(), _dots = Array.Empty<Image>(), _shields = Array.Empty<Image>();
         Button[] _buttons = Array.Empty<Button>();
         TextMeshProUGUI[] _names = Array.Empty<TextMeshProUGUI>();
         RawImage[] _faces = Array.Empty<RawImage>();
@@ -99,8 +108,16 @@ namespace Gladiator.UI
         public int TileFrame(int i) => i >= 0 && i < _shields.Length ? UiFrames.KindOf(_shields[i]) : -1;
         /// <summary>Tests: tile `i`'s name label (its theme role).</summary>
         public Component NameLabel(int i) => i >= 0 && i < _names.Length ? _names[i] : null;
-        /// <summary>Tests: the colour of tile `i`'s focus ring (gold picked, pale hovered, clear otherwise).</summary>
-        public Color RingColor(int i) => _frameImages[i].color;
+        /// <summary>Tests: the colour of tile `i`'s focus ring. P3: tiles have no rings (the producer's note 10), so it is
+        /// always clear; FaceTint and Lifted show the pick and the hover.</summary>
+        public Color RingColor(int i) => Color.clear;
+        /// <summary>Tests: tile `i`'s shield tint (brighter while picked or hovered).</summary>
+        public Color FaceTint(int i) => i >= 0 && i < _shields.Length ? _shields[i].color : Color.clear;
+        /// <summary>Tests: tile `i` stands lifted (it's the pick).</summary>
+        public bool Lifted(int i) => i >= 0 && i < _tiles.Length && _tiles[i].anchoredPosition != _home[i];
+        /// <summary>Tests: tile `i`'s wreath and NEW seal (`LaurelWreath`, `SealNew`).</summary>
+        public Component WreathImage(int i) => i >= 0 && i < _wreaths.Length ? _wreaths[i] : null;
+        public Component NewSeal(int i) => i >= 0 && i < _dots.Length ? _dots[i] : null;
         /// <summary>Tests: the picture tile `i` shows: what SetPortrait put there, else its gladiator's baked portrait.</summary>
         public Sprite PortraitOf(int i)
         {
@@ -124,8 +141,6 @@ namespace Gladiator.UI
             var used = GridMath.Size(Mathf.Max(n, 1), Columns, MenuLayout.Tile, MenuLayout.Gap);
             Root = UiFactory.Rect("Roster", parent, anchor, new Vector2(0f, 1f), pos, new Vector2(full.x, used.y));
             _tiles = new RectTransform[n];
-            _frames = new RectTransform[n];
-            _frameImages = new Image[n];
             _shields = new Image[n];
             _wreaths = new Image[n];
             _dots = new Image[n];
@@ -147,11 +162,6 @@ namespace Gladiator.UI
             var mid = new Vector2(0.5f, 0.5f);
             var c = GridMath.Cell(i, Columns, tile, MenuLayout.Gap);
             _home[i] = c;
-
-            // the focus ring round the shield while it's hovered or picked
-            var frame = UiKit.Frame("Frame", Root, FrameKind.Focus, topLeft, mid, c, tile + new Vector2(Ring * 2f, Ring * 2f), Color.clear);
-            _frameImages[i] = frame;
-            _frames[i] = frame.rectTransform;
 
             // the shield; its Button takes the click (the pictures and words on it ignore the pointer)
             var shield = UiKit.Frame(s.Open ? "Card" : "Locked", Root, s.Open ? FrameKind.Scutum : FrameKind.ScutumLocked, topLeft, mid, c, tile, Color.white);
@@ -195,14 +205,19 @@ namespace Gladiator.UI
             name.enableAutoSizing = true;
             name.fontSizeMin = 18f;
             name.fontSizeMax = 20f;
+            // the scutum's padding is its curved corners (9 × 12 art px); the name band sits on the shield's straight lower
+            // part, inside its 3-px rim, as the shield is drawn (its contrast is still checked)
+            UiAudit.ExemptPadding(name);
             _names[i] = name;
 
-            var wreath = UiFactory.Image("Wreath", t, Color.white, mid, mid, new Vector2(0f, top - 6f), new Vector2(48f, 36f), PixelIcons.Wreath);
+            // the wreath crowns the shield: its ribbon on the top band, its branches rising WreathAbove over the edge
+            var wreathSize = WreathSize;
+            var wreath = UiKit.Frame("Wreath", t, FrameKind.LaurelWreath, mid, mid, new Vector2(0f, top + WreathAbove - wreathSize.y * 0.5f), wreathSize, Color.white);
             wreath.enabled = false;
             _wreaths[i] = wreath;
-            var dot = UiFactory.Image("New", t, th.gold, mid, mid, new Vector2(tile.x * 0.5f - 18f, top - 18f), new Vector2(14f, 14f), PixelIcons.White);
-            dot.enabled = false;
-            _dots[i] = dot;
+            var seal = UiKit.Seal("New", t);
+            seal.rectTransform.anchoredPosition = new Vector2(tile.x * 0.5f - UiKit.SealSize * 0.4f, top - UiKit.SealSize * 0.4f);
+            _dots[i] = seal;
         }
 
         /// <summary>"The Pit Goblin" → "PIT GOBLIN", "Asterion, the Chained" → "ASTERION": carved capitals, without the
@@ -283,20 +298,17 @@ namespace Gladiator.UI
             Refresh();
         }
 
+        /// <summary>The pick: lifted, crowned (when earned) and bright; the hover: bright. Colours and positions only.</summary>
         void Refresh()
         {
-            var gold = UiTheme.Current.gold;
             for (int i = 0; i < _tiles.Length; i++)
             {
                 bool picked = i == _pick;
-                _frameImages[i].color = picked ? gold : i == _hover ? Pale : Color.clear;
+                float k = picked || i == _hover ? UiPlate.FaceFocused : UiPlate.FaceNormal;
+                _shields[i].color = new Color(k, k, k, 1f);
                 _wreaths[i].enabled = picked && _slots[i].Open;
                 var at = _home[i] + (picked ? new Vector2(0f, Lift) : Vector2.zero);
-                if (_tiles[i].anchoredPosition != at)
-                {
-                    _tiles[i].anchoredPosition = at;
-                    _frames[i].anchoredPosition = at;
-                }
+                if (_tiles[i].anchoredPosition != at) _tiles[i].anchoredPosition = at;
             }
         }
     }

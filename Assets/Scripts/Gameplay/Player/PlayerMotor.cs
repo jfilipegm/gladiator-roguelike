@@ -401,11 +401,34 @@ namespace Gladiator.Gameplay
             Vector3 origin = transform.position + Vector3.up * (r + 0.05f);
             float dist = IsGrounded ? 0.25f : 0.1f;
             if (!Physics.SphereCast(origin, r, Vector3.down, out var hit, dist, Layers.SolidMask, QueryTriggerInteraction.Ignore))
+            {
+                _perch = PerchUnder(); // resting on a NoPerch top's edge, where this narrower sphere misses it
                 return false;
+            }
             if (hit.collider.TryGetComponent<NoPerch>(out _)) { _perch = hit.collider; return false; } // slides off (Tick)
             if (Vector3.Angle(hit.normal, Vector3.up) > config.slopeLimit) return false;
             normal = hit.normal;
             return true;
+        }
+
+        static readonly Collider[] _perchProbe = new Collider[8];
+
+        /// <summary>P3 note 20 (the producer's playtest of v0.24.0: on a Slave Pit cage "i can hit but not get hit back"):
+        /// the controller can rest on a NoPerch top's edge while the ground probe's narrower sphere passes beside it, so
+        /// the player hung there "airborne" and never slid off. A NoPerch collider touching the capsule's lower
+        /// hemisphere with its top below the hemisphere's centre is holding them up: slide off it too. A prop beside a
+        /// player on the floor reaches above that centre and doesn't count.</summary>
+        Collider PerchUnder()
+        {
+            float r = _cc.radius;
+            Vector3 c = transform.position + Vector3.up * r;
+            int n = Physics.OverlapSphereNonAlloc(c, r + _cc.skinWidth + 0.02f, _perchProbe, Layers.SolidMask, QueryTriggerInteraction.Ignore);
+            for (int i = 0; i < n; i++)
+            {
+                var col = _perchProbe[i];
+                if (col.bounds.max.y <= c.y && col.TryGetComponent<NoPerch>(out _)) return col;
+            }
+            return null;
         }
 
         /// <summary>On a NoPerch top: no walking back onto it, no free-fall speed building up while resting on it, and a

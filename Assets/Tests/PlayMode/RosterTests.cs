@@ -15,9 +15,9 @@ namespace Gladiator.Tests
     /// <summary>
     /// R9, the producer's playtest: the gladiator select's sliding card row stranded the mouse once the last earned
     /// gladiator was picked. Now a grid of tessera tiles beside the lanista's tablet: every tile is on screen and
-    /// clickable whoever is picked, a locked pick shows its hint and disables FIGHT!, the cursor moves in 2D, the arena
-    /// ladder climbs bottom to top, the Codex shows the same grid read-only, and idle frames allocate nothing. No run
-    /// starts here (the menu scene only).
+    /// clickable whoever is picked, a locked pick shows its hint and disables FIGHT!, the cursor moves in 2D, the arenas
+    /// (P3: a grid of tiles, three to a row, in climb order) move in 2D too, the Codex shows the same grid read-only, and
+    /// idle frames allocate nothing. No run starts here (the menu scene only).
     /// </summary>
     public class RosterTests
     {
@@ -215,21 +215,44 @@ namespace Gladiator.Tests
         }
 
         [UnityTest, Timeout(60000)]
-        public IEnumerator TheLadder_ClimbsBottomToTop_AndALockedStepCantFight()
+        public IEnumerator TheArenaGrid_ReadsInClimbOrder_MovesIn2D_AndALockedTileCantFight()
         {
             yield return Boot();
             var ladder = _menu.Ladder;
-            Assert.AreEqual(_menu.runs.Length, ladder.Count, "every arena is a step");
-            Assert.Greater(ladder.Count, 1);
+            Assert.AreEqual(_menu.runs.Length, ladder.Count, "every arena is a tile");
+            Assert.Greater(ladder.Count, 3, "more than one row");
             Assert.IsFalse(_menu.AsksForArena, "one arena earned: FIGHT! goes straight in (the hidden screen is still laid out)");
             yield return null;
             Canvas.ForceUpdateCanvases();
-            var bottom = ScreenRect(ladder.Tile(0));
+            var first = ScreenRect(ladder.Tile(0));
             var next = ScreenRect(ladder.Tile(1));
-            Assert.Less(bottom.center.y, next.center.y, "the Slave Pit is the bottom step");
-            Assert.Less(bottom.center.x, next.center.x, "each step a little further right");
-            for (int i = 0; i < ladder.Count; i++) AssertOnScreen(ladder.Tile(i), "step " + i);
+            var below = ScreenRect(ladder.Tile(ArenaLadder.Columns));
+            Assert.AreEqual(first.center.y, next.center.y, 10f, "the Slave Pit and the next arena share the top row (the pick stands 8 lifted)");
+            Assert.Less(first.center.x, next.center.x, "climb order runs left to right");
+            Assert.Less(below.center.y, first.center.y, "the fourth arena starts the second row");
+            Assert.AreEqual(first.center.x, below.center.x, 0.5f, "under the first");
+            var tablet = ScreenRect(_menu.ArenaTablet.Root);
+            for (int i = 0; i < ladder.Count; i++)
+            {
+                AssertOnScreen(ladder.Tile(i), "tile " + i);
+                Assert.Less(ScreenRect(ladder.Tile(i)).xMax, tablet.xMin, "tile " + i + " is left of the tablet");
+                Assert.AreEqual(ladder.IsOpen(i) ? (int)FrameKind.Marble : (int)FrameKind.Stone, ladder.TileFrame(i), "tile " + i + "'s frame");
+            }
             AssertOnScreen(_menu.ArenaTablet.Root, "the arena tablet");
+
+            // 2D moves, as on the gladiator grid
+            _menu.PickStep(0);
+            Assert.IsTrue(_menu.MoveArena(1, 0));
+            Assert.AreEqual(1, _menu.Step, "right");
+            Assert.IsTrue(_menu.MoveArena(0, 1));
+            Assert.AreEqual(1 + ArenaLadder.Columns, _menu.Step, "down a row");
+            if (ladder.Count <= 2 * ArenaLadder.Columns) Assert.IsFalse(_menu.MoveArena(0, 1), "the last row stops");
+            else _menu.PickStep(1 + ArenaLadder.Columns);
+            Assert.IsTrue(_menu.MoveArena(-1, 0));
+            Assert.IsFalse(_menu.MoveArena(-1, 0), "the row's left end stops");
+            Assert.AreEqual(ArenaLadder.Columns, _menu.Step);
+            Assert.IsTrue(_menu.MoveArena(0, -1));
+            Assert.AreEqual(0, _menu.Step, "up");
 
             _menu.PickStep(1); // locked on a fresh save
             Assert.IsFalse(_menu.ArenaFightEnabled);
@@ -241,9 +264,9 @@ namespace Gladiator.Tests
             Assert.AreEqual(ladder.Run(0).DisplayName, _menu.ArenaTablet.NameText);
             Assert.AreEqual("×1", _menu.ArenaTablet.RenownText, "tier 0: Renown as earned");
             Assert.IsTrue(_menu.Climb(1));
-            Assert.AreEqual(1, _menu.Step, "up climbs");
+            Assert.AreEqual(1, _menu.Step, "the next arena in climb order");
             Assert.IsTrue(_menu.Climb(-1));
-            Assert.IsFalse(_menu.Climb(-1), "the bottom step stops");
+            Assert.IsFalse(_menu.Climb(-1), "the Slave Pit is the first");
             Assert.AreEqual("MainMenu", SceneManager.GetActiveScene().name);
         }
 
@@ -256,6 +279,7 @@ namespace Gladiator.Tests
             Assert.IsTrue(_menu.AsksForArena, "beating Gorm earns the Provincial Pit");
             Assert.IsNotNull(ladder.Run(0).Boss, "the Slave Pit's run knows its layout and boss (rebuild the main menu: RunTaglines links them)");
             Assert.IsTrue(ladder.HasWreath(0), "Gorm beaten: the Slave Pit's numeral wears the laurel");
+            Assert.AreEqual((int)FrameKind.LaurelWreath, UiFrames.KindOf(ladder.WreathImage(0)), "the redrawn gold laurel");
             Assert.IsFalse(ladder.HasWreath(1));
             _menu.PickStep(0);
             StringAssert.StartsWith("Beaten 1", _menu.ArenaTablet.BestText);

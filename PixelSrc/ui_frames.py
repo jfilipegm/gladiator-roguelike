@@ -3,8 +3,9 @@ here as code so the set is regenerable and diffable like the Blender scripts (no
 
 Spec: docs/tracks/U1-design.md §3-§4; names, sizes and the index format: docs/tracks/U1-contract.md ("UiFrames").
 Every frame is point-filtered pixel art shown at 3 canvas units per art pixel (UiFrames.ArtScale). The script packs the
-30 frames (one per FrameKind, in the enum's order) into one atlas with a 2 px transparent gutter, so the whole UI
-batches on one texture, and writes the index the game reads at runtime:
+37 frames (one per FrameKind, in the enum's order; P3 added the focus glow, the NEW seal, the pilum arrows and the HUD
+icons: docs/tracks/P3-contract.md) into one atlas with a 2 px transparent gutter, so the whole UI batches on one
+texture, and writes the index the game reads at runtime:
 
     name x y w h bl bb br bt type pl pb pr pt
 
@@ -88,6 +89,20 @@ SHADES = {
     # chips, troughs, knob
     "chipEdge": "#120A04", "chipHi": "#7A5226", "chipLo": "#3E2712", "keyHi": "#6B4524", "keyLo": "#170D05",
     "troughEdge": "#1A0F08", "channel": "#1A120C",
+    # P3: the wreath's gilded laurel (gold where lit, olive in the mids and shadows) and its ribbon
+    "wreathHi": "#FFE7A0", "wreathGold": "#E2B14A", "wreathOlive": "#8E9A3A", "wreathOliveLo": "#55622A",
+    "wreathEdge": "#1F240E", "wreathStem": "#A8862E",
+    "ribbonHi": "#E0574C", "ribbon": "#B42A2F", "ribbonLo": "#7A1A20", "ribbonEdge": "#3A0B0F",
+    # P3: the NEW wax seal
+    "sealEdge": "#3A0B0F", "sealRim": "#6E1B21", "sealLo": "#7E2228", "seal": "#9B2E33", "sealHi": "#C24A47",
+    "sealShine": "#E58A7C", "sealInk": "#4A1015",
+    # P3: the HUD icons (the heart in the hp reds, the aureus in gold, the skull's bone, the galea's steel and crest)
+    "heartEdge": "#3A0A0C", "heartShine": "#FFC2B2", "heartHi": "#E85A48",
+    "coinEdge": "#3B2508", "coinHi": "#FFF0BF", "coin1": "#F7D77E", "coin2": "#E8B94F", "coin3": "#C48E2C",
+    "coinLo": "#94641A",
+    "boneHi": "#FBF6EA", "bone": "#E6DCC6", "boneLo": "#B8A98A", "socket": "#1A0F08",
+    "steelHi": "#E6EAF0", "steel": "#AEB4BE", "steelLo": "#737A86", "steelEdge": "#1C1E24",
+    "crestHi": "#F06A55", "crest": "#C8372D", "crestLo": "#8A2420",
 }
 COLOURS = {**TOKENS, **SHADES}
 
@@ -161,10 +176,8 @@ def rings(w, h, layers, centre, chamfer=0):
 
 # ---------- the frames ------------------------------------------------------------------------------------------------
 
-def ansata(marble=False):
-    """Tabula ansata, 30x22: a plaque with a dovetail handle on each side (inside the 10 px side borders, so any height
-    40-90 stretches them evenly); a light top row and a shadow row; the label is engraved by the caller."""
-    w, h = 30, 22
+def ansata_mask(w=30, h=22):
+    """The tabula ansata's silhouette (shared by both plates and the focus glow)."""
     mask = set()
     for y in range(h):
         for x in range(w):
@@ -173,6 +186,14 @@ def ansata(marble=False):
                 mask.add((x, y))          # the plaque
             elif 1 + xl <= y <= 20 - xl:  # the handle: rows 1..20 at the tip, 7..14 where it meets the plaque
                 mask.add((x, y))
+    return mask
+
+
+def ansata(marble=False):
+    """Tabula ansata, 30x22: a plaque with a dovetail handle on each side (inside the 10 px side borders, so any height
+    40-90 stretches them evenly); a light top row and a shadow row; the label is engraved by the caller."""
+    w, h = 30, 22
+    mask = ansata_mask(w, h)
     edge = outline_inside(mask, w, h)
     if marble:
         bands = ["marbleFace1", "marbleFace1", "marbleFace2", "marbleFace2", "marbleFace3", "marbleFace4"]
@@ -583,9 +604,14 @@ BRANCH_LEAVES = [
 ]
 
 
-def laurel(w, h, mirrored_pair, box, leaf_scale=1.0):
+GOLD_LAUREL = ((0.25, "laurelHi"), (-0.3, "laurel"), (-9.0, "laurelLo"), "laurelStem", "laurelEdge")
+
+
+def laurel(w, h, mirrored_pair, box, leaf_scale=1.0, tones=GOLD_LAUREL):
     """Rasterise the branch (or the wreath) into w x h pixels with a 1 px dark outline. `box` = the SVG area mapped to
-    the pixels inside the outline; leaves are lit from the top-left (a bright upper side, a dark lower side)."""
+    the pixels inside the outline; leaves are lit from the top-left (a bright upper side, a dark lower side). `tones`:
+    the leaf colours as (light above which, colour) from lit to shadow, then the stem's and the outline's colours."""
+    *leaf_tones, stem_tone, edge_tone = tones
     leaves = list(BRANCH_LEAVES)
     stems = [BRANCH_STEM]
     if mirrored_pair:
@@ -629,16 +655,16 @@ def laurel(w, h, mirrored_pair, box, leaf_scale=1.0):
             total = n * n
             if leaf_hits >= total * 0.42:
                 l = light / max(1, leaf_hits)
-                cls[(x, y)] = "laurelHi" if l > 0.25 else "laurelLo" if l < -0.3 else "laurel"
+                cls[(x, y)] = next(c for (t, c) in leaf_tones if l > t or t == leaf_tones[-1][0])
             elif stem_hits + leaf_hits >= total * 0.36:
-                cls[(x, y)] = "laurelStem"
+                cls[(x, y)] = stem_tone
     a = Art(w, h)
     for (x, y), c in cls.items():
         a.set(x, y, c)
     for y in range(h):  # a 1 px dark outline round the silhouette
         for x in range(w):
             if (x, y) not in cls and any((x + dx, y + dy) in cls for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))):
-                a.set(x, y, "laurelEdge")
+                a.set(x, y, edge_tone)
     return a
 
 
@@ -707,8 +733,253 @@ def laurel_branch():
     return a
 
 
+WREATH_TONES = ((0.3, "wreathHi"), (-0.02, "wreathGold"), (-0.35, "wreathOlive"), (-9.0, "wreathOliveLo"),
+                "wreathStem", "wreathEdge")
+
+RIBBON = [  # the bow tied where the two stems meet (12x7, its top-left at WREATH_BOW): two loops, the knot, two tails
+    "oo........oo",
+    "ohoo....ooro",
+    "ohrroooorrlo",
+    "orrlohrolrlo",
+    ".oooorloooo.",
+    "...oloolo...",
+    "...oo..oo...",
+]
+WREATH_BOW = (24, 23)
+
+
 def laurel_wreath():
-    return laurel(60, 30, True, (3.0, 4.0, 117.0, 60.5), leaf_scale=1.12)
+    """Laurel wreath, 60x30 (P3, note 10): the U1 branch pair, now gilded laurel: gold where the leaves catch the light,
+    olive green in the mids and shadows, and a small red ribbon tied where the stems meet."""
+    a = laurel(60, 30, True, (3.0, 4.0, 117.0, 60.5), leaf_scale=1.12, tones=WREATH_TONES)
+    cols = {"o": "ribbonEdge", "h": "ribbonHi", "r": "ribbon", "l": "ribbonLo", "k": "ribbonLo"}
+    bx, by = WREATH_BOW
+    for y, row in enumerate(RIBBON):
+        for x, ch in enumerate(row):
+            if ch != ".":
+                a.set(bx + x, by + y, cols[ch])
+    return a
+
+
+def pixels(rows, cols):
+    """Pixel art from strings: one character per pixel, '.' clear, every other character a key of `cols`."""
+    a = Art(len(rows[0]), len(rows))
+    for y, row in enumerate(rows):
+        assert len(row) == a.w, (row, len(row))
+        for x, ch in enumerate(row):
+            if ch != ".":
+                a.set(x, y, cols[ch])
+    return a
+
+
+def mirrored(art):
+    out = Art(art.w, art.h)
+    out.im = art.im.transpose(Image.FLIP_LEFT_RIGHT)
+    out.p = out.im.load()
+    return out
+
+
+def ansata_glow():
+    """AnsataGlow, 34x26 border l12 b2 r12 t2, sliced, no centre (P3, note 1): the focus rim that follows the plate's
+    shape. ansata()'s silhouette placed 2 px in and dilated by 2 px; only the ring is drawn (the plate's own pixels stay
+    clear): the inner row opaque, the outer row ~45 %, in white so UiPlate.FocusColor tints it. An Image of the plate's
+    size + 12 units (2 art px x 3 per side) puts the ring exactly round the plate: the 2 px top and bottom rows are the
+    fixed border and the 22 rows between stretch like the ansata's own; the 12 px sides hold the handles (10) + 2."""
+    w, h = 34, 26
+    mask = {(x + 2, y + 2) for (x, y) in ansata_mask()}
+    a = Art(w, h)
+    for y in range(h):
+        for x in range(w):
+            if (x, y) in mask:
+                continue
+            d = min(math.hypot(x - mx, y - my) for (mx, my) in mask)
+            if d < 1.5:
+                a.set(x, y, "#FFFFFF")
+            elif d < 2.3:
+                a.set(x, y, "#FFFFFF", 115)
+    return a
+
+
+SEAL_MASK = [  # 12x12: an irregular round of wax (a bulge up-right, a flat spot low down)
+    "...######...",
+    ".##########.",
+    ".###########",
+    "############",
+    "############",
+    "############",
+    "############",
+    "############",
+    "############",
+    ".##########.",
+    "..#########.",
+    "...#####....",
+]
+SEAL_N = [  # 4x6, pressed in the middle of the field (cols 4-7, rows 3-8)
+    "G..G",
+    "GG.G",
+    "GG.G",
+    "G.GG",
+    "G.GG",
+    "G..G",
+]
+
+
+def seal_new():
+    """SealNew, 12x12 simple (P3, note 6): the NEW mark, a crimson wax seal (a dark edge, a raised rim lit from the
+    top-left, the pressed field) with a gold N (novum) whose strokes cast a 1 px shadow down-right into the wax."""
+    mask = {(x, y) for y, row in enumerate(SEAL_MASK) for x, ch in enumerate(row) if ch == "#"}
+    edge = outline_inside(mask, 12, 12)
+    rim = outline_inside(mask - edge, 12, 12)
+    a = Art(12, 12)
+    for (x, y) in mask:
+        if (x, y) in edge:
+            a.set(x, y, "sealEdge")
+        elif (x, y) in rim:
+            a.set(x, y, "sealHi" if x + y < 11 else "sealRim")
+        else:
+            a.set(x, y, "seal")
+    a.set(3, 2, "sealShine")
+    gold = {(4 + x, 3 + y) for y, row in enumerate(SEAL_N) for x, ch in enumerate(row) if ch == "G"}
+    for (x, y) in gold:
+        a.set(x, y, "goldBright")
+        if (x + 1, y + 1) not in gold and (x + 1, y + 1) not in rim | edge:
+            a.set(x + 1, y + 1, "sealInk")
+    return a
+
+
+PILUM = [  # pointing left, rows (top, bottom) per column: the barbed head (8 px at its base), the pilum's long thin
+    (5, 6), (4, 7), (3, 8), (3, 8), (2, 9), (2, 9),  # iron shank, and the short socket where the wooden shaft sits
+    (4, 7), (4, 7), (4, 7), (4, 7), (4, 7),
+    (3, 8), (3, 8), (3, 8), (3, 8), (4, 7),
+]
+
+
+def pilum(left=True):
+    """ArrowLeft / ArrowRight, 16x12 simple (P3, note 11): a bronze pilum tip as the pager arrow (mirror images). A dark
+    outline; the ridge along the middle splits the lit upper facets from the dark lower ones; a dark ring at the
+    socket's mouth."""
+    mask = {(x, y) for x, (top, bottom) in enumerate(PILUM) for y in range(top, bottom + 1)}
+    edge = outline_inside(mask, 16, 12)
+    a = Art(16, 12)
+    for (x, y) in mask:
+        if (x, y) in edge or (x == 11 and 4 <= y <= 7):
+            a.set(x, y, "bronzeEdge")
+        elif y <= 5:
+            a.set(x, y, "bronzeHi" if (x, y - 1) in edge else "bronzeFace1")
+        else:
+            a.set(x, y, "bronzeFace5" if (x, y + 1) in edge else "bronzeFace3")
+    return a if left else mirrored(a)
+
+
+HEART = [  # 16x16: a chunky heart in the hp reds, lit up-left; its box sits half a pixel low (the optical centre)
+    "................",
+    "................",
+    "..oooo....oooo..",
+    ".ohhRRo..oRRRRo.",
+    "ohwhRRRooRRRRRDo",
+    "ohhRRRRRRRRRRRDo",
+    "ohRRRRRRRRRRRRDo",
+    "ohRRRRRRRRRRRDDo",
+    ".oRRRRRRRRRRRDo.",
+    "..oRRRRRRRRRDo..",
+    "...oRRRRRRRDo...",
+    "....oRRRRRDo....",
+    ".....oRRRDo.....",
+    "......oDDo......",
+    ".......oo.......",
+    "................",
+]
+
+
+def icon_heart():
+    """IconHeart, 16x16 simple (P3, note 13): the HUD's HP icon."""
+    return pixels(HEART, {"o": "heartEdge", "w": "heartShine", "h": "heartHi", "R": "hp", "D": "hpDark"})
+
+
+COIN_MASK = [  # 16x16: the round flan
+    ".....######.....",
+    "...##########...",
+    "..############..",
+    ".##############.",
+    ".##############.",
+    "################",
+    "################",
+    "################",
+    "################",
+    "################",
+    "################",
+    ".##############.",
+    ".##############.",
+    "..############..",
+    "...##########...",
+    ".....######.....",
+]
+AUREUS_HEAD = [  # 9x10 at (4, 3): a laureate head facing right, struck in relief: the laurel round the crown (leaves W
+    "..hWhW...",  # lit, h shaded), the head and face (F), the eye and the jaw line (x), the wreath's ties at the nape (t);
+    ".hWFFFh..",  # the head's top-left edges catch the light and a shadow falls down-right on the field
+    "hWFFFFF..",
+    "WFFFFFFF.",
+    "FFFFFxFF.",
+    "FFFFFFFFF",
+    "tFFFFFF..",
+    "t.FxFFFF.",
+    "...FFFF..",
+    "..FFFFFF.",
+]
+
+
+def icon_aureus():
+    """IconAureus, 16x16 simple (P3, note 13): the HUD's gold and the price tags, a Roman aureus (not an arcade coin):
+    a dark edge, a beaded rim, and a laureate head in relief on the field."""
+    mask = {(x, y) for y, row in enumerate(COIN_MASK) for x, ch in enumerate(row) if ch == "#"}
+    edge = outline_inside(mask, 16, 16)
+    beads = outline_inside(mask - edge, 16, 16)
+    a = Art(16, 16)
+    for (x, y) in mask:
+        a.set(x, y, "coinEdge" if (x, y) in edge else "coin2")
+    for i, (x, y) in enumerate(sorted(beads, key=lambda p: math.atan2(p[1] + 0.5 - 8, p[0] + 0.5 - 8))):
+        a.set(x, y, "coinHi" if i % 2 == 0 else "coin3")
+    head = {}
+    for y, row in enumerate(AUREUS_HEAD):
+        for x, ch in enumerate(row):
+            if ch != ".":
+                head[(4 + x, 3 + y)] = ch
+    for (x, y), ch in head.items():
+        if ch == "F":
+            lit = (x - 1, y) not in head or (x, y - 1) not in head
+            a.set(x, y, "coinHi" if lit else "coin1")
+        else:
+            a.set(x, y, {"h": "coin3", "W": "coinHi", "x": "coinLo", "t": "coin3"}[ch])
+    for (x, y) in mask - edge - beads:  # the relief's shadow on the field, down-right of the head
+        if (x, y) not in head and any(head.get(n, "t") != "t" for n in ((x - 1, y), (x, y - 1))):
+            a.set(x, y, "coinLo")
+    return a
+
+
+SKULL_GALEA = [  # 16x16, symmetric: a red crest fanning out from the galea's bowl (gold holder, gold brow band, steel
+    "................",  # cheek guards) over a bone skull with dark sockets, a nose hole and a row of teeth
+    "....oooooooo....",
+    "...oHCcCCcCCo...",
+    "...oCCcCCcCCo...",
+    "....occCCcco....",
+    "....oSSggSSo....",
+    "...oSsSSSSSSo...",
+    "..oGGGGGGGGGGo..",
+    ".oSoBBBBBBBBoSo.",
+    ".oSoBkkBBkkBoSo.",
+    ".oSoBkkBBkkBoSo.",
+    ".oSooBBkkBBooSo.",
+    "..oSoBBBBBBoSo..",
+    "..oSoTtTTtToSo..",
+    "...oo.oooo.oo...",
+    "................",
+]
+
+
+def icon_skull_galea():
+    """IconSkullGalea, 16x16 simple (P3, note 13): the HUD's kills, a straight skull in a Roman galea with a red crest."""
+    return pixels(SKULL_GALEA, {"o": "socket", "H": "crestHi", "C": "crest", "c": "crestLo", "g": "gold", "S": "steel",
+                                "s": "steelHi", "G": "gold", "B": "bone", "k": "socket", "T": "bone", "t": "boneLo"})
 
 
 # ---------- the catalogue: FrameKind order (append, never reorder) ----------------------------------------------------
@@ -745,6 +1016,14 @@ def catalogue():
         ("KeyChip", chip(True), (3, 3, 3, 3), "sliced", (2, 2, 2, 2)),
         ("LaurelBranch", laurel_branch(), (0, 0, 0, 0), "simple", (0, 0, 0, 0)),
         ("LaurelWreath", laurel_wreath(), (0, 0, 0, 0), "simple", (0, 0, 0, 0)),
+        # P3 (docs/tracks/P3-contract.md "P3-art")
+        ("AnsataGlow", ansata_glow(), (12, 2, 12, 2), "sliced", (0, 0, 0, 0)),
+        ("SealNew", seal_new(), (0, 0, 0, 0), "simple", (0, 0, 0, 0)),
+        ("ArrowLeft", pilum(True), (0, 0, 0, 0), "simple", (0, 0, 0, 0)),
+        ("ArrowRight", pilum(False), (0, 0, 0, 0), "simple", (0, 0, 0, 0)),
+        ("IconHeart", icon_heart(), (0, 0, 0, 0), "simple", (0, 0, 0, 0)),
+        ("IconAureus", icon_aureus(), (0, 0, 0, 0), "simple", (0, 0, 0, 0)),
+        ("IconSkullGalea", icon_skull_galea(), (0, 0, 0, 0), "simple", (0, 0, 0, 0)),
     ]
 
 
@@ -864,7 +1143,7 @@ def text(img, xy, s, family, size, colour, anchor="mm", stroke=0, stroke_col="ou
     d.text((x, y), s, font=f, fill=rgba(colour), anchor=anchor, stroke_width=stroke, stroke_fill=rgba(stroke_col))
 
 
-NO_CENTRE = {"CardStone", "CardBronze", "CardSilver", "CardGold", "Focus"}
+NO_CENTRE = {"CardStone", "CardBronze", "CardSilver", "CardGold", "Focus", "AnsataGlow"}
 SIZES = {  # two sizes per sliced / tiled frame, in canvas units
     "AnsataBronze": ((240, 66), (360, 90)), "AnsataMarble": ((240, 66), (300, 40)),
     "Marble": ((156, 120), (300, 180)), "Bronze": ((120, 90), (330, 150)), "Wax": ((150, 120), (330, 180)),
@@ -876,9 +1155,75 @@ SIZES = {  # two sizes per sliced / tiled frame, in canvas units
     "Scutum": ((90, 120), (144, 186)), "ScutumLocked": ((90, 120), (144, 186)), "ScutumSpine": ((12, 60), (18, 36)),
     "VexillumBar": ((300, 24), (820, 24)), "VexillumCrimson": ((700, 120), (920, 120)),
     "VexillumPurple": ((700, 120), (920, 120)), "Trough": ((200, 24), (400, 36)),
-    "Chip": ((60, 30), (150, 36)), "KeyChip": ((36, 36), (48, 48)),
+    "Chip": ((60, 30), (150, 36)), "KeyChip": ((36, 36), (48, 48)), "AnsataGlow": ((252, 78), (312, 92)),
 }
-TINTS = {"Halo": ("#529EFF", "#FFBD33"), "Focus": ("#FFFFFF", "gold")}
+TINTS = {"Halo": ("#529EFF", "#FFBD33"), "Focus": ("#FFFFFF", "gold"), "AnsataGlow": ("#FFFFFF", "gold")}
+
+
+def preview_p3(art, bg):
+    """P3's new kinds at their in-game sizes on one tone: the focus glow round both plates at 360x64, 300x80 and
+    200x48 (the plate's size + 12, gold), the NEW seal on a Codex tab (36) and beside an entry (24), the pilum arrows
+    (48x36, resting and hovered), the HUD row (icons at 32x32 beside their trough and numbers) and the wreath."""
+    W = 1920
+    P = Image.new("RGBA", (W, 400), rgba(bg))
+    ink = "ink" if bg == "night" else "outlineInk"
+    text(P, (20, 14), "P3", "MarcellusSC", 22, ink, anchor="la")
+
+    def draw(name, size, at, colour=None):
+        _, a, border, kind, _ = art[name]
+        img = nine(a, border, kind, size, name not in NO_CENTRE)
+        if colour:
+            img = tint(img, colour)
+        P.alpha_composite(img, (int(at[0]), int(at[1])))
+
+    def plate(style, label, size, at, focused=True):
+        draw(style, size, at)
+        text(P, (at[0] + size[0] / 2, at[1] + size[1] / 2), label, "MarcellusSC", min(30, int(size[1] * 0.45)),
+             "bronzeInk" if style == "AnsataBronze" else "marbleInk", engraved=True)
+        if focused:
+            draw("AnsataGlow", (size[0] + 12, size[1] + 12), (at[0] - 6, at[1] - 6), "gold")
+
+    # the glow round both plates at the contract's three sizes
+    x = 40
+    for (w, h) in ((360, 64), (300, 80), (200, 48)):
+        plate("AnsataBronze", "PLAY", (w, h), (x, 50))
+        plate("AnsataMarble", "CODEX", (w, h), (x, 150))
+        x += w + 40
+    # a Codex-style tab with the seal on its top-right corner, over the last letter; an entry with the 24 px seal
+    plate("AnsataMarble", "ARSENAL", (220, 60), (1040, 50), focused=False)
+    draw("SealNew", (36, 36), (1040 + 220 - 64, 50 - 12))
+    draw("Marble", (300, 60), (1040, 150))
+    text(P, (1064, 180), "THE PIT CUR", "MarcellusSC", 24, "marbleInk", anchor="lm", engraved=True)
+    draw("SealNew", (24, 24), (1064 + 172, 168))
+    # the pager: resting arrows (darker) round a page count, then hovered (full colour)
+    for i, (shade, label) in enumerate((("#D0D0D0", "1 / 3"), (None, "2 / 3"))):
+        x0 = 1400 + i * 250
+        draw("ArrowLeft", (48, 36), (x0, 62), shade)
+        text(P, (x0 + 110, 80), label, "MarcellusSC", 24, ink)
+        draw("ArrowRight", (48, 36), (x0 + 172, 62), shade)
+    text(P, (1400 + 110, 120), "resting", "Marcellus", 18, ink)
+    text(P, (1650 + 110, 120), "hovered", "Marcellus", 18, ink)
+    # the HUD plate: icons at 2 units per art px (32x32), each centred on its trough or number
+    draw("Bronze", (560, 130), (40, 250))
+    draw("IconHeart", (32, 32), (64, 274))
+    draw("Trough", (440, 36), (108, 272))
+    P.alpha_composite(tint(nine(art["TroughFill"][1], (0, 0, 0, 0), "simple", (428, 24)), "hp"), (114, 278))
+    text(P, (328, 290), "100 / 100", "LuckiestGuy", 26, "ink", stroke=2, drop=3)
+    draw("IconAureus", (32, 32), (64, 326))
+    text(P, (108, 342), "1,250", "LuckiestGuy", 30, "coin", anchor="lm", stroke=2, drop=3)
+    draw("IconSkullGalea", (32, 32), (300, 326))
+    text(P, (344, 342), "2,417", "LuckiestGuy", 30, "ink", anchor="lm", stroke=2, drop=3)
+    # the icons alone at 32 and at 48 (the price tags' and the HUD's sizes), straight on the tone
+    for i, name in enumerate(("IconHeart", "IconAureus", "IconSkullGalea")):
+        draw(name, (32, 32), (660 + i * 60, 270))
+        draw(name, (48, 48), (652 + i * 60, 320))
+    # the redrawn wreath: on a scutum's top (a picked tile) and behind a legendary card's icon
+    draw("Scutum", (144, 186), (900, 220))
+    draw("LaurelWreath", (120, 60), (912, 196))
+    ImageDraw.Draw(P).rectangle((1100, 230, 1400, 390), fill=rgba("cardInside"))
+    draw("LaurelWreath", (180, 90), (1160, 250))
+    ImageDraw.Draw(P).rectangle((1215, 270, 1284, 339), fill=rgba("#6F7B8C"), outline=rgba("#FFBD33"), width=3)
+    return P
 
 
 def preview(frames, path):
@@ -1033,9 +1378,10 @@ def preview(frames, path):
     text(S, (1030, 1275), "EDICT OF IRON", "MarcellusSC", 26, "ink", anchor="lm")
     text(S, (1030, 1315), "Enemies +20 % HP", "Marcellus", 20, "dust", anchor="lm")
 
-    total = Image.new("RGBA", (W, sum(g.height for g in grids) + S.height), (0, 0, 0, 255))
+    p3 = [preview_p3(art, bg) for bg in ("night", "#857563")]
+    total = Image.new("RGBA", (W, sum(g.height for g in grids + p3) + S.height), (0, 0, 0, 255))
     y = 0
-    for g in grids + [S]:
+    for g in grids + [S] + p3:
         total.paste(g, (0, y))
         y += g.height
     path.parent.mkdir(parents=True, exist_ok=True)

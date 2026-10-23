@@ -15,6 +15,8 @@ namespace Gladiator.UI
     /// U1: a riveted `Bronze` panel (scaled down with UiKit.FitScale on small canvases), the header in Title 48; each row a
     /// Title 24 label, a bronze trough with a knob, the value in Number 26; the focused row in a gold focus ring; BACK is
     /// the panel's main action (bronze).
+    /// P3 (the producer's note 1: no focus rectangles): the focused row is a soft lighter band with a bronze pilum marker
+    /// pointing at it (UiKit.Row).
     /// </summary>
     public sealed class OptionsPanel : MonoBehaviour
     {
@@ -38,14 +40,14 @@ namespace Gladiator.UI
             public Slider Slider;
             public Image Fill;
             public TextMeshProUGUI Value;
-            public Image Focus;
+            public UiKit.RowFocus Focus;
         }
 
         Row[] _rows;
         CanvasGroup _group;
         RectTransform _panel;
         bool _open, _syncing;
-        int _focus, _screenW, _screenH;
+        int _focus, _shownFocus = -1, _screenW, _screenH;
         float _openedAt;
 
         // ---- tests (UiMenuLookTests) ------------------------------------------------------------------------------
@@ -56,6 +58,9 @@ namespace Gladiator.UI
         /// <summary>Row `i`'s value label (its theme role) and its trough's fill (0–1).</summary>
         public Component ValueLabel(int i) => _rows[i].Value;
         public float FillAmount(int i) => _rows[i].Fill.fillAmount;
+        /// <summary>Tests (P3): the focused row (its band and marker shown).</summary>
+        public int Focused => _focus;
+        public bool RowFocusShown(int i) => _rows[i].Focus.Shown;
 
         void Awake()
         {
@@ -109,8 +114,7 @@ namespace Gladiator.UI
             var mid = new Vector2(0.5f, 0.5f);
             float y = RowTop - i * RowPitch;
             ref var r = ref _rows[i];
-            r.Focus = UiKit.Frame("Focus", root, FrameKind.Focus, mid, mid, new Vector2(0, y), new Vector2(1180, 62), th.gold);
-            r.Focus.enabled = false;
+            r.Focus = UiKit.Row("Focus", root, mid, mid, new Vector2(0, y), new Vector2(1180, 62), UiKit.BandLight);
             UiKit.Text("Label", root, r.Label, TextRole.Title, 24f, th.ink, TextAlignmentOptions.Left, mid, mid, new Vector2(-330, y), new Vector2(500, 34));
             r.Slider = MakeSlider(root, new Vector2(170, y), new Vector2(380, TroughH), out r.Fill);
             r.Slider.minValue = r.Min;
@@ -156,6 +160,7 @@ namespace Gladiator.UI
         {
             _openedAt = Time.unscaledTime;
             _focus = 0;
+            _shownFocus = -1;
             Refit();
             Sync();
             Set(true);
@@ -205,7 +210,11 @@ namespace Gladiator.UI
         {
             if (!_open) return;
             if (Screen.width != _screenW || Screen.height != _screenH) Refit();
-            for (int i = 0; i < _rows.Length; i++) _rows[i].Focus.enabled = i == _focus;
+            if (_focus != _shownFocus) // the band and the marker follow the focus (only on a change)
+            {
+                _shownFocus = _focus;
+                for (int i = 0; i < _rows.Length; i++) _rows[i].Focus.Show(i == _focus);
+            }
             if (Time.unscaledTime - _openedAt < 0.15f) return; // the key that opened the panel
             var kb = Keyboard.current;
             var pad = Gamepad.current;

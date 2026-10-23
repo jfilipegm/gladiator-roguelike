@@ -20,6 +20,10 @@ or removed.**
 | 6 | R8 | Daily seeds | Nice |
 | 7 | R6 | Cosmetics | Nice; last of the three because it needs the most art |
 | 8 | R4 + R5 | Music, then real audio | Nice; generated in code (decided below) |
+| 9 | P3 | The producer's v0.24.0 UI notes (19) | Added 2026-10-22: in progress, `docs/tracks/P3-notes.md`, release v0.25.0 |
+| 10 | C1 | Clip recording mode (hide the HUD, cinematic camera, slow motion, staged moments) | Added 2026-10-22: the producer's Steam marketing clips |
+| 11 | M1 | Procedurally generated arena interiors | Added 2026-10-22, the producer: "the arena should stay the same as the map but the stuff inside should be randomized". Each arena keeps its walls, stands, gates and silhouette; the mounds, ramps, props, obstacles and hazard patches inside are placed from the run's seed (the `Map` stream), so SAME SEED replays the same interior. Needs: per-arena interior rules (zones, clearances round the start, the gates and the boss's entrance), a connectivity check on the nav grid, the height grid and obstacle list baked at load, static batching at load, perf and readability checks per arena |
+| 12 | S1 | Steam-ready basics (display options, gamepad prompts, key rebinding, a credits page) | Added 2026-10-22: what Steam players expect |
 
 Unchanged and not in this plan: the playtest concerns (C13–C26) wait on your playtest; `docs/BACKLOG.md` stays
 unscheduled.

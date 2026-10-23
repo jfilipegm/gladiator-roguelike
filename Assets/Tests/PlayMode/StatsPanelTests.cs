@@ -14,6 +14,8 @@ namespace Gladiator.Tests
     /// level-up cards sit where LevelUpLayout puts them beside the "your stats" column (U1 layout A), the selected card's preview is exactly the stats after the
     /// pick, a Vow wears its split frame and previews its price in red, and the Blood Altar's prompt shows the max-HP cut
     /// that using it takes.
+    /// P3: the pause shows the same bronze column as the level-up (the seed in its second line), each stat row's sources
+    /// in a tooltip on hover; the pick preview's rows never move between cards (no weapon lines).
     /// </summary>
     public class StatsPanelTests
     {
@@ -103,7 +105,11 @@ namespace Gladiator.Tests
             foreach (var s in StatText.Order) StringAssert.Contains(StatInfo.Name(s), text, "every stat is on the page");
             var t = new CharBuffer(32);
             StringAssert.Contains(StatText.Value(t, StatId.MaxHp, _stats.MaxHp).ToString(), text, "with its total");
-            StringAssert.Contains("WEAPONS", text);
+            StringAssert.Contains("SEED " + GameRandom.SeedText(GameRandom.RunSeed), _page.SubText, "the seed under the gladiator's name");
+            Assert.AreEqual((int)FrameKind.Bronze, _page.FrameShown, "P3: the level-up's bronze column, not a marble page");
+            var size = ((RectTransform)_cards.Content.parent).rect.size;
+            var fit = LevelUpLayout.For(size, LevelUpLayout.PauseCards);
+            Assert.AreEqual(fit.StatsScale, _page.PickScale, 1e-4f, "a three-card level-up's fit");
             int rewrites = _page.Rewrites;
             yield return Frames(10);
             Assert.AreEqual(rewrites, _page.Rewrites, "nothing changed: the text isn't rewritten");
@@ -122,9 +128,18 @@ namespace Gladiator.Tests
             DevSettings.DamagePct = 50f;
             Player.Main.SetPaused(true);
             yield return Frames(2);
-            string text = _page.Text;
-            StringAssert.Contains(skin.displayName + " +20", text, "the card and what it adds");
-            StringAssert.Contains("ADMIN (F1)", text, "admin buffs are a marked share (Editor / dev builds)");
+            // P3: the sources moved from the page into each stat row's tooltip
+            _page.HoverRow(StatId.MaxHp, true);
+            yield return Frames(2);
+            Assert.IsTrue(_page.TooltipShown, "hovering Max HP shows its sources");
+            string text = _page.TooltipText;
+            StringAssert.Contains(skin.displayName, text, "the card");
+            StringAssert.Contains("+20", text, "and what it adds");
+            StringAssert.Contains("Base", text);
+            _page.HoverRow(StatId.MaxHp, false);
+            _page.HoverRow(StatId.Damage, true);
+            yield return Frames(2);
+            StringAssert.Contains("ADMIN (F1)", _page.TooltipText, "admin buffs are a marked share (Editor / dev builds)");
             var shares = new StatShare[24];
             float sum = 0f;
             int n = _stats.Breakdown(StatId.Damage, shares);
@@ -132,7 +147,17 @@ namespace Gladiator.Tests
             Assert.AreEqual(_stats.Get(StatId.Damage), sum, 1e-4f, "the page's shares add up to the total");
             DevSettings.DamagePct = 0f;
             yield return Frames(2);
-            StringAssert.DoesNotContain("ADMIN (F1)", _page.Text, "the page follows the admin menu while paused");
+            StringAssert.DoesNotContain("ADMIN (F1)", _page.TooltipText, "the tooltip follows the admin menu while paused");
+            _page.HoverRow(StatId.Damage, false);
+            _page.HoverTitle(true);
+            yield return Frames(2);
+            var g = _stats.gladiator;
+            if (g != null && g.traits != null && g.traits.Length > 0 && g.traits[0] != null)
+            {
+                Assert.IsTrue(_page.TooltipShown, "hovering the name shows the gladiator's traits");
+                StringAssert.Contains(g.traits[0].displayName, _page.TooltipText);
+            }
+            _page.HoverTitle(false);
         }
 
         [UnityTest, Timeout(60000)]
@@ -168,6 +193,36 @@ namespace Gladiator.Tests
                 Assert.AreEqual(after[i], _stats.Get((StatId)i), 1e-3f, picked.Def.id + " " + (StatId)i + ": the preview is what the pick did");
             yield return Frames(2);
             Assert.AreEqual(StatsPanel.Mode.Hidden, _page.Current, "the column leaves with the cards");
+        }
+
+        /// <summary>P3 (the producer's note 19): every card shows the same rows at the same places; only the numbers
+        /// change. A new weapon's card adds no lines (its info is in the inventory's ghost).</summary>
+        [UnityTest, Timeout(60000)]
+        public IEnumerator PickPreview_HasFixedRows_NothingMovesBetweenCards()
+        {
+            yield return Boot(true);
+            yield return OpenCards();
+            int n = _lvl.ChoiceCount;
+            Assert.GreaterOrEqual(n, 2, "two cards to move between");
+            var rows = new Vector3[StatText.Order.Length];
+            int lines = -1;
+            for (int c = 0; c < n; c++)
+            {
+                _cards.Hover(c);
+                yield return Frames(2);
+                Assert.AreEqual(c, _cards.Selected);
+                int count = _page.Text.Split('\n').Length;
+                if (lines < 0) lines = count;
+                Assert.AreEqual(lines, count, "card " + c + ": the same rows");
+                StringAssert.DoesNotContain("attacks/s", _page.Text, "no weapon lines");
+                for (int i = 0; i < rows.Length; i++)
+                {
+                    var p = _page.RowRect(StatText.Order[i]).position;
+                    if (c == 0) rows[i] = p;
+                    else Assert.AreEqual(rows[i], p, StatText.Order[i] + " stays where it was");
+                }
+            }
+            _lvl.Choose(0);
         }
 
         [UnityTest, Timeout(60000)]

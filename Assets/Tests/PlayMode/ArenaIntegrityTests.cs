@@ -254,6 +254,91 @@ namespace Gladiator.Tests
             Assert.Greater(health.DamageTaken, before, "and it still hits the wall-hugging player");
         }
 
+        // ------------------------------------------------------------------ the perch drop
+
+        /// <summary>P3 note 20 (the producer's playtest of v0.24.0: on top of a Slave Pit cage "i can hit but not get hit
+        /// back"): the real motor, dropped onto every NoPerch top inside the loop (its middle and four corners), standing
+        /// still or walking back onto it, with the starter's capsule and the Murder Machine's (the widest): within 1.5 s
+        /// it must be off the top (its feet under the top, or outside its footprint).</summary>
+        [UnityTest, Timeout(240000)] public IEnumerator PerchDrop_SlavePit() => PerchDrop("SlavePit");
+        [UnityTest, Timeout(240000)] public IEnumerator PerchDrop_ProvincialPit() => PerchDrop("ProvincialPit");
+        [UnityTest, Timeout(240000)] public IEnumerator PerchDrop_StoneAmphitheater() => PerchDrop("StoneAmphitheater");
+        [UnityTest, Timeout(240000)] public IEnumerator PerchDrop_GrandArena() => PerchDrop("GrandArena");
+        [UnityTest, Timeout(240000)] public IEnumerator PerchDrop_ImperialArena() => PerchDrop("ImperialArena");
+        [UnityTest, Timeout(240000)] public IEnumerator PerchDrop_Colosseum() => PerchDrop("Colosseum");
+
+        IEnumerator PerchDrop(string scene)
+        {
+            yield return Boot(scene);
+            var tops = new List<Collider>();
+            foreach (var np in Object.FindObjectsByType<NoPerch>(FindObjectsInactive.Exclude))
+            {
+                var col = np.GetComponent<Collider>();
+                if (col == null || !col.enabled) continue;
+                var c = col.bounds.center;
+                if (_bounds.Contains(c.x, c.z)) tops.Add(col);
+            }
+            Assert.Greater(tops.Count, 0, scene + ": no NoPerch tops inside the loop");
+            var configs = new[]
+            {
+                _motor.config,
+                UnityEditor.AssetDatabase.LoadAssetAtPath<MovementConfig>("Assets/Data/Config/MovementConfig_Machine.asset"),
+            };
+            var original = _motor.config;
+            var fails = new StringBuilder();
+            int drops = 0, failed = 0;
+            foreach (var cfg in configs)
+            {
+                if (cfg == null) continue;
+                _motor.config = cfg;
+                var cc = _player.GetComponent<CharacterController>(); // the motor sizes it only at Awake and on slides
+                cc.height = cfg.capsuleHeight;
+                cc.radius = cfg.capsuleRadius;
+                cc.center = new Vector3(0f, cfg.capsuleHeight * 0.5f, 0f);
+                foreach (var col in tops)
+                {
+                    var b = col.bounds;
+                    float ix = Mathf.Max(0f, b.extents.x - 0.15f), iz = Mathf.Max(0f, b.extents.z - 0.15f);
+                    for (int k = 0; k < 5; k++)
+                    for (int walk = 0; walk < 2; walk++)
+                    {
+                        var at = new Vector3(b.center.x + (k == 0 ? 0f : (k & 1) == 0 ? -ix : ix), b.max.y + 0.3f,
+                                             b.center.z + (k == 0 ? 0f : k < 3 ? -iz : iz));
+                        if (!_bounds.Contains(at.x, at.z)) continue;
+                        _motor.Teleport(at);
+                        Physics.SyncTransforms();
+                        _input.Next = default;
+                        for (int t = 0; t < 90; t++)
+                        {
+                            var p = _player.transform.position;
+                            var toMiddle = new Vector2(b.center.x - p.x, b.center.z - p.z);
+                            _input.Next.Move = walk == 1 && toMiddle.sqrMagnitude > 1e-4f ? toMiddle.normalized : Vector2.zero;
+                            _player.ReferenceYaw = 0f;
+                            _player.Tick(Dt, Dt);
+                            _motor.Tick(Dt, Dt);
+                        }
+                        drops++;
+                        var end = _player.transform.position;
+                        bool over = end.x > b.min.x - cfg.capsuleRadius && end.x < b.max.x + cfg.capsuleRadius
+                                 && end.z > b.min.z - cfg.capsuleRadius && end.z < b.max.z + cfg.capsuleRadius;
+                        if (over && end.y > b.max.y - 0.3f)
+                        {
+                            failed++;
+                            if (fails.Length < 1500)
+                                fails.Append($"\n  {cfg.name} on {col.name} ({col.transform.parent?.name}) top {b.max.y:0.00} from {at} {(walk == 1 ? "walking back" : "still")}: ended at {end}");
+                        }
+                    }
+                }
+            }
+            _motor.config = original;
+            var cc0 = _player.GetComponent<CharacterController>();
+            cc0.height = original.capsuleHeight;
+            cc0.radius = original.capsuleRadius;
+            cc0.center = new Vector3(0f, original.capsuleHeight * 0.5f, 0f);
+            Debug.Log($"[Integrity] {scene} perch drop: {tops.Count} NoPerch tops, {drops} drops, {failed} stayed on top{fails}");
+            Assert.AreEqual(0, failed, scene + ": stayed on a NoPerch top" + fails);
+        }
+
         // ------------------------------------------------------------------ the perch audit
 
         [UnityTest, Timeout(240000)] public IEnumerator PerchAudit_SlavePit() => PerchAudit("SlavePit");

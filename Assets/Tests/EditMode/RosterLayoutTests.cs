@@ -1,5 +1,6 @@
 using Gladiator.Core;
 using Gladiator.Gameplay;
+using Gladiator.UI;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -9,6 +10,8 @@ namespace Gladiator.Tests
     /// R9 (the select screens as a portrait grid): the grid and ladder maths (2D cursor moves, sizes, cells, fitting),
     /// the canvas a CanvasScaler gives each screen, and the layout rule that nothing ever leaves the screen or covers the
     /// diorama at 16:9, 16:10, 21:9 and 4:3 for up to 16 gladiators and 8 arenas. Plus the save's per-gladiator runs.
+    /// P3: the arenas are a grid of tiles in a frame (ArenaLadder, three to a row) that fits the same way for up to 12
+    /// arenas, and the roster leaves room above it for the picked tile's wreath (MainMenu.RosterScale).
     /// </summary>
     public class RosterLayoutTests
     {
@@ -100,13 +103,18 @@ namespace Gladiator.Tests
                     var size = GridMath.Size(n, MenuLayout.Columns, MenuLayout.Tile, MenuLayout.Gap) * grid;
                     Assert.LessOrEqual(size.y, block + 0.01f, s + ", " + n + " gladiators: the grid fits its height");
                     Assert.GreaterOrEqual(MenuLayout.TabletLeft(canvas) - MenuLayout.GridRight(canvas, n), DioramaGap, s + ", " + n + " gladiators: the diorama stays clear");
+                    // P3: with the picked tile's wreath above it
+                    float roster = MainMenu.RosterScale(canvas, n);
+                    Assert.LessOrEqual(roster, grid + 1e-5f, "never larger than the plain grid");
+                    var withWreath = GridMath.Size(n, MenuLayout.Columns, MenuLayout.Tile, MenuLayout.Gap) * roster;
+                    Assert.LessOrEqual(withWreath.y + RosterGrid.WreathRoom, block + 0.01f, s + ", " + n + " gladiators: the grid and the wreath above it fit");
                 }
-                for (int n = 1; n <= 8; n++)
+                for (int n = 1; n <= 12; n++)
                 {
-                    float ladder = MenuLayout.LadderScale(canvas, n);
-                    var size = GridMath.LadderSize(n, MenuLayout.Step, MenuLayout.StepGap, MenuLayout.StepShift) * ladder;
-                    Assert.LessOrEqual(size.y, block + 0.01f, s + ", " + n + " arenas: the ladder fits its height");
-                    Assert.GreaterOrEqual(MenuLayout.TabletLeft(canvas) - MenuLayout.LadderRight(canvas, n), DioramaGap, s + ", " + n + " arenas: the diorama stays clear");
+                    float arenas = ArenaLadder.GridScale(canvas, n);
+                    var size = ArenaLadder.FrameSize(n) * arenas;
+                    Assert.LessOrEqual(size.y, block + 0.01f, s + ", " + n + " arenas: the grid fits its height");
+                    Assert.GreaterOrEqual(MenuLayout.TabletLeft(canvas) - ArenaLadder.GridRight(canvas, n), DioramaGap - 0.01f, s + ", " + n + " arenas: the diorama stays clear");
                 }
             }
         }
@@ -118,11 +126,26 @@ namespace Gladiator.Tests
             {
                 var canvas = GridMath.CanvasSize(s.x, s.y, MenuLayout.Reference, MenuLayout.Match);
                 Assert.AreEqual(1f, MenuLayout.GridScale(canvas, 16), s + ": 16 tiles, no shrinking, no scrolling");
-                Assert.AreEqual(1f, MenuLayout.LadderScale(canvas, 6), s + ": the six arenas' ladder");
+                Assert.AreEqual(1f, ArenaLadder.GridScale(canvas, 6), s + ": the six arenas' grid");
+                Assert.AreEqual(1f, MainMenu.RosterScale(canvas, 12), s + ": twelve gladiators and the wreath above them");
                 Assert.AreEqual(1f, MenuLayout.TabletScale(canvas), s + ": the tablet");
             }
             var hd = GridMath.CanvasSize(1920f, 1080f, MenuLayout.Reference, MenuLayout.Match);
             Assert.Less(MenuLayout.GridScale(hd, 20), 1f, "more than 16: the grid shrinks to fit (it never slides)");
+        }
+
+        [Test]
+        public void TheArenaGrid_IsThreeToARow_InsideItsFrame()
+        {
+            Assert.AreEqual(3, ArenaLadder.Columns);
+            var t = ArenaLadder.TileSize;
+            float inset = ArenaLadder.Inset, gap = ArenaLadder.Gap;
+            Assert.AreEqual(new Vector2(3f * t.x + 2f * gap + 2f * inset, 2f * t.y + gap + 2f * inset), ArenaLadder.FrameSize(6), "six arenas: two full rows");
+            Assert.AreEqual(ArenaLadder.FrameSize(3).x, ArenaLadder.FrameSize(7).x, "more arenas are only more rows");
+            Assert.AreEqual(ArenaLadder.FrameSize(6).y + t.y + gap, ArenaLadder.FrameSize(7).y);
+            Assert.AreEqual(new Vector2(inset + t.x * 0.5f, -inset - t.y * 0.5f), ArenaLadder.Cell(0), "the Slave Pit top-left");
+            Assert.AreEqual(new Vector2(inset + t.x * 2.5f + 2f * gap, -inset - t.y * 0.5f), ArenaLadder.Cell(2), "the third ends the row");
+            Assert.AreEqual(new Vector2(inset + t.x * 0.5f, -inset - t.y * 1.5f - gap), ArenaLadder.Cell(3), "the fourth starts the next");
         }
 
         [Test]

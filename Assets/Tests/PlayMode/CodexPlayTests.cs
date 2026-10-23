@@ -69,7 +69,8 @@ namespace Gladiator.Tests
             Assert.AreEqual(ma, codex.EntryCount(CodexPanel.Tab.Market));
             Assert.GreaterOrEqual(se, 3, "the crate, the rat, the bookmaker");
             Assert.AreEqual(0, codex.NewCount, "a fresh save has nothing new");
-            StringAssert.DoesNotContain("NEW", _menu.CodexButtonText);
+            Assert.IsFalse(_menu.CodexSealShown, "no NEW seal on the CODEX plate");
+            Assert.AreEqual("CODEX", _menu.CodexButtonText);
             Assert.IsTrue(codex.TryEntry(CodexPanel.Tab.Bestiary, 0, out string title, out bool open, out _));
             Assert.AreEqual("???", title, "nothing met yet");
             Assert.IsFalse(open);
@@ -90,7 +91,8 @@ namespace Gladiator.Tests
             });
             var codex = _menu.Codex;
             Assert.Greater(codex.NewCount, 0);
-            StringAssert.Contains("NEW", _menu.CodexButtonText);
+            Assert.IsTrue(_menu.CodexSealShown, "P3: the crimson NEW seal on the CODEX plate (it read \"• n NEW\")");
+            Assert.AreEqual("CODEX", _menu.CodexButtonText, "the word stays CODEX");
             int secret = -1;
             for (int i = 0; i < codex.EntryCount(CodexPanel.Tab.Secrets); i++)
                 if (codex.TryEntry(CodexPanel.Tab.Secrets, i, out string t, out bool open, out bool isNew) && open)
@@ -107,6 +109,8 @@ namespace Gladiator.Tests
             codex.TryEntry(CodexPanel.Tab.Secrets, secret, out _, out _, out bool stillNew);
             Assert.IsFalse(stillNew, "seen now");
             Assert.IsTrue(codex.TabHasNew(CodexPanel.Tab.Challenges), "the challenge isn't viewed yet");
+            Assert.IsTrue(codex.TabSealShown(CodexPanel.Tab.Challenges), "its tab wears the seal");
+            Assert.IsFalse(codex.TabSealShown(CodexPanel.Tab.Records), "RECORDS has nothing new");
             codex.HandleInput(false, false, false, false, false, true); // Esc / B
             yield return null;
             Assert.IsFalse(_menu.CodexOpen, "back closes it");

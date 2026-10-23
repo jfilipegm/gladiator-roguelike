@@ -252,4 +252,5 @@ def lineup():
     return {"tris": tris, "renders": out}
 
 
-result = lineup()
+if __name__ == "gl_script":  # run by the bridge or Tools/bheadless; importing this module (V5) only gets Builder
+    result = lineup()

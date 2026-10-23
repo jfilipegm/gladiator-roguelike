@@ -1,4 +1,4 @@
-# A1 — Character art direction (prototypes: the Nobody V2 rigid, V3 skinned, V4 the OSRS feel)
+# A1 — Character art direction (the pick: V5, lineup variant A; earlier prototypes V2-V4 for the record)
 
 The producer's brief (2026-10-23): evolve the characters into a polished, distinctive stylized 3D look, without
 rebuilding the game. Keep the identity (low-poly, chunky, readable with 300 enemies), lose the "assembled from
@@ -87,6 +87,23 @@ characters, in 3D, with that simple feel, not a complete rip-off.**
 - **Changes beyond V3's list if adopted:** the proportions move from chibi (CLAUDE.md §5, head 35-40 %) to stylized
   adult (head ~24 %), a decision for DECISIONS; the joints are higher (hips 0.66, not 0.40), so `PartAnimProfile`'s
   stride (swing amplitude and frequency) wants retuning for longer legs (data only).
+
+## 3d. The producer on V4, the style lineup, and the pick: `CH_Nobody_V5` (variant A)
+**The producer (2026-10-23):** V4 was "trying too hard to be close to reality and coming as a mobile weird character".
+After four single guesses, a lineup instead (`BlenderSrc/characters/proto/ch_nobody_lineup.py`,
+`Screenshots/a1_lineup.jpg`): one simple Nobody in OSRS-simple shapes (chamfered boxy sections, plain tapered limbs,
+no muscles, a few clear clothing pieces, a minimal face), in four variants beside the original: A chibi + flat
+facets, B chibi + soft gradients, C medium + flat, D medium + soft. **The producer's pick: A** ("my favorite so far").
+- **V5** (`ch_nobody_v5.py`) is variant A exactly, rigged: one skinned mesh on the six bones at CH_Nobody's joints
+  (hips 0.40, shoulders (+-0.285, 0.86), neck 0.95: the old animation pivots and proportions, so the run cycle needs no
+  retuning), the lineup's rule-based weights (neck, shoulder corners, sleeve, hem blended). One change from the lineup:
+  the gladius blade is grey iron with bright edges (the rust-brown blade read as a wooden club).
+- **Cost:** **930 tris** (822 body + gladius + shield) in **3 renderers**: the original's 876 in 36. Under budget.
+- **Screens:** `Screenshots/a1v5_blender.jpg` (front, back, 3/4 beside the original; run and swing poses) and
+  `Screenshots/a1v5_ingame_compare.jpg` (Slave Pit, the game's material, light and post).
+- **Next, on the producer's OK:** the four skinning changes (§3b) and a free `nobody_v5` skin to flip between it and
+  the original on the select screen and play a run with it; then the rest of the roster in this style, one script
+  each from the same builder (Tier 1 enemies first, with the 300-enemy stress run before they switch).
 
 ## 4. Comparison and risks
 | | Original | Prototype |

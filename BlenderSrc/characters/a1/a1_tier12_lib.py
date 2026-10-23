@@ -214,7 +214,7 @@ def body(ox=0.0, p=None, skin="skin_light", skin_shade="skin_mid", top="cloth_wh
 
 
 def face(a, ox=0.0, eyes="ink", brows="mud_dark", nose="skin_mid", brow_angle=0.3, eye_w=0.24, eye_h=0.075,
-         eye_z=None, brow_z=None, mouth=None, mouth_w=0.36):
+         eye_z=None, brow_z=None, mouth=None, mouth_w=0.36, brow_w=0.48, brow_h=0.06, brow_ledge=0.012):
     """The variant-A minimal face as decals: two slit eyes, two angled brows (None: none), a wedge nose (None: none),
     an optional mouth bar. Positive brow_angle = angry (outer ends up)."""
     HW, HH, ry = a["head_w"], a["p"]["HH"], a["head_back_y"]
@@ -225,8 +225,8 @@ def face(a, ox=0.0, eyes="ink", brows="mud_dark", nose="skin_mid", brow_angle=0.
     for s, x, sg in (("L", HW * 0.38, 1), ("R", -HW * 0.38, -1)):
         out.append(decal("Eye" + s, HW * eye_w, HH * eye_h, (x, -ry - 0.004, ez), eyes, ox))
         if brows:
-            out.append(decal("Brow" + s, HW * 0.48, HH * 0.06, (x, -ry - 0.008, bz), brows, ox,
-                             rot_y=-brow_angle * sg, ledge=0.012))
+            out.append(decal("Brow" + s, HW * brow_w, HH * brow_h, (x, -ry - 0.008, bz), brows, ox,
+                             rot_y=-brow_angle * sg, ledge=brow_ledge))
     if nose:
         x, y, z = 0.0, face_y(a, 0.47), hz(0.47)
         yb = face_y(a, 0.33)

@@ -5,6 +5,7 @@ magenta belt (the enemy accent), a long crimson cloak down his back, a steel hel
 broad red crest that runs SIDE TO SIDE (his silhouette: a wide fan over the head), the vine staff (wood, gold cap)
 raised up and out in the right hand, the left fist out at the hip in a dark glove, gilded greaves, leather boots, no
 shield. Changed: the variant-A body (lean, x1.1 for an officer's presence); the cloak is a curved back plate.
+export=1: the game model Assets/Art/Models/A1/Enemies/EN_Centurion.fbx (docs/tracks/A1-ingame-contract.md).
 """
 import importlib
 import math
@@ -22,9 +23,13 @@ import stylized_kit as S
 importlib.reload(S)
 import a1_tier12_lib as L
 importlib.reload(L)
+import a1_export as X
+importlib.reload(X)
 
+EXPORT = ARGS.get("export") == "1"
 GAP = 1.3
-OX = -GAP / 2
+OX = 0.0 if EXPORT else -GAP / 2
+RULES = [("Medal", "Body"), ("Cheek", "Head"), ("Vitis", "ArmR"), ("Knot", "ArmR"), ("StaffCap", "ArmR")]
 SCALE = 1.1
 
 
@@ -85,8 +90,12 @@ def build():
         o.rotation_euler = (0.35, -0.3, 0)   # leaning up, forward and out
     parts += [staff, knot, cap]
     L.xform(parts, L.Matrix.Scale(SCALE, 4), (0, 0, 0), OX)
-    return parts
+    J = X.joints(p, scale=SCALE)
+    return parts, J
 
 
-parts = build()
-result = A.review("centurion", parts, original_blend="en_centurion", original_root="EN_Centurion", height=2.0, gap=GAP)
+parts, J = build()
+if EXPORT:
+    result = L.export_enemy("EN_Centurion", parts, J, 1.85, RULES)
+else:
+    result = A.review("centurion", parts, original_blend="en_centurion", original_root="EN_Centurion", height=2.0, gap=GAP)

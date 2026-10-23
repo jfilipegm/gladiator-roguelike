@@ -488,6 +488,20 @@
 - **Screenshots:** the "[E] THE BOOK" tag over him, the book with 1, 2 and 4 cards at 1080p and 4 at 4:3 (an unaffordable tier IV shows "Need 40 gold"), a running "WAGER I 0 / 25 28s", the cooldown's "COME BACK LATER".
 - **Released:** PR #33 merged 2026-10-23 09:00 with the producer's OK; released **v0.26.0** (Linux 47 MB, Linux dev 77, Windows 49, macOS 56); smoke runs on Linux, Linux dev in the Provincial Pit and Wine, 0 exceptions; the W1 worker archived.
 
+## Done — T1 admin mode and the Playground (branch `phase5-playground`, ships with A1 as v0.27.0; spec `docs/tracks/T1-playground.md`)
+- **The producer's request:** "a way I activate an admin version and have access to the play ground arena to test everything and every character, Boss etc".
+- **Built (three workers W-menu, W-play, W-admin + integration):**
+  - `AdminMode`: type ADMIN on the main menu or launch with `-admin`; it's remembered in PlayerPrefs. The Editor and dev builds keep F1 (`PanelAllowed`) and show real progress until it's typed;
+  - the admin view of the pickers (every gladiator, skin and arena; never written to the save);
+  - PLAYGROUND → the Playground scene (`Gladiator/Setup/Dev/Build Playground`): the test-arena pieces plus the `Showroom` (every gladiator + skins, enemies by tier, bosses, labelled, an idle/run/attack/hit loop; zero GC). No Director, timeless, god mode; a Playground run is never committed;
+  - F1: FIGHT A BOSS (the boss's own arena, the timer jumped so the boss enters ~3 s in) and FREEZE (enemies and bosses hold still and deal no damage, but take hits and die).
+- **Integration fixes:**
+  - admin mode isn't forced in the Editor or dev builds (it would have shown everything unlocked there and broken the menu tests);
+  - `PlaygroundSetup.LinkMenu` reloads the run after opening the menu scene (OpenScene unloaded it, so the link saved as null);
+  - Build Main Menu keeps the link;
+  - the Director test accepts a disabled Director's Instance.
+- **Verified:** AdminModeTests 8/8, AdminToolsTests 3/3, PlaygroundTests 3/3; the menu → PLAYGROUND → select (every gladiator open) → Playground walk in Play mode, with screenshots.
+
 ## Done — A1 the characters' art direction (branch `phase5-artdir`, release v0.27.0 when the producer OKs the merge)
 - **Direction:** five prototypes against the producer's verdicts (V1 boxes, V2 Playmobil, V3 cheap mobile, V4 too realistic), then a 4-variant lineup: **variant A** picked (chibi, OSRS-simple chamfered shapes, flat facets); the whole cast drawn as review sheets (`Screenshots/a1/`, gallery sent 12:50) and approved for the game at 13:05 (A1-art-direction §3–3f).
 - **In the game:** 36 characters + 20 skins as rigid-part models in `Assets/Art/Models/A1/` (classic kept), one mesh per part, the classic part sets and the boss parts BossController moves; `ModelStyle` swaps every reference (menu, both ways); portraits, skin portraits, codex atlas, arena tiles re-baked. Three workers (background agents: R-glad, R-tier12, R-tier3boss) wrote the Blender scripts and exports; the orchestrator wrote the kit, the exporter, the switch and the tests.

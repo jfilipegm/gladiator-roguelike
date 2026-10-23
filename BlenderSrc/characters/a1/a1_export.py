@@ -25,6 +25,9 @@ import gladiator_kit as K
 
 PARTS = ("Body", "Head", "ArmL", "ArmR", "LegL", "LegR")
 PARENT = {"Body": None, "Head": "Body", "ArmL": "Body", "ArmR": "Body", "LegL": None, "LegR": None}
+# other parts the game finds by name (Assets/Scripts/Gameplay/Boss/BossController.cs, WeaponDef.modelPart): keep them
+# as their own objects with `sub=` when the classic model has them (docs/tracks/A1-rigs.json, A1-ingame-contract.md)
+SUB_PARTS = ("Flail", "Spear", "WingL", "WingR", "Falx", "Chain", "BLeg")
 SHOTS = "/home/jfilipegm/Gladiator Roguelike/Screenshots/a1/ingame"
 
 # simple_kit.humanoid's piece names -> part ("side": the piece's L/R suffix picks ArmL/ArmR or LegL/LegR)
@@ -84,18 +87,28 @@ def _bake(objs):
         n = bpy.data.objects.new(base(o), me)
         bpy.context.scene.collection.objects.link(n)
         baked.append(n)
-    for o in list(objs):
-        for d in reversed(K.descendants(o)):
-            bpy.data.objects.remove(d, do_unlink=True)
+    doomed = {}
+    for o in objs:   # a frame and its own pieces may both be passed: remove each object once
+        for d in K.descendants(o):
+            doomed[d.name] = d
+    for d in doomed.values():
+        bpy.data.objects.remove(d, do_unlink=True)
     return baked
 
 
-def export(root_name, folder, parts, J, rules=(), export_fbx=True, pose_sheet=True):
+def export(root_name, folder, parts, J, rules=(), export_fbx=True, pose_sheet=True, sub=()):
     """Builds root_name (an EMPTY at the origin) with one mesh per part, origins at the joints J, and exports
-    Assets/Art/Models/A1/<folder>/<root_name>.fbx. Returns info."""
+    Assets/Art/Models/A1/<folder>/<root_name>.fbx. Returns info.
+    sub: [(name, part, pivot)]: pieces whose name starts with `name` become ONE separate object called `name` under
+    `part` (origin at `pivot`, world space; None = the part's joint), for the parts the game finds by name besides the
+    six (SUB_PARTS: a boss's Flail / Spear / WingL / WingR / Falx, Asterion's Chain the Labyrinth Chain hides)."""
     pieces = _bake(parts)
-    groups, unknown = {}, []
+    groups, unknown, subs = {}, [], {}
     for o in pieces:
+        hit = next((sd for sd in sub if base(o).startswith(sd[0])), None)
+        if hit is not None:
+            subs.setdefault(hit, []).append(o)
+            continue
         c = sum((Vector(v.co) for v in o.data.vertices), Vector()) / max(1, len(o.data.vertices))
         part = _part_of(base(o), c.x, rules)
         if part is None:
@@ -108,7 +121,7 @@ def export(root_name, folder, parts, J, rules=(), export_fbx=True, pose_sheet=Tr
     if missing:
         raise ValueError("no joint for: " + ", ".join(missing))
     root = K.empty(root_name)
-    made, pivots = {}, {}
+    made, pivots, made_sub = {}, {}, {}
     order = [p for p in PARTS if p in groups] + [p for p in groups if p not in PARTS]
     for part in order:
         objs = groups[part]
@@ -124,10 +137,22 @@ def export(root_name, folder, parts, J, rules=(), export_fbx=True, pose_sheet=Tr
         obj.parent = made[pp] if pp is not None else root
         obj.matrix_parent_inverse = Matrix.Identity(4)
         obj.location = pivots[part] - (pivots[pp] if pp is not None else Vector())
+    for (name, part, pivot), objs in subs.items():
+        if part not in made:
+            raise ValueError(name + " needs its part " + part)
+        obj = K.join(objs, name) if len(objs) > 1 else objs[0]
+        obj.name, obj.data.name = name, name
+        pv = Vector(pivot) if pivot is not None else pivots[part]
+        obj.data.transform(Matrix.Translation(-pv))
+        obj.parent = made[part]
+        obj.matrix_parent_inverse = Matrix.Identity(4)
+        obj.location = pv - pivots[part]
+        made_sub[name] = obj
     bpy.context.view_layer.update()
     meshes = [o for o in K.descendants(root) if o.type == "MESH"]
     lo, hi = K.world_bounds(meshes)
     info = {"root": root_name, "tris": K.tri_count(meshes), "renderers": len(meshes), "parts": sorted(made),
+            "sub": sorted(made_sub),
             "height": round(hi.z - lo.z, 3), "width": round(hi.x - lo.x, 3), "depth": round(hi.y - lo.y, 3)}
     if pose_sheet:
         info["poses"] = poses(root, made)

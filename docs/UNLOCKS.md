@@ -39,7 +39,7 @@ Every reward is **content** (a weapon or Boon entering the pool) or **Renown** (
 | Reward | Kind | Unlock | How |
 |---|---|---|---|
 | **Sling** (CRIT) | weapon: one fast stone at the farthest target in range, long reach, big crits | Secret: **the Golden Rat** | catch it in the Slave Pit |
-| **Loaded Dice** (GOLD) | Boon: +Luck, +gold | Secret: **the Bookmaker** | win his wager in the Provincial Pit |
+| **Loaded Dice** (GOLD) | Boon: +Luck, +gold | Secret: **the Bookmaker** | win one of his wagers at tier II or higher in the Provincial Pit |
 | **Gorm's Whip** (BLOOD) | weapon: a 6 m thin crack through everything in a line, at the two nearest enemies in turn; Bleeds; **the tip** (last 1.5 m) always crits, so you fight at whip's length | Challenge **Pit Master's Bane** | defeat Gorm 3 times |
 | **Net** | weapon: a slow thrown net, wide, pierces, Roots for 1.5 s | Challenge **Champion of the Provinces** | defeat the Provincial Champion |
 | **Winged Sandals** (MOVEMENT) | Boon: +1 jump in mid-air per level (max 2) | Market | 300 Renown |
@@ -71,11 +71,30 @@ Every reward is **content** (a weapon or Boon entering the pool) or **Renown** (
 - It keeps appearing after you've caught it (for the gold).
 
 **The Bookmaker (Provincial Pit).** A hunched bookmaker with a ledger stands at one of the arena's secret spots (a corner under the stands).
-- **The call:** within 9 m he calls "PSST! A WAGER, CHAMPION?" once per run, and his gold chalk ring glows.
-- **The wager:** stand in the ring for 1.2 s and he takes a 30-gold stake (no gold, no wager) and posts it: "KILL N IN 30 S". N is 1.3 × your kills in the last 30 s, at least 60, so he bets against your own pace.
-- **Win:** he pays 90 gold, "THE BOOKMAKER PAYS UP!", and the flag `bookmaker_paid` (unlocks Loaded Dice).
-- **Lose:** "THE HOUSE WINS.", the crowd boos.
-- One wager per run, and the HUD shows its countdown.
+W1 (the producer's note 23, docs/tracks/W1-wager.md) replaced his single 30-gold bet with **his book**.
+- **The call:** within 9 m he calls "PSST! A WAGER, CHAMPION?", "[E]  THE BOOK" shows over him, and his gold chalk ring glows.
+- **The book:** E (gamepad North) in his ring opens it, costing nothing; a chest in reach still takes the press. The run pauses
+  under "THE BOOK" ("the Bookmaker takes your wager"): 1–4 wager cards in the level-up's row, and WALK AWAY (Esc, gamepad East) to leave. With no
+  gold he still opens it: a card you can't pay shows "Need n gold" on its disabled BET plate.
+- **The wagers** (the stake doubling; N is worked out from your kills of the last 30 s each time the book opens, at most 600):
+
+  | Tier | Stake | Challenge | Time | Pays | Opens at |
+  |---|---|---|---|---|---|
+  | I | 5 | kill N: 0.8 × your pace, at least 25 | 30 s | 15 | always |
+  | II | 10 | kill N: 1.2 × your pace, at least 50 | 30 s | 35 | 100 kills this run |
+  | III | 20 | kill N **without being hit** (1.0 × pace, at least 40); any damage loses | 30 s | 80 | 300 kills |
+  | IV | 40 | **his champion**: an elite (the Director's elite pick, with an affix) comes in at a gate; kill it | 45 s | 200 | 600 kills |
+
+  **Luck** may open one more tier than your kills did: chance Luck / 0.5 (the level-up's fourth-card rule), rolled once per
+  opening on a seeded fork. Fewer than four cards: "MORE KILLS, BIGGER WAGERS" under the row.
+- **A pick:** he takes the stake and the HUD counts the wager down under the timer ("WAGER I", "WAGER II",
+  "WAGER III · NO HITS", "THE CHAMPION").
+- **Win:** he pays the tier's payout, "THE BOOKMAKER PAYS UP!", a cheer, Favor. The first win **at tier II or higher** sets the
+  flag `bookmaker_paid` (unlocks Loaded Dice): tier I is too easy to be the secret.
+- **Lose:** "THE HOUSE WINS.", the crowd boos (time out, a hit on tier III, or the run ending). If his champion leaves the
+  arena without being killed, it's no contest and the stake comes back.
+- **Again:** after each wager he waits 60 s ("COME BACK LATER" over him; E only gets his line), then calls again.
+  No limit per run (`maxWagers` 0).
 
 Both are new components in the RattlingCrate mould: spots from `ArenaLayoutDef.secretSpots`, a flag saved at once, and API hooks for tests. They have models (`PR_GoldenRat`, `CH_Bookmaker`) and placeholder SFX (squeak, coin shower, quill).
 
@@ -104,7 +123,10 @@ Both are new components in the RattlingCrate mould: spots from `ArenaLayoutDef.s
   - Migrate fills the new lists.
 - **PlayMode:**
   - **the Golden Rat:** appears, flees faster than a run, a touch catches it (the test teleports; in play a slide closes the gap), the flag is set, and the Sling unlocks at the run's end; it dives away when its time is up;
-  - **the Bookmaker:** stake, win and lose;
+  - **the Bookmaker** (W1): E opens the book and pauses, walking away costs nothing, a pick takes the stake and starts
+    the countdown, a tier I win pays but keeps the flag, the cooldown then a second wager, a card you can't pay is
+    refused, tier III loses on a hit, tier IV sends one elite and its kill pays and sets the flag; the book passes the
+    UI audit with 1 and 4 cards. EditMode `WagerMathTests`: the table, the offer count from kills + Luck, N from the pace;
   - **each new weapon fires** (Net roots, Whip pierces a line and Bleeds, Sling hits the farthest target);
   - **the new synergies switch on;**
   - **the Codex:** builds every tab with no errors, shows NEW once, and Market BUY works.
@@ -117,7 +139,8 @@ Both are new components in the RattlingCrate mould: spots from `ArenaLayoutDef.s
 
 ## Tunables
 - the rat's `chance`, `window`, `speed`, `life`, `gold`;
-- the Bookmaker's `stake`, `payout`, `seconds`, `paceFactor`, `minKills`;
+- the Bookmaker's `tiers` (per tier: `stake`, `payout`, `seconds`, `paceFactor`, `minKills`, `unlockKills`), `maxKills`,
+  `cooldownSeconds`, `maxWagers`, `flagMinTier`, `championGateDistance`;
 - Market prices and bounties (`UnlockDef`);
 - `MetaConfig` Renown per run, unchanged.
 

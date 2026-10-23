@@ -19,7 +19,7 @@ namespace Gladiator.Tests
     /// real main menu scene with the sandbox's save: the main menu (fresh and seasoned), the gladiator select (every
     /// tablet page, the skins), the arena select (every arena), the Edicts page, the Daily screen and its read-only Edicts
     /// page, every page of every Codex tab, Options. In a run (the test arena): the HUD, the level-up with 3 and with 4
-    /// cards, the pause, the boss's reward and both end screens. A failure lists each label as "parent/label: why".
+    /// cards, the pause, the boss's reward, the Bookmaker's book (W1: 1 and 4 cards) and both end screens. A failure lists each label as "parent/label: why".
     /// The in-run screens change in P3-B: these cases are written against today's screens and run after both merge.
     /// </summary>
     public class UiAuditTests
@@ -378,6 +378,46 @@ namespace Gladiator.Tests
             yield return Frames(3);
             AssertClean("the boss's reward (SPOILS OF VICTORY)");
             _lvl.Choose(0);
+        }
+
+        /// <summary>W1: the Bookmaker's book in the test arena (a bookmaker and his panel made here, as the Provincial Pit's
+        /// builder makes them): one card you can't pay (its BET plate disabled), then four with some you can and some you
+        /// can't, then WALK AWAY focused.</summary>
+        [UnityTest, Timeout(60000)]
+        public IEnumerator TheBookmakersBook_OneAndFourCards()
+        {
+            yield return BootRun();
+            var bm = new GameObject("Bookmaker").AddComponent<Bookmaker>();
+            bm.spots = new[] { Player.Main.transform.position + new Vector3(3f, 0f, 3f) };
+            bm.arenaCenter = EnemyManager.Instance.arenaCenter;
+            var panel = WagerPanel.Instance != null ? WagerPanel.Instance : new GameObject("WagerPanel").AddComponent<WagerPanel>();
+            yield return Frames(2); // his Start places him
+            Assert.AreEqual(Bookmaker.Phase.Waiting, bm.State);
+
+            Assert.IsTrue(bm.OpenBook());
+            yield return Frames(3);
+            Assert.IsTrue(panel.Shown);
+            Assert.AreEqual(1 + (bm.LuckOpenedTier ? 1 : 0), panel.CardCount);
+            Assert.AreEqual(UiState.Disabled, panel.CardPlate(0).State, "no gold: the BET plate is disabled");
+            AssertClean("the Bookmaker's book, " + panel.CardCount + " card(s), no gold");
+            bm.CloseBook();
+            yield return Frames(2);
+
+            for (int i = 1; i < bm.tiers.Length; i++) bm.tiers[i].unlockKills = 0;
+            _run.AddGold(25 - _run.Gold); // I and II affordable, III and IV not
+            Assert.IsTrue(bm.OpenBook());
+            yield return Frames(3);
+            Assert.AreEqual(4, panel.CardCount, "four cards");
+            Assert.AreEqual(UiState.Focused, panel.CardPlate(0).State);
+            Assert.AreEqual(UiState.Disabled, panel.CardPlate(3).State);
+            AssertClean("the Bookmaker's book, 4 cards");
+            yield return new WaitForSecondsRealtime(0.3f);
+            panel.Hover(WagerPanel.WalkAwayId);
+            yield return Frames(2);
+            Assert.AreEqual(UiState.Focused, panel.WalkAwayPlate.State);
+            AssertClean("the Bookmaker's book, WALK AWAY focused");
+            bm.CloseBook();
+            Object.Destroy(bm.gameObject);
         }
 
         [UnityTest, Timeout(60000)]

@@ -44,6 +44,8 @@ namespace Gladiator.UI
         const float BloodBarW = 220f, BloodBarH = 12f, KillsX = 219f;
         const float LevelRowH = 44f, FavorRowH = 26f, LevelGap = 10f, LevelMinW = 220f, GoldTextW = 130f;
         static readonly Vector2 FavorIconSize = new Vector2(30f, 26f);
+        /// <summary>The top-left plate's right edge from the screen's left (canvas units): titles over the HUD stay clear of it.</summary>
+        public const float TopLeftPlateRight = PlateX + PlateW;
         /// <summary>The level plate's word (P3, the producer's note 14: "LV" or "LEVEL"); read once at Awake.</summary>
         public static string LevelWord = "LEVEL";
         const float StripLeft = 24f, StripGap = 10f, TilePitch = 58f;
@@ -132,10 +134,11 @@ namespace Gladiator.UI
         readonly int[] _tagKey = new int[Tags];
         TextMeshProUGUI _prompt;
         int _promptKey = int.MinValue;
-        // the Bookmaker (P1): "[E]  WAGER 30 GOLD" over him while he calls you over, "NEED 30 GOLD" in red when you're short
+        // the Bookmaker (W1): "[E]  THE BOOK" over him while he calls you over, "COME BACK LATER" during his cooldown
         TextMeshProUGUI _bookTag;
         int _bookKey = int.MinValue;
         const float BookmakerTagHeight = 2.3f;
+        const string BookTag = "[E]  THE BOOK", BookLaterTag = "COME BACK LATER", BookPrompt = "[E] Open the Bookmaker's book";
         static readonly Color AltarColor = new Color(1f, 0.4f, 0.55f);
 
         static readonly Color WeaponTileInner = new Color(0.2f, 0.13f, 0.07f, 0.92f); // warm bronze: weapons vs Boons
@@ -436,15 +439,15 @@ namespace Gladiator.UI
                 _tagKey[i] = int.MinValue;
             }
             _bookTag = UiKit.Text("BookmakerTag", canvas, "", TextRole.Body, 28f, _coin, TextAlignmentOptions.Center, mid, mid, Vector2.zero, new Vector2(460, 40), TextLook.Outline);
-            PreSize(_bookTag, "[E]  WAGER 8888 GOLD");
-            PreSize(_bookTag, "NEED 8888 GOLD");
+            PreSize(_bookTag, BookTag);
+            PreSize(_bookTag, BookLaterTag);
             _bookTag.rectTransform.localScale = Vector3.zero;
             var bottom = new Vector2(0.5f, 0f);
             _prompt = AutoSize(UiKit.Text("Prompt", canvas, "", TextRole.Body, 30f, Color.white, TextAlignmentOptions.Center, bottom, bottom,
                 new Vector2(0, 150), new Vector2(1300, 46), TextLook.Outline), 22f, 30f);
             PreSize(_prompt, "[E] Blood Altar: lose 88% max HP for a Rare+ upgrade");
             PreSize(_prompt, "[E] Armory Chest  88888 gold  (not enough gold)");
-            PreSize(_prompt, "[E] Wager 8888 gold: beat your own pace, win 8888");
+            PreSize(_prompt, BookPrompt);
 
             _toast = UiKit.Text("Toast", canvas, "LEVEL UP!", TextRole.Shout, 84f, _goldBright, TextAlignmentOptions.Center, top, top,
                 new Vector2(0, -239), new Vector2(900, 110), TextLook.Outline);
@@ -897,8 +900,9 @@ namespace Gladiator.UI
                 if (_build != null && _build.State.Version != _lastBuildVersion) RefreshStrip();
             }
 
-            // the clock is frozen under the cards and LEVEL UP! (or PAUSED) sits over it: hide it until they close
-            float timerAlpha = (LevelUpController.Instance != null && LevelUpController.Instance.IsOpen) || (player != null && player.IsPaused) ? 0f : 1f;
+            // the clock is frozen under the cards and LEVEL UP! (or PAUSED, or W1's THE BOOK) sits over it: hide it until they close
+            float timerAlpha = (LevelUpController.Instance != null && LevelUpController.Instance.IsOpen) || (player != null && player.IsPaused)
+                               || (Bookmaker.Instance != null && Bookmaker.Instance.BookOpen) ? 0f : 1f;
             if (_timer.alpha != timerAlpha) _timer.alpha = timerAlpha;
             if (_edictGroup != null && _edictGroup.alpha != timerAlpha) _edictGroup.alpha = timerAlpha;
             if (_stripGroup.alpha != timerAlpha) _stripGroup.alpha = timerAlpha;
@@ -1197,17 +1201,17 @@ namespace Gladiator.UI
             DrawBookmaker(cam, run);
             int reach = live ? props.InReach : -1;
             var bm = Bookmaker.Instance;
-            bool bet = reach < 0 && bm != null && bm.InReach && run != null && !run.Ended; // a chest in reach takes E first
+            // a chest in reach takes E first; during his cooldown the tag over him says so and E only gets his line
+            bool bet = reach < 0 && bm != null && bm.InReach && !bm.CoolingDown && run != null && !run.Ended;
             int pkey = reach >= 0 ? (props.KindOf(reach) == Interactables.Kind.Altar ? -2 : price * 2 + (afford ? 1 : 0))
-                     : bet ? (bm.CanAfford ? -3 : -4) : -1;
+                     : bet ? -3 : -1;
             if (pkey == _promptKey) return;
             _promptKey = pkey;
             if (pkey == -1) { _prompt.text = ""; return; }
-            if (pkey == -3 || pkey == -4)
+            if (pkey == -3)
             {
-                if (pkey == -3) _prompt.SetText("[E] Wager {0} gold: beat your own pace, win {1}", (float)bm.stake, (float)bm.payout);
-                else _prompt.SetText("[E] Wager {0} gold  (not enough gold)", bm.stake);
-                _prompt.color = pkey == -3 ? _coin : _loss;
+                _prompt.text = BookPrompt; // the book itself shows the stakes (W1)
+                _prompt.color = _coin;
                 return;
             }
             if (pkey == -2)
@@ -1221,7 +1225,8 @@ namespace Gladiator.UI
             _prompt.color = afford ? _coin : _loss;
         }
 
-        /// <summary>The Bookmaker's world prompt over his head while he calls you (chests show their price the same way).</summary>
+        /// <summary>The Bookmaker's world prompt over his head while he calls you (chests show their price the same way):
+        /// "[E]  THE BOOK" in gold, or "COME BACK LATER" during his cooldown between wagers (W1).</summary>
         void DrawBookmaker(Camera cam, RunState run)
         {
             var bm = Bookmaker.Instance;
@@ -1240,13 +1245,12 @@ namespace Gladiator.UI
             }
             rt.position = new Vector3(sp.x, sp.y, 0f);
             if (rt.localScale.x == 0f) rt.localScale = Vector3.one;
-            bool afford = bm.CanAfford;
-            int key = bm.stake * 2 + (afford ? 1 : 0);
+            bool later = bm.CoolingDown;
+            int key = later ? 1 : 0;
             if (key == _bookKey) return;
             _bookKey = key;
-            if (afford) _bookTag.SetText("[E]  WAGER {0} GOLD", bm.stake);
-            else _bookTag.SetText("NEED {0} GOLD", bm.stake);
-            _bookTag.color = afford ? _coin : _loss;
+            _bookTag.text = later ? BookLaterTag : BookTag;
+            _bookTag.color = later ? UiTheme.Current.dust : _coin;
         }
 
         /// <summary>The Bookmaker's world prompt ("" when hidden) and the bottom prompt (tests).</summary>

@@ -51,4 +51,7 @@ goes into the game. Branch `phase5-artdir`. **Nothing in the game changes:** new
 | R-tier3 | en_praetorian, en_gildedmercenary, en_sorcerer, en_skeletallegionnaire, en_champion |
 | R-boss | en_gorm, en_beastlord, en_gildedpatron, en_emperorschampion, en_eternalvictor, en_chimera |
 
-The orchestrator collects the sheets into a gallery for the producer.
+Started as three workers (cards; the app refused direct starts): **R-glad** (R-glad1 + R-glad2, notes
+`A1-roster-glad.md`), **R-tier12** (R-tier1 + R-tier2, `A1-roster-tier12.md`), **R-tier3boss** (R-tier3 + R-boss,
+`A1-roster-tier3boss.md`). The orchestrator collects the sheets (`Screenshots/a1/a1_<id>.png`) into a gallery for the
+producer.

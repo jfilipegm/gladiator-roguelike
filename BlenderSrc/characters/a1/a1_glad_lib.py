@@ -148,6 +148,17 @@ def cape(name, width_top, width_bottom, length, loc, swatch, ox=0.0, cols=8, dep
     return A.flat(o)
 
 
+def on_cape(top, width_top, width_bottom, length, f, down, tilt=10.0, bend=0.06, thickness=0.03, lift=0.008):
+    """A point on the back face of a cape() hung at `top` (character space): f in -1..1 across it, `down` metres
+    down it, `lift` off its surface. For cords, badges and weights that follow a curved, tilted cape."""
+    wt, wb = width_top / 2, width_bottom / 2
+    x = f * (wt + (wb - wt) * down / length)
+    y = thickness / 2 + bend * (abs(x) / max(wt, wb)) ** 2 + lift
+    z = -down
+    t = math.radians(tilt)
+    return (top[0] + x, top[1] + y * math.cos(t) - z * math.sin(t), top[2] + y * math.sin(t) + z * math.cos(t))
+
+
 def tattered(width_top, width_bottom, length, teeth=4, depth=0.08, seed=0):
     """A cape/tabard outline (x, z) from z=0 down to -length, wider at the bottom, its hem cut into `teeth` points."""
     import random

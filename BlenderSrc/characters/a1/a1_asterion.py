@@ -10,10 +10,14 @@ broken shackle link on the left, the bronze chain wound round the right forearm)
 and the chain trailing from his right hand along the ground to the stone block torn from the labyrinth's wall
 (stone grey, a bone meander on top, a bronze ring bolt, a lump of mortar). No fangs, no spikes, no red.
 Built at the chibi scale with a heavy build, then scaled x1.1 (G.grow): horn tips ~1.8 m.
+export=1: the game model Assets/Art/Models/A1/Characters/CH_Asterion.fbx (a1_export; docs/tracks/A1-ingame-contract.md).
 """
 import importlib
 import os
 import sys
+
+import bpy
+from mathutils import Vector
 
 import gladiator_kit as K
 importlib.reload(K)
@@ -24,9 +28,12 @@ importlib.reload(A)
 sys.path.insert(0, os.path.join(REPO, "BlenderSrc", "characters", "a1"))
 import a1_glad_lib as G
 importlib.reload(G)
+import a1_export as X
+importlib.reload(X)
 
 GAP = 1.6
-OX = -GAP / 2
+EXPORT = ARGS.get("export") == "1"
+OX = 0.0 if EXPORT else -GAP / 2
 SCALE = 1.1
 
 
@@ -136,19 +143,38 @@ def build():
     # the chain from the right hand down to the ground and along it, back to the stone block
     hx, hyy, hz_ = a["hand_r"]
     pts = [(hx, hyy + 0.09, wr - 0.02), (hx - 0.02, 0.22, 0.20), (hx - 0.03, 0.36, 0.035), (hx - 0.05, 0.95, 0.035)]
-    parts += G.chain("Link", pts, "bronze", OX, pitch=0.185, size=(0.04, 0.10, 0.21), alt="bronze_d")
+    parts += G.chain("ChainLink", pts, "bronze", OX, pitch=0.185, size=(0.04, 0.10, 0.21), alt="bronze_d")
     sy, sw, sh_, sl = 1.18, 0.36, 0.34, 0.40
     sx0 = hx - 0.05
-    stone = A.loft("Stone", [(0.0, A.oct8(sw / 2, sl / 2, 0.72, sx0, sy)), (sh_, A.oct8(sw / 2, sl / 2, 0.72, sx0, sy))],
+    stone = A.loft("ChainStone", [(0.0, A.oct8(sw / 2, sl / 2, 0.72, sx0, sy)), (sh_, A.oct8(sw / 2, sl / 2, 0.72, sx0, sy))],
                    "stone_grey", OX)
     parts.append(stone)
-    parts.append(A.box("RingBolt", (0.12, 0.10, 0.035), (sx0, sy - sl / 2 - 0.03, sh_ * 0.5), "bronze", OX))
+    parts.append(A.box("ChainRingBolt", (0.12, 0.10, 0.035), (sx0, sy - sl / 2 - 0.03, sh_ * 0.5), "bronze", OX))
     for k, (x, y, w, d) in enumerate(((0.0, 0.11, 0.25, 0.04), (0.11, -0.02, 0.04, 0.22))):
-        parts.append(A.box("Key%d" % k, (w, d, 0.02), (sx0 + x, sy + y, sh_ + 0.005), "bone", OX))
+        parts.append(A.box("ChainKey%d" % k, (w, d, 0.02), (sx0 + x, sy + y, sh_ + 0.005), "bone", OX))
 
     G.grow(parts, OX, SCALE)
-    return parts
+    return parts, p
 
 
-parts = build()
-result = A.review("asterion", parts, original_blend="ch_asterion", original_root="CH_Asterion", height=2.0, gap=GAP)
+parts, p = build()
+
+
+def joints(p):
+    """The humanoid's joints scaled with him; the neck low and forward, where the skull hangs off the hump."""
+    J = X.joints(p, scale=SCALE)
+    J["Head"] = Vector((0.0, -0.07, p["N"] - 0.02)) * SCALE
+    return J
+
+
+if EXPORT:
+    meshes = [o for o in parts if o.type == "MESH"]   # not the weapon frames (their pieces are listed)
+    result = X.export("CH_Asterion", "Characters", meshes, joints(p),
+                      rules=[("ChainWrap", "ArmR"), ("Chain", "Chain"), ("Collar", "Body"), ("Mane", "Body"), ("Kilt", "Body"),
+                             ("Tail", "Body"), ("Labyrinth", "Body"), ("ScarChest", "Body"), ("ScarBrow", "Head"),
+                             ("ShoulderFur", "Arm"), ("Cuff", "Arm"), ("BrokenLink", "ArmL"), ("Hoof", "Leg"),
+                             ("Skull", "Head"), ("Snout", "Head"), ("Nostril", "Head"), ("Forelock", "Head"),
+                             ("Horn", "Head")])
+    root = bpy.data.objects["CH_Asterion"]   # build_skins.py reads the model's root
+else:
+    result = A.review("asterion", parts, original_blend="ch_asterion", original_root="CH_Asterion", height=2.0, gap=GAP)

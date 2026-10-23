@@ -6,10 +6,13 @@ with dark eye holes and glowing purple cracks in a dark opening, the cyan rune o
 player's mark from behind), thin arms in wide ash sleeves with charcoal cuffs, bone-pale hands, bare dark feet under
 the hem, and the crooked censer staff (a hook bending forward over his head, a chain, a bronze censer with a purple
 ember).
+export=1: the game model Assets/Art/Models/A1/Characters/CH_AshenOracle.fbx (a1_export; docs/tracks/A1-ingame-contract.md).
 """
 import importlib
 import os
 import sys
+
+import bpy
 
 import gladiator_kit as K
 importlib.reload(K)
@@ -20,8 +23,11 @@ importlib.reload(A)
 sys.path.insert(0, os.path.join(REPO, "BlenderSrc", "characters", "a1"))
 import a1_glad_lib as G
 importlib.reload(G)
+import a1_export as X
+importlib.reload(X)
 
-OX = -0.6
+EXPORT = ARGS.get("export") == "1"
+OX = 0.0 if EXPORT else -0.6
 
 
 def build():
@@ -90,20 +96,27 @@ def build():
 
     # the crooked censer staff in the right fist: a hook bending forward over his head, the censer hanging from it
     hx, hy, hzz = a["hand_r"]
-    parts.append(G.tube("Pole", [(hx, hy, 0.06), (hx + 0.02, hy, 0.62), (hx - 0.012, hy + 0.01, 1.25),
-                                 (hx, hy, 1.78), (hx, hy - 0.07, 1.93), (hx, hy - 0.19, 1.96), (hx, hy - 0.27, 1.89)],
+    parts.append(G.tube("CenserStaffPole", [(hx, hy, 0.06), (hx + 0.02, hy, 0.62), (hx - 0.012, hy + 0.01, 1.25),
+                                 (hx, hy, 1.73), (hx, hy - 0.07, 1.88), (hx, hy - 0.19, 1.91), (hx, hy - 0.27, 1.84)],
                         [0.026, 0.026, 0.024, 0.024, 0.022, 0.02, 0.018], "wood_dark", OX, sides=6))
     cy = hy - 0.27
-    parts.append(A.box("Chain", (0.014, 0.014, 0.17), (hx, cy, 1.89), "iron", OX, pivot=(0, 0, 1)))
-    cz = 1.66
-    parts.append(A.loft("Censer", [(cz - 0.07, A.ngon(6, 0.045, hx, cy)), (cz - 0.03, A.ngon(6, 0.08, hx, cy)),
+    parts.append(A.box("CenserStaffChain", (0.014, 0.014, 0.17), (hx, cy, 1.84), "iron", OX, pivot=(0, 0, 1)))
+    cz = 1.61
+    parts.append(A.loft("CenserStaffCenser", [(cz - 0.07, A.ngon(6, 0.045, hx, cy)), (cz - 0.03, A.ngon(6, 0.08, hx, cy)),
                                    (cz + 0.05, A.ngon(6, 0.08, hx, cy)), (cz + 0.07, A.ngon(6, 0.06, hx, cy))],
                         "bronze_d", OX))
-    parts.append(A.loft("Ember", [(cz + 0.07, A.ngon(6, 0.055, hx, cy)), (cz + 0.10, A.ngon(6, 0.03, hx, cy))],
+    parts.append(A.loft("CenserStaffEmber", [(cz + 0.07, A.ngon(6, 0.055, hx, cy)), (cz + 0.10, A.ngon(6, 0.03, hx, cy))],
                         "purple_l", OX))
-    return parts
+    return parts, p
 
 
-parts = build()
-result = A.review("ashen_oracle", parts, original_blend="ch_ashenoracle", original_root="CH_AshenOracle", height=2.0,
-                  gap=1.2)
+parts, p = build()
+if EXPORT:
+    meshes = [o for o in parts if o.type == "MESH"]   # not the weapon frames (their pieces are listed)
+    result = X.export("CH_AshenOracle", "Characters", meshes, X.joints(p),
+                      rules=[("Robe", "Body"), ("Stole", "Body"), ("Mantle", "Body"), ("Opening", "Head"), ("Mask", "Head"),
+                             ("Crack", "Head"), ("Rune", "Head"), ("CenserStaff", "ArmR")])
+    root = bpy.data.objects["CH_AshenOracle"]   # build_skins.py reads the model's root
+else:
+    result = A.review("ashen_oracle", parts, original_blend="ch_ashenoracle", original_root="CH_AshenOracle", height=2.0,
+                      gap=1.2)

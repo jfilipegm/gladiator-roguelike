@@ -5,6 +5,7 @@ leather apron, a spiked iron collar round his own neck (a brag), the magenta bel
 a coiled whip in the right fist with the lash rising behind his shoulder, two iron chain leashes hanging from the left
 fist (his Pit Curs walk on them), leather trousers and boots. Changed: the variant-A body (lean); the stubble is
 painted on the jaw; the chains are plain iron bars.
+export=1: the game model Assets/Art/Models/A1/Enemies/EN_BeastHandler.fbx (docs/tracks/A1-ingame-contract.md).
 """
 import importlib
 import math
@@ -18,8 +19,13 @@ import simple_kit as A
 importlib.reload(A)
 import a1_tier12_lib as L
 importlib.reload(L)
+import a1_export as X
+importlib.reload(X)
 
-OX = -0.55
+EXPORT = ARGS.get("export") == "1"
+OX = 0.0 if EXPORT else -0.55
+RULES = [("Apron", "Body"), ("Collar", "Body"), ("Armband", "ArmR"), ("WhipCoil", "ArmR"), ("CoilHole", "ArmR"),
+         ("Lash", "ArmR"), ("Chain", "ArmL")]
 
 
 def build():
@@ -60,8 +66,12 @@ def build():
     for k, (dx, dy) in enumerate(((0.025, -0.03), (-0.02, 0.03))):
         sq = L.ngon(4, 0.017, lx + dx, ly + dy, math.pi / 4)
         parts.append(L.loft("Chain%d" % k, [(lz - 0.42 + 0.04 * k, sq), (lz - 0.05, sq)], "iron", OX, True, False))
-    return parts
+    J = X.joints(p)
+    return parts, J
 
 
-parts = build()
-result = A.review("beast_handler", parts, original_blend="en_beasthandler", original_root="EN_BeastHandler")
+parts, J = build()
+if EXPORT:
+    result = L.export_enemy("EN_BeastHandler", parts, J, 1.3, RULES)
+else:
+    result = A.review("beast_handler", parts, original_blend="en_beasthandler", original_root="EN_BeastHandler")

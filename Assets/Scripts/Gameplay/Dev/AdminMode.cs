@@ -5,12 +5,13 @@ using UnityEngine;
 namespace Gladiator.Gameplay
 {
     /// <summary>
-    /// T1 (docs/tracks/T1-playground.md §1): admin mode, the producer's switch for the test tools in any build. Always on
-    /// in the Editor and development builds (as F1 always was); in a release build it's on with `-admin` on the command
-    /// line, or once the player has typed ADMIN on the main menu (Toggle; remembered in PlayerPrefs `gladiator.admin`, not
-    /// in the save, so it never touches progress). While it's on, F1 opens the admin panel in any arena
-    /// (AdminController.Available), and the menu offers every gladiator, skin and arena (MainMenu.IsPickable: a view, never
-    /// written) and the PLAYGROUND button. On reads cached values: no allocation, safe to ask every frame.
+    /// T1 (docs/tracks/T1-playground.md §1): admin mode, the producer's switch for the test tools in any build: on with
+    /// `-admin` on the command line, or once the player has typed ADMIN on the main menu (Toggle; remembered in PlayerPrefs
+    /// `gladiator.admin`, not in the save, so it never touches progress). While it's on, F1 opens the admin panel in any
+    /// arena, and the menu offers every gladiator, skin and arena (MainMenu.IsPickable: a view, never written) and the
+    /// PLAYGROUND button. The Editor and development builds keep F1 without it (PanelAllowed, as before T1) but show the
+    /// real progress until the switch is typed, so the dev build plays like the game. On reads cached values: no
+    /// allocation, safe to ask every frame.
     /// </summary>
     public static class AdminMode
     {
@@ -28,14 +29,17 @@ namespace Gladiator.Gameplay
 
         static int _saved = -1, _cmd = -1; // -1 = not read yet
 
-        /// <summary>Admin mode: the build or the command line forces it, or the player switched it on.</summary>
+        /// <summary>Admin mode: `-admin`, or the player switched it on.</summary>
         public static bool On => Forced || Switched;
 
-        /// <summary>On whatever the switch says: the Editor, a development build, or `-admin`.</summary>
-        public static bool Forced => BuildAlwaysOn || FromCommandLine;
+        /// <summary>On whatever the switch says: `-admin` on the command line.</summary>
+        public static bool Forced => FromCommandLine;
 
-        /// <summary>The Editor and development builds (`Debug.isDebugBuild`) always have it (unless a test says release).</summary>
-        public static bool BuildAlwaysOn => !SimulateRelease && (Application.isEditor || Debug.isDebugBuild);
+        /// <summary>F1 (AdminController.Available): admin mode, or the Editor and development builds as before T1.</summary>
+        public static bool PanelAllowed => On || DevBuild;
+
+        /// <summary>The Editor or a development build (`Debug.isDebugBuild`), unless a test says release.</summary>
+        public static bool DevBuild => !SimulateRelease && (Application.isEditor || Debug.isDebugBuild);
 
         /// <summary>`-admin` is on the command line (CommandLineOverride in tests).</summary>
         public static bool FromCommandLine
@@ -58,14 +62,14 @@ namespace Gladiator.Gameplay
             }
         }
 
-        /// <summary>Flips the player's switch, saves it and raises Changed. A forced build stays on either way (the
-        /// switch still flips, for the next release launch).</summary>
+        /// <summary>Flips the player's switch, saves it and raises Changed. `-admin` keeps it on either way (the switch
+        /// still flips, for the next launch).</summary>
         public static void Toggle()
         {
             _saved = Switched ? 0 : 1;
             PlayerPrefs.SetInt(Key, _saved);
             PlayerPrefs.Save();
-            Debug.Log("[Admin] admin mode switched " + (_saved == 1 ? "on" : "off") + (Forced ? " (this build keeps it on)" : ""));
+            Debug.Log("[Admin] admin mode switched " + (_saved == 1 ? "on" : "off") + (Forced ? " (-admin keeps it on)" : ""));
             Changed?.Invoke();
         }
 
@@ -74,13 +78,11 @@ namespace Gladiator.Gameplay
         public static string StatusText =>
             !On ? "ADMIN MODE OFF"
             : Switched ? "ADMIN MODE ON"
-            : BuildAlwaysOn ? "ADMIN MODE ON (DEV BUILD)"
             : "ADMIN MODE ON (-admin)";
 
         // ---- tests ----------------------------------------------------------------------------------------------------
 
-        /// <summary>Tests: pretend this is a release build (the Editor / development clause off), so On follows `-admin`
-        /// and the switch only.</summary>
+        /// <summary>Tests: pretend this is a release build (DevBuild off), so F1 follows admin mode only.</summary>
         public static bool SimulateRelease;
         /// <summary>Tests: stands in for `-admin` on the command line (null = read the command line).</summary>
         public static bool? CommandLineOverride;

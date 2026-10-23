@@ -73,7 +73,8 @@ namespace Gladiator.Gameplay
         {
             if (CurrentPhase != Phase.Playing) return;
             CurrentPhase = Phase.Beat;
-            if (meta != null && run != null) Rewards = MetaProgress.CommitRun(Summary(e), meta);
+            // T1: a Playground run is a test bench, never progress (no Renown, stats, unlocks or seen marks)
+            if (meta != null && run != null && !GameSession.Playground) Rewards = MetaProgress.CommitRun(Summary(e), meta);
             if (Player.Main != null && !_blockedInput) { Player.Main.BlockInput(); _blockedInput = true; }
             Vector3 at = health != null ? health.transform.position + Vector3.up * 0.9f : Vector3.zero;
             // P1: the player's side stops at once, whatever the outcome (the weapons, traits and projectiles also check

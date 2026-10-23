@@ -150,18 +150,17 @@ namespace Gladiator.Tests
         }
 
         [Test]
-        public void TheEditorAndDevBuilds_AlwaysHaveIt()
+        public void TheEditorAndDevBuilds_KeepF1_ButShowTheRealProgressUntilTyped()
         {
             AdminMode.SimulateRelease = false;
-            Assert.IsTrue(AdminMode.BuildAlwaysOn, "the Editor (Debug.isDebugBuild too)");
-            Assert.IsTrue(AdminMode.On);
-            Assert.AreEqual("ADMIN MODE ON (DEV BUILD)", AdminMode.StatusText);
+            Assert.IsTrue(AdminMode.DevBuild, "the Editor (Debug.isDebugBuild too)");
+            Assert.IsTrue(AdminMode.PanelAllowed, "F1 as before T1");
+            Assert.IsFalse(AdminMode.On, "no unlock view, no PLAYGROUND until typed");
             AdminMode.Toggle();
-            Assert.IsTrue(AdminMode.Switched, "the switch still flips (for a release launch)");
             Assert.IsTrue(AdminMode.On);
-            Assert.AreEqual("ADMIN MODE ON", AdminMode.StatusText);
+            AdminMode.SimulateRelease = true;
             AdminMode.Toggle();
-            Assert.IsTrue(AdminMode.On, "and stays on");
+            Assert.IsFalse(AdminMode.PanelAllowed, "a release build: F1 only in admin mode");
         }
 
         // ---------------------------------------------------------------- the typed code

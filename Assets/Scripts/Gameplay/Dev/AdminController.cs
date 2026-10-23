@@ -5,8 +5,7 @@ using UnityEngine.InputSystem;
 namespace Gladiator.Gameplay
 {
     /// <summary>
-    /// Admin tools (F1 in any arena while AdminMode.On: the Editor, development builds, or a release build switched to
-    /// admin mode): % buffs, god mode / timeless, run shortcuts, spawning any enemy type from the EnemyCatalog, freezing
+    /// Admin tools (F1 in any arena: the Editor, development builds, or any build in admin mode, AdminMode.PanelAllowed): % buffs, god mode / timeless, run shortcuts, spawning any enemy type from the EnemyCatalog, freezing
     /// the enemies, fighting any boss (T1), crowd size and game speed. Opening it pauses the game.
     /// The UI (Gladiator.UI.AdminPanel) only draws this state and calls these methods; tests call them directly.
     /// </summary>
@@ -34,7 +33,7 @@ namespace Gladiator.Gameplay
         public int SelectedAffix { get; private set; }
         public AffixDef Affix => catalog != null && SelectedAffix > 0 && SelectedAffix <= catalog.affixes.Length ? catalog.affixes[SelectedAffix - 1] : null;
         /// <summary>F1 opens the panel (T1: admin mode, in any build).</summary>
-        public bool Available => AdminMode.On;
+        public bool Available => AdminMode.PanelAllowed;
 
         void Awake()
         {

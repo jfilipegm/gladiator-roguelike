@@ -6,11 +6,14 @@ behind), the strap across the chest carrying a bone hunting horn with a cyan ban
 the wolf-head hood (a grey wolf's skull over his brow, a pale snout with a dark nose and bone fangs, two slate ears
 up, the hood hanging down the back of his head), bare arms with fur cuffs, leather trousers, fur boots, and the
 short hunting spear held low and forward with a cyan tassel.
+export=1: the game model Assets/Art/Models/A1/Characters/CH_Beastmaster.fbx (a1_export; docs/tracks/A1-ingame-contract.md).
 """
 import importlib
 import math
 import os
 import sys
+
+import bpy
 
 from mathutils import Vector
 
@@ -23,8 +26,11 @@ importlib.reload(A)
 sys.path.insert(0, os.path.join(REPO, "BlenderSrc", "characters", "a1"))
 import a1_glad_lib as G
 importlib.reload(G)
+import a1_export as X
+importlib.reload(X)
 
-OX = -0.6
+EXPORT = ARGS.get("export") == "1"
+OX = 0.0 if EXPORT else -0.6
 
 
 def build():
@@ -100,13 +106,20 @@ def build():
     hand = Vector((hx, hy, hzz))
     d = Vector((0.0, -0.906, -0.423))
     a0, a1, a2 = hand - d * 0.30, hand + d * 0.76, hand + d * 0.98
-    parts.append(G.tube("Shaft", [tuple(a0), tuple(a1)], [0.022, 0.022], "wood", OX, sides=6))
-    parts.append(G.tube("Tassel", [tuple(a1 - d * 0.06), tuple(a1)], [0.036, 0.036], "player_cyan", OX, sides=6))
-    parts.append(G.tube("SpearBlade", [tuple(a1), tuple(a1 + d * 0.07), tuple(a2)], [0.024, 0.06, 0.0], "steel_l", OX,
+    parts.append(G.tube("HuntingSpearShaft", [tuple(a0), tuple(a1)], [0.022, 0.022], "wood", OX, sides=6))
+    parts.append(G.tube("HuntingSpearTassel", [tuple(a1 - d * 0.06), tuple(a1)], [0.036, 0.036], "player_cyan", OX, sides=6))
+    parts.append(G.tube("HuntingSpearBlade", [tuple(a1), tuple(a1 + d * 0.07), tuple(a2)], [0.024, 0.06, 0.0], "steel_l", OX,
                         sides=4, squash=0.3))
-    return parts
+    return parts, p
 
 
-parts = build()
-result = A.review("beastmaster", parts, original_blend="ch_beastmaster", original_root="CH_Beastmaster", height=1.9,
-                  gap=1.2)
+parts, p = build()
+if EXPORT:
+    meshes = [o for o in parts if o.type == "MESH"]   # not the weapon frames (their pieces are listed)
+    result = X.export("CH_Beastmaster", "Characters", meshes, X.joints(p),
+                      rules=[("Cuff", "Arm"), ("Boot", "Leg"), ("Mantle", "Body"), ("FurTips", "Body"), ("Strap", "Body"),
+                             ("Horn", "Body"), ("Snout", "Head"), ("Fangs", "Head"), ("HuntingSpear", "ArmR")])
+    root = bpy.data.objects["CH_Beastmaster"]   # build_skins.py reads the model's root
+else:
+    result = A.review("beastmaster", parts, original_blend="ch_beastmaster", original_root="CH_Beastmaster", height=1.9,
+                      gap=1.2)

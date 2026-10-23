@@ -4,10 +4,13 @@ horizontal loft, G.hloft).
 Identity kept from ch_wolf.py: a grey timber wolf, bigger and leaner than the Pit Cur, a slate stripe down the back,
 a pale belly, the player's cyan collar and glowing cyan eyes (an ally among the curs, never their magenta), a pale
 snout with a dark nose and white fangs, slate ears up, slate tail out and back, pale paws. Budget <= 450 tris.
+export=1: the game model Assets/Art/Models/A1/Characters/CH_Wolf.fbx (a1_export; docs/tracks/A1-ingame-contract.md).
 """
 import importlib
 import os
 import sys
+
+import bpy
 
 import gladiator_kit as K
 importlib.reload(K)
@@ -16,9 +19,15 @@ importlib.reload(A)
 sys.path.insert(0, os.path.join(REPO, "BlenderSrc", "characters", "a1"))
 import a1_glad_lib as G
 importlib.reload(G)
+import a1_export as X
+importlib.reload(X)
 
-OX = -0.55
+EXPORT = ARGS.get("export") == "1"
+OX = 0.0 if EXPORT else -0.55
 BZ = 0.50     # the body's centre line
+# CH_Wolf's rig: the front legs are ArmL/ArmR (under Body), the hind legs LegL/LegR (under the root), the Head under Body
+WOLF_JOINTS = {"Body": (0.0, 0.04, 0.40), "Head": (0.0, -0.38, BZ + 0.07), "ArmL": (0.095, -0.255, BZ - 0.02),
+               "ArmR": (-0.095, -0.255, BZ - 0.02), "LegL": (0.095, 0.30, BZ), "LegR": (-0.095, 0.30, BZ)}
 
 
 def build():
@@ -60,8 +69,16 @@ def build():
     # the tail: out and back, a little up, bushy
     parts.append(G.tube("Tail", [(0, 0.40, BZ + 0.06), (0, 0.56, BZ + 0.10), (0, 0.74, BZ + 0.07)], [0.04, 0.06, 0.0],
                         "slate", OX, sides=5))
-    return parts
+    p = None   # a quadruped: its joints are WOLF_JOINTS
+    return parts, p
 
 
-parts = build()
-result = A.review("wolf", parts, original_blend="ch_wolf", original_root="CH_Wolf", height=1.2, gap=1.1)
+parts, p = build()
+if EXPORT:
+    meshes = [o for o in parts if o.type == "MESH"]   # not the weapon frames (their pieces are listed)
+    result = X.export("CH_Wolf", "Characters", meshes, WOLF_JOINTS,
+                      rules=[("Body", "Body"), ("Collar", "Body"), ("Tail", "Body"), ("Snout", "Head"), ("Fangs", "Head"),
+                             ("Paw", "Arm")])
+    root = bpy.data.objects["CH_Wolf"]   # build_skins.py reads the model's root
+else:
+    result = A.review("wolf", parts, original_blend="ch_wolf", original_root="CH_Wolf", height=1.2, gap=1.1)

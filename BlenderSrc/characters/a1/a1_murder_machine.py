@@ -7,10 +7,13 @@ the leather apron with a rust stain, short legs in iron greaves and boots, the p
 the slab of a cleaver held low and forward.
 Built at the chibi scale with a brute's proportions (a barrel torso, thick limbs, short legs), then scaled x1.38
 about his feet (G.grow), so the style's sizes stay consistent with the Nobody.
+export=1: the game model Assets/Art/Models/A1/Characters/CH_MurderMachine.fbx (a1_export; docs/tracks/A1-ingame-contract.md).
 """
 import importlib
 import os
 import sys
+
+import bpy
 
 import gladiator_kit as K
 importlib.reload(K)
@@ -21,9 +24,12 @@ importlib.reload(A)
 sys.path.insert(0, os.path.join(REPO, "BlenderSrc", "characters", "a1"))
 import a1_glad_lib as G
 importlib.reload(G)
+import a1_export as X
+importlib.reload(X)
 
 GAP = 2.0
-OX = -GAP / 2
+EXPORT = ARGS.get("export") == "1"
+OX = 0.0 if EXPORT else -GAP / 2
 SCALE = 1.45
 
 
@@ -110,9 +116,17 @@ def build():
     parts.append(G.child_box("Hole", (0.07, 0.09, 0.09), (0, -0.10, -0.80), "ink", f))
 
     G.grow(parts, OX, SCALE)
-    return parts
+    return parts, p
 
 
-parts = build()
-result = A.review("murder_machine", parts, original_blend="ch_murdermachine", original_root="CH_MurderMachine",
-                  height=2.3, gap=GAP)
+parts, p = build()
+if EXPORT:
+    meshes = [o for o in parts if o.type == "MESH"]   # not the weapon frames (their pieces are listed)
+    result = X.export("CH_MurderMachine", "Characters", meshes, X.joints(p, scale=SCALE),
+                      rules=[("Barrel", "Body"), ("Rivet", "Body"), ("Apron", "Body"), ("Mantle", "Body"), ("Sigil", "Body"),
+                             ("Pauldron", "Arm"), ("Boot", "Leg"), ("Handle", "ArmR"), ("Ferrule", "ArmR"),
+                             ("Blade", "ArmR"), ("Edge", "ArmR"), ("Spine", "ArmR"), ("Hole", "ArmR")])
+    root = bpy.data.objects["CH_MurderMachine"]   # build_skins.py reads the model's root
+else:
+    result = A.review("murder_machine", parts, original_blend="ch_murdermachine", original_root="CH_MurderMachine",
+                      height=2.3, gap=GAP)

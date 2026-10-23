@@ -179,6 +179,23 @@ def frame(name, loc, ox=0.0, rot=(0.0, 0.0, 0.0)):
     return f
 
 
+def ball(name, r, loc, swatch, ox=0.0, n=8, rz=None):
+    """A low-poly ball (n-sided rings, 5 rows) centred at loc: bombs, pommels, knobs, orbs."""
+    rz = r if rz is None else rz
+    x, y, z = loc
+    rings = [(z - rz, A.ngon(n, r * 0.3, x, y, math.pi / n)), (z - rz * 0.6, A.ngon(n, r * 0.86, x, y, math.pi / n)),
+             (z, A.ngon(n, r, x, y, math.pi / n)), (z + rz * 0.6, A.ngon(n, r * 0.86, x, y, math.pi / n)),
+             (z + rz, A.ngon(n, r * 0.3, x, y, math.pi / n))]
+    return A.loft(name, rings, swatch, ox)
+
+
+def move(objs, d):
+    """Translates objects (top-level ones; children follow) by d = (dx, dy, dz)."""
+    for o in objs:
+        if o.parent is None:
+            o.location = (o.location[0] + d[0], o.location[1] + d[1], o.location[2] + d[2])
+
+
 def grow(parts, ox, s, name="Root"):
     """Builds-at-chibi-scale-then-scales: parents every top-level part to an empty at (ox, 0, 0) scaled by s (big
     characters keep the style's proportions and helper sizes, then stand at their real height). Returns the empty."""

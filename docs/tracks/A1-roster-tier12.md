@@ -14,3 +14,4 @@ red eyes on the feral ones, darker / dirtier cloth than the gladiators, no playe
 | Enemy | Tris | Kept | Changed | Doubt |
 |---|---|---|---|---|
 | Convict | 437 | thin, hunched, grey starving skin, sack rags, magenta chest rag, yellow eyes + grimace, charcoal hair, wrist shackles with a broken link, arms reaching, bare feet, no weapon | loincloth -> a ragged sack tunic with a dirt hem | the tunic reads a little like a dress from the front |
+| Pit Cur | 392 | low lean quadruped in mud-brown, dark spine ridge (hackles), dark pointed ears, pale snout + black nose + bone fangs, yellow eyes, magenta collar with iron spikes, tail up, light paws, lunge stance | chibi: a big chamfered head, short stocky legs; oct8 body lofted along Y with a pale belly; the collar is a frustum so it frames the neck from the front | the magenta patch is smaller than the original's chest block (a frame round the neck, seen under the chin) |

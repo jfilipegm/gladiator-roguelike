@@ -275,6 +275,56 @@ def cape(name, top_z, bottom_z, top_w, bottom_w, back_y, swatch, inner=None, fla
     return o
 
 
+def mirror_y(obj):
+    """Mirrors a (baked) mesh front to back (y -> -y), keeping its normals outward: a cape() turned into an apron."""
+    bake([obj])
+    obj.data.transform(Matrix.Scale(-1, 4, (0, 1, 0)))
+    obj.data.flip_normals()
+    return obj
+
+
+def spiked_ball(name, centre, r, swatch, spike_swatch, spike=None, parts=None):
+    """A chamfered iron ball with six pyramid spikes (a flail head, a mace). Returns [ball, spikes...]."""
+    cx, cy, cz = centre
+    ball = ring_rows(name, [(cz - r, r * 0.42, r * 0.42, cx, cy), (cz - r * 0.45, r * 0.95, r * 0.95, cx, cy),
+                            (cz + r * 0.45, r * 0.95, r * 0.95, cx, cy), (cz + r, r * 0.42, r * 0.42, cx, cy)], swatch)
+    out = [ball]
+    ln = spike or r * 0.75
+    for k, d in enumerate(((1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1))):
+        base = (cx + d[0] * r * 0.85, cy + d[1] * r * 0.85, cz + d[2] * r * 0.85)
+        out.append(tip("%sSpike%d" % (name, k), base, ln, r * 0.3, spike_swatch, direction=d))
+    return out
+
+
+def disc(name, centre, r, thickness, swatch, axis="X", sides=8):
+    """A flat chamfered disc (a coil of rope or whip, a medallion) facing along `axis`."""
+    pts = A.ngon(sides, r, phase=math.pi / sides)
+    o = A.loft(name, [(-thickness / 2, pts), (thickness / 2, pts)], swatch)
+    rot = {"X": Matrix.Rotation(math.radians(90), 4, "Y"), "Y": ROT_Z_TO_NEG_Y, "Z": Matrix.Identity(4)}[axis]
+    o.data.transform(Matrix.Translation(Vector(centre)) @ rot)
+    return o
+
+
+def hoop(name, centre, r, thick, swatch, axis="Y", sides=8, rot_z=0.0):
+    """A chamfered ring with a square section (a whip's coil, a key ring, a wreath) facing along `axis`."""
+    bm = bmesh.new()
+    sec = [(-thick, -thick), (thick, -thick), (thick, thick), (-thick, thick)]   # (radial, axial) offsets
+    rings = []
+    for k in range(sides):
+        a = 2 * math.pi * (k + 0.5) / sides
+        ca, sa = math.cos(a), math.sin(a)
+        rings.append([bm.verts.new(((r + dr) * ca, (r + dr) * sa, dz)) for dr, dz in sec])
+    for k in range(sides):
+        r0, r1 = rings[k], rings[(k + 1) % sides]
+        for j in range(4):
+            bm.faces.new((r0[j], r0[(j + 1) % 4], r1[(j + 1) % 4], r1[j]))
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    o = A.flat(K.object_from_bmesh(name, bm, swatch=swatch))
+    rot = {"X": Matrix.Rotation(math.radians(90), 4, "Y"), "Y": ROT_Z_TO_NEG_Y, "Z": Matrix.Identity(4)}[axis]
+    o.data.transform(Matrix.Translation(Vector(centre)) @ Matrix.Rotation(rot_z, 4, "Z") @ rot)
+    return o
+
+
 def ring_rows(name, rows, swatch, cap_bottom=True, cap_top=True):
     """A loft from (z, rx, ry, cx, cy[, k]) rows in oct8 sections (a shortcut for bodies)."""
     rings = [(r[0], A.oct8(r[1], r[2], r[5] if len(r) > 5 else 0.62, r[3] if len(r) > 3 else 0.0,

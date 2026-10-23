@@ -1,4 +1,4 @@
-# A1 — Character art direction (prototypes: the Nobody V2 rigid, V3 skinned)
+# A1 — Character art direction (prototypes: the Nobody V2 rigid, V3 skinned, V4 the OSRS feel)
 
 The producer's brief (2026-10-23): evolve the characters into a polished, distinctive stylized 3D look, without
 rebuilding the game. Keep the identity (low-poly, chunky, readable with 300 enemies), lose the "assembled from
@@ -65,6 +65,28 @@ joints: a skinned mesh on a small skeleton. CLAUDE.md §7.2 keeps skinning "for 
    `SkinnedMeshRenderer`).
 4. Performance: 300 skinned enemies is GPU skinning of ~300 × 700 vertices a frame (small), but it must be measured
    with the 300-enemy stress run before the enemies move over; the player and the bosses first.
+
+## 3c. The producer on V3, and prototype 3: `CH_Nobody_V4` (the OSRS feel, made ours)
+**The producer (2026-10-23):** V3 "looks like a cheap mobile character"; then the target: **Old School RuneScape's
+characters, in 3D, with that simple feel, not a complete rip-off.**
+- **What the OSRS feel is made of:** angular forms of a few big, slightly irregular facets (chamfered boxy sections,
+  tapered limbs, trapezoid fists, wedge feet) with soft gradients across them; stylized adult proportions (broad
+  shoulders, narrow waist, big hands, long legs, a small head); clothing as the main shapes, colour per face, muted;
+  minimal faces (slit eyes, a wedge nose, angular hair).
+- **What makes it ours:** a Roman pit fighter (the exomis over the left shoulder, a belt and bronze buckle, sandals,
+  the scrap pauldron and one greave, the gladius and the round scrap shield), our palette and the player's cyan
+  (headband with tails, the focale and its tail down the back), a head bigger than OSRS's (~24 % of the height, so it
+  reads from our camera), heavy angled brows for attitude.
+- **Build:** `BlenderSrc/characters/proto/ch_nobody_v4.py`: explicit low-poly sections (`oct8` chamfered boxes,
+  `hex6` limbs) lofted piece by piece, smooth normals with hard edges past ~60-70° (soft gradients on angular shapes),
+  joined into one skinned mesh on the same six bones; rule-based weights (each piece follows its bone; the neck, the
+  shoulder corners, the sleeve and the tunic's hem over the thighs are blended so they bend). Height 1.6 m (the
+  capsule); joints: hips 0.66, shoulders (+-0.275, 1.13), neck 1.20.
+- **Cost:** **1,260 tris** (1,098 body + gladius + shield) in **3 renderers**; ~60 to trim for the 1,200 budget.
+- **Screens:** `Screenshots/a1v4_blender.jpg`, `Screenshots/a1v4_ingame_compare.jpg`.
+- **Changes beyond V3's list if adopted:** the proportions move from chibi (CLAUDE.md §5, head 35-40 %) to stylized
+  adult (head ~24 %), a decision for DECISIONS; the joints are higher (hips 0.66, not 0.40), so `PartAnimProfile`'s
+  stride (swing amplitude and frequency) wants retuning for longer legs (data only).
 
 ## 4. Comparison and risks
 | | Original | Prototype |

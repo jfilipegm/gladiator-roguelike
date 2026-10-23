@@ -105,6 +105,26 @@ facets, B chibi + soft gradients, C medium + flat, D medium + soft. **The produc
   the original on the select screen and play a run with it; then the rest of the roster in this style, one script
   each from the same builder (Tier 1 enemies first, with the 300-enemy stress run before they switch).
 
+## 3e. The whole cast in variant A (screenshots only, 2026-10-23)
+**The producer on V5:** "an improvement but not the final version", and asked to see every other character in that
+design. Shared kit `BlenderSrc/simple_kit.py`, contract `A1-roster-contract.md`, three workers (background agents in
+their own worktrees; the app refused session starts over Remote Control), one script each in
+`BlenderSrc/characters/a1/a1_<tag>.py`, notes `A1-roster-glad.md`, `A1-roster-tier12.md`, `A1-roster-tier3boss.md`.
+- **35 characters** beside their originals (front, back, 3/4): `Screenshots/a1/a1_<tag>.png`; the gallery (three
+  labelled tall JPEGs, built by the orchestrator) in `Screenshots/a1/gallery/`. Sent to the producer 2026-10-23 12:50.
+- **Triangles:** gladiators 884–1,198 (the Wolf 402); tier 1–2 enemies 392–455, elites 388–711; tier 3 enemies
+  728–940; bosses 992–1,946 (the Chimera 844).
+- **Finding: the kit's body is too heavy for crowds.** `simple_kit.humanoid` alone is ~620–660 tris, so a regular
+  enemy can't reach the 450 guide on it. R-tier12 built a lean variant (`a1_tier12_lib.body()`: two-ring legs and
+  fists, a five-ring head, decal faces, ~370 tris with hair and a tunic) and R-tier3boss another
+  (`a1_tier3boss_lib.lean_humanoid`, ~270, used for the Patron's bearers). The tier 3 enemies still use the full body
+  (728–940): if the style goes in, enemies move to one lean body (pick one, put it in the kit) before the stress run.
+- **The workers' weakest reads:** the Bookmaker's quill (reads as a blade), Asterion's snout (pig-like from the
+  front), the Wolf's cyan collar (faint head-on), the Brute's head (sits on the shoulders), the Centurion's crest (a
+  red umbrella), Gorm's beard (a bib; mostly brown), the Beast Lord (busy front), the Skeletal Legionnaire's helmet
+  (a cap).
+- **Waiting for the producer's verdict.** Nothing in the game uses any of it.
+
 ## 4. Comparison and risks
 | | Original | Prototype |
 |---|---|---|

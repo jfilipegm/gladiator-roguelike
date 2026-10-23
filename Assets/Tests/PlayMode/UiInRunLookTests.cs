@@ -389,6 +389,47 @@ namespace Gladiator.Tests
             Assert.IsTrue(UiKit.HasRole(_hud.LevelLabel, TextRole.Number));
         }
 
+        /// <summary>
+        /// The producer's note 21 (after P3): both top plates are one height, so the level-up's two columns hang the same
+        /// gap under them; the Nobody's status plate has no empty meter row (11 shorter than P3's 171); the Blood Knight's
+        /// meter row sits between the HP trough and the gold row, inside the plate's ContentRect.
+        /// </summary>
+        [UnityTest, Timeout(90000)]
+        public IEnumerator Hud_BothTopPlatesOneHeight_TheMeterRowOnlyWithAMeter()
+        {
+            yield return Boot();
+            yield return Frames(2);
+            Canvas.ForceUpdateCanvases();
+            float tol = _hud.CanvasRect.lossyScale.x + 0.5f;
+            Assert.AreEqual(_hud.LevelPlateRect.rect.height, _hud.StatusPlateRect.rect.height, 0.01f, "one height");
+            Assert.AreEqual(World(_hud.LevelPlateRect).yMin, World(_hud.StatusPlateRect).yMin, tol, "one bottom line");
+            Assert.LessOrEqual(_hud.StatusPlateRect.rect.height, 160.5f, "the status plate lost its empty meter row");
+            Assert.IsFalse(_hud.BloodBarRect.gameObject.activeSelf, "the Nobody has no meter");
+            try
+            {
+                GladiatorLoadout.NextOverride = UnityEditor.AssetDatabase.LoadAssetAtPath<GladiatorDef>("Assets/Data/Gladiators/GL_BloodKnight.asset");
+                yield return Boot();
+                yield return Frames(3);
+                Canvas.ForceUpdateCanvases();
+                Assert.IsTrue(_hud.BloodBarRect.gameObject.activeSelf, "the Blood Knight's meter shows");
+                Player.Main.GetComponent<PlayerHealth>().Spend(60f); // half his HP: Bloodlust's "+n% DMG" label shows
+                yield return Frames(3);
+                Canvas.ForceUpdateCanvases();
+                StringAssert.EndsWith("% DMG", _hud.BloodLabel, "the meter's label has words to measure");
+                Assert.AreEqual(_hud.LevelPlateRect.rect.height, _hud.StatusPlateRect.rect.height, 0.01f, "still one height");
+                var status = Hud.ContentWorldRect(_hud.StatusPlateRect, FrameKind.Bronze);
+                var meter = World(_hud.BloodBarRect);
+                AssertInside(status, meter, tol, "the meter's trough");
+                var label = Hud.TextWorldRect(_hud.BloodLabelText);
+                AssertInside(status, label, tol, "the meter's label");
+                float goldTop = Mathf.Max(World(_hud.GoldIconRect).yMax, Hud.TextWorldRect(_hud.GoldLabel).yMax);
+                Assert.Less(meter.yMax, World(_hud.HpBarRect).yMin, "the meter under the HP trough");
+                Assert.Greater(meter.yMin, goldTop, "and over the gold row");
+                Assert.Greater(label.yMin, goldTop, "its label too");
+            }
+            finally { GladiatorLoadout.NextOverride = null; }
+        }
+
         /// <summary>The padding rule on the cards: every label's glyphs inside the card frame's ContentRect.</summary>
         [UnityTest, Timeout(60000)]
         public IEnumerator Cards_EveryLabelInsideTheFramesContentRect()

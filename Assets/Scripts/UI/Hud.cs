@@ -48,6 +48,9 @@ namespace Gladiator.UI
         public static string LevelWord = "LEVEL";
         const float StripLeft = 24f, StripGap = 10f, TilePitch = 58f;
         float _weaponRowY = -191f, _boonRowY = -249f, _chipTop = -309f, _statusBottom = -181f;
+        // the producer's note 21 (after P3): both top plates one height, the status plate's rows spread inside it
+        float _plateH, _statusContentTop, _statusContentH;
+        bool _meterRow;
         const float TileSize = 52f, TileLine = 44f, TileInnerSize = 40f, TileIconSize = 40f;
         static readonly Vector2 PlaqueSize = new Vector2(1560f, 220f);
         const float PlaquePad = 48f;
@@ -216,10 +219,28 @@ namespace Gladiator.UI
                 new Vector2(0f, 2f), new Vector2(TileInnerSize, 30f), TextLook.Outline), 18f, 22f);
         }
 
+        // the numbers' rows as tall as their textBounds with the theme's font, glyphs centred (TextBox.MidlineRow)
+        static float BloodRow => Mathf.Max(BloodRowH, Mathf.Ceil(TextBox.MidlineRow(TextRole.Number, BloodSize)));
+        static float GoldRow => Mathf.Max(GoldRowH, Mathf.Ceil(TextBox.MidlineRow(TextRole.Number, GoldSize)));
+        static float LevelRow => Mathf.Max(LevelRowH, Mathf.Ceil(TextBox.MidlineRow(TextRole.Number, LevelSize)));
+
         /// <summary>
-        /// P3: the top-left bronze plate, its rows laid out from its ContentRect (the same gap above HP as under gold and
-        /// kills): the heart and the HP trough with its number, the special meter (Blood, Wrath, Charge, Midas, Rage) and
-        /// its label, the aureus and gold, the skull in its galea and kills. The build strip hangs under it.
+        /// The producer's note 21 (after P3): both top plates are one height, so the level-up's and the pause's two columns
+        /// hang the same gap under them. It is the level plate's (its two rows) or the status plate's three rows packed
+        /// (HP, a meter, gold and kills), whichever is more: 160 at the theme's fonts, the status plate 11 shorter than
+        /// its P3 171 (it kept an empty meter row for gladiators without a meter).
+        /// </summary>
+        static float PlateHeight()
+        {
+            var pad = UiFrames.Padding(FrameKind.Bronze);
+            float tb = pad.w + pad.y + 2f * UiKit.ContentPad;
+            return Mathf.Max(tb + LevelRow + LevelGap + FavorRowH, tb + HpRowH + BloodRow + GoldRow);
+        }
+
+        /// <summary>
+        /// P3: the top-left bronze plate, its rows laid out from its ContentRect (LayoutStatusRows): the heart and the HP
+        /// trough with its number, the special meter (Blood, Wrath, Charge, Midas, Rage) and its label when there is one,
+        /// the aureus and gold, the skull in its galea and kills. The build strip hangs under it.
         /// </summary>
         void BuildStatusPlate(Transform canvas, UiTheme th)
         {
@@ -229,47 +250,73 @@ namespace Gladiator.UI
             var pad = UiFrames.Padding(FrameKind.Bronze);
             float p = UiKit.ContentPad;
             float top = pad.w + p, bottom = pad.y + p, left = PlateX + pad.x + p, right = PlateX + PlateW - pad.z - p;
-            // the numbers' rows as tall as their textBounds with the theme's font, glyphs centred (TextBox.MidlineRow);
             // the HP number sits on its trough by design (a 32-tall trough has no room for the padding rule)
-            float bloodRow = Mathf.Max(BloodRowH, Mathf.Ceil(TextBox.MidlineRow(TextRole.Number, BloodSize)));
-            float goldRow = Mathf.Max(GoldRowH, Mathf.Ceil(TextBox.MidlineRow(TextRole.Number, GoldSize)));
-            float h = top + HpRowH + RowGap + bloodRow + RowGap + goldRow + bottom;
+            float bloodRow = BloodRow, goldRow = GoldRow;
+            float h = _plateH;
             _statusPlate = UiKit.Frame("StatusPlate", canvas, FrameKind.Bronze, tl, tl, new Vector2(PlateX, Top), new Vector2(PlateW, h), Color.white).rectTransform;
             _statusBottom = Top - h;
+            _statusContentTop = Top - top;
+            _statusContentH = h - top - bottom;
             _weaponRowY = _statusBottom - StripGap;
             _boonRowY = _weaponRowY - TilePitch;
             _chipTop = _boonRowY - TileSize - 8f;
-            float hpY = Top - top - HpRowH * 0.5f;
-            float bloodY = hpY - HpRowH * 0.5f - RowGap - bloodRow * 0.5f;
-            float goldY = bloodY - bloodRow * 0.5f - RowGap - goldRow * 0.5f;
             float barLeft = left + IconPx + IconGap;
 
-            _hpIcon = UiKit.Frame("HpIcon", canvas, FrameKind.IconHeart, tl, mid, new Vector2(left + IconPx * 0.5f, hpY), new Vector2(IconPx, IconPx), Color.white);
-            _hpFill = Trough("HpBar", canvas, th.hp, tl, ml, new Vector2(barLeft, hpY), new Vector2(right - barLeft, HpRowH));
+            // every row at y 0 here: LayoutStatusRows places them
+            _hpIcon = UiKit.Frame("HpIcon", canvas, FrameKind.IconHeart, tl, mid, new Vector2(left + IconPx * 0.5f, 0f), new Vector2(IconPx, IconPx), Color.white);
+            _hpFill = Trough("HpBar", canvas, th.hp, tl, ml, new Vector2(barLeft, 0f), new Vector2(right - barLeft, HpRowH));
             _hpText = UiKit.Text("HpText", _hpFill.transform.parent, "100 / 100", TextRole.Number, 26f, Color.white, TextAlignmentOptions.Midline, mid, mid,
                 Vector2.zero, new Vector2(right - barLeft, HpRowH), TextLook.Outline);
             UiAudit.ExemptPadding(_hpText); // a readout printed on its bar (outlined), not a label inside the trough's padding
 
-            _bloodFill = Trough("BloodBar", canvas, BloodColor, tl, ml, new Vector2(barLeft, bloodY), new Vector2(BloodBarW, BloodBarH));
+            _bloodFill = Trough("BloodBar", canvas, BloodColor, tl, ml, new Vector2(barLeft, 0f), new Vector2(BloodBarW, BloodBarH));
             _bloodFill.fillAmount = 0f;
             _bloodRoot = _bloodFill.transform.parent.gameObject;
             float bloodTextLeft = barLeft + BloodBarW + IconGap;
             _bloodText = AutoSize(UiKit.Text("BloodText", canvas, "", TextRole.Number, BloodSize, BloodColor, TextAlignmentOptions.MidlineLeft, tl, ml,
-                new Vector2(bloodTextLeft, bloodY), new Vector2(right - bloodTextLeft, bloodRow + LabelSlack), TextLook.Outline), 16f, BloodSize);
+                new Vector2(bloodTextLeft, 0f), new Vector2(right - bloodTextLeft, bloodRow + LabelSlack), TextLook.Outline), 16f, BloodSize);
             PreSize(_bloodText, "+100% DMG");
             PreSize(_bloodText, "UNCHAINED");
             _bloodRoot.SetActive(false);
             _bloodText.gameObject.SetActive(false);
 
-            _goldIcon = UiKit.Frame("GoldIcon", canvas, FrameKind.IconAureus, tl, mid, new Vector2(left + IconPx * 0.5f, goldY), new Vector2(IconPx, IconPx), Color.white);
+            _goldIcon = UiKit.Frame("GoldIcon", canvas, FrameKind.IconAureus, tl, mid, new Vector2(left + IconPx * 0.5f, 0f), new Vector2(IconPx, IconPx), Color.white);
             _gold = AutoSize(UiKit.Text("Gold", canvas, "0", TextRole.Number, GoldSize, _coin, TextAlignmentOptions.MidlineLeft, tl, ml,
-                new Vector2(barLeft, goldY), new Vector2(GoldTextW, goldRow + LabelSlack), TextLook.Outline), 20f, GoldSize);
+                new Vector2(barLeft, 0f), new Vector2(GoldTextW, goldRow + LabelSlack), TextLook.Outline), 20f, GoldSize);
             float killIconLeft = barLeft + GoldTextW + IconGap;
-            _killIcon = UiKit.Frame("KillIcon", canvas, FrameKind.IconSkullGalea, tl, mid, new Vector2(killIconLeft + IconPx * 0.5f, goldY), new Vector2(IconPx, IconPx), Color.white);
+            _killIcon = UiKit.Frame("KillIcon", canvas, FrameKind.IconSkullGalea, tl, mid, new Vector2(killIconLeft + IconPx * 0.5f, 0f), new Vector2(IconPx, IconPx), Color.white);
             float killsLeft = killIconLeft + IconPx + IconGap;
             _kills = AutoSize(UiKit.Text("Kills", canvas, "0", TextRole.Number, GoldSize, Color.white, TextAlignmentOptions.MidlineLeft, tl, ml,
-                new Vector2(killsLeft, goldY), new Vector2(right - killsLeft, goldRow + LabelSlack), TextLook.Outline), 20f, GoldSize);
+                new Vector2(killsLeft, 0f), new Vector2(right - killsLeft, goldRow + LabelSlack), TextLook.Outline), 20f, GoldSize);
+            LayoutStatusRows(false);
         }
+
+        /// <summary>
+        /// Note 21: the status plate's rows inside its ContentRect: HP at its top, gold-and-kills at its bottom (the same
+        /// inset as at the top: the P3 padding rule), and the meter's row centred between them while the gladiator has a
+        /// meter (DrawBlood calls this when one appears or goes). Moves rects only: no allocation.
+        /// </summary>
+        void LayoutStatusRows(bool meter)
+        {
+            _meterRow = meter;
+            float goldRow = GoldRow;
+            float hpY = _statusContentTop - HpRowH * 0.5f;
+            float goldY = _statusContentTop - _statusContentH + goldRow * 0.5f;
+            if (meter)
+            {
+                float bloodY = (hpY - HpRowH * 0.5f + goldY + goldRow * 0.5f) * 0.5f;
+                SetY((RectTransform)_bloodRoot.transform, bloodY);
+                SetY(_bloodText.rectTransform, bloodY);
+            }
+            SetY(_hpIcon.rectTransform, hpY);
+            SetY((RectTransform)_hpFill.transform.parent, hpY);
+            SetY(_goldIcon.rectTransform, goldY);
+            SetY(_gold.rectTransform, goldY);
+            SetY(_killIcon.rectTransform, goldY);
+            SetY(_kills.rectTransform, goldY);
+        }
+
+        static void SetY(RectTransform rt, float y) => rt.anchoredPosition = new Vector2(rt.anchoredPosition.x, y);
 
         /// <summary>
         /// P3 (the producer's note 14): the top-right bronze plate as wide as LevelWord + " 88" needs at the default size
@@ -286,8 +333,10 @@ namespace Gladiator.UI
             var pad = UiFrames.Padding(FrameKind.Bronze);
             float p = UiKit.ContentPad;
             float t = pad.w + p, b = pad.y + p, l = pad.x + p, r = pad.z + p;
-            float levelRow = Mathf.Max(LevelRowH, Mathf.Ceil(TextBox.MidlineRow(TextRole.Number, LevelSize)));
-            float h = t + levelRow + LevelGap + FavorRowH + b;
+            float levelRow = LevelRow;
+            float h = _plateH;
+            // note 21: when the status plate's rows set the height, the spare room goes between the two rows
+            float levelGap = Mathf.Max(LevelGap, h - t - levelRow - FavorRowH - b);
             _levelPlate = UiKit.Frame("LevelPlate", canvas, FrameKind.Bronze, tr, tr, new Vector2(-PlateX, Top), new Vector2(LevelMinW, h), Color.white).rectTransform;
             string word = string.IsNullOrEmpty(LevelWord) ? "LV" : LevelWord;
             _levelFormat = word + " {0}";
@@ -299,7 +348,7 @@ namespace Gladiator.UI
             _level.rectTransform.anchoredPosition = new Vector2((l - r) * 0.5f, -t - levelRow * 0.5f);
             _level.rectTransform.sizeDelta = new Vector2(w - l - r, levelRow + LabelSlack);
             AutoSize(_level, 36f, LevelSize); // "LEVEL 100" in a long run shrinks before it's cut
-            float favorY = -t - levelRow - LevelGap - FavorRowH * 0.5f;
+            float favorY = -t - levelRow - levelGap - FavorRowH * 0.5f;
             _favorIcon = UiFactory.Image("FavorIcon", _levelPlate, Color.white, tl, mid, new Vector2(l + FavorIconSize.x * 0.5f, favorY), FavorIconSize, PixelIcons.Laurel);
             float barLeft = l + FavorIconSize.x + IconGap;
             _favorFill = Trough("FavorBar", _levelPlate, th.favor, tl, ml, new Vector2(barLeft, favorY), new Vector2(w - r - barLeft, 18f));
@@ -335,6 +384,7 @@ namespace Gladiator.UI
             _objective = AutoSize(UiKit.Text("Objective", canvas, "", TextRole.Title, 28f, _goldColor, TextAlignmentOptions.Center, top, top,
                 new Vector2(0, -125), new Vector2(760, 40), TextLook.Outline), 20f, 28f);
 
+            _plateH = PlateHeight();
             BuildStatusPlate(canvas, th);
             BuildLevelPlate(canvas, th);
 
@@ -766,6 +816,8 @@ namespace Gladiator.UI
         public RectTransform FavorIconRect => _favorIcon.rectTransform;
         public RectTransform HpBarRect => (RectTransform)_hpFill.transform.parent;
         public RectTransform FavorBarRect => (RectTransform)_favorFill.transform.parent;
+        /// <summary>The special meter's trough (active only while the gladiator has a meter; note 21).</summary>
+        public RectTransform BloodBarRect => (RectTransform)_bloodRoot.transform;
         public RectTransform XpBarRect => (RectTransform)_xpFill.transform.parent;
         public Component BloodLabelText => _bloodText;
         /// <summary>The Boon row's bottom edge (canvas units from the top): the synergy chips start under it.</summary>
@@ -948,6 +1000,7 @@ namespace Gladiator.UI
             bool raging = rite == null && !wrath && !charge && !gold && rage != null && rage.trait != null;
             bool on = (rite != null && rite.trait != null) || wrath || charge || gold || raging;
             if (_bloodRoot.activeSelf != on) { _bloodRoot.SetActive(on); _bloodText.gameObject.SetActive(on); }
+            if (_meterRow != on) LayoutStatusRows(on);
             if (!on) return;
             if (wrath) { DrawWrath(verdict, unscaledDt); return; }
             if (charge) { DrawCharge(storm, unscaledDt); return; }

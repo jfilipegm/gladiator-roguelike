@@ -179,6 +179,22 @@ def frame(name, loc, ox=0.0, rot=(0.0, 0.0, 0.0)):
     return f
 
 
+def grow(parts, ox, s, name="Root"):
+    """Builds-at-chibi-scale-then-scales: parents every top-level part to an empty at (ox, 0, 0) scaled by s (big
+    characters keep the style's proportions and helper sizes, then stand at their real height). Returns the empty."""
+    import bpy
+    root = K.empty(name, location=(ox, 0.0, 0.0))
+    bpy.context.view_layer.update()
+    inv = root.matrix_world.inverted()
+    for o in parts:
+        if o.parent is None and o is not root:
+            o.parent = root
+            o.matrix_parent_inverse = inv
+    root.scale = (s, s, s)
+    bpy.context.view_layer.update()
+    return root
+
+
 def child_box(name, size, loc, swatch, parent, pivot=(0, 0, 0), taper=(1.0, 1.0), rot=(0.0, 0.0, 0.0)):
     o = K.box(name, size=size, location=loc, pivot=pivot, taper=taper, swatch=swatch, parent=parent)
     o.rotation_euler = tuple(math.radians(v) for v in rot)

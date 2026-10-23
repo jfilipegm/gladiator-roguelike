@@ -318,7 +318,10 @@ namespace Gladiator.EditorTools
                 Debug.LogWarning("[PlaygroundSetup] no " + GameSession.MenuScene + " (Gladiator/Setup/Build Main Menu) or no run: the menu isn't linked");
                 return false;
             }
+            // opening a scene unloads unused assets: the run is loaded again from its path after the scene is open
+            string runPath = AssetDatabase.GetAssetPath(run);
             var scene = EditorSceneManager.OpenScene(GameSession.MenuScene, OpenSceneMode.Single);
+            run = AssetDatabase.LoadAssetAtPath<RunDef>(runPath);
             var menu = Object.FindAnyObjectByType<Gladiator.UI.MainMenu>();
             if (menu == null)
             {

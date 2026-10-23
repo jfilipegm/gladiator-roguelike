@@ -186,7 +186,7 @@ namespace Gladiator.Tests
             var director = Object.FindAnyObjectByType<Director>(FindObjectsInactive.Include);
             Assert.IsNotNull(director, "the Director is there (F1 can turn it on)");
             Assert.IsFalse(director.enabled, "the Director is off");
-            Assert.IsNull(Director.Instance, "no Director running");
+            Assert.IsTrue(Director.Instance == null || !Director.Instance.enabled, "no Director running"); // a disabled Director's Awake still sets Instance
             var end = Object.FindAnyObjectByType<RunEndController>();
             Assert.IsNotNull(end, "the run's end");
             Assert.IsTrue(end.meta == null, "a Playground run is never recorded in the save"); // Unity's ==: an empty field is a fake null

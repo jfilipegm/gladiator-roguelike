@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2a180a432490fcd38f28c2658e635ef, type: 3}
+  m_Name: RD_Playground
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.RunDef
+  id: playground
+  description: 'Admin: a big flat field with the test arena''s pieces and every character on show. Nothing spawns on its own: F1 for the tools.'
+  unlock: {fileID: 0}
+  arenas:
+  - displayName: THE PLAYGROUND
+    scenePath: Assets/Scenes/Dev/Playground.unity
+  thumbnail: {fileID: 0}
+  tagline: Every fighter, every beast, every boss.
+  hazards: None. Nothing spawns unless you ask (F1).
+  layout: {fileID: 11400000, guid: de0e3c205b778cfc5bc8bd30c10e2c96, type: 2}
+  bossPortrait: {fileID: 0}
+  bossName: 

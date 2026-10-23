@@ -37,6 +37,15 @@ numbers below are honest.
 
 The roster scripts now export the game models through `a1_export.export()` (one mesh per part, origins at the joints). `a1_tier3boss_lib.export_rig()` adds what the exporter cannot do alone: the extra parts the game code drives by name (Gorm's `Flail`, the Emperor's Champion's `Spear`, `WingL`/`WingR`, the Eternal Victor's `Falx`) are nested under their arm or head with their place kept, then the pose sheet and the FBX. The tier 3 enemies moved to the lean enemy body (`a1_tier12_lib.body()` and its decal face) and three-ring helms.
 
+**Summary:** 11 FBX models; tier 3 enemies 521–591 tris, 6 renderers each (were 728–940); bosses 992–1,946 tris, 6–13
+renderers; the Chimera 844 / 6. Heights all within ±10 % of the originals (Gorm and the Patron were rescaled for it).
+Every pose sheet shows each piece following its part. **For the exporter (a1_export.py, not edited):** it parents any
+part outside the six to the root, so it can't nest a part the game drives under an arm or the head (the originals
+have Flail/Spear/Falx under ArmR, WingL/WingR under the eagle on the head); `export_rig` re-parents them after
+`export(..., export_fbx=False, pose_sheet=False)` and then calls `poses()` and `K.export_fbx()` itself. A
+`parents={"Flail": "ArmR"}` argument in `export()` would make that unnecessary. Not checked in Unity: the wings' flap
+axis, the thrown falx's spin plane, the bearers' BLeg swing.
+
 | Model | Tris | Renderers | Height (original) | Doubts |
 |---|---|---|---|---|
 | EN_Praetorian | 591 (was 894) | 6 | 2.13 m (2.04, +4%) | a little over 550: the curved scutum (94) and the plume/cheek/neck guards are the identity |

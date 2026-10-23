@@ -5,11 +5,14 @@ skirt), the crimson sash across him, a dark gold belt with a crimson gem, the ca
 slits, a small dark smile) under a dark gold laurel band, the sun-crown behind his head (a gold disc ringed with
 bright rays, none straight down; its back painted player cyan, his mark from behind), gold shoulder caps, crimson
 bangles, crimson boots, and the sceptre in the left fist (a dark gold rod, a big golden orb with a crimson gem).
+export=1: the game model Assets/Art/Models/A1/Characters/CH_GoldenIdol.fbx (a1_export; docs/tracks/A1-ingame-contract.md).
 """
 import importlib
 import math
 import os
 import sys
+
+import bpy
 
 import gladiator_kit as K
 importlib.reload(K)
@@ -20,8 +23,11 @@ importlib.reload(A)
 sys.path.insert(0, os.path.join(REPO, "BlenderSrc", "characters", "a1"))
 import a1_glad_lib as G
 importlib.reload(G)
+import a1_export as X
+importlib.reload(X)
 
-OX = -0.6
+EXPORT = ARGS.get("export") == "1"
+OX = 0.0 if EXPORT else -0.6
 
 
 def build():
@@ -92,9 +98,16 @@ def build():
     parts.append(A.box("OrbGem", (0.06, 0.04, 0.06), (hx, hy - 0.105, oz), "crimson", OX, rot=(0, 0.785, 0)))
     parts.append(A.loft("OrbCollar", [(oz - 0.13, A.ngon(6, 0.04, hx, hy)), (oz - 0.09, A.ngon(6, 0.05, hx, hy))],
                         "gold_d", OX))
-    return parts
+    return parts, p
 
 
-parts = build()
-result = A.review("golden_idol", parts, original_blend="ch_goldenidol", original_root="CH_GoldenIdol", height=1.9,
-                  gap=1.2)
+parts, p = build()
+if EXPORT:
+    meshes = [o for o in parts if o.type == "MESH"]   # not the weapon frames (their pieces are listed)
+    result = X.export("CH_GoldenIdol", "Characters", meshes, X.joints(p),
+                      rules=[("Gem", "Body"), ("Pauldron", "Arm"), ("Bangle", "Arm"), ("Cuff", "side"), ("Smile", "Head"),
+                             ("Disc", "Head"), ("Ray", "Head"), ("Rod", "ArmL"), ("Orb", "ArmL")])
+    root = bpy.data.objects["CH_GoldenIdol"]   # build_skins.py reads the model's root
+else:
+    result = A.review("golden_idol", parts, original_blend="ch_goldenidol", original_root="CH_GoldenIdol", height=1.9,
+                      gap=1.2)

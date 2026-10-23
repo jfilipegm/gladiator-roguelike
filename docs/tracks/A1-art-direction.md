@@ -125,6 +125,21 @@ their own worktrees; the app refused session starts over Remote Control), one sc
   (a cap).
 - **Waiting for the producer's verdict.** Nothing in the game uses any of it.
 
+## 3f. In the game (2026-10-23, the producer: "It sure feels like an improvement you can implement it")
+- **How:** the same three workers exported their characters as the game's rigid-part models
+  (`A1-ingame-contract.md`, `a1_export.py`: one mesh per part at its joint, the classic part set, ±10 % height, a
+  pose sheet each in `Screenshots/a1/ingame/`), into `Assets/Art/Models/A1/` beside the classic models (kept).
+  `ModelStyle` swapped every reference (data, prefabs, scenes); portraits, skin portraits, codex atlas and arena
+  tiles re-baked. No gameplay code changed.
+- **Numbers:** gladiators 402–1,198 tris in 6 renderers (Asterion 7 with his Chain, the Bookmaker 1); tier 1–2
+  enemies 388–711 in 6; tier 3 enemies 521–591 in 6 (moved to the lean body); bosses 992–1,946 in 6–13 (Flail,
+  Spear, Wings, Falx, the bearers' legs kept as their own objects for BossController); the Chimera 844 in 6. The
+  classic cast was 20–90 renderers each.
+- **Skins:** the 20 gladiator skins rebuilt from the A1 scripts (`build_skins.py style=a1`, `a1_remap` for the
+  swatches only A1 uses) into `A1/Characters/Skins/`; the classic skins rebuild identical.
+- **Found on the way:** BossController's named parts (my first search missed them; the boss worker caught it); the
+  classic Provincial Champion's scutum side panels were named WingL/R and flapped with the Emperor's eagle.
+
 ## 4. Comparison and risks
 | | Original | Prototype |
 |---|---|---|

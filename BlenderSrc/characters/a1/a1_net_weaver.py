@@ -6,11 +6,14 @@ the rope net hung down his back like a cape with cyan cords and lead weights alo
 dark hair with a topknot, a cyan headband with its tails behind, glowing cyan eyes, a dark chin beard, the manica
 (cloth and leather bands) wrapping the left arm, a leather bracer on the right, white shin wraps and sandals, and the
 trident slanted forward, its three steel prongs ahead of him at head height with a cyan binding.
+export=1: the game model Assets/Art/Models/A1/Characters/CH_NetWeaver.fbx (a1_export; docs/tracks/A1-ingame-contract.md).
 """
 import importlib
 import math
 import os
 import sys
+
+import bpy
 
 from mathutils import Vector
 
@@ -23,8 +26,11 @@ importlib.reload(A)
 sys.path.insert(0, os.path.join(REPO, "BlenderSrc", "characters", "a1"))
 import a1_glad_lib as G
 importlib.reload(G)
+import a1_export as X
+importlib.reload(X)
 
-OX = -0.6
+EXPORT = ARGS.get("export") == "1"
+OX = 0.0 if EXPORT else -0.6
 
 
 def build():
@@ -93,18 +99,26 @@ def build():
     hx, hy, hzz = a["hand_r"]
     hand = Vector((hx, hy, hzz))
     d = Vector((0.0, -math.sin(math.radians(40)), math.cos(math.radians(40))))
-    parts.append(G.tube("Shaft", [tuple(hand - d * 0.42), tuple(hand + d * 1.08)], [0.022, 0.022], "wood", OX, sides=6))
-    parts.append(G.tube("Binding", [tuple(hand + d * 0.98), tuple(hand + d * 1.06)], [0.034, 0.034], "glow_cyan", OX,
+    parts.append(G.tube("TridentShaft", [tuple(hand - d * 0.42), tuple(hand + d * 1.20)], [0.022, 0.022], "wood", OX, sides=6))
+    parts.append(G.tube("TridentBinding", [tuple(hand + d * 1.10), tuple(hand + d * 1.18)], [0.034, 0.034], "glow_cyan", OX,
                         sides=6))
-    bar = hand + d * 1.09
-    parts.append(A.box("Bar", (0.30, 0.045, 0.045), tuple(bar), "steel", OX, rot=(math.radians(40), 0, 0)))
+    bar = hand + d * 1.21
+    parts.append(A.box("TridentBar", (0.30, 0.045, 0.045), tuple(bar), "steel", OX, rot=(math.radians(40), 0, 0)))
     for k, x in enumerate((-0.13, 0.0, 0.13)):
         hgt = 0.36 if x == 0.0 else 0.28
         b = bar + Vector((x, 0, 0))
-        parts.append(G.tube("Prong%d" % k, [tuple(b), tuple(b + d * hgt), tuple(b + d * (hgt + 0.09))],
+        parts.append(G.tube("TridentProng%d" % k, [tuple(b), tuple(b + d * hgt), tuple(b + d * (hgt + 0.09))],
                             [0.018, 0.018, 0.0], "steel_l", OX, sides=4))
-    return parts
+    return parts, p
 
 
-parts = build()
-result = A.review("net_weaver", parts, original_blend="ch_netweaver", original_root="CH_NetWeaver", height=1.9, gap=1.2)
+parts, p = build()
+if EXPORT:
+    meshes = [o for o in parts if o.type == "MESH"]   # not the weapon frames (their pieces are listed)
+    result = X.export("CH_NetWeaver", "Characters", meshes, X.joints(p),
+                      rules=[("Manica", "ArmL"), ("Topknot", "Head"), ("Galerus", "Body"), ("StrapFront", "Body"),
+                             ("StrapBack", "Body"), ("Net", "Body"), ("Cord", "Body"), ("Weight", "Body"),
+                             ("Trident", "ArmR")])
+    root = bpy.data.objects["CH_NetWeaver"]   # build_skins.py reads the model's root
+else:
+    result = A.review("net_weaver", parts, original_blend="ch_netweaver", original_root="CH_NetWeaver", height=1.9, gap=1.2)

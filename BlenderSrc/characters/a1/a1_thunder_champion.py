@@ -6,10 +6,13 @@ a dark brow, cheek guards and the tall glowing white-cyan zigzag crest side to s
 with bronze shoulder caps and bracers, bronze greaves and sandals, the storm spear held upright (a bronze leaf blade
 with a glowing core above his head).
 Changed: the cuirass's gold abs plate is a gold bolt emblem (no anatomy in this style).
+export=1: the game model Assets/Art/Models/A1/Characters/CH_ThunderChampion.fbx (a1_export; docs/tracks/A1-ingame-contract.md).
 """
 import importlib
 import os
 import sys
+
+import bpy
 
 import gladiator_kit as K
 importlib.reload(K)
@@ -20,8 +23,11 @@ importlib.reload(A)
 sys.path.insert(0, os.path.join(REPO, "BlenderSrc", "characters", "a1"))
 import a1_glad_lib as G
 importlib.reload(G)
+import a1_export as X
+importlib.reload(X)
 
-OX = -0.6
+EXPORT = ARGS.get("export") == "1"
+OX = 0.0 if EXPORT else -0.6
 BOLT = [(0.06, 0.0), (-0.06, -0.18), (0.03, -0.18), (-0.07, -0.40), (0.09, -0.14), (0.0, -0.14), (0.10, 0.0)]
 
 
@@ -80,18 +86,25 @@ def build():
 
     # the storm spear, upright in the right fist: a bronze leaf blade with a glowing core above his head
     hx, hy, hzz = a["hand_r"]
-    parts.append(G.tube("Shaft", [(hx, hy, 0.07), (hx, hy, 1.80)], [0.024, 0.024], "wood_dark", OX, sides=6))
+    parts.append(G.tube("StormSpearShaft", [(hx, hy, 0.07), (hx, hy, 1.80)], [0.024, 0.024], "wood_dark", OX, sides=6))
     for k, z in enumerate((hzz + 0.085, hzz - 0.105)):
-        parts.append(A.loft("Band%d" % k, [(z - 0.025, A.ngon(6, 0.034, hx, hy)), (z + 0.025, A.ngon(6, 0.034, hx, hy))],
+        parts.append(A.loft("StormSpearBand%d" % k, [(z - 0.025, A.ngon(6, 0.034, hx, hy)), (z + 0.025, A.ngon(6, 0.034, hx, hy))],
                             "bronze_d", OX))
-    parts.append(A.loft("Socket", [(1.76, A.ngon(6, 0.036, hx, hy)), (1.86, A.ngon(6, 0.03, hx, hy))], "bronze", OX))
+    parts.append(A.loft("StormSpearSocket", [(1.76, A.ngon(6, 0.036, hx, hy)), (1.86, A.ngon(6, 0.03, hx, hy))], "bronze", OX))
     blade = [(0.0, 0.0), (0.075, 0.11), (0.045, 0.27), (0.0, 0.38), (-0.045, 0.27), (-0.075, 0.11)]
-    parts.append(G.panel("Blade", blade, 0.035, (hx, hy, 1.84), "bronze_l", OX))
+    parts.append(G.panel("StormSpearBlade", blade, 0.035, (hx, hy, 1.84), "bronze_l", OX))
     core = [(0.0, 0.05), (0.035, 0.14), (0.0, 0.30), (-0.035, 0.14)]
-    parts.append(G.panel("Core", core, 0.05, (hx, hy, 1.84), "glow_cyan", OX))
-    return parts
+    parts.append(G.panel("StormSpearCore", core, 0.05, (hx, hy, 1.84), "glow_cyan", OX))
+    return parts, p
 
 
-parts = build()
-result = A.review("thunder_champion", parts, original_blend="ch_thunderchampion", original_root="CH_ThunderChampion",
-                  height=2.0, gap=1.2)
+parts, p = build()
+if EXPORT:
+    meshes = [o for o in parts if o.type == "MESH"]   # not the weapon frames (their pieces are listed)
+    result = X.export("CH_ThunderChampion", "Characters", meshes, X.joints(p),
+                      rules=[("Pteruges", "Body"), ("Emblem", "Body"), ("Shoulder", "Arm"), ("Cheek", "Head"),
+                             ("StormSpear", "ArmR")])
+    root = bpy.data.objects["CH_ThunderChampion"]   # build_skins.py reads the model's root
+else:
+    result = A.review("thunder_champion", parts, original_blend="ch_thunderchampion", original_root="CH_ThunderChampion",
+                      height=2.0, gap=1.2)

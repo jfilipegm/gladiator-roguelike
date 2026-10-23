@@ -6,10 +6,14 @@ hunch), a pot belly, a sackcloth rag on a rope belt, long thin arms with sack wr
 and big flat feet, the bulging satchel on his back towering over his head (a leather flap, junk poking out of it:
 a stick, a sword hilt, a bomb), the cyan headband and knot and the cyan rag round the satchel (the player's mark
 from behind), and a bomb in the right hand.
+export=1: the game model Assets/Art/Models/A1/Characters/CH_PitGoblin.fbx (a1_export; docs/tracks/A1-ingame-contract.md).
 """
 import importlib
 import os
 import sys
+
+import bpy
+from mathutils import Vector
 
 import gladiator_kit as K
 importlib.reload(K)
@@ -20,8 +24,11 @@ importlib.reload(A)
 sys.path.insert(0, os.path.join(REPO, "BlenderSrc", "characters", "a1"))
 import a1_glad_lib as G
 importlib.reload(G)
+import a1_export as X
+importlib.reload(X)
 
-OX = -0.55
+EXPORT = ARGS.get("export") == "1"
+OX = 0.0 if EXPORT else -0.55
 HEAD_SHIFT = (0.0, -0.045, -0.02)   # the hunch: the head sits forward and a little low
 
 
@@ -125,8 +132,26 @@ def build():
     body.append(A.loft("BombCap", [(bz + 0.07, A.ngon(6, 0.03, hx, hy - 0.04)),
                                    (bz + 0.11, A.ngon(6, 0.03, hx, hy - 0.04))], "bronze", OX))
     body.append(A.box("BombFuse", (0.016, 0.016, 0.06), (hx, hy - 0.04, bz + 0.11), "rope", OX, pivot=(0, 0, -1)))
-    return head + body
+    parts = head + body
+    return parts, p
 
 
-parts = build()
-result = A.review("pit_goblin", parts, original_blend="ch_pitgoblin", original_root="CH_PitGoblin", height=1.4)
+parts, p = build()
+
+
+def joints(p):
+    """The humanoid's joints, the neck moved with the hunched head (HEAD_SHIFT)."""
+    J = X.joints(p)
+    J["Head"] = J["Head"] + Vector(HEAD_SHIFT) * 0.6
+    return J
+
+
+if EXPORT:
+    meshes = [o for o in parts if o.type == "MESH"]   # not the weapon frames (their pieces are listed)
+    result = X.export("CH_PitGoblin", "Characters", meshes, joints(p),
+                      rules=[("Knee", "Leg"), ("Strap", "Body"), ("Belly", "Body"), ("Rope", "Body"), ("Rag", "Body"),
+                             ("Satchel", "Body"), ("Junk", "Body"), ("Pupil", "Head"), ("Grin", "Head"),
+                             ("Tooth", "Head"), ("Bomb", "ArmR")])
+    root = bpy.data.objects["CH_PitGoblin"]   # build_skins.py reads the model's root
+else:
+    result = A.review("pit_goblin", parts, original_blend="ch_pitgoblin", original_root="CH_PitGoblin", height=1.4)

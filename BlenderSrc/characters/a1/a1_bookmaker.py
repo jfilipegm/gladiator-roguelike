@@ -6,6 +6,8 @@ leather legs under it, a tanned round face with small dark eyes and a big nose, 
 ledger (dark wooden covers, bone pages) under his left arm, a white quill raised in his right hand, a fat gold coin
 pouch on the sash. No player cyan (he isn't the player), no orange-red (he doesn't hurt you).
 The original is one joined mesh in secrets.blend beside PR_GoldenRat, so the review appends it here and drops the rat.
+export=1: the game model Assets/Art/Models/A1/Characters/CH_Bookmaker.fbx (a1_export): the original is one static mesh
+with no parts (Bookmaker.cs only turns him to face you), so every piece goes on one "Root" mesh under CH_Bookmaker.
 """
 import importlib
 import os
@@ -20,9 +22,12 @@ importlib.reload(A)
 sys.path.insert(0, os.path.join(REPO, "BlenderSrc", "characters", "a1"))
 import a1_glad_lib as G
 importlib.reload(G)
+import a1_export as X
+importlib.reload(X)
 
+EXPORT = ARGS.get("export") == "1"
 GAP = 1.2
-OX = -GAP / 2
+OX = 0.0 if EXPORT else -GAP / 2
 
 
 def build():
@@ -88,8 +93,12 @@ def build():
 
 
 parts = build()
-A._append_original("secrets", "CH_Bookmaker", (GAP / 2, 0, 0))
-for o in list(bpy.data.objects):
-    if o.name.startswith("PR_"):
-        bpy.data.objects.remove(o, do_unlink=True)
-result = A.review("bookmaker", parts, height=1.6, gap=GAP)
+if EXPORT:
+    result = X.export("CH_Bookmaker", "Characters", parts, {}, rules=[("", "Root")])
+    root = bpy.data.objects["CH_Bookmaker"]
+else:
+    A._append_original("secrets", "CH_Bookmaker", (GAP / 2, 0, 0))
+    for o in list(bpy.data.objects):
+        if o.name.startswith("PR_"):
+            bpy.data.objects.remove(o, do_unlink=True)
+    result = A.review("bookmaker", parts, height=1.6, gap=GAP)

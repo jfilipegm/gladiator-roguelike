@@ -3,11 +3,15 @@
 Identity kept from ch_bloodknight.py: a fallen knight in blackened plate (iron_d, iron trim), the crimson tabard, the
 horned great-helm with the glowing cyan T visor, spiked pauldrons, the tattered crimson cape with the pale cyan sword
 sigil on its back (read from the camera behind), the crimson-fullered greatsword held low and forward.
-Built broader than the Nobody (wider torso, thicker limbs); the helm replaces the head (no face, no hair).
+Built broader than the Nobody (wider torso, thicker limbs); the helm replaces the head (no face, no hair); scaled
+x1.06 about the feet (G.grow) so the horns stand within 10 % of the original's 1.91 m.
+export=1: the game model Assets/Art/Models/A1/Characters/CH_BloodKnight.fbx (a1_export; docs/tracks/A1-ingame-contract.md).
 """
 import importlib
 import os
 import sys
+
+import bpy
 
 import gladiator_kit as K
 importlib.reload(K)
@@ -18,8 +22,12 @@ importlib.reload(A)
 sys.path.insert(0, os.path.join(REPO, "BlenderSrc", "characters", "a1"))
 import a1_glad_lib as G
 importlib.reload(G)
+import a1_export as X
+importlib.reload(X)
 
-OX = -0.55
+EXPORT = ARGS.get("export") == "1"
+OX = 0.0 if EXPORT else -0.55
+SCALE = 1.06
 
 
 def build():
@@ -96,8 +104,18 @@ def build():
     parts.append(G.child_box("Gem", (0.085, 0.085, 0.085), (0, -0.1, 0), "blood", f))
     parts.append(G.child_box("Grip", (0.045, 0.22, 0.045), (0, 0.02, 0), "leather_d", f))
     parts.append(G.child_box("Pommel", (0.07, 0.07, 0.07), (0, 0.15, 0), "iron", f))
-    return parts
+    G.grow(parts, OX, SCALE)
+    return parts, p
 
 
-parts = build()
-result = A.review("blood_knight", parts, original_blend="ch_bloodknight", original_root="CH_BloodKnight")
+parts, p = build()
+if EXPORT:
+    meshes = [o for o in parts if o.type == "MESH"]   # not the weapon's frame (its pieces are in the list)
+    result = X.export("CH_BloodKnight", "Characters", meshes, X.joints(p, scale=SCALE),
+                      rules=[("Tabard", "Body"), ("Sigil", "Body"), ("Pauldron", "Body"), ("Spike", "Body"),
+                             ("Visor", "Head"), ("Ridge", "Head"), ("Horn", "Head"),
+                             ("Blade", "ArmR"), ("Fuller", "ArmR"), ("Guard", "ArmR"), ("Gem", "ArmR"),
+                             ("Grip", "ArmR"), ("Pommel", "ArmR")])
+    root = bpy.data.objects["CH_BloodKnight"]   # build_skins.py reads the model's root
+else:
+    result = A.review("blood_knight", parts, original_blend="ch_bloodknight", original_root="CH_BloodKnight")

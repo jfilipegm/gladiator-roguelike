@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Winter Hunter
   description: White furs from the far north, where even the wolves turn pale.
   gladiator: {fileID: 11400000, guid: a0bdfaf6664bfd90fac8a78b837a9a7f, type: 2}
-  model: {fileID: 919132149155446097, guid: 398afd1634f881b6986128f453701ebd, type: 3}
+  model: {fileID: 919132149155446097, guid: 38e6b4d722d440ef9a2554927450559c, type: 3}
   portrait: {fileID: 21300000, guid: 56c51d08767bdd79a92f8772f1c53ff2, type: 3}
   unlock: {fileID: 11400000, guid: d2ea30a3548dd96c4901eb5212940e8f, type: 2}
   chips:

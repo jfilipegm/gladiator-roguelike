@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Pearl Diver
   description: 'Ivory linen and silver weights: between fights, he dives for pearls.'
   gladiator: {fileID: 11400000, guid: aca89070bfa5730529ba1e205fa325c9, type: 2}
-  model: {fileID: 919132149155446097, guid: 13303f53377e9cf4392d0f40b9631885, type: 3}
+  model: {fileID: 919132149155446097, guid: fdd1ed1bbce419eb0af61be290620e18, type: 3}
   portrait: {fileID: 21300000, guid: eac7be7e2c1ab56b8ad9d6b03cf499e8, type: 3}
   unlock: {fileID: 11400000, guid: 801e537d1462c14b2918d86da7aa8e91, type: 2}
   chips:

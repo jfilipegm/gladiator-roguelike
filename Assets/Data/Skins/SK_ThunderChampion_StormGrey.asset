@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Storm-Grey
   description: Slate cloth and silver armour, the colour of the sky before the bolt.
   gladiator: {fileID: 11400000, guid: 158757af219939f1fbb4e94d7fa967b7, type: 2}
-  model: {fileID: 919132149155446097, guid: b38a5315829f062379915502aefc8abd, type: 3}
+  model: {fileID: 919132149155446097, guid: 67d92ca2b56a3bb9daaeb3c50d4256f8, type: 3}
   portrait: {fileID: 21300000, guid: a7d02d75a6e87691781ef7914673bb67, type: 3}
   unlock: {fileID: 11400000, guid: 38052dd96456e47fc8e199011c929ff9, type: 2}
   chips:

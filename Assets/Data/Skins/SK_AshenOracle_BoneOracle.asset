@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Bone Oracle
   description: 'Ivory robes and a mask of bleached bone: the oracle as the dead see him.'
   gladiator: {fileID: 11400000, guid: 8e064a74ca9fac68e9f81d6f3b09f38a, type: 2}
-  model: {fileID: 919132149155446097, guid: c08d1d1838aa8a58fb46b4b69465b549, type: 3}
+  model: {fileID: 919132149155446097, guid: e42dc731ae8e08c5a8693cf310dd5bbf, type: 3}
   portrait: {fileID: 21300000, guid: 4dec442145c0f911e863d562d123d495, type: 3}
   unlock: {fileID: 11400000, guid: d2ea98ce8c3ac3ce39e9a0d538e265a7, type: 2}
   chips:

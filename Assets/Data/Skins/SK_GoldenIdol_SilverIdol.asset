@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Silver Idol
   description: 'Silver for gold and sapphire for ruby: some fortunes shine colder.'
   gladiator: {fileID: 11400000, guid: 4b5f648d2fcfe541b86cb4ccc060c7d8, type: 2}
-  model: {fileID: 919132149155446097, guid: 8c0743c491642e1fab8610f0684f60bc, type: 3}
+  model: {fileID: 919132149155446097, guid: 0853e431c711422e7b189b9627b9ecf7, type: 3}
   portrait: {fileID: 21300000, guid: 648137068fc219d3581e0f9f36a6d1ed, type: 3}
   unlock: {fileID: 11400000, guid: e69dc3a2d7cc1db27b427907d1358baa, type: 2}
   chips:

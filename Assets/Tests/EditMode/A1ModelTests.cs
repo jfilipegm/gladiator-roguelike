@@ -15,6 +15,9 @@ namespace Gladiator.Tests
         const string Root = "Assets/Art/Models/";
         const string A1Root = "Assets/Art/Models/A1/";
         static readonly string[] Parts = { "Body", "Head", "ArmL", "ArmR", "LegL", "LegR" };
+        // other parts BossController finds by name on the bosses (Flail, Spear, WingL/R, BossDef.discPart "Falx", the
+        // Patron's bearer legs "BLeg*"); a gladiator's starting weapon's modelPart is checked from the data below
+        static readonly string[] BossParts = { "Flail", "Spear", "WingL", "WingR", "Falx" };
 
         static IEnumerable<(string a1, string classic)> Twins()
         {
@@ -32,6 +35,13 @@ namespace Gladiator.Tests
             foreach (var t in model.GetComponentsInChildren<Transform>(true))
                 if (System.Array.IndexOf(Parts, t.name) >= 0) set.Add(t.name);
             return set;
+        }
+
+        static bool HasNode(GameObject model, string name, bool prefix)
+        {
+            foreach (var t in model.GetComponentsInChildren<Transform>(true))
+                if (prefix ? t.name.StartsWith(name) : t.name == name) return true;
+            return false;
         }
 
         static float Height(GameObject prefab)
@@ -69,6 +79,13 @@ namespace Gladiator.Tests
                     if (System.Array.IndexOf(Parts, t.name) >= 0)
                         Assert.Less(Quaternion.Angle(t.localRotation, Quaternion.identity), 0.5f, $"{a1Path}: {t.name} rest rotation");
                 }
+                foreach (var name in BossParts)
+                    if (HasNode(classic, name, false) && !(a1.name == "EN_Champion" && name.StartsWith("Wing")))
+                        // the classic Provincial Champion's "WingL/R" were his scutum's side panels, which the eagle's
+                        // flap (meant for the Emperor's Champion) beat while he roared; the A1 scutum is one piece
+                        Assert.IsTrue(HasNode(a1, name, false), $"{a1Path}: the classic model's \"{name}\" is missing");
+                if (HasNode(classic, "BLeg", true))
+                    Assert.IsTrue(HasNode(a1, "BLeg", true), $"{a1Path}: the classic model's BLeg* parts are missing");
                 float ha = Height(a1), hc = Height(classic);
                 Assert.That(ha / hc, Is.InRange(0.85f, 1.15f), $"{a1Path}: height {ha:F2} vs classic {hc:F2}");
                 int ra = a1.GetComponentsInChildren<MeshRenderer>(true).Length;
@@ -77,6 +94,19 @@ namespace Gladiator.Tests
                 n++;
             }
             Assert.Greater(n, 0, "no A1 models yet");
+        }
+
+        [Test]
+        public void EachGladiatorsModel_HasThePartItsStartingWeaponHides()
+        {
+            foreach (var guid in AssetDatabase.FindAssets("t:GladiatorDef", new[] { "Assets/Data" }))
+            {
+                var g = AssetDatabase.LoadAssetAtPath<Gameplay.GladiatorDef>(AssetDatabase.GUIDToAssetPath(guid));
+                if (g == null || g.model == null || g.startingWeapon == null || string.IsNullOrEmpty(g.startingWeapon.modelPart))
+                    continue;
+                Assert.IsTrue(HasNode(g.model, g.startingWeapon.modelPart, false),
+                    $"{g.id}: {g.model.name} has no \"{g.startingWeapon.modelPart}\" for {g.startingWeapon.name} to hide");
+            }
         }
 
         [Test]

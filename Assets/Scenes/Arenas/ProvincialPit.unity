@@ -8351,7 +8351,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c2347cb41436ff89fa0c47f533e26ce9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.Bookmaker
-  model: {fileID: 919132149155446097, guid: a8d453bfacdc568e3a6466bcd6f04312, type: 3}
+  model: {fileID: 919132149155446097, guid: 9953ef3deb2266b46bfe578ca6f328bb, type: 3}
   material: {fileID: 2100000, guid: 05a9990b9ad10f8f2aaf5ee4b41e035e, type: 2}
   spots:
   - {x: -41.4, y: 0, z: 26.4}

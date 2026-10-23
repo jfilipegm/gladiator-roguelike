@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.EnemyDef
   id: emperors_champion
   displayName: The Emperor's Champion
-  model: {fileID: 919132149155446097, guid: 2af38bc28a46f8ad0a1a39ee8a630280, type: 3}
+  model: {fileID: 919132149155446097, guid: 7ba74d7d117dae785a311027009f39da, type: 3}
   anim: {fileID: 0}
   scale: 1
   maxHp: 18000

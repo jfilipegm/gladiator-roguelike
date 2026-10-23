@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Ashen Knight
   description: 'Plate burned white as ash and bone: what walked out of the pyre.'
   gladiator: {fileID: 11400000, guid: 4703c691660f0da138b940de2cf1db6e, type: 2}
-  model: {fileID: 919132149155446097, guid: ae7b6e742ca4b28e09f3247b26e59446, type: 3}
+  model: {fileID: 919132149155446097, guid: 8955c4fee087df33280ba203d34f4315, type: 3}
   portrait: {fileID: 21300000, guid: 93534e6e70b1f3a9099be28e4b21d43d, type: 3}
   unlock: {fileID: 11400000, guid: 85bec570e9140d2c4ba0dabf66c5a352, type: 2}
   chips:

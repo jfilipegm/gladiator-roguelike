@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: The White Bull
   description: The snow-white hide of his father, the bull that came out of the sea.
   gladiator: {fileID: 11400000, guid: b36d75c1cbe79bec9861b56ae7bceb69, type: 2}
-  model: {fileID: 919132149155446097, guid: 0e65801305a8ce19dbc4369889dda306, type: 3}
+  model: {fileID: 919132149155446097, guid: 1884a51b7a5abedcca0248b0c79a0ed2, type: 3}
   portrait: {fileID: 21300000, guid: 7ac6f22319e145fb2b6459b62410344a, type: 3}
   unlock: {fileID: 11400000, guid: c0209fa7a5aeb764087eb4453c281449, type: 2}
   chips:

@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Bronze Bull
   description: 'Talos, the bronze guardian of Crete: a hide of polished metal.'
   gladiator: {fileID: 11400000, guid: b36d75c1cbe79bec9861b56ae7bceb69, type: 2}
-  model: {fileID: 919132149155446097, guid: bc4ca119f06e477039bd9465978f3767, type: 3}
+  model: {fileID: 919132149155446097, guid: e074cc95b3eecbb938d21cfcaea959a8, type: 3}
   portrait: {fileID: 21300000, guid: 85c157784c64ec022a90e7c7152a6e93, type: 3}
   unlock: {fileID: 11400000, guid: d0f56d556ab16186a82fde7bbb5a9ac2, type: 2}
   chips:

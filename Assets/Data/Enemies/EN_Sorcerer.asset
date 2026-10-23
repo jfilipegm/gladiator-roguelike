@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.EnemyDef
   id: sorcerer
   displayName: Sorcerer
-  model: {fileID: 919132149155446097, guid: 07c526a4fa28569f79b161a9d479e19f, type: 3}
+  model: {fileID: 919132149155446097, guid: 0fb94cccade66548497b7a8f9fc47778, type: 3}
   anim: {fileID: 11400000, guid: 13cb1487eb00393ca8898bf49cbdecec, type: 2}
   scale: 1
   maxHp: 34

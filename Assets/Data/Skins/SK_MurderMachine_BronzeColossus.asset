@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Bronze Colossus
   description: Polished bronze from hood to boots, cast like a temple statue.
   gladiator: {fileID: 11400000, guid: c0766fee8c3737abb9d813cf9b327c3a, type: 2}
-  model: {fileID: 919132149155446097, guid: e1f6b5422073a67cda1d823ca8fa67f3, type: 3}
+  model: {fileID: 919132149155446097, guid: e334e4d1a1e132fd0be843a7f8f9a217, type: 3}
   portrait: {fileID: 21300000, guid: b78994fe96aa8920b980f8d36c5f37ed, type: 3}
   unlock: {fileID: 11400000, guid: 74ea75f713c753b548dc2dc296a9bb81, type: 2}
   chips:

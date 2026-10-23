@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Olympian
   description: Ivory and gold, dressed like the god whose bolts he throws.
   gladiator: {fileID: 11400000, guid: 158757af219939f1fbb4e94d7fa967b7, type: 2}
-  model: {fileID: 919132149155446097, guid: e5a5606b85dac5682b158a0536cc565d, type: 3}
+  model: {fileID: 919132149155446097, guid: faa34cebb86a4f410909fcbb238dc45b, type: 3}
   portrait: {fileID: 21300000, guid: 13665c742f9afd559a97bc368dced4e2, type: 3}
   unlock: {fileID: 11400000, guid: a027e9afb02903dd69fce4de4e9380f3, type: 2}
   chips:

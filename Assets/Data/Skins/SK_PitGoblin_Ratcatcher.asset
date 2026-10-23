@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Ratcatcher
   description: Ochre leathers and gold teeth, all paid for in rat tails.
   gladiator: {fileID: 11400000, guid: 4b69c77c154ce4ea3b830a57ee7c3e8c, type: 2}
-  model: {fileID: 919132149155446097, guid: 02e5912937f6dfb44b8d8fa11af26ef4, type: 3}
+  model: {fileID: 919132149155446097, guid: 66158291c70244b15bfff5dd92730d06, type: 3}
   portrait: {fileID: 21300000, guid: 5d3a65a37ad702b938117f8324078964, type: 3}
   unlock: {fileID: 11400000, guid: 4410c7a38a88870dfb9a90fc5bc39a52, type: 2}
   chips:

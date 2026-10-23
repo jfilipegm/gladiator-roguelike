@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.EnemyDef
   id: chimera
   displayName: Chimera
-  model: {fileID: 919132149155446097, guid: 373c873ba5723b33294e4f42983df01a, type: 3}
+  model: {fileID: 919132149155446097, guid: 132e0d19581f2e74382de838cc9c301c, type: 3}
   anim: {fileID: 11400000, guid: 9cdc5325d803ad537aec4b6eeade5bcc, type: 2}
   scale: 1
   maxHp: 420

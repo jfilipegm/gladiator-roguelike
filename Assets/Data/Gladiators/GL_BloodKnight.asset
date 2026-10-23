@@ -20,7 +20,7 @@ MonoBehaviour:
     value: 120
   - stat: 3
     value: 0.92
-  model: {fileID: 919132149155446097, guid: 7ea5b8602e14b64d68dfbc723f738432, type: 3}
+  model: {fileID: 919132149155446097, guid: 67508152555aa2dc0b4d13d0f95b8263, type: 3}
   movement: {fileID: 11400000, guid: 79110a9e50aaf00e39729470b8240ee4, type: 2}
   animProfile: {fileID: 11400000, guid: ec1bdec1dff80eec5b3cd87fb7f6a9ff, type: 2}
   cameraTargetHeight: 1.35

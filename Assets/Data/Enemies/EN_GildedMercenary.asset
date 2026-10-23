@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.EnemyDef
   id: mercenary
   displayName: Gilded Mercenary
-  model: {fileID: 919132149155446097, guid: a4fca676c47b742cd82000b9a9048822, type: 3}
+  model: {fileID: 919132149155446097, guid: 3c0be98a4fc971982947307cb7d7466f, type: 3}
   anim: {fileID: 11400000, guid: e5d474139ad75bf5185bf4f27ffd2c8f, type: 2}
   scale: 1
   maxHp: 95

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.EnemyDef
   id: eternal_victor
   displayName: The Eternal Victor
-  model: {fileID: 919132149155446097, guid: 08ff914deab9a3e7f843d6df0b321222, type: 3}
+  model: {fileID: 919132149155446097, guid: 7cf26e9d5b9356807ab97827e073ee04, type: 3}
   anim: {fileID: 0}
   scale: 1
   maxHp: 22000

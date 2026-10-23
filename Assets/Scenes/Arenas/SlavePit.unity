@@ -19862,7 +19862,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.RattlingCrate
   crateModel: {fileID: 919132149155446097, guid: d7698e04e6ef35ebea175a5065d07ba8, type: 3}
-  goblinModel: {fileID: 919132149155446097, guid: e4c0290cdf04be19b92d98ed07f4b9c8, type: 3}
+  goblinModel: {fileID: 919132149155446097, guid: 7ed1de339701327c5af67a88fe844eb5, type: 3}
   envMaterial: {fileID: 2100000, guid: e150b2621cd59fedbb971e176776eb64, type: 2}
   charMaterial: {fileID: 2100000, guid: 05a9990b9ad10f8f2aaf5ee4b41e035e, type: 2}
   spots:

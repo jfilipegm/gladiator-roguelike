@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Night Knight
   description: Obsidian plate edged in silver, for a knight who has stopped counting.
   gladiator: {fileID: 11400000, guid: 4703c691660f0da138b940de2cf1db6e, type: 2}
-  model: {fileID: 919132149155446097, guid: 6ece26612b9cda4a888d1b202fc252c2, type: 3}
+  model: {fileID: 919132149155446097, guid: 61b895cdb95acb40eada17161e822179, type: 3}
   portrait: {fileID: 21300000, guid: 21be4465201f9595a9ecf751f633aead, type: 3}
   unlock: {fileID: 11400000, guid: 1560e0ab79d65c9d2afe1c88f7d5e330, type: 2}
   chips:

@@ -1,4 +1,4 @@
-# A1 — Character art direction (prototype: the Nobody)
+# A1 — Character art direction (prototypes: the Nobody V2 rigid, V3 skinned)
 
 The producer's brief (2026-10-23): evolve the characters into a polished, distinctive stylized 3D look, without
 rebuilding the game. Keep the identity (low-poly, chunky, readable with 300 enemies), lose the "assembled from
@@ -35,6 +35,36 @@ Readability rules kept: the player's cyan reads from behind (headband tails, the
 - **Cost:** **1,190 tris** (budget 1,200; the original 876, +36 %) in **8 renderers** (the original 36, −78 %): one mesh per rigid part plus the shield and the blade.
 - **Iterations (3, the cap):** (1) 3,462 tris, lanky, the head too small, the back read as dark hair; (2) chibi proportions, the focale back, 1,566 tris, but 6-sided limbs shaded faceted; (3) limbs smoothed past the hexagon's 60°, hidden caps and small extras cut (ears, thumbs, knee cap, a second plank), the tufts that read as cat ears replaced by one swept back: 1,190 tris.
 - **Screens:** `Screenshots/a1_blender_compare.jpg` (front, back, 3/4, review sheet with the 64 px silhouette) and `Screenshots/a1_ingame_compare.jpg` (in the Slave Pit with the game's material, light and post: a close 3/4, and the gameplay camera from behind). Both are captured with the original beside it.
+
+## 3b. The producer on V2, and prototype 2: `CH_Nobody_V3` (one continuous, skinned body)
+**The producer (2026-10-23):** "it looks like a Playmobil character, it's not fluid, it still looks like different blocks
+fitting together." **Right, and the cause is the rig, not the shapes:** six rigid meshes meet at the neck, shoulders
+and hips, so the seams show however each piece is shaped. Fluid characters need one continuous mesh that bends at the
+joints: a skinned mesh on a small skeleton. CLAUDE.md §7.2 keeps skinning "for a specific proven need"; this is it.
+- **Source:** `BlenderSrc/characters/proto/ch_nobody_v3.py`. The body grows from a skeleton graph (Blender's Skin
+  modifier + one subdivision): the neck flows out of the shoulders, the arms out of the deltoids, the thighs out of the
+  hips. The head is a 12-sided rounded form whose jaw sits over that neck (a jaw over a neck, not a block on a peg).
+  The tunic, belt, hair, headband and focale are layers lifted off the body's own surface (so they hug it); the skirt
+  flares from the waist. Face, pauldron, greave, buckle and the cyan tails ride one bone rigidly.
+- **Skeleton:** six bones at CH_Nobody's joints, named as the parts (`Body`, `Head`, `ArmL/R`, `LegL/R`; the legs not
+  under the Body, as in the rigid rig), automatic (heat) weights on the organic surface. Posed renders (a run frame
+  and an overhead swing, the rotations `PartPose` uses) bend smoothly at the shoulders and hips.
+- **Output:** `Assets/Art/Prototype/CH_Nobody_V3.fbx` (outside `Assets/Art/Models`, so the rigid-part import rules
+  leave it alone; Unity imports it facing +Z at 1:1), `BlenderSrc/blend/ch_nobody_v3.blend`. Not referenced by the game.
+- **Cost:** **1,648 tris** (one skinned mesh 1,460 + the gladius and the shield) in **3 renderers** (V1 36, V2 8).
+  Over the player's 1,200: an optimisation pass (a lighter skeleton subdivision, cheaper skirt) should land ~1,300.
+- **Screens:** `Screenshots/a1v3_blender.jpg` (front, back, 3/4 beside the original; the run and swing poses) and
+  `Screenshots/a1v3_ingame_compare.jpg` (Slave Pit, the game's material, light and post).
+
+**What adopting skinning would change (only after approval):**
+1. `PartRig.Set`: `bind * offset` → `offset * bind` (the offset in the parent's space). Identical for today's rigid rigs
+   (identity binds); correct for bones, whose binds aren't identity.
+2. `ModelImportRules`: its post-process rotates mesh vertices to bake the FBX root's 180° yaw, which would break
+   skinning (bind poses); skinned characters export Unity-ready instead (as V3 does) and skip that step.
+3. `EnemyManager` and the hit flash collect `MeshRenderer`s; skinned characters need `Renderer` (the
+   `SkinnedMeshRenderer`).
+4. Performance: 300 skinned enemies is GPU skinning of ~300 × 700 vertices a frame (small), but it must be measured
+   with the 300-enemy stress run before the enemies move over; the player and the bosses first.
 
 ## 4. Comparison and risks
 | | Original | Prototype |

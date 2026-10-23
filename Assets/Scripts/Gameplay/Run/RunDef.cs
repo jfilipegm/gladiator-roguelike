@@ -48,7 +48,8 @@ namespace Gladiator.Gameplay
     /// in, the run's seed and, in the Daily Games, the day's plan. The menu starts a run (or the daily), arenas read the
     /// gladiator, the end screen retries or goes back to the menu. Every run load seeds GameRandom with Seed right before
     /// LoadScene (R8), so the same seed replays the same chests, swarms, elites, gifts and whims (docs/tracks/R7-design.md
-    /// §3.4).
+    /// §3.4). T1: the menu's arena list (KnownRuns, for the admin panel's boss fights) and whether this run is the
+    /// Playground (StartPlayground).
     /// </summary>
     public static class GameSession
     {
@@ -74,7 +75,19 @@ namespace Gladiator.Gameplay
         /// <summary>Tests: stands in for -runSeed's parsed value (null = read the command line). Clear() resets it.</summary>
         public static uint? RunSeedOverride;
 
+        /// <summary>T1: every arena the menu offers, in ladder order (MainMenu sets it on Start), so the admin panel can
+        /// jump to any boss. Never null: empty until a menu has been up this session, and after Clear.</summary>
+        public static RunDef[] KnownRuns
+        {
+            get => _knownRuns;
+            set => _knownRuns = value ?? Array.Empty<RunDef>();
+        }
+        /// <summary>T1: the current run is the Playground (the menu's PLAYGROUND launch: StartPlayground). StartRun,
+        /// StartDaily and Clear reset it; Retry keeps it.</summary>
+        public static bool Playground { get; set; }
+
         static uint _freshCount;
+        static RunDef[] _knownRuns = Array.Empty<RunDef>();
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void Reset()
@@ -82,6 +95,7 @@ namespace Gladiator.Gameplay
             Gladiator = null; Skin = null; Run = null; ArenaIndex = 0;
             Seed = 0u; Daily = default; DailyScored = false;
             SuppressLoad = false; LastLoadPath = null; RunSeedOverride = null;
+            _knownRuns = Array.Empty<RunDef>(); Playground = false;
         }
 
         /// <summary>A build that boots straight into an arena (no menu) still honours -runSeed: GameRandom's own reset
@@ -94,8 +108,9 @@ namespace Gladiator.Gameplay
             GameRandom.BeginRun(seed);
         }
 
-        /// <summary>Forget the gladiator, skin, run, seed and daily, and the test switches (tests: one that picks a gladiator
-        /// must not leak it into the next; set SuppressLoad / RunSeedOverride after calling this).</summary>
+        /// <summary>Forget the gladiator, skin, run, seed and daily, the Playground and the menu's arena list, and the test
+        /// switches (tests: one that picks a gladiator must not leak it into the next; set SuppressLoad / RunSeedOverride
+        /// after calling this).</summary>
         public static void Clear() => Reset();
 
         public static string ArenaName =>
@@ -105,8 +120,18 @@ namespace Gladiator.Gameplay
         public static void StartRun(GladiatorDef gladiator, RunDef run) =>
             StartRun(gladiator, run, TryCommandLineSeed(out uint seed) ? seed : FreshSeed());
 
-        /// <summary>A normal run on `seed` (SAME SEED, -runSeed, tests). Leaves any daily.</summary>
-        public static void StartRun(GladiatorDef gladiator, RunDef run, uint seed)
+        /// <summary>A normal run on `seed` (SAME SEED, -runSeed, tests). Leaves any daily and the Playground.</summary>
+        public static void StartRun(GladiatorDef gladiator, RunDef run, uint seed) => Begin(gladiator, run, seed, false);
+
+        /// <summary>T1: the Playground (the admin menu's PLAYGROUND → FIGHT!): `run` is its RunDef, any gladiator. Like a
+        /// normal run (-runSeed or a fresh seed), with Playground set until the next StartRun / StartDaily / Clear.</summary>
+        public static void StartPlayground(GladiatorDef gladiator, RunDef run)
+        {
+            if (string.IsNullOrEmpty(FirstArena(run))) Debug.LogWarning("[GameSession] StartPlayground: no Playground run (or it has no scene)");
+            Begin(gladiator, run, TryCommandLineSeed(out uint seed) ? seed : FreshSeed(), true);
+        }
+
+        static void Begin(GladiatorDef gladiator, RunDef run, uint seed, bool playground)
         {
             Gladiator = gladiator;
             Run = run;
@@ -114,6 +139,7 @@ namespace Gladiator.Gameplay
             Daily = default;
             DailyScored = false;
             Seed = seed;
+            Playground = playground;
             LoadRun(FirstArena(run));
         }
 
@@ -132,6 +158,7 @@ namespace Gladiator.Gameplay
             Daily = plan;
             DailyScored = scored;
             Seed = plan.Seed;
+            Playground = false;
             RunModifiers.Set(plan.Edicts);
             Debug.Log($"[GameSession] daily {plan.Date} {(scored ? "SCORED" : "practice")}: {plan.Run.id} as {plan.Gladiator.id}, " +
                       $"{(plan.Edicts != null ? plan.Edicts.Length : 0)} edicts, seed {GameRandom.SeedText(plan.Seed)}");
@@ -192,7 +219,7 @@ namespace Gladiator.Gameplay
             }
         }
 
-        static string FirstArena(RunDef run) => run != null && run.arenas.Length > 0 ? run.arenas[0].scenePath : null;
+        static string FirstArena(RunDef run) => run != null && run.arenas != null && run.arenas.Length > 0 ? run.arenas[0].scenePath : null;
 
         /// <summary>Retry's reload: the active scene again, on Seed.</summary>
         static void Reload()

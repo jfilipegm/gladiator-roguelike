@@ -3,13 +3,21 @@
 Review sheets only (`Screenshots/a1/a1_<tag>.png`: the new design left from the front, the original right; front /
 back / three-quarter). Nothing in the game changes. Scripts: `BlenderSrc/characters/a1/a1_<tag>.py`; shared helpers
 (scutum, helmets, rods and points, capes, bake/scale/hunch) in `BlenderSrc/characters/a1/a1_tier3boss_lib.py`.
-Bosses are built at their real size (the kit body scaled ×1.6–2.3 with wider/thicker proportions) and reviewed with
-`review(height=, gap=)`.
+Bosses are built at their real size (the kit body scaled ×1.05–2.15 with wider/thicker proportions; the Eternal
+Victor stretched taller and thinner) and reviewed with `review(height=, gap=)`. The Chimera is built at real size from
+lofts along its body.
+
+**Summary:** 11 sheets; tier 3 enemies 728–940 tris, bosses 992–1,946, the Chimera 844. All bosses are under 2,500;
+every tier 3 humanoid is over the 450 guide (see the note). Weakest reads: Gorm (the pointed black beard looks a
+little like a bib; mostly brown), the Beast Lord (the lion face over his face reads busy from the front), the Skeletal
+Legionnaire (the tilted bowl helmet reads a little like a cap).
 
 **Triangles, a general note:** the kit's base body (`simple_kit.humanoid`) is ~620–660 tris on its own (feet 44 each,
 fists 44 each, head 92, torso 80), so a humanoid in this style can't reach the 450 guide for regular enemies without
-changing the kit itself (a lean variant with 2-ring feet and fists and a 4-ring head would save ~150). I only cut
-hidden geometry (`helmet_head`: the head's top under a helmet, -32). The numbers below are honest.
+changing the kit itself. `a1_tier3boss_lib.lean_humanoid` shows one way (2-ring limbs, block hands and feet, a 4-ring
+head, eyes only: ~270 tris; used for the Patron's bearers); it would need the producer's eye before it replaces the
+kit body on enemies. Otherwise I only cut hidden geometry (`helmet_head`: the head's top under a helmet, -32). The
+numbers below are honest.
 
 | Character | Tris | Kept | Changed | Doubts |
 |---|---|---|---|---|

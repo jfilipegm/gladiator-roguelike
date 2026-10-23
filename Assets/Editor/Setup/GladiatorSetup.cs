@@ -170,7 +170,7 @@ namespace Gladiator.EditorTools
                 g.cameraTargetHeight = 0.85f;
                 g.tradeoff = "Fast and greedy, but fragile: 70 HP, -10 % damage.";
             }
-            if (g.model == null) g.model = AssetDatabase.LoadAssetAtPath<GameObject>(GoblinModel);
+            if (g.model == null) g.model = ModelStyle.Load(GoblinModel);
             if (g.movement == null) g.movement = move;
             if (g.animProfile == null) g.animProfile = anim;
             if (g.startingWeapon == null) g.startingWeapon = satchel;
@@ -282,7 +282,7 @@ namespace Gladiator.EditorTools
                 g.cameraTargetHeight = 1.35f;
                 g.tradeoff = "Lives on kills: slow, and other healing is halved.";
             }
-            if (g.model == null) g.model = AssetDatabase.LoadAssetAtPath<GameObject>(KnightModel);
+            if (g.model == null) g.model = ModelStyle.Load(KnightModel);
             if (g.movement == null) g.movement = move;
             if (g.animProfile == null) g.animProfile = anim;
             if (g.startingWeapon == null) g.startingWeapon = sword;
@@ -359,7 +359,7 @@ namespace Gladiator.EditorTools
                 g.cameraTargetHeight = 1.6f;
                 g.tradeoff = "Unstoppable but slow: 85 % speed, and the cleaver only hits in front of him.";
             }
-            if (g.model == null) g.model = AssetDatabase.LoadAssetAtPath<GameObject>(MachineModel);
+            if (g.model == null) g.model = ModelStyle.Load(MachineModel);
             if (g.movement == null) g.movement = move;
             if (g.animProfile == null) g.animProfile = anim;
             if (g.startingWeapon == null) g.startingWeapon = cleaver;
@@ -432,7 +432,7 @@ namespace Gladiator.EditorTools
                 g.cameraTargetHeight = 1.3f;
                 g.tradeoff = "Fast and flashy but fragile: 90 HP, and a lone target leaves the lightning nothing to jump to.";
             }
-            if (g.model == null) g.model = AssetDatabase.LoadAssetAtPath<GameObject>(ThunderModel);
+            if (g.model == null) g.model = ModelStyle.Load(ThunderModel);
             if (g.movement == null) g.movement = move;
             if (g.animProfile == null) g.animProfile = anim;
             if (g.startingWeapon == null) g.startingWeapon = spear;
@@ -518,7 +518,7 @@ namespace Gladiator.EditorTools
                 g.cameraTargetHeight = 1.25f;
                 g.tradeoff = "Slow to start and fragile: curses take time, and a lone boss doesn't spread them.";
             }
-            if (g.model == null) g.model = AssetDatabase.LoadAssetAtPath<GameObject>(OracleModel);
+            if (g.model == null) g.model = ModelStyle.Load(OracleModel);
             if (g.movement == null) g.movement = move;
             if (g.animProfile == null) g.animProfile = anim;
             if (g.startingWeapon == null) g.startingWeapon = censer;
@@ -608,7 +608,7 @@ namespace Gladiator.EditorTools
                 g.cameraTargetHeight = 1.2f;
                 g.tradeoff = "Control without armour: 95 HP, and a short reach when the net isn't ready.";
             }
-            if (g.model == null) g.model = AssetDatabase.LoadAssetAtPath<GameObject>(NetWeaverModel);
+            if (g.model == null) g.model = ModelStyle.Load(NetWeaverModel);
             if (g.movement == null) g.movement = move;
             if (g.animProfile == null) g.animProfile = anim;
             if (g.startingWeapon == null) g.startingWeapon = trident;
@@ -731,7 +731,7 @@ namespace Gladiator.EditorTools
                 g.cameraTargetHeight = 1.3f;
                 g.tradeoff = "Weak until he's rich: every chest is a choice between an upgrade and his damage.";
             }
-            if (g.model == null) g.model = AssetDatabase.LoadAssetAtPath<GameObject>(IdolModel);
+            if (g.model == null) g.model = ModelStyle.Load(IdolModel);
             if (g.movement == null) g.movement = move;
             if (g.animProfile == null) g.animProfile = anim;
             if (g.startingWeapon == null) g.startingWeapon = toss;

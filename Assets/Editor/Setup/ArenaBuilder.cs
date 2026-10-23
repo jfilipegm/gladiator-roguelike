@@ -265,8 +265,8 @@ namespace Gladiator.EditorTools
                 crate.spots = layout.secretSpots;
                 crate.arenaCenter = layout.center;
                 crate.flag = GladiatorSetup.Flag;
-                crate.crateModel = AssetDatabase.LoadAssetAtPath<GameObject>(GladiatorSetup.CrateModel);
-                crate.goblinModel = AssetDatabase.LoadAssetAtPath<GameObject>(GladiatorSetup.GoblinModel);
+                crate.crateModel = ModelStyle.Load(GladiatorSetup.CrateModel);
+                crate.goblinModel = ModelStyle.Load(GladiatorSetup.GoblinModel);
                 crate.envMaterial = AssetDatabase.LoadAssetAtPath<Material>(LookSetup.EnvMat);
                 crate.charMaterial = AssetDatabase.LoadAssetAtPath<Material>(LookSetup.CharMat);
             }
@@ -284,7 +284,7 @@ namespace Gladiator.EditorTools
                 bookie.transform.SetParent(arena, false);
                 bookie.spots = layout.secretSpots;
                 bookie.arenaCenter = layout.center;
-                bookie.model = AssetDatabase.LoadAssetAtPath<GameObject>(BookmakerModel);
+                bookie.model = ModelStyle.Load(BookmakerModel);
                 bookie.material = AssetDatabase.LoadAssetAtPath<Material>(LookSetup.CharMat);
                 // W1: his book (E in his ring) beside the run's other panels; only arenas with a bookmaker have one
                 var book = new GameObject("WagerPanel").AddComponent<Gladiator.UI.WagerPanel>();
@@ -299,7 +299,7 @@ namespace Gladiator.EditorTools
                 stranger.spots = layout.secretSpots;
                 stranger.arenaCenter = layout.center;
                 stranger.flag = GladiatorSetup.OracleFlag;
-                stranger.model = AssetDatabase.LoadAssetAtPath<GameObject>(GladiatorSetup.OracleModel);
+                stranger.model = ModelStyle.Load(GladiatorSetup.OracleModel);
                 stranger.material = AssetDatabase.LoadAssetAtPath<Material>(LookSetup.CharMat);
             }
 
@@ -538,7 +538,7 @@ namespace Gladiator.EditorTools
             race.chariotLaps = Mathf.Max(1, layout.chariotLaps);
 
             string model = string.IsNullOrEmpty(layout.chariotModel) ? "Props/PR_Chariot" : layout.chariotModel;
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Art/Models/" + model + ".fbx");
+            var prefab = ModelStyle.Load("Assets/Art/Models/" + model + ".fbx");
             if (prefab == null) Debug.LogError("[ArenaBuilder] missing chariot model " + model);
             var envMat = AssetDatabase.LoadAssetAtPath<Material>(LookSetup.EnvMat);
             var chariots = new Transform[prefab != null ? race.chariotCount : 0];

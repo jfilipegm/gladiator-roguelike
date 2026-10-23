@@ -267,7 +267,7 @@ namespace Gladiator.EditorTools
                     foreach (var g in All<GladiatorDef>())
                     {
                         // no model of its own (the Nobody) = the player prefab's, CH_Nobody
-                        var model = g.model != null ? g.model : AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Art/Models/Characters/CH_Nobody.fbx");
+                        var model = g.model != null ? g.model : ModelStyle.Load("Assets/Art/Models/Characters/CH_Nobody.fbx");
                         if (model == null) continue;
                         rig.Render(model, mat, true);
                         rig.CopyTo(tex, 0, 0);

@@ -76,7 +76,7 @@ namespace Gladiator.EditorTools
             {
                 var g = Check(row, roster, ids);
                 if (g == null) { skipped++; continue; }
-                string modelPath = ModelDir + row.@base + row.suffix + ".fbx";
+                string modelPath = ModelStyle.Path(ModelDir + row.@base + row.suffix + ".fbx");
                 var model = AssetDatabase.LoadAssetAtPath<GameObject>(modelPath);
                 if (model == null)
                 {

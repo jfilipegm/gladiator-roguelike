@@ -55,7 +55,7 @@ namespace Gladiator.EditorTools
             {
                 convict.id = "convict";
                 convict.displayName = "Starving Convict";
-                convict.model = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Art/Models/Enemies/EN_Convict.fbx");
+                convict.model = ModelStyle.Load("Assets/Art/Models/Enemies/EN_Convict.fbx");
                 convict.anim = anim;
                 convict.maxHp = 20f; convict.moveSpeed = 3.6f; convict.radius = 0.36f; convict.contactDamage = 8f; convict.xp = 1f;
                 EditorUtility.SetDirty(convict);
@@ -205,7 +205,7 @@ namespace Gladiator.EditorTools
                 d.anim = anim;
                 init(d);
             }
-            if (d.model == null) d.model = AssetDatabase.LoadAssetAtPath<GameObject>(Models + "Enemies/" + asset + ".fbx");
+            if (d.model == null) d.model = ModelStyle.Load(Models + "Enemies/" + asset + ".fbx");
             EditorUtility.SetDirty(d);
         }
 

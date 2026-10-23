@@ -126,7 +126,7 @@ namespace Gladiator.EditorTools
                 g.cameraTargetHeight = 1.25f;
                 g.tradeoff = "The pack is his damage: two wolves at first, and they won't stray far from him.";
             }
-            if (g.model == null) g.model = AssetDatabase.LoadAssetAtPath<GameObject>(Model);
+            if (g.model == null) g.model = ModelStyle.Load(Model);
             if (g.movement == null) g.movement = move;
             if (g.animProfile == null) g.animProfile = anim;
             if (g.startingWeapon == null) g.startingWeapon = pack;
@@ -156,7 +156,7 @@ namespace Gladiator.EditorTools
                     L(Pct(StatId.ProjectileSpeed, 0.2f), Pct(StatId.Area, 0.15f)), L(Pct(StatId.Damage, 0.3f)), L(Add(StatId.Amount, 1f)),
                 };
             }
-            if (w.summon == null) w.summon = AssetDatabase.LoadAssetAtPath<GameObject>(WolfModel);
+            if (w.summon == null) w.summon = ModelStyle.Load(WolfModel);
             EditorUtility.SetDirty(w);
             return w;
         }

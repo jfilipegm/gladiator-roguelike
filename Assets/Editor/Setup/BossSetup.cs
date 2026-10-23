@@ -48,7 +48,7 @@ namespace Gladiator.EditorTools
                 body.prewarm = 1;
             }
             if (body.model == null)
-                body.model = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Art/Models/Enemies/EN_Gorm.fbx");
+                body.model = ModelStyle.Load("Assets/Art/Models/Enemies/EN_Gorm.fbx");
             EditorUtility.SetDirty(body);
 
             if (!AssetDatabase.IsValidFolder("Assets/Data/Bosses")) AssetDatabase.CreateFolder("Assets/Data", "Bosses");
@@ -99,7 +99,7 @@ namespace Gladiator.EditorTools
                 body.prewarm = 1;
             }
             if (body.model == null)
-                body.model = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Art/Models/Enemies/EN_Champion.fbx");
+                body.model = ModelStyle.Load("Assets/Art/Models/Enemies/EN_Champion.fbx");
             EditorUtility.SetDirty(body);
 
             if (!AssetDatabase.IsValidFolder("Assets/Data/Bosses")) AssetDatabase.CreateFolder("Assets/Data", "Bosses");
@@ -175,7 +175,7 @@ namespace Gladiator.EditorTools
                 body.prewarm = 1;
             }
             if (body.model == null)
-                body.model = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Art/Models/Enemies/EN_BeastLord.fbx");
+                body.model = ModelStyle.Load("Assets/Art/Models/Enemies/EN_BeastLord.fbx");
             EditorUtility.SetDirty(body);
 
             if (!AssetDatabase.IsValidFolder("Assets/Data/Bosses")) AssetDatabase.CreateFolder("Assets/Data", "Bosses");
@@ -249,7 +249,7 @@ namespace Gladiator.EditorTools
                 body.prewarm = 1;
             }
             if (body.model == null)
-                body.model = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Art/Models/Enemies/EN_GildedPatron.fbx");
+                body.model = ModelStyle.Load("Assets/Art/Models/Enemies/EN_GildedPatron.fbx");
             EditorUtility.SetDirty(body);
 
             if (!AssetDatabase.IsValidFolder("Assets/Data/Bosses")) AssetDatabase.CreateFolder("Assets/Data", "Bosses");
@@ -328,7 +328,7 @@ namespace Gladiator.EditorTools
                 body.prewarm = 1;
             }
             if (body.model == null)
-                body.model = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Art/Models/Enemies/EN_EmperorsChampion.fbx");
+                body.model = ModelStyle.Load("Assets/Art/Models/Enemies/EN_EmperorsChampion.fbx");
             EditorUtility.SetDirty(body);
 
             if (!AssetDatabase.IsValidFolder("Assets/Data/Bosses")) AssetDatabase.CreateFolder("Assets/Data", "Bosses");
@@ -419,7 +419,7 @@ namespace Gladiator.EditorTools
                 body.prewarm = 1;
             }
             if (body.model == null)
-                body.model = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Art/Models/Enemies/EN_EternalVictor.fbx");
+                body.model = ModelStyle.Load("Assets/Art/Models/Enemies/EN_EternalVictor.fbx");
             EditorUtility.SetDirty(body);
 
             if (!AssetDatabase.IsValidFolder("Assets/Data/Bosses")) AssetDatabase.CreateFolder("Assets/Data", "Bosses");

@@ -51,7 +51,7 @@ namespace Gladiator.EditorTools
 
             var visual = new GameObject("Visual").transform;
             visual.SetParent(root.transform, false);
-            var model = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(Model), visual);
+            var model = (GameObject)PrefabUtility.InstantiatePrefab(ModelStyle.Load(Model), visual);
             LookSetup.AssignMaterial(model, AssetDatabase.LoadAssetAtPath<Material>(LookSetup.CharMat));
             foreach (var t in visual.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = Layers.Player;
             foreach (var r in visual.GetComponentsInChildren<MeshRenderer>(true))

@@ -6,15 +6,21 @@ Identity kept from ch_nobody.py: the cyan headband and the focale's tail (the pl
 pauldron and one greave on the shield side, the rusty gladius, the round scrap shield.
 """
 import importlib
+import os
+import sys
 
+sys.path.insert(0, os.path.join(REPO, "BlenderSrc", "characters", "a1"))
 import gladiator_kit as K
 importlib.reload(K)
 import stylized_kit as S
 importlib.reload(S)
 import simple_kit as A
 importlib.reload(A)
+import a1_export as X
+importlib.reload(X)
 
-OX = -0.55
+EXPORT = ARGS.get("export") == "1"   # export=1: the game model (Assets/Art/Models/A1/Characters/CH_Nobody.fbx)
+OX = 0.0 if EXPORT else -0.55
 
 
 def build():
@@ -52,8 +58,13 @@ def build():
         parts.append(A.flat(o))
     lx, ly, lz = a["hand_l"]
     parts.append(A.round_shield("Shield", 0.235, (lx + 0.11, -0.04, lz + p["AL"] * 0.35), OX))
-    return parts
+    return parts, p
 
 
-parts = build()
-result = A.review("nobody", parts, original_blend="ch_nobody", original_root="CH_Nobody")
+parts, p = build()
+if EXPORT:
+    result = X.export("CH_Nobody", "Characters", parts, X.joints(p),
+                      rules=[("Blade", "ArmR"), ("Guard", "ArmR"), ("Pommel", "ArmR"), ("Shield", "ArmL"),
+                             ("Pauldron", "ArmL")])
+else:
+    result = A.review("nobody", parts, original_blend="ch_nobody", original_root="CH_Nobody")

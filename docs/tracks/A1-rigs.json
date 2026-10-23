@@ -1,0 +1,4725 @@
+{
+ "CH_AshenOracle": {
+  "blend": "ch_ashenoracle.blend",
+  "root": "CH_AshenOracle",
+  "root_type": "EMPTY",
+  "height": 1.806,
+  "bounds_x": [
+   -0.335,
+   0.335
+  ],
+  "bounds_y": [
+   -0.37,
+   0.28
+  ],
+  "renderers": 33,
+  "tris": 572,
+  "parts": {
+   "Body": {
+    "parent": "CH_AshenOracle",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     0.0,
+     0.5
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Belt",
+     "Hem",
+     "Robe",
+     "StoleEndL",
+     "StoleEndR",
+     "StoleL",
+     "StoleR"
+    ]
+   },
+   "ArmL": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.24,
+     0.0,
+     0.94
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "CuffL",
+     "HandL"
+    ]
+   },
+   "ArmR": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     -0.24,
+     0.0,
+     0.94
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "CenserStaff",
+     "CuffR",
+     "HandR"
+    ]
+   },
+   "Head": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     -0.02,
+     1.0
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Hood",
+     "Mask"
+    ]
+   },
+   "LegL": {
+    "parent": "CH_AshenOracle",
+    "type": "MESH",
+    "pivot": [
+     0.1,
+     0.0,
+     0.5
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FootL"
+    ]
+   },
+   "LegR": {
+    "parent": "CH_AshenOracle",
+    "type": "MESH",
+    "pivot": [
+     -0.1,
+     0.0,
+     0.5
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FootR"
+    ]
+   }
+  },
+  "root_children": []
+ },
+ "CH_Asterion": {
+  "blend": "ch_asterion.blend",
+  "root": "CH_Asterion",
+  "root_type": "EMPTY",
+  "height": 1.831,
+  "bounds_x": [
+   -0.844,
+   0.71
+  ],
+  "bounds_y": [
+   -0.717,
+   2.133
+  ],
+  "renderers": 64,
+  "tris": 1148,
+  "parts": {
+   "Body": {
+    "parent": "CH_Asterion",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     0.0,
+     0.5
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Belt",
+     "Chest",
+     "Collar",
+     "CollarRing",
+     "Hump",
+     "Kilt",
+     "KiltHem",
+     "Labyrinth0",
+     "Labyrinth1",
+     "Labyrinth2",
+     "Labyrinth3",
+     "Labyrinth4",
+     "ScarChest",
+     "Tail"
+    ]
+   },
+   "ArmL": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.52,
+     0.0,
+     1.02
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "BrokenHalf",
+     "BrokenLink",
+     "CuffL",
+     "FistL",
+     "ForearmL",
+     "ScarArm",
+     "ShoulderFurL"
+    ]
+   },
+   "ArmR": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     -0.52,
+     0.0,
+     1.02
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "ChainWrap0",
+     "ChainWrap1",
+     "CuffR",
+     "FistR",
+     "ForearmR",
+     "ShoulderFurR"
+    ]
+   },
+   "Head": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     -0.14,
+     1.0
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Brow",
+     "EarL",
+     "EarR",
+     "EyeL",
+     "EyeR",
+     "Forelock",
+     "HornL",
+     "HornLMid",
+     "HornLTip",
+     "HornR",
+     "HornRMid",
+     "HornRTip",
+     "NoseRing",
+     "NoseRingL",
+     "NoseRingR",
+     "NostrilL",
+     "NostrilR",
+     "ScarBrow",
+     "Snout"
+    ]
+   },
+   "LegL": {
+    "parent": "CH_Asterion",
+    "type": "MESH",
+    "pivot": [
+     0.17,
+     0.0,
+     0.5
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "HoofL",
+     "ShinL"
+    ]
+   },
+   "LegR": {
+    "parent": "CH_Asterion",
+    "type": "MESH",
+    "pivot": [
+     -0.17,
+     0.0,
+     0.5
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "HoofR",
+     "ShinR"
+    ]
+   }
+  },
+  "root_children": [
+   "Chain"
+  ]
+ },
+ "CH_Beastmaster": {
+  "blend": "ch_beastmaster.blend",
+  "root": "CH_Beastmaster",
+  "root_type": "EMPTY",
+  "height": 1.72,
+  "bounds_x": [
+   -0.35,
+   0.35
+  ],
+  "bounds_y": [
+   -0.958,
+   0.329
+  ],
+  "renderers": 38,
+  "tris": 720,
+  "parts": {
+   "Body": {
+    "parent": "CH_Beastmaster",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     0.0,
+     0.5
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Belt",
+     "Horn",
+     "Mantle",
+     "Skirt",
+     "Strap"
+    ]
+   },
+   "ArmL": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.27,
+     0.0,
+     0.94
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "CuffL",
+     "FistL"
+    ]
+   },
+   "ArmR": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     -0.27,
+     0.0,
+     0.94
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "CuffR",
+     "FistR",
+     "HuntingSpear"
+    ]
+   },
+   "Head": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     -0.02,
+     1.0
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Beard",
+     "Eyes",
+     "Hood"
+    ]
+   },
+   "LegL": {
+    "parent": "CH_Beastmaster",
+    "type": "MESH",
+    "pivot": [
+     0.11,
+     0.0,
+     0.5
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "BootL"
+    ]
+   },
+   "LegR": {
+    "parent": "CH_Beastmaster",
+    "type": "MESH",
+    "pivot": [
+     -0.11,
+     0.0,
+     0.5
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "BootR"
+    ]
+   }
+  },
+  "root_children": []
+ },
+ "CH_BloodKnight": {
+  "blend": "ch_bloodknight.blend",
+  "root": "CH_BloodKnight",
+  "root_type": "EMPTY",
+  "height": 1.914,
+  "bounds_x": [
+   -0.544,
+   0.544
+  ],
+  "bounds_y": [
+   -1.397,
+   0.457
+  ],
+  "renderers": 50,
+  "tris": 980,
+  "parts": {
+   "Body": {
+    "parent": "CH_BloodKnight",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     0.0,
+     0.48
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Belt",
+     "Buckle",
+     "Cape",
+     "Faulds",
+     "Gorget",
+     "PauldronL",
+     "PauldronR",
+     "Tabard"
+    ]
+   },
+   "ArmL": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.31,
+     0.0,
+     1.0
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "ElbowL",
+     "GauntletL",
+     "HandL"
+    ]
+   },
+   "ArmR": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     -0.31,
+     0.0,
+     1.0
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "ElbowR",
+     "GauntletR",
+     "Greatsword",
+     "HandR"
+    ]
+   },
+   "Head": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     -0.02,
+     1.08
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "HelmRim",
+     "HornL",
+     "HornR",
+     "HornTipL",
+     "HornTipR",
+     "Ridge",
+     "VisorDrop",
+     "VisorSlit"
+    ]
+   },
+   "LegL": {
+    "parent": "CH_BloodKnight",
+    "type": "MESH",
+    "pivot": [
+     0.13,
+     0.0,
+     0.48
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FootL",
+     "KneeL"
+    ]
+   },
+   "LegR": {
+    "parent": "CH_BloodKnight",
+    "type": "MESH",
+    "pivot": [
+     -0.13,
+     0.0,
+     0.48
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FootR",
+     "KneeR"
+    ]
+   }
+  },
+  "root_children": []
+ },
+ "CH_GoldenIdol": {
+  "blend": "ch_goldenidol.blend",
+  "root": "CH_GoldenIdol",
+  "root_type": "EMPTY",
+  "height": 1.929,
+  "bounds_x": [
+   -0.64,
+   0.64
+  ],
+  "bounds_y": [
+   -0.24,
+   0.29
+  ],
+  "renderers": 37,
+  "tris": 844,
+  "parts": {
+   "Body": {
+    "parent": "CH_GoldenIdol",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     0.0,
+     0.48
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Belt",
+     "Gem",
+     "Sash",
+     "Skirt"
+    ]
+   },
+   "ArmL": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.31,
+     0.0,
+     0.98
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "BangleL",
+     "FistL",
+     "PauldronL",
+     "Sceptre"
+    ]
+   },
+   "ArmR": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     -0.31,
+     0.0,
+     0.98
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "BangleR",
+     "FistR",
+     "PauldronR"
+    ]
+   },
+   "Head": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     -0.02,
+     1.04
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Eyes",
+     "Laurel",
+     "Smile",
+     "SunCrown"
+    ]
+   },
+   "LegL": {
+    "parent": "CH_GoldenIdol",
+    "type": "MESH",
+    "pivot": [
+     0.13,
+     0.0,
+     0.48
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "BootL"
+    ]
+   },
+   "LegR": {
+    "parent": "CH_GoldenIdol",
+    "type": "MESH",
+    "pivot": [
+     -0.13,
+     0.0,
+     0.48
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "BootR"
+    ]
+   }
+  },
+  "root_children": []
+ },
+ "CH_MurderMachine": {
+  "blend": "ch_murdermachine.blend",
+  "root": "CH_MurderMachine",
+  "root_type": "EMPTY",
+  "height": 2.23,
+  "bounds_x": [
+   -0.79,
+   0.79
+  ],
+  "bounds_y": [
+   -1.394,
+   0.395
+  ],
+  "renderers": 38,
+  "tris": 808,
+  "parts": {
+   "Body": {
+    "parent": "CH_MurderMachine",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     0.0,
+     0.56
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Apron",
+     "Belt",
+     "Buckle",
+     "ChestPlate",
+     "Mantle",
+     "MantleTail",
+     "Rivet0",
+     "Rivet1",
+     "Rivet2",
+     "Rivet3",
+     "SigilHaft",
+     "SigilHead"
+    ]
+   },
+   "ArmL": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.62,
+     -0.02,
+     1.3
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FistL",
+     "PauldronL",
+     "VambraceL"
+    ]
+   },
+   "ArmR": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     -0.62,
+     -0.02,
+     1.3
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Cleaver",
+     "FistR",
+     "PauldronR",
+     "VambraceR"
+    ]
+   },
+   "Head": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     -0.04,
+     1.4
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "EyeL",
+     "EyeR",
+     "HoodPoint"
+    ]
+   },
+   "LegL": {
+    "parent": "CH_MurderMachine",
+    "type": "MESH",
+    "pivot": [
+     0.22,
+     0.0,
+     0.56
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "BootL",
+     "GreaveL"
+    ]
+   },
+   "LegR": {
+    "parent": "CH_MurderMachine",
+    "type": "MESH",
+    "pivot": [
+     -0.22,
+     0.0,
+     0.56
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "BootR",
+     "GreaveR"
+    ]
+   }
+  },
+  "root_children": []
+ },
+ "CH_NetWeaver": {
+  "blend": "ch_netweaver.blend",
+  "root": "CH_NetWeaver",
+  "root_type": "EMPTY",
+  "height": 1.861,
+  "bounds_x": [
+   -0.47,
+   0.337
+  ],
+  "bounds_y": [
+   -1.112,
+   0.312
+  ],
+  "renderers": 50,
+  "tris": 872,
+  "parts": {
+   "Body": {
+    "parent": "CH_NetWeaver",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     0.0,
+     0.5
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Belt",
+     "Buckle",
+     "Galerus",
+     "GaleStrap",
+     "Net",
+     "Skirt"
+    ]
+   },
+   "ArmL": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.26,
+     0.0,
+     0.94
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FistL",
+     "Manica0",
+     "Manica1",
+     "Manica2",
+     "Manica3"
+    ]
+   },
+   "ArmR": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     -0.26,
+     0.0,
+     0.94
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "BracerR",
+     "FistR",
+     "Trident"
+    ]
+   },
+   "Head": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     -0.02,
+     1.0
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Band",
+     "BandTail0",
+     "BandTail1",
+     "Beard",
+     "Eyes",
+     "Hair",
+     "HairBack",
+     "Topknot"
+    ]
+   },
+   "LegL": {
+    "parent": "CH_NetWeaver",
+    "type": "MESH",
+    "pivot": [
+     0.11,
+     0.0,
+     0.5
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "SandalL",
+     "WrapL"
+    ]
+   },
+   "LegR": {
+    "parent": "CH_NetWeaver",
+    "type": "MESH",
+    "pivot": [
+     -0.11,
+     0.0,
+     0.5
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "SandalR",
+     "WrapR"
+    ]
+   }
+  },
+  "root_children": []
+ },
+ "CH_Nobody": {
+  "blend": "ch_nobody.blend",
+  "root": "CH_Nobody",
+  "root_type": "EMPTY",
+  "height": 1.51,
+  "bounds_x": [
+   -0.36,
+   0.45
+  ],
+  "bounds_y": [
+   -0.84,
+   0.31
+  ],
+  "renderers": 36,
+  "tris": 876,
+  "parts": {
+   "Body": {
+    "parent": "CH_Nobody",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     0.0,
+     0.4
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Belt",
+     "Loincloth",
+     "Pauldron",
+     "Scarf",
+     "ScarfTail"
+    ]
+   },
+   "ArmL": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.28,
+     0.0,
+     0.86
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "HandL",
+     "Shield",
+     "WrapL"
+    ]
+   },
+   "ArmR": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     -0.28,
+     0.0,
+     0.86
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Gladius",
+     "HandR",
+     "WrapR"
+    ]
+   },
+   "Head": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     0.0,
+     0.95
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Brow",
+     "EyeL",
+     "EyeR",
+     "Hair",
+     "HairBack",
+     "Headband",
+     "HeadbandKnot",
+     "Nose"
+    ]
+   },
+   "LegL": {
+    "parent": "CH_Nobody",
+    "type": "MESH",
+    "pivot": [
+     0.11,
+     0.0,
+     0.4
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FootL",
+     "ShinL"
+    ]
+   },
+   "LegR": {
+    "parent": "CH_Nobody",
+    "type": "MESH",
+    "pivot": [
+     -0.11,
+     0.0,
+     0.4
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FootR",
+     "ShinR"
+    ]
+   }
+  },
+  "root_children": []
+ },
+ "CH_PitGoblin": {
+  "blend": "ch_pitgoblin.blend",
+  "root": "CH_PitGoblin",
+  "root_type": "EMPTY",
+  "height": 1.266,
+  "bounds_x": [
+   -0.604,
+   0.604
+  ],
+  "bounds_y": [
+   -0.4,
+   0.49
+  ],
+  "renderers": 48,
+  "tris": 904,
+  "parts": {
+   "Body": {
+    "parent": "CH_PitGoblin",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     0.0,
+     0.3
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Belly",
+     "Hump",
+     "Rag",
+     "RagBelt",
+     "Satchel",
+     "StrapL",
+     "StrapR"
+    ]
+   },
+   "ArmL": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.21,
+     -0.02,
+     0.55
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "HandL",
+     "WrapL"
+    ]
+   },
+   "ArmR": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     -0.21,
+     -0.02,
+     0.55
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Bomb",
+     "HandR",
+     "WrapR"
+    ]
+   },
+   "Head": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     -0.04,
+     0.59
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "BrowL",
+     "BrowR",
+     "EarL",
+     "EarR",
+     "EyeL",
+     "EyeR",
+     "Grin",
+     "Headband",
+     "HeadbandKnot",
+     "Nose",
+     "PupilL",
+     "PupilR",
+     "Tooth0",
+     "Tooth1",
+     "Tooth2"
+    ]
+   },
+   "LegL": {
+    "parent": "CH_PitGoblin",
+    "type": "MESH",
+    "pivot": [
+     0.1,
+     0.0,
+     0.3
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FootL",
+     "KneeL"
+    ]
+   },
+   "LegR": {
+    "parent": "CH_PitGoblin",
+    "type": "MESH",
+    "pivot": [
+     -0.1,
+     0.0,
+     0.3
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FootR",
+     "KneeR"
+    ]
+   }
+  },
+  "root_children": []
+ },
+ "CH_ThunderChampion": {
+  "blend": "ch_thunderchampion.blend",
+  "root": "CH_ThunderChampion",
+  "root_type": "EMPTY",
+  "height": 2.23,
+  "bounds_x": [
+   -0.36,
+   0.36
+  ],
+  "bounds_y": [
+   -0.25,
+   0.329
+  ],
+  "renderers": 37,
+  "tris": 788,
+  "parts": {
+   "Body": {
+    "parent": "CH_ThunderChampion",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     0.0,
+     0.5
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Abs",
+     "Belt",
+     "Cape",
+     "Skirt",
+     "Strip0",
+     "Strip1",
+     "Strip2",
+     "Strip3"
+    ]
+   },
+   "ArmL": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.27,
+     0.0,
+     0.96
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "BracerL",
+     "FistL",
+     "ShoulderL"
+    ]
+   },
+   "ArmR": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     -0.27,
+     0.0,
+     0.96
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "BracerR",
+     "FistR",
+     "ShoulderR",
+     "StormSpear"
+    ]
+   },
+   "Head": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     -0.02,
+     1.02
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Brow",
+     "CheekL",
+     "CheekR",
+     "Crest",
+     "CrestBase",
+     "Eyes",
+     "Helm"
+    ]
+   },
+   "LegL": {
+    "parent": "CH_ThunderChampion",
+    "type": "MESH",
+    "pivot": [
+     0.11,
+     0.0,
+     0.5
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "GreaveL",
+     "SandalL"
+    ]
+   },
+   "LegR": {
+    "parent": "CH_ThunderChampion",
+    "type": "MESH",
+    "pivot": [
+     -0.11,
+     0.0,
+     0.5
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "GreaveR",
+     "SandalR"
+    ]
+   }
+  },
+  "root_children": []
+ },
+ "CH_Wolf": {
+  "blend": "ch_wolf.blend",
+  "root": "CH_Wolf",
+  "root_type": "EMPTY",
+  "height": 0.9,
+  "bounds_x": [
+   -0.17,
+   0.17
+  ],
+  "bounds_y": [
+   -0.77,
+   0.739
+  ],
+  "renderers": 21,
+  "tris": 252,
+  "parts": {
+   "Body": {
+    "parent": "CH_Wolf",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     0.04,
+     0.36
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Back",
+     "Belly",
+     "Collar",
+     "Tail"
+    ]
+   },
+   "ArmL": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.1,
+     -0.21,
+     0.38
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "PawL"
+    ]
+   },
+   "ArmR": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     -0.1,
+     -0.21,
+     0.38
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "PawR"
+    ]
+   },
+   "Head": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     -0.4,
+     0.5
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "EarL",
+     "EarR",
+     "EyeL",
+     "EyeR",
+     "Fangs",
+     "Nose",
+     "Snout"
+    ]
+   },
+   "LegL": {
+    "parent": "CH_Wolf",
+    "type": "MESH",
+    "pivot": [
+     0.1,
+     0.3,
+     0.4
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FootL"
+    ]
+   },
+   "LegR": {
+    "parent": "CH_Wolf",
+    "type": "MESH",
+    "pivot": [
+     -0.1,
+     0.3,
+     0.4
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FootR"
+    ]
+   }
+  },
+  "root_children": []
+ },
+ "EN_Assassin": {
+  "blend": "en_assassin.blend",
+  "root": "EN_Assassin",
+  "root_type": "EMPTY",
+  "height": 1.43,
+  "bounds_x": [
+   -0.25,
+   0.25
+  ],
+  "bounds_y": [
+   -0.165,
+   0.769
+  ],
+  "renderers": 18,
+  "tris": 216,
+  "parts": {
+   "Body": {
+    "parent": "EN_Assassin",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     0.0,
+     0.42
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Sash",
+     "Scarf",
+     "ScarfTail"
+    ]
+   },
+   "ArmL": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.2,
+     0.0,
+     0.82
+    ],
+    "rot": [
+     -0.25,
+     -0.0,
+     -0.12
+    ],
+    "children": [
+     "FistL"
+    ]
+   },
+   "ArmR": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     -0.2,
+     0.0,
+     0.82
+    ],
+    "rot": [
+     -0.25,
+     -0.0,
+     0.12
+    ],
+    "children": [
+     "FistR"
+    ]
+   },
+   "Head": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     -0.01,
+     0.89
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "EyeSlit",
+     "Hood"
+    ]
+   },
+   "LegL": {
+    "parent": "EN_Assassin",
+    "type": "MESH",
+    "pivot": [
+     0.08,
+     0.0,
+     0.42
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FootL"
+    ]
+   },
+   "LegR": {
+    "parent": "EN_Assassin",
+    "type": "MESH",
+    "pivot": [
+     -0.08,
+     0.0,
+     0.42
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FootR"
+    ]
+   }
+  },
+  "root_children": []
+ },
+ "EN_BeastHandler": {
+  "blend": "en_beasthandler.blend",
+  "root": "EN_BeastHandler",
+  "root_type": "EMPTY",
+  "height": 1.3,
+  "bounds_x": [
+   -0.49,
+   0.405
+  ],
+  "bounds_y": [
+   -0.345,
+   0.19
+  ],
+  "renderers": 21,
+  "tris": 268,
+  "parts": {
+   "Body": {
+    "parent": "EN_BeastHandler",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     0.0,
+     0.42
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Apron",
+     "Belt",
+     "Collar"
+    ]
+   },
+   "ArmL": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.33,
+     0.0,
+     0.88
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Chain0",
+     "Chain1",
+     "FistL"
+    ]
+   },
+   "ArmR": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     -0.33,
+     0.0,
+     0.88
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Armband",
+     "Lash",
+     "WhipCoil"
+    ]
+   },
+   "Head": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     -0.02,
+     0.98
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Brow",
+     "Eyes",
+     "Stubble"
+    ]
+   },
+   "LegL": {
+    "parent": "EN_BeastHandler",
+    "type": "MESH",
+    "pivot": [
+     0.12,
+     0.0,
+     0.42
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "BootL"
+    ]
+   },
+   "LegR": {
+    "parent": "EN_BeastHandler",
+    "type": "MESH",
+    "pivot": [
+     -0.12,
+     0.0,
+     0.42
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "BootR"
+    ]
+   }
+  },
+  "root_children": []
+ },
+ "EN_BeastLord": {
+  "blend": "en_beastlord.blend",
+  "root": "EN_BeastLord",
+  "root_type": "EMPTY",
+  "height": 4.913,
+  "bounds_x": [
+   -1.241,
+   1.053
+  ],
+  "bounds_y": [
+   -1.106,
+   0.781
+  ],
+  "renderers": 52,
+  "tris": 736,
+  "parts": {
+   "Body": {
+    "parent": "EN_BeastLord",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     0.0,
+     1.1
+    ],
+    "rot": [
+     0.14,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Belt",
+     "Chain0",
+     "Chain1",
+     "Chain2",
+     "Horn",
+     "Loin",
+     "Mane",
+     "Pelt",
+     "PeltTail",
+     "Strap"
+    ]
+   },
+   "ArmL": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.74,
+     -0.178,
+     2.004
+    ],
+    "rot": [
+     0.139,
+     -0.014,
+     0.099
+    ],
+    "children": [
+     "BracerL",
+     "Goad",
+     "HandL"
+    ]
+   },
+   "ArmR": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     -0.74,
+     -0.178,
+     2.004
+    ],
+    "rot": [
+     0.139,
+     0.014,
+     -0.099
+    ],
+    "children": [
+     "BracerR",
+     "HandR"
+    ]
+   },
+   "Head": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     -0.352,
+     2.161
+    ],
+    "rot": [
+     0.14,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Beard",
+     "Eyes",
+     "Hood"
+    ]
+   },
+   "LegL": {
+    "parent": "EN_BeastLord",
+    "type": "MESH",
+    "pivot": [
+     0.37,
+     0.05,
+     1.1
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FootL",
+     "WrapL0",
+     "WrapL1"
+    ]
+   },
+   "LegR": {
+    "parent": "EN_BeastLord",
+    "type": "MESH",
+    "pivot": [
+     -0.37,
+     0.05,
+     1.1
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FootR",
+     "WrapR0",
+     "WrapR1"
+    ]
+   }
+  },
+  "root_children": []
+ },
+ "EN_Brute": {
+  "blend": "en_brute.blend",
+  "root": "EN_Brute",
+  "root_type": "EMPTY",
+  "height": 1.786,
+  "bounds_x": [
+   -0.844,
+   0.844
+  ],
+  "bounds_y": [
+   -0.451,
+   0.37
+  ],
+  "renderers": 37,
+  "tris": 576,
+  "parts": {
+   "Body": {
+    "parent": "EN_Brute",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     0.04,
+     0.72
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Belly",
+     "Belt",
+     "Loincloth",
+     "PauldronL",
+     "PauldronR",
+     "ShoulderL",
+     "ShoulderR",
+     "Strap"
+    ]
+   },
+   "ArmL": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.56,
+     0.06,
+     1.42
+    ],
+    "rot": [
+     -0.15,
+     -0.0,
+     0.12
+    ],
+    "children": [
+     "CuffL",
+     "FistL"
+    ]
+   },
+   "ArmR": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     -0.56,
+     0.06,
+     1.42
+    ],
+    "rot": [
+     -0.15,
+     -0.0,
+     -0.12
+    ],
+    "children": [
+     "CuffR",
+     "FistR"
+    ]
+   },
+   "Head": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     -0.12,
+     1.28
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Brow",
+     "EyeL",
+     "EyeR",
+     "Jaw",
+     "Topknot"
+    ]
+   },
+   "LegL": {
+    "parent": "EN_Brute",
+    "type": "MESH",
+    "pivot": [
+     0.235,
+     0.04,
+     0.72
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FootL",
+     "WrapL"
+    ]
+   },
+   "LegR": {
+    "parent": "EN_Brute",
+    "type": "MESH",
+    "pivot": [
+     -0.235,
+     0.04,
+     0.72
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FootR",
+     "WrapR"
+    ]
+   }
+  },
+  "root_children": []
+ },
+ "EN_Centurion": {
+  "blend": "en_centurion.blend",
+  "root": "EN_Centurion",
+  "root_type": "EMPTY",
+  "height": 1.85,
+  "bounds_x": [
+   -0.636,
+   0.468
+  ],
+  "bounds_y": [
+   -0.555,
+   0.285
+  ],
+  "renderers": 22,
+  "tris": 284,
+  "parts": {
+   "Body": {
+    "parent": "EN_Centurion",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     0.0,
+     0.5
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Belt",
+     "Cloak",
+     "Phalerae",
+     "Skirt"
+    ]
+   },
+   "ArmL": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.39,
+     0.0,
+     1.02
+    ],
+    "rot": [
+     0.0,
+     0.2,
+     0.0
+    ],
+    "children": [
+     "FistL"
+    ]
+   },
+   "ArmR": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     -0.39,
+     0.0,
+     1.02
+    ],
+    "rot": [
+     -0.5,
+     0.25,
+     0.0
+    ],
+    "children": [
+     "FistR",
+     "Vitis"
+    ]
+   },
+   "Head": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     -0.01,
+     1.08
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "CheekL",
+     "CheekR",
+     "Eyes",
+     "Helm"
+    ]
+   },
+   "LegL": {
+    "parent": "EN_Centurion",
+    "type": "MESH",
+    "pivot": [
+     0.15,
+     0.0,
+     0.5
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "BootL"
+    ]
+   },
+   "LegR": {
+    "parent": "EN_Centurion",
+    "type": "MESH",
+    "pivot": [
+     -0.15,
+     0.0,
+     0.5
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "BootR"
+    ]
+   }
+  },
+  "root_children": []
+ },
+ "EN_Champion": {
+  "blend": "en_champion.blend",
+  "root": "EN_Champion",
+  "root_type": "EMPTY",
+  "height": 3.0,
+  "bounds_x": [
+   -0.804,
+   0.862
+  ],
+  "bounds_y": [
+   -0.968,
+   0.42
+  ],
+  "renderers": 39,
+  "tris": 540,
+  "parts": {
+   "Body": {
+    "parent": "EN_Champion",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Band0",
+     "Band1",
+     "Belt",
+     "Neck",
+     "PauldronL",
+     "PauldronR",
+     "Skirt"
+    ]
+   },
+   "ArmL": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.62,
+     0.0,
+     1.9
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.08
+    ],
+    "children": [
+     "HandL",
+     "Shield"
+    ]
+   },
+   "ArmR": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     -0.62,
+     0.0,
+     1.9
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     -0.08
+    ],
+    "children": [
+     "Gladius",
+     "HandR",
+     "Manica0",
+     "Manica1",
+     "Manica2"
+    ]
+   },
+   "Head": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     -0.04,
+     2.02
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Bar0",
+     "Bar1",
+     "Bar2",
+     "Brim",
+     "Grille",
+     "Helm"
+    ]
+   },
+   "LegL": {
+    "parent": "EN_Champion",
+    "type": "MESH",
+    "pivot": [
+     0.279,
+     0.0,
+     1.0
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "BootL",
+     "Greave"
+    ]
+   },
+   "LegR": {
+    "parent": "EN_Champion",
+    "type": "MESH",
+    "pivot": [
+     -0.279,
+     0.0,
+     1.0
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "BootR"
+    ]
+   }
+  },
+  "root_children": []
+ },
+ "EN_Chimera": {
+  "blend": "en_chimera.blend",
+  "root": "EN_Chimera",
+  "root_type": "EMPTY",
+  "height": 2.404,
+  "bounds_x": [
+   -0.682,
+   0.682
+  ],
+  "bounds_y": [
+   -1.525,
+   1.401
+  ],
+  "renderers": 58,
+  "tris": 720,
+  "parts": {
+   "Body": {
+    "parent": "EN_Chimera",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     0.02,
+     0.68
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Chest",
+     "GoatHead",
+     "Harness",
+     "Haunch",
+     "Tail",
+     "Withers"
+    ]
+   },
+   "ArmL": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.25,
+     -0.56,
+     0.82
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "PawL"
+    ]
+   },
+   "ArmR": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     -0.25,
+     -0.56,
+     0.82
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "PawR"
+    ]
+   },
+   "Head": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     -0.8,
+     1.32
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "EarL",
+     "EarR",
+     "EyeL",
+     "EyeR",
+     "FangL",
+     "FangR",
+     "Jaw",
+     "Nose",
+     "Ruff",
+     "Snout",
+     "Throat"
+    ]
+   },
+   "LegL": {
+    "parent": "EN_Chimera",
+    "type": "MESH",
+    "pivot": [
+     0.235,
+     0.52,
+     0.82
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FootL"
+    ]
+   },
+   "LegR": {
+    "parent": "EN_Chimera",
+    "type": "MESH",
+    "pivot": [
+     -0.235,
+     0.52,
+     0.82
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FootR"
+    ]
+   }
+  },
+  "root_children": []
+ },
+ "EN_Convict": {
+  "blend": "en_convict.blend",
+  "root": "EN_Convict",
+  "root_type": "EMPTY",
+  "height": 1.295,
+  "bounds_x": [
+   -0.3,
+   0.3
+  ],
+  "bounds_y": [
+   -0.452,
+   0.17
+  ],
+  "renderers": 20,
+  "tris": 240,
+  "parts": {
+   "Body": {
+    "parent": "EN_Convict",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     0.02,
+     0.36
+    ],
+    "rot": [
+     0.3,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Loincloth",
+     "Rag"
+    ]
+   },
+   "ArmL": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.23,
+     -0.098,
+     0.742
+    ],
+    "rot": [
+     -0.2,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "ShackleL"
+    ]
+   },
+   "ArmR": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     -0.23,
+     -0.098,
+     0.742
+    ],
+    "rot": [
+     -0.2,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "ShackleR"
+    ]
+   },
+   "Head": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     -0.145,
+     0.791
+    ],
+    "rot": [
+     0.3,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "EyeL",
+     "EyeR",
+     "Hair",
+     "Mouth"
+    ]
+   },
+   "LegL": {
+    "parent": "EN_Convict",
+    "type": "MESH",
+    "pivot": [
+     0.104,
+     0.0,
+     0.36
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FootL"
+    ]
+   },
+   "LegR": {
+    "parent": "EN_Convict",
+    "type": "MESH",
+    "pivot": [
+     -0.104,
+     0.0,
+     0.36
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FootR"
+    ]
+   }
+  },
+  "root_children": []
+ },
+ "EN_EmperorsChampion": {
+  "blend": "en_emperorschampion.blend",
+  "root": "EN_EmperorsChampion",
+  "root_type": "EMPTY",
+  "height": 4.643,
+  "bounds_x": [
+   -1.23,
+   1.568
+  ],
+  "bounds_y": [
+   -0.857,
+   0.887
+  ],
+  "renderers": 80,
+  "tris": 1304,
+  "parts": {
+   "Body": {
+    "parent": "EN_EmperorsChampion",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     0.0,
+     1.15
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Abs",
+     "Belt",
+     "Cloak",
+     "Javelins",
+     "Neck",
+     "PecL",
+     "PecR",
+     "Scabbard",
+     "SkirtCore",
+     "Tab0",
+     "Tab1",
+     "Tab2",
+     "Tab3",
+     "Tab4",
+     "Tab5",
+     "Tab6",
+     "Tab7",
+     "Tab8",
+     "Tab9"
+    ]
+   },
+   "ArmL": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.8,
+     0.0,
+     2.1
+    ],
+    "rot": [
+     -0.25,
+     -0.0,
+     0.1
+    ],
+    "children": [
+     "FistL",
+     "PauldronBL",
+     "PauldronCL",
+     "PauldronL",
+     "Shield",
+     "VambraceL"
+    ]
+   },
+   "ArmR": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     -0.8,
+     0.0,
+     2.1
+    ],
+    "rot": [
+     -0.3,
+     -0.0,
+     -0.1
+    ],
+    "children": [
+     "FistR",
+     "PauldronBR",
+     "PauldronCR",
+     "PauldronR",
+     "Spear",
+     "VambraceR"
+    ]
+   },
+   "Head": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     -0.05,
+     2.23
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Band",
+     "Brows",
+     "CheekL",
+     "CheekR",
+     "Chin",
+     "Eyes",
+     "Helm",
+     "Mouth",
+     "NeckGuard",
+     "Visor"
+    ]
+   },
+   "LegL": {
+    "parent": "EN_EmperorsChampion",
+    "type": "MESH",
+    "pivot": [
+     0.36,
+     0.02,
+     1.15
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "BootL",
+     "GreaveL",
+     "KneeL"
+    ]
+   },
+   "LegR": {
+    "parent": "EN_EmperorsChampion",
+    "type": "MESH",
+    "pivot": [
+     -0.36,
+     0.02,
+     1.15
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "BootR",
+     "GreaveR",
+     "KneeR"
+    ]
+   }
+  },
+  "root_children": []
+ },
+ "EN_EternalVictor": {
+  "blend": "en_eternalvictor.blend",
+  "root": "EN_EternalVictor",
+  "root_type": "EMPTY",
+  "height": 3.6,
+  "bounds_x": [
+   -0.703,
+   1.904
+  ],
+  "bounds_y": [
+   -0.754,
+   0.56
+  ],
+  "renderers": 88,
+  "tris": 1418,
+  "parts": {
+   "Body": {
+    "parent": "EN_EternalVictor",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     0.0,
+     1.38
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Cloak",
+     "Cuirass",
+     "Kilt",
+     "Neck",
+     "Ribs",
+     "Sash",
+     "SashEnd",
+     "Spine",
+     "Strap0",
+     "Strap1",
+     "Strap2"
+    ]
+   },
+   "ArmL": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.45,
+     0.0,
+     2.14
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "ElbowL",
+     "FistL",
+     "ForearmL",
+     "Guard",
+     "HumerusL",
+     "Pauldron0",
+     "Pauldron1",
+     "Pauldron2"
+    ]
+   },
+   "ArmR": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     -0.45,
+     0.0,
+     2.14
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "ElbowR",
+     "Falx",
+     "FistR",
+     "ForearmR",
+     "HumerusR",
+     "Manica0",
+     "Manica1",
+     "Manica2"
+    ]
+   },
+   "Head": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     -0.02,
+     2.27
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Brim",
+     "Crest",
+     "Dark",
+     "Dome",
+     "Grille0",
+     "Grille1",
+     "Grille2",
+     "Jaw",
+     "Laurel",
+     "NeckFlare",
+     "Teeth",
+     "Visor"
+    ]
+   },
+   "LegL": {
+    "parent": "EN_EternalVictor",
+    "type": "MESH",
+    "pivot": [
+     0.19,
+     0.0,
+     1.38
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FootL",
+     "GreaveL",
+     "KneeCapL",
+     "KneeL"
+    ]
+   },
+   "LegR": {
+    "parent": "EN_EternalVictor",
+    "type": "MESH",
+    "pivot": [
+     -0.19,
+     0.0,
+     1.38
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FootR",
+     "GreaveR",
+     "KneeCapR",
+     "KneeR"
+    ]
+   }
+  },
+  "root_children": []
+ },
+ "EN_FirePot": {
+  "blend": "en_firepot.blend",
+  "root": "EN_FirePot",
+  "root_type": "EMPTY",
+  "height": 1.163,
+  "bounds_x": [
+   -0.324,
+   0.285
+  ],
+  "bounds_y": [
+   -0.455,
+   0.352
+  ],
+  "renderers": 20,
+  "tris": 276,
+  "parts": {
+   "Body": {
+    "parent": "EN_FirePot",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     0.02,
+     0.36
+    ],
+    "rot": [
+     0.22,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Frame",
+     "Sash"
+    ]
+   },
+   "ArmL": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.23,
+     -0.067,
+     0.75
+    ],
+    "rot": [
+     -0.081,
+     0.022,
+     -0.098
+    ],
+    "children": []
+   },
+   "ArmR": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     -0.23,
+     -0.067,
+     0.75
+    ],
+    "rot": [
+     -0.331,
+     -0.022,
+     0.098
+    ],
+    "children": [
+     "HandPot"
+    ]
+   },
+   "Head": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     -0.115,
+     0.781
+    ],
+    "rot": [
+     0.22,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Cap",
+     "EyeL",
+     "EyeR",
+     "Mask"
+    ]
+   },
+   "LegL": {
+    "parent": "EN_FirePot",
+    "type": "MESH",
+    "pivot": [
+     0.09,
+     0.0,
+     0.36
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FootL"
+    ]
+   },
+   "LegR": {
+    "parent": "EN_FirePot",
+    "type": "MESH",
+    "pivot": [
+     -0.09,
+     0.0,
+     0.36
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FootR"
+    ]
+   }
+  },
+  "root_children": []
+ },
+ "EN_GildedMercenary": {
+  "blend": "en_gildedmercenary.blend",
+  "root": "EN_GildedMercenary",
+  "root_type": "EMPTY",
+  "height": 2.63,
+  "bounds_x": [
+   -0.77,
+   0.47
+  ],
+  "bounds_y": [
+   -0.28,
+   0.31
+  ],
+  "renderers": 24,
+  "tris": 288,
+  "parts": {
+   "Body": {
+    "parent": "EN_GildedMercenary",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     0.0,
+     0.46
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Belt",
+     "Cloak",
+     "Purse",
+     "Skirt",
+     "Trim"
+    ]
+   },
+   "ArmL": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.36,
+     0.0,
+     0.96
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FistL",
+     "PauldronL"
+    ]
+   },
+   "ArmR": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     -0.36,
+     0.0,
+     0.96
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FistR",
+     "Halberd",
+     "PauldronR"
+    ]
+   },
+   "Head": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     -0.01,
+     1.02
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Crest",
+     "Face"
+    ]
+   },
+   "LegL": {
+    "parent": "EN_GildedMercenary",
+    "type": "MESH",
+    "pivot": [
+     0.14,
+     0.0,
+     0.46
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "BootL",
+     "GreaveL"
+    ]
+   },
+   "LegR": {
+    "parent": "EN_GildedMercenary",
+    "type": "MESH",
+    "pivot": [
+     -0.14,
+     0.0,
+     0.46
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "BootR",
+     "GreaveR"
+    ]
+   }
+  },
+  "root_children": []
+ },
+ "EN_GildedPatron": {
+  "blend": "en_gildedpatron.blend",
+  "root": "EN_GildedPatron",
+  "root_type": "EMPTY",
+  "height": 4.87,
+  "bounds_x": [
+   -1.626,
+   1.626
+  ],
+  "bounds_y": [
+   -2.26,
+   2.26
+  ],
+  "renderers": 72,
+  "tris": 920,
+  "parts": {
+   "Body": {
+    "parent": "EN_GildedPatron",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     0.0,
+     1.38
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Backrest",
+     "Belly",
+     "Canopy",
+     "Cushion",
+     "Lap",
+     "Post-1-1",
+     "Post-11",
+     "Post1-1",
+     "Post11",
+     "Skirt",
+     "Toga"
+    ]
+   },
+   "ArmL": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.78,
+     0.1,
+     2.88
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Goblet",
+     "HandL"
+    ]
+   },
+   "ArmR": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     -0.78,
+     0.1,
+     2.88
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "HandR",
+     "Purse"
+    ]
+   },
+   "Head": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     0.05,
+     3.36
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "EyeL",
+     "EyeR",
+     "Jowls",
+     "Wreath"
+    ]
+   }
+  },
+  "root_children": [
+   "Bearer0",
+   "Bearer1",
+   "Bearer2",
+   "Bearer3",
+   "BLeg0L",
+   "BLeg0R",
+   "BLeg1L",
+   "BLeg1R",
+   "BLeg2L",
+   "BLeg2R",
+   "BLeg3L",
+   "BLeg3R",
+   "PoleL",
+   "PoleR"
+  ]
+ },
+ "EN_Gorm": {
+  "blend": "en_gorm.blend",
+  "root": "EN_Gorm",
+  "root_type": "EMPTY",
+  "height": 3.725,
+  "bounds_x": [
+   -1.414,
+   1.052
+  ],
+  "bounds_y": [
+   -0.872,
+   0.62
+  ],
+  "renderers": 52,
+  "tris": 824,
+  "parts": {
+   "Body": {
+    "parent": "EN_Gorm",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     0.06,
+     1.25
+    ],
+    "rot": [
+     0.18,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Apron",
+     "Cape",
+     "Collar",
+     "Gut",
+     "Key0",
+     "Key1",
+     "Key2",
+     "Key3",
+     "KeyRing",
+     "Sash",
+     "ShoulderL",
+     "ShoulderR",
+     "Stud0",
+     "Stud1",
+     "Stud2"
+    ]
+   },
+   "ArmL": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.78,
+     -0.108,
+     2.287
+    ],
+    "rot": [
+     -0.072,
+     -0.027,
+     0.148
+    ],
+    "children": [
+     "BracerL",
+     "HandL",
+     "Whip"
+    ]
+   },
+   "ArmR": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     -0.78,
+     -0.108,
+     2.287
+    ],
+    "rot": [
+     -0.072,
+     0.027,
+     -0.148
+    ],
+    "children": [
+     "BracerR",
+     "Flail",
+     "HandR"
+    ]
+   },
+   "Head": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     -0.468,
+     2.252
+    ],
+    "rot": [
+     0.18,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Beard",
+     "Brow",
+     "Earring",
+     "EyeL",
+     "EyeR",
+     "Nose"
+    ]
+   },
+   "LegL": {
+    "parent": "EN_Gorm",
+    "type": "MESH",
+    "pivot": [
+     0.351,
+     0.06,
+     1.25
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "BootL",
+     "WrapL"
+    ]
+   },
+   "LegR": {
+    "parent": "EN_Gorm",
+    "type": "MESH",
+    "pivot": [
+     -0.351,
+     0.06,
+     1.25
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "BootR",
+     "WrapR"
+    ]
+   }
+  },
+  "root_children": []
+ },
+ "EN_Murmillo": {
+  "blend": "en_murmillo.blend",
+  "root": "EN_Murmillo",
+  "root_type": "EMPTY",
+  "height": 1.72,
+  "bounds_x": [
+   -0.47,
+   0.46
+  ],
+  "bounds_y": [
+   -0.548,
+   0.3
+  ],
+  "renderers": 22,
+  "tris": 264,
+  "parts": {
+   "Body": {
+    "parent": "EN_Murmillo",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     0.0,
+     0.46
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Belt",
+     "Loin"
+    ]
+   },
+   "ArmL": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.38,
+     0.0,
+     0.96
+    ],
+    "rot": [
+     -0.7,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Shield"
+    ]
+   },
+   "ArmR": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     -0.38,
+     0.0,
+     0.96
+    ],
+    "rot": [
+     -0.35,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FistR",
+     "Gladius"
+    ]
+   },
+   "Head": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     -0.01,
+     1.02
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Brim",
+     "Crest",
+     "Grille"
+    ]
+   },
+   "LegL": {
+    "parent": "EN_Murmillo",
+    "type": "MESH",
+    "pivot": [
+     0.15,
+     0.0,
+     0.46
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "BootL",
+     "Greave"
+    ]
+   },
+   "LegR": {
+    "parent": "EN_Murmillo",
+    "type": "MESH",
+    "pivot": [
+     -0.15,
+     0.0,
+     0.46
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "BootR"
+    ]
+   }
+  },
+  "root_children": []
+ },
+ "EN_NetThrower": {
+  "blend": "en_netthrower.blend",
+  "root": "EN_NetThrower",
+  "root_type": "EMPTY",
+  "height": 2.001,
+  "bounds_x": [
+   -0.414,
+   0.41
+  ],
+  "bounds_y": [
+   -0.415,
+   0.305
+  ],
+  "renderers": 21,
+  "tris": 264,
+  "parts": {
+   "Body": {
+    "parent": "EN_NetThrower",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     0.0,
+     0.4
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Belt",
+     "Bundle",
+     "Galerus",
+     "Loin"
+    ]
+   },
+   "ArmL": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.28,
+     0.0,
+     0.84
+    ],
+    "rot": [
+     -0.5,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Trident"
+    ]
+   },
+   "ArmR": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     -0.28,
+     0.0,
+     0.84
+    ],
+    "rot": [
+     -0.25,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "HandNet"
+    ]
+   },
+   "Head": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     -0.02,
+     0.88
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Eyes",
+     "Hair"
+    ]
+   },
+   "LegL": {
+    "parent": "EN_NetThrower",
+    "type": "MESH",
+    "pivot": [
+     0.1,
+     0.0,
+     0.4
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FootL"
+    ]
+   },
+   "LegR": {
+    "parent": "EN_NetThrower",
+    "type": "MESH",
+    "pivot": [
+     -0.1,
+     0.0,
+     0.4
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FootR",
+     "Wrap"
+    ]
+   }
+  },
+  "root_children": []
+ },
+ "EN_PitCur": {
+  "blend": "en_pitcur.blend",
+  "root": "EN_PitCur",
+  "root_type": "EMPTY",
+  "height": 0.762,
+  "bounds_x": [
+   -0.15,
+   0.15
+  ],
+  "bounds_y": [
+   -0.63,
+   0.556
+  ],
+  "renderers": 20,
+  "tris": 240,
+  "parts": {
+   "Body": {
+    "parent": "EN_PitCur",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     0.04,
+     0.3
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Collar",
+     "Hackles",
+     "Tail"
+    ]
+   },
+   "ArmL": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.085,
+     -0.17,
+     0.32
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "PawL"
+    ]
+   },
+   "ArmR": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     -0.085,
+     -0.17,
+     0.32
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "PawR"
+    ]
+   },
+   "Head": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     -0.32,
+     0.42
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "EarL",
+     "EarR",
+     "EyeL",
+     "EyeR",
+     "Nose",
+     "Snout",
+     "Teeth"
+    ]
+   },
+   "LegL": {
+    "parent": "EN_PitCur",
+    "type": "MESH",
+    "pivot": [
+     0.085,
+     0.25,
+     0.34
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FootL"
+    ]
+   },
+   "LegR": {
+    "parent": "EN_PitCur",
+    "type": "MESH",
+    "pivot": [
+     -0.085,
+     0.25,
+     0.34
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FootR"
+    ]
+   }
+  },
+  "root_children": []
+ },
+ "EN_Praetorian": {
+  "blend": "en_praetorian.blend",
+  "root": "EN_Praetorian",
+  "root_type": "EMPTY",
+  "height": 2.04,
+  "bounds_x": [
+   -0.465,
+   0.46
+  ],
+  "bounds_y": [
+   -0.521,
+   0.225
+  ],
+  "renderers": 22,
+  "tris": 288,
+  "parts": {
+   "Body": {
+    "parent": "EN_Praetorian",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     0.0,
+     0.48
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Belt",
+     "Skirt"
+    ]
+   },
+   "ArmL": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.38,
+     0.0,
+     1.0
+    ],
+    "rot": [
+     -0.7,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Shield"
+    ]
+   },
+   "ArmR": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     -0.38,
+     0.0,
+     1.0
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FistR",
+     "Pilum"
+    ]
+   },
+   "Head": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     -0.01,
+     1.06
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "CheekL",
+     "CheekR",
+     "Eyes",
+     "Helm"
+    ]
+   },
+   "LegL": {
+    "parent": "EN_Praetorian",
+    "type": "MESH",
+    "pivot": [
+     0.15,
+     0.0,
+     0.48
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "BootL"
+    ]
+   },
+   "LegR": {
+    "parent": "EN_Praetorian",
+    "type": "MESH",
+    "pivot": [
+     -0.15,
+     0.0,
+     0.48
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "BootR"
+    ]
+   }
+  },
+  "root_children": []
+ },
+ "EN_ShieldArcher": {
+  "blend": "en_shieldarcher.blend",
+  "root": "EN_ShieldArcher",
+  "root_type": "EMPTY",
+  "height": 1.23,
+  "bounds_x": [
+   -0.295,
+   0.42
+  ],
+  "bounds_y": [
+   -0.49,
+   0.435
+  ],
+  "renderers": 22,
+  "tris": 264,
+  "parts": {
+   "Body": {
+    "parent": "EN_ShieldArcher",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     0.0,
+     0.4
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Belt"
+    ]
+   },
+   "ArmL": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.24,
+     0.0,
+     0.8
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Shield"
+    ]
+   },
+   "ArmR": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     -0.24,
+     0.0,
+     0.8
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Grip"
+    ]
+   },
+   "Head": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     -0.01,
+     0.85
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Cap",
+     "Eyes"
+    ]
+   },
+   "LegL": {
+    "parent": "EN_ShieldArcher",
+    "type": "MESH",
+    "pivot": [
+     0.09,
+     0.0,
+     0.4
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FootL"
+    ]
+   },
+   "LegR": {
+    "parent": "EN_ShieldArcher",
+    "type": "MESH",
+    "pivot": [
+     -0.09,
+     0.0,
+     0.4
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FootR"
+    ]
+   }
+  },
+  "root_children": []
+ },
+ "EN_ShieldThug": {
+  "blend": "en_shieldthug.blend",
+  "root": "EN_ShieldThug",
+  "root_type": "EMPTY",
+  "height": 1.5,
+  "bounds_x": [
+   -0.43,
+   0.415
+  ],
+  "bounds_y": [
+   -0.555,
+   0.22
+  ],
+  "renderers": 21,
+  "tris": 260,
+  "parts": {
+   "Body": {
+    "parent": "EN_ShieldThug",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     0.0,
+     0.42
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Belt"
+    ]
+   },
+   "ArmL": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.34,
+     0.0,
+     0.89
+    ],
+    "rot": [
+     -0.7,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Shield"
+    ]
+   },
+   "ArmR": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     -0.34,
+     0.0,
+     0.89
+    ],
+    "rot": [
+     -0.25,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Club",
+     "FistR"
+    ]
+   },
+   "Head": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     -0.02,
+     0.94
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Beard",
+     "Brim",
+     "Eyes",
+     "Helmet",
+     "NoseGuard"
+    ]
+   },
+   "LegL": {
+    "parent": "EN_ShieldThug",
+    "type": "MESH",
+    "pivot": [
+     0.13,
+     0.0,
+     0.42
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "BootL"
+    ]
+   },
+   "LegR": {
+    "parent": "EN_ShieldThug",
+    "type": "MESH",
+    "pivot": [
+     -0.13,
+     0.0,
+     0.42
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "BootR"
+    ]
+   }
+  },
+  "root_children": []
+ },
+ "EN_SkeletalLegionnaire": {
+  "blend": "en_skeletallegionnaire.blend",
+  "root": "EN_SkeletalLegionnaire",
+  "root_type": "EMPTY",
+  "height": 1.729,
+  "bounds_x": [
+   -0.335,
+   0.31
+  ],
+  "bounds_y": [
+   -0.738,
+   0.119
+  ],
+  "renderers": 23,
+  "tris": 288,
+  "parts": {
+   "Body": {
+    "parent": "EN_SkeletalLegionnaire",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     0.02,
+     0.58
+    ],
+    "rot": [
+     0.16,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Plates",
+     "Rag",
+     "Spine"
+    ]
+   },
+   "ArmL": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.25,
+     -0.06,
+     1.074
+    ],
+    "rot": [
+     -0.191,
+     -0.019,
+     0.118
+    ],
+    "children": []
+   },
+   "ArmR": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     -0.25,
+     -0.06,
+     1.074
+    ],
+    "rot": [
+     -0.391,
+     0.019,
+     -0.118
+    ],
+    "children": [
+     "HandR",
+     "Hilt"
+    ]
+   },
+   "Head": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     -0.089,
+     1.19
+    ],
+    "rot": [
+     0.28,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Face",
+     "Helm",
+     "Jaw",
+     "Nose",
+     "SocketL",
+     "SocketR"
+    ]
+   },
+   "LegL": {
+    "parent": "EN_SkeletalLegionnaire",
+    "type": "MESH",
+    "pivot": [
+     0.125,
+     0.0,
+     0.58
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FootL"
+    ]
+   },
+   "LegR": {
+    "parent": "EN_SkeletalLegionnaire",
+    "type": "MESH",
+    "pivot": [
+     -0.125,
+     0.0,
+     0.58
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FootR"
+    ]
+   }
+  },
+  "root_children": []
+ },
+ "EN_Slinger": {
+  "blend": "en_slinger.blend",
+  "root": "EN_Slinger",
+  "root_type": "EMPTY",
+  "height": 1.437,
+  "bounds_x": [
+   -0.278,
+   0.275
+  ],
+  "bounds_y": [
+   -0.345,
+   0.22
+  ],
+  "renderers": 22,
+  "tris": 272,
+  "parts": {
+   "Body": {
+    "parent": "EN_Slinger",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     0.0,
+     0.38
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Belt",
+     "Scarf",
+     "StoneBag"
+    ]
+   },
+   "ArmL": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.22,
+     0.0,
+     0.78
+    ],
+    "rot": [
+     -0.2,
+     -0.0,
+     -0.1
+    ],
+    "children": []
+   },
+   "ArmR": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     -0.22,
+     0.0,
+     0.78
+    ],
+    "rot": [
+     -0.35,
+     -0.0,
+     0.12
+    ],
+    "children": [
+     "SlingStrap",
+     "Wrap"
+    ]
+   },
+   "Head": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     -0.01,
+     0.83
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "EyeL",
+     "EyeR",
+     "HoodBack",
+     "HoodSideL",
+     "HoodSideR",
+     "HoodTop",
+     "Mask"
+    ]
+   },
+   "LegL": {
+    "parent": "EN_Slinger",
+    "type": "MESH",
+    "pivot": [
+     0.09,
+     0.0,
+     0.38
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FootL"
+    ]
+   },
+   "LegR": {
+    "parent": "EN_Slinger",
+    "type": "MESH",
+    "pivot": [
+     -0.09,
+     0.0,
+     0.38
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FootR"
+    ]
+   }
+  },
+  "root_children": []
+ },
+ "EN_Sorcerer": {
+  "blend": "en_sorcerer.blend",
+  "root": "EN_Sorcerer",
+  "root_type": "EMPTY",
+  "height": 2.05,
+  "bounds_x": [
+   -0.346,
+   0.359
+  ],
+  "bounds_y": [
+   -0.309,
+   0.331
+  ],
+  "renderers": 23,
+  "tris": 284,
+  "parts": {
+   "Body": {
+    "parent": "EN_Sorcerer",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     0.0,
+     0.46
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Belt",
+     "Hem",
+     "Robe",
+     "Stole"
+    ]
+   },
+   "ArmL": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.23,
+     0.0,
+     0.9
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "CuffL",
+     "HandL"
+    ]
+   },
+   "ArmR": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     -0.23,
+     0.0,
+     0.9
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "CuffR",
+     "HandR",
+     "Staff"
+    ]
+   },
+   "Head": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     -0.01,
+     0.96
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "EyeL",
+     "EyeR",
+     "Hood",
+     "Point"
+    ]
+   },
+   "LegL": {
+    "parent": "EN_Sorcerer",
+    "type": "MESH",
+    "pivot": [
+     0.09,
+     0.0,
+     0.46
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FootL"
+    ]
+   },
+   "LegR": {
+    "parent": "EN_Sorcerer",
+    "type": "MESH",
+    "pivot": [
+     -0.09,
+     0.0,
+     0.46
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FootR"
+    ]
+   }
+  },
+  "root_children": []
+ },
+ "EN_WarBoar": {
+  "blend": "en_warboar.blend",
+  "root": "EN_WarBoar",
+  "root_type": "EMPTY",
+  "height": 1.02,
+  "bounds_x": [
+   -0.33,
+   0.33
+  ],
+  "bounds_y": [
+   -0.99,
+   0.8
+  ],
+  "renderers": 21,
+  "tris": 252,
+  "parts": {
+   "Body": {
+    "parent": "EN_WarBoar",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     0.06,
+     0.36
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Harness",
+     "Mane",
+     "Tail"
+    ]
+   },
+   "ArmL": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.2,
+     -0.28,
+     0.4
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "HoofL"
+    ]
+   },
+   "ArmR": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     -0.2,
+     -0.28,
+     0.4
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "HoofR"
+    ]
+   },
+   "Head": {
+    "parent": "Body",
+    "type": "MESH",
+    "pivot": [
+     0.0,
+     -0.52,
+     0.44
+    ],
+    "rot": [
+     0.25,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "Disc",
+     "EarL",
+     "EarR",
+     "EyeL",
+     "EyeR",
+     "Snout",
+     "TuskL",
+     "TuskR"
+    ]
+   },
+   "LegL": {
+    "parent": "EN_WarBoar",
+    "type": "MESH",
+    "pivot": [
+     0.2,
+     0.4,
+     0.42
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FootL"
+    ]
+   },
+   "LegR": {
+    "parent": "EN_WarBoar",
+    "type": "MESH",
+    "pivot": [
+     -0.2,
+     0.4,
+     0.42
+    ],
+    "rot": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "children": [
+     "FootR"
+    ]
+   }
+  },
+  "root_children": []
+ },
+ "CH_Bookmaker": {
+  "blend": "secrets.blend",
+  "root": "CH_Bookmaker",
+  "root_type": "MESH",
+  "height": 1.36,
+  "bounds_x": [
+   -0.453,
+   0.403
+  ],
+  "bounds_y": [
+   -0.427,
+   0.34
+  ],
+  "renderers": 1,
+  "tris": 332,
+  "parts": {},
+  "root_children": []
+ }
+}

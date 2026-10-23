@@ -176,7 +176,7 @@ namespace Gladiator.UI
                 _tabPlates[i] = UiKit.Button("Tab" + TabNames[i], box, TabNames[i], ButtonStyle.Secondary, mid, mid, pos, new Vector2(218, 62), () => Select((Tab)t), 24f);
                 _tabButtons[i] = _tabPlates[i].Button;
                 // P3 (note 6): the NEW seal on the tab's top-right corner, over its last letter (no meander under the tab: note 9)
-                var seal = UiKit.Seal("New", _tabPlates[i].Root);
+                var seal = UiKit.Seal("New", _tabPlates[i].Root, UiKit.SealSizeInline);
                 UiKit.PlaceSeal(seal, _tabPlates[i].Root, _tabPlates[i].Label);
                 _tabDots[i] = seal;
             }

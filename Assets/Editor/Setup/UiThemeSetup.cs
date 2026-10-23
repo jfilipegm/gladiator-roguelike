@@ -41,8 +41,11 @@ namespace Gladiator.EditorTools
 
         // the material looks: tune them in the gallery, then here
         const float OutlineWidth = 0.2f;          // dark ink rim (SDF units)
-        const float OutlineWidthThin = 0.32f;     // Marcellus / Marcellus SC: thin strokes need a wider rim to read over sky and sand
+        // Marcellus / Marcellus SC: a thin rim on a thickened face. Note 28 (v0.27.0): the 0.32 rim ate the thin strokes, so
+        // gold titles read mostly dark brown; 0.15 on a 0.2 face keeps the letters gold with the rim still clear over sky and sand
+        const float OutlineWidthThin = 0.15f;
         const float OutlineFaceDilate = 0.1f;     // thickens the face so the rim doesn't eat thin strokes
+        const float OutlineFaceDilateThin = 0.2f; // the thin fonts' face, thicker
         const float OutlineDropAlpha = 0.9f;      // the drop shadow under outlined text
         const float OutlineDropOffsetY = -0.6f;
         const float OutlineDropDilate = 0.2f;     // the drop has the outlined silhouette
@@ -220,7 +223,7 @@ namespace Gladiator.EditorTools
                 if (look == TextLook.Outline)
                 {
                     mat.EnableKeyword(ShaderUtilities.Keyword_Outline);
-                    mat.SetFloat(ShaderUtilities.ID_FaceDilate, OutlineFaceDilate);
+                    mat.SetFloat(ShaderUtilities.ID_FaceDilate, thin ? OutlineFaceDilateThin : OutlineFaceDilate);
                     mat.SetFloat(ShaderUtilities.ID_OutlineWidth, thin ? OutlineWidthThin : OutlineWidth);
                     mat.SetColor(ShaderUtilities.ID_OutlineColor, ink);
                     mat.EnableKeyword(ShaderUtilities.Keyword_Underlay);

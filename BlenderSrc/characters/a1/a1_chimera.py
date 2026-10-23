@@ -7,6 +7,10 @@ round its barrel (the enemy accent); from its back a goat's neck rises on its le
 horns curling back; its tail is a slate snake arching up over the rump on its right with its own head facing forward,
 so the three heads show from the front, the side and 3/4. In the simple style: chamfered lofts along the body (built
 up Z and turned to run along -Y), hex-section legs, plain tapered horns and spikes, flat faces.
+In-game (export=1): Assets/Art/Models/A1/Enemies/EN_Chimera.fbx with the original's six parts: front legs ArmL/ArmR
+and hind legs LegL/LegR (pivots inside the barrel), Head = the lion's head (pivot at the neck, turning inside its
+mane), Body = the barrel, mane, harness, the goat and the snake (the original's GoatHead/Tail parts are not driven by
+the game, so they ride on Body).
 """
 import importlib
 import math
@@ -22,9 +26,12 @@ import simple_kit as A
 importlib.reload(A)
 import a1_tier3boss_lib as L
 importlib.reload(L)
+import a1_export as X
+importlib.reload(X)
 
 GAP = 2.2
-OX = -GAP / 2
+EXPORT = ARGS.get("export") == "1"
+OX = 0.0 if EXPORT else -GAP / 2
 
 
 def along(name, rows, swatch, cap_bottom=True, cap_top=True):
@@ -111,9 +118,18 @@ def build():
     parts.append(L.tip("SnakeFang", sh + Vector((0, -0.2, -0.05)), 0.07, 0.016, "bone", direction=(0, 0, -1)))
     for s, x in (("L", 1), ("R", -1)):
         parts.append(A.box("SnakeEye" + s, (0.03, 0.04, 0.03), sh + Vector((x * 0.075, -0.12, 0.05)), "hazard_yellow"))
-    return parts
+    J = {"Body": (0, 0, 0.8), "Head": (0, -0.88, 1.38), "ArmL": (0.24, -0.47, 0.95), "ArmR": (-0.24, -0.47, 0.95),
+         "LegL": (0.228, 0.56, 0.95), "LegR": (-0.228, 0.56, 0.95)}
+    return parts, L.scaled_joints(J)
 
 
-parts = build()
+parts, J = build()
 L.finish(parts, 1.0, OX)
-result = A.review("chimera", parts, original_blend="en_chimera", original_root="EN_Chimera", height=2.4, gap=GAP)
+if EXPORT:
+    result = L.export_rig("EN_Chimera", parts, J,
+                          rules=[("Body", "Body"), ("Harness", "Body"), ("Mane", "Body"), ("Spike", "Body"),
+                                 ("PawL", "ArmL"), ("PawR", "ArmR"), ("Jaw", "Head"), ("Throat", "Head"),
+                                 ("Fang", "Head"), ("Goat", "Body"), ("Muzzle", "Body"), ("Beard", "Body"),
+                                 ("Horn", "Body"), ("Tail", "Body"), ("Snake", "Body")])
+else:
+    result = A.review("chimera", parts, original_blend="en_chimera", original_root="EN_Chimera", height=2.4, gap=GAP)

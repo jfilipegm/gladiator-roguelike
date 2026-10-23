@@ -78,11 +78,12 @@ def tube(name, pts, radii, swatch, ox=0.0, sides=6, cap_start=True, cap_end=True
     return A.flat(K.object_from_bmesh(name, bm, swatch=swatch))
 
 
-def panel(name, outline, thickness, loc, swatch, ox=0.0, tilt=0.0, yaw=0.0, bend=0.0, dy=0.0):
+def panel(name, outline, thickness, loc, swatch, ox=0.0, tilt=0.0, yaw=0.0, bend=0.0, dy=0.0, roll=0.0):
     """An outline [(x, z)] (relative to loc; z down is negative) extruded `thickness` along Y, tilted `tilt` degrees
     about X (positive swings its bottom backwards, +Y) and turned `yaw` about Z. bend (metres): pushes the outline's
     side points backwards in proportion to |x| (a cape curving round the back, a tabard round the belly; negative
-    curves the sides forward). dy: a Y offset before the tilt (a badge on a tilted cape: the cape's tilt, a dy)."""
+    curves the sides forward). dy: a Y offset before the tilt (a badge on a tilted cape: the cape's tilt, a dy).
+    roll: degrees about Y after the tilt (a sash across the chest)."""
     bm = bmesh.new()
     h = thickness / 2
     xs = max(abs(x) for x, _ in outline) or 1.0
@@ -99,7 +100,8 @@ def panel(name, outline, thickness, loc, swatch, ox=0.0, tilt=0.0, yaw=0.0, bend
         bm.faces.new((front[i], front[j], back[j], back[i]))
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     bmesh.ops.triangulate(bm, faces=[f for f in bm.faces if len(f.verts) > 4])
-    rot = Matrix.Rotation(math.radians(yaw), 4, "Z") @ Matrix.Rotation(math.radians(tilt), 4, "X")
+    rot = Matrix.Rotation(math.radians(yaw), 4, "Z") @ Matrix.Rotation(math.radians(roll), 4, "Y") @ \
+        Matrix.Rotation(math.radians(tilt), 4, "X")
     bmesh.ops.transform(bm, matrix=rot, verts=bm.verts)
     o = K.object_from_bmesh(name, bm, location=(loc[0] + ox, loc[1], loc[2]), swatch=swatch)
     return A.flat(o)

@@ -6,14 +6,18 @@ bare-chested bearers in white loincloths and crimson caps; he is round, in gold 
 head with a gold laurel wreath and a bored face, a goblet raised in his left hand and a fat purse in his right (he
 throws the coin bombs from it). The litter's platform has a crimson skirt, a crimson cushion and a gold backrest.
 The bearers are a cheap version of the kit body (a1_tier3boss_lib.lean_humanoid, ~270 tris each) so the whole boss
-stays under 2,500. Built in kit units, then scaled x1.05 about the ground.
+stays under 2,500. Built in kit units, then scaled x1.15 about the ground (~4.45 m to the finial; the original 4.87).
+In-game (export=1): Assets/Art/Models/A1/Enemies/EN_GildedPatron.fbx with the original's parts: Body = the litter
+(platform, cushion, posts, canopy) and the seated Patron, so it rocks on the poles; Head and ArmL (goblet) / ArmR
+(purse) under it; no LegL/LegR. The bearers' legs are BLeg<i>L / BLeg<i>R (pivot at the hip) for BossController to
+swing; the rest of the bearers and the poles are one static mesh ("Root").
 """
 import importlib
 import math
 import os
 import sys
 
-from mathutils import Matrix
+from mathutils import Matrix, Vector
 
 sys.path.insert(0, os.path.join(REPO, "BlenderSrc", "characters", "a1"))
 import gladiator_kit as K
@@ -22,10 +26,13 @@ import simple_kit as A
 importlib.reload(A)
 import a1_tier3boss_lib as L
 importlib.reload(L)
+import a1_export as X
+importlib.reload(X)
 
-SCALE = 1.05
+SCALE = 1.15
 GAP = 3.2
-OX = -GAP / 2
+EXPORT = ARGS.get("export") == "1"
+OX = 0.0 if EXPORT else -GAP / 2
 BEARERS = ((0.48, -1.62), (-0.48, -1.62), (0.48, 1.62), (-0.48, 1.62))
 POLE_X, POLE_Z = 0.86, 1.33
 
@@ -113,11 +120,29 @@ def build():
         parts.append(A.box("Leaf%d" % k, (0.09, 0.03, 0.06), (x, y, lz + 0.02), "gold_l" if k % 2 else "gold",
                            taper=(0.4, 1.0), rot=(0.0, 0.0, a_ + math.pi / 2)))
     seat = (0, 0.1, 1.54)
-    L.xform(parts[n_before:], Matrix.Translation(seat) @ Matrix.Scale(1.2, 4) @ Matrix.Translation((0, -0.1, -1.54)))
-    return parts
+    up = Matrix.Translation(seat) @ Matrix.Scale(1.2, 4) @ Matrix.Translation((0, -0.1, -1.54))
+    L.xform(parts[n_before:], up)
+    # the joints: the litter's underside (Body), the Patron's neck and shoulders (after his x1.2), the bearers' hips
+    J = {"Body": (0, 0, 1.28), "Head": up @ Vector((0, 0.08, hp["N"])), "ArmL": up @ Vector((0.42, 0.08, 2.1)),
+         "ArmR": up @ Vector((-0.42, 0.08, 2.1))}
+    for i, (bx, by) in enumerate(BEARERS):
+        for s_, sx in (("L", 1), ("R", -1)):
+            J["BLeg%d%s" % (i, s_)] = (bx + sx * A.CHIBI["LX"], by, A.CHIBI["H"])
+    return parts, L.scaled_joints(J, SCALE)
 
 
-parts = build()
+parts, J = build()
 L.finish(parts, SCALE, OX)
-result = A.review("gilded_patron", parts, original_blend="en_gildedpatron", original_root="EN_GildedPatron",
+if EXPORT:
+    rules = [("PoleCap", "Root"), ("Pole", "Root"), ("Platform", "Body"), ("Cushion", "Body"), ("Backrest", "Body"),
+             ("Post", "Body"), ("Fringe", "Body"), ("Canopy", "Body"), ("Peak", "Body"), ("Finial", "Body"),
+             ("Robe", "Body"), ("Toga", "Body"), ("Lap", "Body"), ("Sandal", "Body"), ("Goblet", "ArmL"),
+             ("Purse", "ArmR"), ("Jowls", "Head"), ("Wreath", "Head"), ("Leaf", "Head")]
+    for i in range(len(BEARERS)):
+        for s_ in ("L", "R"):
+            rules += [("B%dLeg%s" % (i, s_), "BLeg%d%s" % (i, s_)), ("B%dFoot%s" % (i, s_), "BLeg%d%s" % (i, s_))]
+        rules.append(("B%d" % i, "Root"))
+    result = L.export_rig("EN_GildedPatron", parts, J, rules=rules)
+else:
+    result = A.review("gilded_patron", parts, original_blend="en_gildedpatron", original_root="EN_GildedPatron",
                   height=3.9, gap=GAP)

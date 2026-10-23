@@ -382,6 +382,49 @@ def lean_humanoid(ox=0.0, oy=0.0, p=None, skin="skin_tan", skin_shade="skin_dark
     return {"parts": parts, "a": a}
 
 
+def lean_helmet(a, swatch, low=0.6, top=1.07, s=1.08, name="Helm"):
+    """helmet() with three rings (38 tris instead of 54): for the enemies drawn many at a time."""
+    HW, ry, hz = a["head_w"], a["head_back_y"], a["hz"]
+    return A.loft(name, [(hz(low), A.oct8(HW * s, ry * s, 0.6)), (hz(0.86), A.oct8(HW * (s - 0.06), ry * (s - 0.06), 0.6)),
+                         (hz(top), A.oct8(HW * 0.5, ry * 0.5, 0.6))], swatch, cap_bottom=False)
+
+
+def scaled_joints(J, scale=1.0, shift=None):
+    """Joints {part: (x, y, z)} in build space -> Vectors after finish(scale) (about the origin, ox = 0 when exporting);
+    shift {part: (dx, dy, dz)} first (a hunch moved the neck and shoulders forward)."""
+    out = {}
+    for k, v in J.items():
+        v = Vector(v)
+        if shift and k in shift:
+            v = v + Vector(shift[k])
+        out[k] = v * scale
+    return out
+
+
+def export_rig(root_name, parts, J, rules=(), nest=None, folder="Enemies"):
+    """a1_export.export() (one mesh per part, origins at the joints J), plus what it can't do on its own: the extra
+    parts the game code drives by name (Flail, Spear, Falx, WingL/WingR) nested under their part (nest =
+    {"Flail": "ArmR"}) with their world place kept, so they follow it; then the pose sheet and the FBX
+    (Assets/Art/Models/A1/<folder>/<root_name>.fbx)."""
+    import os
+    import a1_export as X
+    info = X.export(root_name, folder, parts, J, rules, export_fbx=False, pose_sheet=False)
+    root = bpy.data.objects[root_name]
+    made = {o.name: o for o in K.descendants(root) if o.type == "MESH"}
+    bpy.context.view_layer.update()
+    for child, parent in (nest or {}).items():
+        c, pa = made[child], made[parent]
+        mw = c.matrix_world.copy()
+        c.parent = pa
+        c.matrix_parent_inverse = Matrix.Identity(4)
+        c.matrix_world = mw
+    bpy.context.view_layer.update()
+    info["hierarchy"] = {n: o.parent.name for n, o in made.items()}
+    info["poses"] = X.poses(root, made)
+    info["fbx"] = K.export_fbx(root, os.path.join("A1", folder, root_name))
+    return info
+
+
 def ring_rows(name, rows, swatch, cap_bottom=True, cap_top=True):
     """A loft from (z, rx, ry, cx, cy[, k]) rows in oct8 sections (a shortcut for bodies)."""
     rings = [(r[0], A.oct8(r[1], r[2], r[5] if len(r) > 5 else 0.62, r[3] if len(r) > 3 else 0.0,

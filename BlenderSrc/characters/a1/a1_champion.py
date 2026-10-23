@@ -6,6 +6,8 @@ leading (shield-side) leg, leather boots; a broad-brimmed steel helm with a face
 the huge curved crimson scutum (gold rim, spine and boss) that covers him from shin to chin, so from the front the
 shield IS the silhouette; a short gladius in the right fist, pointing forward.
 Built at the kit's chibi size, then scaled x1.75 about the feet (the head top ~2.7 m, the crest above it).
+In-game (export=1): Assets/Art/Models/A1/Enemies/EN_Champion.fbx, the kit body (a boss: one on screen), the shield and
+the pauldrons on the arms, the joints scaled with the body.
 """
 import importlib
 import os
@@ -22,10 +24,13 @@ import simple_kit as A
 importlib.reload(A)
 import a1_tier3boss_lib as L
 importlib.reload(L)
+import a1_export as X
+importlib.reload(X)
 
 SCALE = 1.75
 GAP = 2.2
-OX = -GAP / 2
+EXPORT = ARGS.get("export") == "1"
+OX = 0.0 if EXPORT else -GAP / 2
 
 
 def build():
@@ -91,9 +96,17 @@ def build():
     parts.append(blade)
     parts.append(A.box("Guard", (0.06, 0.04, 0.15), (hx, hy - 0.08, hzz), "gold"))
     parts.append(A.box("Pommel", (0.055, 0.05, 0.055), (hx, hy + 0.09, hzz), "gold"))
-    return parts
+    return parts, X.joints(p, scale=SCALE)
 
 
-parts = build()
+parts, J = build()
 L.finish(parts, SCALE, OX)
-result = A.review("champion", parts, original_blend="en_champion", original_root="EN_Champion", height=3.0, gap=GAP)
+if EXPORT:
+    result = L.export_rig("EN_Champion", parts, J,
+                          rules=[("Band", "Body"), ("PauldronL", "ArmL"), ("PauldronR", "ArmR"), ("Manica", "ArmR"),
+                                 ("Brim", "Head"), ("Grille", "Head"), ("Bar", "Head"), ("Visor", "Head"),
+                                 ("Shield", "ArmL"), ("Spine", "ArmL"), ("Boss", "ArmL"), ("Blade", "ArmR"),
+                                 ("Guard", "ArmR"), ("Pommel", "ArmR")])
+else:
+    result = A.review("champion", parts, original_blend="en_champion", original_root="EN_Champion", height=3.0,
+                      gap=GAP)

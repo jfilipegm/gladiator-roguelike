@@ -9,13 +9,16 @@ with its wings raised in a V (nothing else has wings); the spear taller than he 
 blade, gold collar, crimson tassel, gold butt spike); the curved purple scutum (gold rim, spine, boss) at his left
 side, not square in front; a crimson quiver of javelins fanning up past his left shoulder; a gladius at the right hip.
 Built at the kit's chibi size (broad), then scaled x2.1 about the feet.
+In-game (export=1): Assets/Art/Models/A1/Enemies/EN_EmperorsChampion.fbx, the kit body (a boss), with the parts
+BossController drives by name: "Spear" under ArmR (pivot in the fist), "WingL"/"WingR" under Head (pivots at the wing
+roots on the eagle); the shield on ArmL, the quiver, javelins, cloak and pteruges on Body.
 """
 import importlib
 import math
 import os
 import sys
 
-from mathutils import Matrix
+from mathutils import Matrix, Vector
 
 sys.path.insert(0, os.path.join(REPO, "BlenderSrc", "characters", "a1"))
 import gladiator_kit as K
@@ -26,10 +29,13 @@ import simple_kit as A
 importlib.reload(A)
 import a1_tier3boss_lib as L
 importlib.reload(L)
+import a1_export as X
+importlib.reload(X)
 
 SCALE = 2.1
 GAP = 2.9
-OX = -GAP / 2
+EXPORT = ARGS.get("export") == "1"
+OX = 0.0 if EXPORT else -GAP / 2
 WING = [(0.0, -0.06), (0.26, -0.1), (0.42, -0.03), (0.56, -0.13), (0.68, 0.0), (0.8, -0.07), (0.9, 0.16),
         (1.0, 0.52), (0.84, 0.44), (0.6, 0.34), (0.3, 0.24), (0.0, 0.15)]
 
@@ -133,10 +139,23 @@ def build():
     knob = L.boss_knob("ShieldBoss", 0.085, 0.07, (0, fy - 0.015, 0.02), "gold_l", sides=6)
     L.xform([sh, spine, knob], Matrix.Translation((SX + 0.17, -0.16, 0.45)) @ Matrix.Rotation(0.5, 4, "Z"))
     parts += [sh, spine, knob]
-    return parts
+    J = dict(X.joints(p))
+    J["Spear"] = Vector(a["hand_r"])
+    J["WingL"], J["WingR"] = Vector((0.04, 0.0, top + 0.1)), Vector((-0.04, 0.0, top + 0.1))
+    return parts, L.scaled_joints(J, SCALE)
 
 
-parts = build()
+parts, J = build()
 L.finish(parts, SCALE, OX)
-result = A.review("emperors_champion", parts, original_blend="en_emperorschampion",
-                  original_root="EN_EmperorsChampion", height=4.7, gap=GAP)
+if EXPORT:
+    result = L.export_rig("EN_EmperorsChampion", parts, J, nest={"Spear": "ArmR", "WingL": "Head", "WingR": "Head"},
+                          rules=[("CuirassEdge", "Body"), ("Pteruges", "Body"), ("Hem", "Body"), ("Quiver", "Body"),
+                                 ("Jav", "Body"), ("Scabbard", "Body"), ("Hilt", "Body"), ("PauldronL", "ArmL"),
+                                 ("PauldronR", "ArmR"), ("VambraceL", "ArmL"), ("VambraceR", "ArmR"),
+                                 ("Knee", "side"), ("Cheek", "Head"), ("Visor", "Head"), ("NeckGuard", "Head"),
+                                 ("Eagle", "Head"), ("Beak", "Head"), ("WingL", "WingL"), ("WingR", "WingR"),
+                                 ("Spear", "Spear"), ("Butt", "Spear"), ("Collar", "Spear"), ("Tassel", "Spear"),
+                                 ("Blade", "Spear"), ("Shield", "ArmL")])
+else:
+    result = A.review("emperors_champion", parts, original_blend="en_emperorschampion",
+                      original_root="EN_EmperorsChampion", height=4.7, gap=GAP)

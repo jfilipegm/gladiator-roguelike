@@ -6,6 +6,8 @@ its tail down his back; a dark-skinned face with glowing orange eyes and a black
 with iron bracers, a leather strap across the chest, a leather loincloth on the magenta belt (the enemy accent), fur
 legs with leather wraps; a bone war horn and a coiled chain at the belt; the long hooked goad-spear held upright in
 the LEFT fist, taller than him. Built at the kit's chibi size, hunched, then scaled x2.1 about the feet.
+In-game (export=1): Assets/Art/Models/A1/Enemies/EN_BeastLord.fbx, the kit body (a boss), the goad on ArmL, the joints
+moved with the hunch; the lion hood, snout and tufts on Head, the mane plate and the pelt on Body.
 """
 import importlib
 import math
@@ -23,10 +25,14 @@ import simple_kit as A
 importlib.reload(A)
 import a1_tier3boss_lib as L
 importlib.reload(L)
+import a1_export as X
+importlib.reload(X)
 
 SCALE = 2.1
 GAP = 2.8
-OX = -GAP / 2
+EXPORT = ARGS.get("export") == "1"
+OX = 0.0 if EXPORT else -GAP / 2
+HUNCH = 0.2
 
 
 def build():
@@ -116,11 +122,21 @@ def build():
     held = {"Goad", "Grip", "Socket", "Blade", "Hook"}
     rigid = {o: Sz for o in parts if o.name.startswith(("Arm", "Fist", "Bracer")) or o.name in held}
     upper = [o for o in parts if not o.name.startswith(("Leg", "Foot", "Wrap", "Loin", "Horn", "Chain", "PeltTail"))]
-    L.shear_forward(upper, H + 0.06, 0.2, rigid)
-    return parts
+    z0 = H + 0.06
+    L.shear_forward(upper, z0, HUNCH, rigid)
+    arm_shift = (0, -(Sz - z0) * HUNCH, 0)
+    shift = {"Head": (0, -(N - z0) * HUNCH, 0), "ArmL": arm_shift, "ArmR": arm_shift}
+    return parts, L.scaled_joints(X.joints(p), SCALE, shift)
 
 
-parts = build()
+parts, J = build()
 L.finish(parts, SCALE, OX)
-result = A.review("beast_lord", parts, original_blend="en_beastlord", original_root="EN_BeastLord", height=4.4,
+if EXPORT:
+    result = L.export_rig("EN_BeastLord", parts, J,
+                          rules=[("Loin", "Body"), ("Strap", "Body"), ("Wrap", "side"), ("Horn", "Body"),
+                                 ("Chain", "Body"), ("Snout", "Head"), ("Fang", "Head"), ("Tuft", "Head"),
+                                 ("Mane", "Body"), ("Pelt", "Body"), ("Goad", "ArmL"), ("Grip", "ArmL"),
+                                 ("Socket", "ArmL"), ("Blade", "ArmL"), ("Hook", "ArmL")])
+else:
+    result = A.review("beast_lord", parts, original_blend="en_beastlord", original_root="EN_BeastLord", height=4.4,
                   gap=GAP)

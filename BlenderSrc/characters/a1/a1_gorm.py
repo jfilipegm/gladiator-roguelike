@@ -5,7 +5,10 @@ yellow eyes under heavy brows, an iron slaver's collar, a bare torso with a big 
 the magenta sash (the enemy accent), a ring of gold keys at the right hip, a dark red cape down his back, dark red
 trousers with sack-cloth wraps, leather boots and bracers; the chain flail in the right hand (a wooden grip, iron
 links, a spiked rusty ball resting by his foot: the silhouette nothing else in the pit has) and the coiled bullwhip
-in the left. Built at the kit's chibi size with a wide, long-armed body, hunched, then scaled x2.15 about the feet.
+in the left. Built at the kit's chibi size with a wide, long-armed body, hunched, then scaled x2.3 about the feet
+(~3.6 m: the original is 3.7).
+In-game (export=1): Assets/Art/Models/A1/Enemies/EN_Gorm.fbx, the kit body (a boss), the joints moved with the hunch,
+and the "Flail" part BossController spins (grip, chain, ball) under ArmR with its pivot at the fist.
 """
 import importlib
 import os
@@ -20,10 +23,14 @@ import simple_kit as A
 importlib.reload(A)
 import a1_tier3boss_lib as L
 importlib.reload(L)
+import a1_export as X
+importlib.reload(X)
 
-SCALE = 2.15
+SCALE = 2.3
 GAP = 2.6
-OX = -GAP / 2
+EXPORT = ARGS.get("export") == "1"
+OX = 0.0 if EXPORT else -GAP / 2
+HUNCH = 0.26
 
 
 def build():
@@ -79,13 +86,13 @@ def build():
     sr = (-(SX + 0.02), 0.0, Sz)
     arm_r = [L.get(parts, n) for n in ("ArmR", "FistR", "BracerR")]
     hand = Vector(a["hand_r"])
-    m = (Matrix.Translation(sr) @ Matrix.Rotation(0.22, 4, "Y") @ Matrix.Rotation(-0.95, 4, "X") @
+    m = (Matrix.Translation(sr) @ Matrix.Rotation(0.22, 4, "Y") @ Matrix.Rotation(-0.6, 4, "X") @
          Matrix.Translation(-Vector(sr)))
     L.xform(arm_r, m)
     hx, hy, hzz = m @ hand
     grip_end = (hx - 0.01, hy - 0.02, hzz - 0.12)
     flail = [L.rod("FlailGrip", (hx, hy + 0.01, hzz + 0.06), grip_end, 0.026, "wood_dark")]
-    ball_c = (hx - 0.04, hy - 0.03, 0.16)
+    ball_c = (hx - 0.04, hy - 0.03, 0.235)          # the bottom spike touches the ground
     n = 5
     for k in range(n):
         p0 = [grip_end[i] + (ball_c[i] - grip_end[i]) * (k / n) for i in range(3)]
@@ -102,10 +109,21 @@ def build():
     # the hunch: everything above the hips leans forward; the arms and what they hold move as one piece
     rigid = {o: Sz for o in parts if o.name.startswith(("Arm", "Fist", "Bracer")) or o in flail or o in whip}
     upper = [o for o in parts if not o.name.startswith(("Leg", "Foot", "Wrap", "Apron", "Stud", "Key"))]
-    L.shear_forward(upper, H + 0.06, 0.26, rigid)
-    return parts
+    z0 = H + 0.06
+    L.shear_forward(upper, z0, HUNCH, rigid)
+    J = dict(X.joints(p))
+    J["Flail"] = Vector((hx, hy, hzz))
+    arm_shift = (0, -(Sz - z0) * HUNCH, 0)
+    shift = {"Head": (0, -(N - z0) * HUNCH, 0), "ArmL": arm_shift, "ArmR": arm_shift, "Flail": arm_shift}
+    return parts, L.scaled_joints(J, SCALE, shift)
 
 
-parts = build()
+parts, J = build()
 L.finish(parts, SCALE, OX)
-result = A.review("gorm", parts, original_blend="en_gorm", original_root="EN_Gorm", height=3.6, gap=GAP)
+if EXPORT:
+    result = L.export_rig("EN_Gorm", parts, J, nest={"Flail": "ArmR"},
+                          rules=[("Gut", "Body"), ("Apron", "Body"), ("Stud", "Body"), ("Key", "Body"),
+                                 ("Collar", "Body"), ("Wrap", "side"), ("Flail", "Flail"), ("Link", "Flail"),
+                                 ("Ball", "Flail"), ("Whip", "ArmL"), ("Coil", "ArmL")])
+else:
+    result = A.review("gorm", parts, original_blend="en_gorm", original_root="EN_Gorm", height=3.9, gap=GAP)

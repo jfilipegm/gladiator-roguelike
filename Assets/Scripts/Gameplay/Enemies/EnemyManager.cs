@@ -765,6 +765,7 @@ namespace Gladiator.Gameplay
             float recoilAngle = feedback != null ? feedback.hitRecoilAngle : 20f;
             var tele = TelegraphRenderer.Instance;
             _mud = MudZones.Instance;
+            bool frozen = DevSettings.FreezeEnemies;
 
             for (int i = 0; i < _high; i++)
             {
@@ -786,6 +787,7 @@ namespace Gladiator.Gameplay
 
                 var def = v.Def;
                 if (def.behaviour == EnemyBehaviour.Scripted) { TickScripted(i, v, dt); continue; }
+                if (frozen) { TickFrozen(i, v, dt, tele, camPos, animD2, recoilTime, recoilAngle); continue; } // the admin's FREEZE
                 if (def.behaviour == EnemyBehaviour.Caster) TryBlink(i, def, player, dt);
                 Vector3 p = _pos[i];
                 Vector3 to = player - p;
@@ -941,6 +943,26 @@ namespace Gladiator.Gameplay
             if (_threatCount < _threats.Length)
                 _threats[_threatCount++] = new EnemyThreat { Position = _pos[i], Color = telegraphColor, Windup = _scriptedWindup[i] };
             v.Root.SetPositionAndRotation(_pos[i], Quaternion.Euler(0f, _yaw[i], 0f));
+        }
+
+        /// <summary>
+        /// The admin's FREEZE (DevSettings.FreezeEnemies, T1): no thinking, moving, turning, wind-ups, shots or touch.
+        /// Hits still flash, recoil and kill (ApplyDamage is untouched) and status ticks still burn, but knockback is
+        /// dropped: a frozen enemy stays where it stands (a model to look at, a dummy to hit). An attack it was in is
+        /// dropped too, so it stands at ease and starts from Move when the freeze ends. Elites keep their ring.
+        /// </summary>
+        void TickFrozen(int i, EnemyView v, float dt, TelegraphRenderer tele, Vector3 camPos, float animD2, float recoilTime, float recoilAngle)
+        {
+            _vel[i] = Vector3.zero;
+            _knock[i] = Vector3.zero;
+            _state[i] = AiState.Move;
+            var affix = _affix[i];
+            if (affix != null && tele != null) tele.Circle(_pos[i], _radius[i] * 2.1f, 0f, affix.color, TelegraphRenderer.Style.Ring, 0.16f, i * 0.37f);
+            if (_flash[i] > 0f) { _flash[i] -= dt; if (_flash[i] <= 0f && v.Flashing) SetMaterial(v, bodyMaterial); }
+            if (_recoil[i] > 0f) _recoil[i] -= dt;
+            v.Root.SetPositionAndRotation(_pos[i], Quaternion.Euler(0f, _yaw[i], 0f));
+            float ex = _pos[i].x - camPos.x, ez = _pos[i].z - camPos.z;
+            if (ex * ex + ez * ez < animD2 && v.Rig.IsValid) Animate(i, v, dt, recoilTime, recoilAngle); // standing: the recoil shows
         }
 
         /// <summary>Moves a scripted enemy (its controller owns movement). `windup` marks it as a threat for the bot and arrows.</summary>

@@ -13,6 +13,10 @@ namespace Gladiator.Gameplay
         public static bool GodMode;
         /// <summary>The run timer doesn't advance, so the run never ends by time.</summary>
         public static bool Timeless;
+        /// <summary>Enemies (bosses too) stand still: no moving, turning, wind-ups, attacks, shots or touch damage. They
+        /// still take hits, flash, recoil, die and drop XP; knockback doesn't move them (T1: looking at models up close,
+        /// testing weapons).</summary>
+        public static bool FreezeEnemies;
 
         // Buffs in percent (+50 = ×1.5). Crit is in percentage points of crit chance.
         public static float DamagePct, AttackSpeedPct, RangePct, MaxHpPct, MoveSpeedPct, PickupRangePct, CritPct;
@@ -41,6 +45,7 @@ namespace Gladiator.Gameplay
         {
             GodMode = false;
             Timeless = false;
+            FreezeEnemies = false;
             ResetBuffs();
         }
     }

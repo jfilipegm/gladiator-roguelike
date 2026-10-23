@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.EnemyDef
   id: firepot
   displayName: Fire-Pot Thrower
-  model: {fileID: 919132149155446097, guid: 42fe96172bccca7b5a3742c15158856e, type: 3}
+  model: {fileID: 919132149155446097, guid: cc1ad38639eafa476b619d4f12be971b, type: 3}
   anim: {fileID: 11400000, guid: 13cb1487eb00393ca8898bf49cbdecec, type: 2}
   scale: 1
   maxHp: 22

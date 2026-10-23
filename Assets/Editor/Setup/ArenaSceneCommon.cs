@@ -131,8 +131,8 @@ namespace Gladiator.EditorTools
             var props = new GameObject("Interactables").AddComponent<Interactables>();
             props.transform.SetParent(systems, false);
             props.config = PlayerSetup.EnsureAsset<InteractableConfig>(CombatSetup.InteractablesPath);
-            props.chestModel = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Art/Models/Props/PR_ArmoryChest.fbx");
-            props.altarModel = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Art/Models/Props/PR_BloodAltar.fbx");
+            props.chestModel = ModelStyle.Load("Assets/Art/Models/Props/PR_ArmoryChest.fbx");
+            props.altarModel = ModelStyle.Load("Assets/Art/Models/Props/PR_BloodAltar.fbx");
             props.burst = pop;
             props.material = AssetDatabase.LoadAssetAtPath<Material>(LookSetup.EnvMat);
 
@@ -287,7 +287,7 @@ namespace Gladiator.EditorTools
 
         static GameObject Place(string model, Transform parent, Vector3 pos, float yaw, Vector3? scale, int layer)
         {
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(Models + model + ".fbx");
+            var prefab = ModelStyle.Load(Models + model + ".fbx");
             if (prefab == null) { Debug.LogError("[ArenaSceneCommon] missing model " + model); return new GameObject("MISSING " + model); }
             var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent);
             go.transform.SetPositionAndRotation(pos, Quaternion.Euler(0, yaw, 0));

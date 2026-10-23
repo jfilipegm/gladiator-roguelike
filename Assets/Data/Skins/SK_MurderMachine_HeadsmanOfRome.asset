@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Headsman of Rome
   description: 'The Emperor''s own headsman: a black hood, cold iron and a mantle of imperial purple.'
   gladiator: {fileID: 11400000, guid: c0766fee8c3737abb9d813cf9b327c3a, type: 2}
-  model: {fileID: 919132149155446097, guid: 5e41aa0c5d9fee65c9feec3d0100e495, type: 3}
+  model: {fileID: 919132149155446097, guid: 725721e113b6609dfaf3997043e0a622, type: 3}
   portrait: {fileID: 21300000, guid: 2a3dc5381153d6c88b8991488340f49e, type: 3}
   unlock: {fileID: 11400000, guid: 15f8f4fd1fd8eaf7ba581219300ae6e1, type: 2}
   chips:

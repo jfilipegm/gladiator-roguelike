@@ -332,13 +332,15 @@ def export_fbx(root, rel_path):
     nodes (rigid-part rigs are full of them). Unity's conversion maps Blender -Y to -Z, so the root gets a temporary
     180 deg yaw here: asset front (Blender -Y) arrives at Unity +Z, asset left (Blender +X) at Unity -X, every
     part keeps identity rotation, and only the FBX root node carries the 180 deg yaw (under an identity prefab root).
-    With GLADIATOR_SKIN set (see active_skin()) it writes Characters/Skins/<basename of rel_path><suffix>.fbx instead.
+    With GLADIATOR_SKIN set (see active_skin()) it writes <dir of rel_path>/Skins/<basename><suffix>.fbx instead
+    (Characters/Skins/ for the classic models, A1/Characters/Skins/ for the A1 ones).
     """
     import math
     sk = active_skin()
     if sk:
         base = os.path.basename(rel_path)
-        rel_path = os.path.join("Characters", "Skins", (base[:-4] if base.endswith(".fbx") else base) + sk["suffix"])
+        rel_path = os.path.join(os.path.dirname(rel_path) or "Characters", "Skins",
+                                (base[:-4] if base.endswith(".fbx") else base) + sk["suffix"])
     path = os.path.join(MODELS_DIR, rel_path if rel_path.endswith(".fbx") else rel_path + ".fbx")
     os.makedirs(os.path.dirname(path), exist_ok=True)
     bpy.ops.object.select_all(action="DESELECT")

@@ -108,7 +108,7 @@ namespace Gladiator.EditorTools
 
         static GameObject Place(string model, Transform parent, Vector3 pos, float yaw, Material mat, bool isStatic)
         {
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(Models + model + ".fbx");
+            var prefab = ModelStyle.Load(Models + model + ".fbx");
             if (prefab == null) { Debug.LogError("[LookDev] missing model " + model); return new GameObject("MISSING " + model); }
             var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent);
             go.transform.SetPositionAndRotation(pos, Quaternion.Euler(0, yaw, 0));

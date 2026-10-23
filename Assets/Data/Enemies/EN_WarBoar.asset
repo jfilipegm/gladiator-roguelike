@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.EnemyDef
   id: warboar
   displayName: War Boar
-  model: {fileID: 919132149155446097, guid: 1133e5b5a7eee5e30b0890a8a8558f33, type: 3}
+  model: {fileID: 919132149155446097, guid: 120c1083d4c2e79cfbd87b7adb261787, type: 3}
   anim: {fileID: 11400000, guid: 9cdc5325d803ad537aec4b6eeade5bcc, type: 2}
   scale: 1
   maxHp: 60

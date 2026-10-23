@@ -86,7 +86,7 @@ namespace Gladiator.EditorTools
                 g.cameraTargetHeight = 1.5f;
                 g.tradeoff = "Huge and heavy: 95 % speed, no armour, and his Rage takes him when the crowd closes in, not when you choose.";
             }
-            if (g.model == null) g.model = AssetDatabase.LoadAssetAtPath<GameObject>(Model);
+            if (g.model == null) g.model = ModelStyle.Load(Model);
             if (g.movement == null) g.movement = move;
             if (g.animProfile == null) g.animProfile = anim;
             if (g.startingWeapon == null) g.startingWeapon = chain;

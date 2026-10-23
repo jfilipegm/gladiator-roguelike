@@ -7,8 +7,9 @@ using UnityEngine.UI;
 namespace Gladiator.UI
 {
     /// <summary>
-    /// Draws AdminController (F1): buffs, run switches, enemy spawning, crowd and game speed. Dev tool: built in code,
-    /// labels refreshed only while open; the game is paused while it's shown.
+    /// Draws AdminController (F1): buffs, run switches, enemy spawning and FREEZE, crowd and game speed; the second column
+    /// has the upgrades and FIGHT A BOSS (one button per menu run, T1). Dev tool: built in code, labels refreshed only
+    /// while open; the game is paused while it's shown.
     /// </summary>
     public sealed class AdminPanel : MonoBehaviour, ITickable
     {
@@ -24,13 +25,20 @@ namespace Gladiator.UI
         GameObject _root;
         Transform _panel;
         readonly TextMeshProUGUI[] _buffValues = new TextMeshProUGUI[AdminController.BuffCount];
-        Button _god, _timeless, _director;
+        Button _god, _timeless, _director, _freeze;
         TextMeshProUGUI _enemyName, _affix, _count, _crowd, _speed, _status, _upgradeName, _upgradeInfo;
         Button _rarity;
         static readonly string[] RarityLabels = { "Rarity: Common", "Rarity: Uncommon", "Rarity: Rare", "Rarity: Legendary" };
         bool _shown;
         float _y;
         const float Width = 600f;
+        // FIGHT A BOSS: a button per GameSession.KnownRuns entry (rebuilt when that list changes), the column sized to them
+        const int MaxBossRuns = 8;
+        readonly Button[] _bossButtons = new Button[MaxBossRuns];
+        RectTransform _panel2;
+        float _panel2Base;
+        RunDef[] _bossRunsShown;
+        int _bossCountShown = -1;
 
         void Awake()
         {
@@ -66,22 +74,30 @@ namespace Gladiator.UI
             Row("Spawn count", out _count, () => Ctl.CycleCount(-1), () => Ctl.CycleCount(+1));
             Buttons(("Spawn near me", () => Ctl.SpawnNearPlayer(Ctl.SpawnCount)), ("Spawn around arena", () => Ctl.SpawnAroundArena(Ctl.SpawnCount)));
             Row("Crowd (keeps alive)", out _crowd, () => Ctl.AdjustCrowd(-25), () => Ctl.AdjustCrowd(+25));
-            Buttons(("Kill all enemies", () => Ctl.KillAllEnemies()), ("Clear pickups", () => Ctl.ClearPickups()));
+            _freeze = Buttons(("Freeze", () => Ctl.ToggleFreeze()), ("Kill all", () => Ctl.KillAllEnemies()), ("Clear pickups", () => Ctl.ClearPickups()))[0];
 
             Section("GAME");
             Row("Game speed", out _speed, () => Ctl.CycleSpeed(-1), () => Ctl.CycleSpeed(+1));
             Buttons(("Restart run", () => Ctl.Restart()));
             Line("Settings and buffs survive Restart/Retry (not a new play session).", 18f, new Color(1f, 1f, 1f, 0.45f));
 
-            // second column, left of the first: build tools (weapons and chests join it later)
+            // second column, left of the first: build tools (weapons and chests join it later), then the boss fights
             var bg2 = UiFactory.Image("AdminPanel2", canvas, PanelColor, Vector2.one, Vector2.one, new Vector2(-20f - Width - 12f, -80f), new Vector2(Width, 190f), PixelIcons.White);
             bg2.raycastTarget = true;
             _panel = bg2.transform;
+            _panel2 = bg2.rectTransform;
             _y = -12f;
             Section("UPGRADES  (skip the level-up cards)");
             Row("Upgrade", out _upgradeName, () => Ctl.CycleUpgrade(-1), () => Ctl.CycleUpgrade(+1), 300f);
             _upgradeInfo = Line("", 20f, new Color(1f, 1f, 1f, 0.7f));
             _rarity = Buttons((RarityLabels[0], () => Ctl.CycleRarity()), ("Give 1 level", () => Ctl.GiveUpgrade()))[0];
+            Section("FIGHT A BOSS  (as you are; boss 3 s in)");
+            _panel2Base = -_y; // the column's height above the boss buttons (each row adds 40)
+            for (int k = 0; k < MaxBossRuns; k++)
+            {
+                int run = k;
+                _bossButtons[k] = Buttons(("Boss", () => Ctl.FightBoss(run)))[0];
+            }
 
             _root.SetActive(false);
         }
@@ -100,6 +116,7 @@ namespace Gladiator.UI
 
         void Refresh()
         {
+            RefreshBossRuns();
             for (int i = 0; i < AdminController.BuffCount; i++)
             {
                 var b = (AdminController.Buff)i;
@@ -110,6 +127,7 @@ namespace Gladiator.UI
             Tint(_god, DevSettings.GodMode, "God mode: ON", "God mode: off");
             Tint(_timeless, DevSettings.Timeless, "Timeless: ON", "Timeless: off");
             Tint(_director, Ctl.DirectorOn, "Director: ON", "Director: off");
+            Tint(_freeze, DevSettings.FreezeEnemies, "Freeze: ON", "Freeze: off");
             var def = Ctl.Selected;
             _enemyName.text = def != null ? def.displayName : "(no EnemyDefs)";
             var affix = Ctl.Affix;
@@ -128,6 +146,45 @@ namespace Gladiator.UI
             var em = EnemyManager.Instance;
             var run = RunState.Current;
             if (run != null) _status.SetText("enemies alive {0}   |   level {1}   |   {2}:{3:00} left", em != null ? em.AliveCount : 0, run.Level, Mathf.Floor(run.TimeRemaining / 60f), Mathf.Floor(run.TimeRemaining % 60f));
+        }
+
+        /// <summary>
+        /// FIGHT A BOSS: one button per GameSession.KnownRuns entry, "THE SLAVE PIT: Gorm". Labels are rebuilt only when
+        /// that list changes (the menu sets it once). No list (an arena started from the Editor): one greyed-out row.
+        /// </summary>
+        void RefreshBossRuns()
+        {
+            var runs = GameSession.KnownRuns;
+            int count = Mathf.Min(AdminController.BossRunCount, MaxBossRuns);
+            if (runs == _bossRunsShown && count == _bossCountShown) return;
+            _bossRunsShown = runs;
+            _bossCountShown = count;
+            int rows = Mathf.Max(1, count);
+            for (int k = 0; k < MaxBossRuns; k++)
+            {
+                var b = _bossButtons[k];
+                b.gameObject.SetActive(k < rows);
+                if (k >= rows) continue;
+                var label = UiFactory.Label(b);
+                if (count == 0)
+                {
+                    b.interactable = false;
+                    label.text = "No arena list: start the run from the menu";
+                    continue;
+                }
+                b.interactable = AdminController.CanFightBoss(k);
+                label.text = BossRunLabel(AdminController.BossRun(k));
+            }
+            _panel2.sizeDelta = new Vector2(Width, _panel2Base + rows * 40f + 6f);
+        }
+
+        /// <summary>"THE SLAVE PIT: Gorm" (the arena, then its boss's short name).</summary>
+        static string BossRunLabel(RunDef run)
+        {
+            if (run == null) return "(missing run)";
+            var boss = run.Boss;
+            string who = boss != null ? (!string.IsNullOrEmpty(boss.shortName) ? boss.shortName : boss.displayName) : "no boss";
+            return run.DisplayName + ": " + who;
         }
 
         static void Tint(Button b, bool on, string onText, string offText)

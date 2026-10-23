@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Sewer King
   description: 'Slate rags and a purple sash: king of everything that washes down the drains.'
   gladiator: {fileID: 11400000, guid: 4b69c77c154ce4ea3b830a57ee7c3e8c, type: 2}
-  model: {fileID: 919132149155446097, guid: 32096571d43e077bfa6b79b6b5702751, type: 3}
+  model: {fileID: 919132149155446097, guid: 439f82b3de9755105a881d3298a9952c, type: 3}
   portrait: {fileID: 21300000, guid: 4127739306ac6466395629d4fe17ef46, type: 3}
   unlock: {fileID: 11400000, guid: d3cf1edb39b9588fcb22ba5a20d5d158, type: 2}
   chips:

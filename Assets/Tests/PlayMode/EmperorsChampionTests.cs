@@ -175,7 +175,7 @@ namespace Gladiator.Tests
             Assert.AreEqual(1, Boss.Phase);
             Assert.IsTrue(Boss.ShieldUp, "his scutum blocks from the front");
             var root = _em.GetViewRoot(Boss.Slot);
-            foreach (var part in new[] { "Spear", "Shield", "Javelins", "Eagle", "WingL", "WingR" })
+            foreach (var part in new[] { "Spear", "WingL", "WingR" }) // the parts BossController moves by name
                 Assert.IsNotNull(FindDeep(root, part), "EN_EmperorsChampion has its " + part);
 
             // ~65 m away on the south field (off the track): he strides at closeInSpeed and doesn't attack

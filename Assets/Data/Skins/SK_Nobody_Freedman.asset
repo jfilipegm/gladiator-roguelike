@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Freedman
   description: Bleached linen and a bronze shield, polished for the day he walks out a free man.
   gladiator: {fileID: 11400000, guid: fb2a9c8c134c113e99d7d8b67db69361, type: 2}
-  model: {fileID: 919132149155446097, guid: 13c56c5f58fc435fabff2d7757a26b62, type: 3}
+  model: {fileID: 919132149155446097, guid: f03e190c0ca0244f785b92155810971d, type: 3}
   portrait: {fileID: 21300000, guid: 86afabece30f98fbc82dcf84572b946a, type: 3}
   unlock: {fileID: 11400000, guid: b5475df553aa9f6379938f13bf77d328, type: 2}
   chips:

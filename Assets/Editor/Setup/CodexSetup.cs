@@ -97,7 +97,7 @@ namespace Gladiator.EditorTools
                 if (g != null && g.model != null) jobs.Add(("gl:" + g.id, g.model));
             foreach (var (unlock, path) in SecretModels)
             {
-                var m = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+                var m = ModelStyle.Load(path);
                 if (m != null) jobs.Add(("sc:" + unlock, m));
             }
             int rows = Mathf.CeilToInt(jobs.Count / (float)Columns);

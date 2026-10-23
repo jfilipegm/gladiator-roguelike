@@ -341,7 +341,7 @@ namespace Gladiator.EditorTools
 
             public GroundProbe(string model)
             {
-                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Art/Models/" + model + ".fbx");
+                var prefab = ModelStyle.Load("Assets/Art/Models/" + model + ".fbx");
                 _go = Object.Instantiate(prefab);
                 _go.hideFlags = HideFlags.HideAndDontSave;
                 foreach (var mf in _go.GetComponentsInChildren<MeshFilter>())

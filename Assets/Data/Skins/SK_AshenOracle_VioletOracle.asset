@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Violet Oracle
   description: Robes dyed the violet of the old mysteries.
   gladiator: {fileID: 11400000, guid: 8e064a74ca9fac68e9f81d6f3b09f38a, type: 2}
-  model: {fileID: 919132149155446097, guid: 67de54b9f20b97b53a9472b6053b0852, type: 3}
+  model: {fileID: 919132149155446097, guid: b9e8eae0c10f23556b944667eafcc632, type: 3}
   portrait: {fileID: 21300000, guid: c60302380018e9df4affa7f3c940febf, type: 3}
   unlock: {fileID: 11400000, guid: 3ba64624a998a14b1935d48ef0e7d5f7, type: 2}
   chips:

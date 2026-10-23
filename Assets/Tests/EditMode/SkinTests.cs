@@ -416,7 +416,10 @@ namespace Gladiator.Tests
                 string key = row.@base.StartsWith("CH_", StringComparison.Ordinal) ? row.@base.Substring(3) : row.@base;
                 Assert.AreEqual("Assets/Data/Skins/SK_" + key + row.suffix + ".asset", AssetDatabase.GetAssetPath(s), s.id);
                 Assert.IsNotNull(s.model, s.id + " model");
-                Assert.AreEqual("Assets/Art/Models/Characters/Skins/" + row.@base + row.suffix + ".fbx", AssetDatabase.GetAssetPath(s.model), s.id);
+                // the A1 skin when there is one (ModelStyle: the A1 characters are the game's, the classic ones kept)
+                string classicModel = "Assets/Art/Models/Characters/Skins/" + row.@base + row.suffix + ".fbx";
+                string a1Model = "Assets/Art/Models/A1/Characters/Skins/" + row.@base + row.suffix + ".fbx";
+                Assert.AreEqual(System.IO.File.Exists(a1Model) ? a1Model : classicModel, AssetDatabase.GetAssetPath(s.model), s.id);
                 Assert.AreEqual(3, s.chips.Length, s.id + " chips");
                 Assert.AreEqual(3, row.chips.Length, s.id + ": three chip swatches in the table");
                 for (int c = 0; c < 3; c++)
@@ -480,12 +483,22 @@ namespace Gladiator.Tests
             return map;
         }
 
+        /// <summary>The model inside the player prefab (the Nobody's: A1 or classic, whichever the game uses).</summary>
+        static GameObject PlayerModel()
+        {
+            var player = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Player/P_Player.prefab");
+            foreach (var t in player.GetComponentsInChildren<Transform>(true))
+                if (t.name == "CH_Nobody" && PrefabUtility.IsAnyPrefabInstanceRoot(t.gameObject))
+                    return PrefabUtility.GetCorrespondingObjectFromSource(t.gameObject);
+            return AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Art/Models/Characters/CH_Nobody.fbx");
+        }
+
         /// <summary>A skin is a palette remap: the same part names and the same geometry (index counts) as its gladiator's
         /// own model (the Nobody's is the player prefab's CH_Nobody), so the animator drives it unchanged.</summary>
         static void AssertSameParts(SkinDef s)
         {
             var baseModel = s.gladiator.model != null ? s.gladiator.model
-                : AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Art/Models/Characters/CH_Nobody.fbx");
+                : PlayerModel();
             Assert.IsNotNull(baseModel, s.id + ": the gladiator's model");
             CollectionAssert.AreEquivalent(Parts(baseModel), Parts(s.model), s.id + ": the same parts as " + baseModel.name);
             Assert.AreEqual(Indices(baseModel), Indices(s.model), s.id + ": the same geometry as " + baseModel.name);

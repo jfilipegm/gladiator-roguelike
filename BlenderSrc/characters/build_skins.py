@@ -17,6 +17,15 @@ PAL_Master.png. One shared material, no new material; the base's .blend and revi
     Tools/bheadless BlenderSrc/characters/build_skins.py check=base [gladiator=<id>]
         runs the base scripts with no skin (their FBX, .blend and review sheet go to a temp folder) and compares the
         FBX with the committed one the same way: proves the kit's skin hook changes nothing without the variable
+    Tools/bheadless BlenderSrc/characters/build_skins.py check=rebuild [gladiator=<id>] [style=a1]
+        rebuilds each skin into a temp folder and compares it with the committed skin FBX (same nodes, geometry, UV
+        cells): proves a change to the table or this driver left that style's skins as they were
+Every mode takes style=a1 (default: classic): the A1 models (docs/tracks/A1-ingame-contract.md, "Skins"). A skin's
+`a1_script` (BlenderSrc/characters/a1/a1_<id>.py) is run with export=1 and writes
+Assets/Art/Models/A1/Characters/Skins/<base><suffix>.fbx; its remap is `remap` plus `a1_remap` (swatches only the A1
+model uses, so the skin still reads as itself; `remap` alone never changes, so the classic skins stay as they are).
+The A1 review sheet is Screenshots/a1/ingame/a1_skins_<gladiator>.png. An A1 part joins its pieces (the weapon
+into its arm), so check=skins on A1 accepts each face kept or remapped (the kept weapon can't be told apart by name).
 Keep each run short (one gladiator, or skin=all without review).
 """
 import contextlib
@@ -41,6 +50,17 @@ REDS = {"rust", "rust_light", "red_banner", "red_banner_d", "crimson", "crimson_
 FLOORS = (("pale", "marble"), ("dark", "mud_dark"))
 VIEWS = (("front", (0, -1, 0.2)), ("three_quarter", (0.8, -1, 0.55)), ("back", (0.3, 1, 0.75)))
 TILE, SIL = 240, 64
+STYLES = ("classic", "a1")
+A1_SHOTS = "/home/jfilipegm/Gladiator Roguelike/Screenshots/a1/ingame"  # a1_export.SHOTS (shared by all worktrees)
+
+
+def script_of(s, style):
+    return s["a1_script"] if style == "a1" else s["script"]
+
+
+def model_dir(style):
+    """The base models' folder under Assets/Art/Models for a style (the skins are in its Skins/)."""
+    return os.path.join("A1", "Characters") if style == "a1" else "Characters"
 
 
 def load_table():
@@ -69,13 +89,15 @@ def validate(table):
             errors.append(sid + ": id must be <gladiator>_<name>")
         if not s["suffix"].startswith("_") or not os.path.exists(os.path.join(HERE, s["script"])):
             errors.append(sid + ": bad suffix or script")
+        if "a1_script" in s and not os.path.exists(os.path.join(HERE, s["a1_script"])):
+            errors.append(sid + ": no a1_script " + s["a1_script"])
         if s["base"] not in table["keep"]:
             errors.append(sid + ": no keep entry for " + s["base"])
         if (s["price"] > 0) == bool(s["champion"]):
             errors.append(sid + ": exactly one of price > 0 / champion")
         if len(s["chips"]) != 3 or any(c not in pal for c in s["chips"]):
             errors.append(sid + ": chips must be three palette swatches")
-        for m in s["remap"]:
+        for m in list(s["remap"]) + list(s.get("a1_remap", ())):
             a, b = m["from"], m["to"]
             if a not in pal or b not in pal:
                 errors.append("%s: %s -> %s not in the palette" % (sid, a, b))
@@ -89,8 +111,11 @@ def validate(table):
     return errors
 
 
-def env_of(table, s):
-    return {"suffix": s["suffix"], "remap": {m["from"]: m["to"] for m in s["remap"]}, "keep": table["keep"][s["base"]]}
+def env_of(table, s, style="classic"):
+    remap = {m["from"]: m["to"] for m in s["remap"]}
+    if style == "a1":
+        remap.update({m["from"]: m["to"] for m in s.get("a1_remap", ())})
+    return {"suffix": s["suffix"], "remap": remap, "keep": table["keep"][s["base"]]}
 
 
 @contextlib.contextmanager
@@ -113,6 +138,8 @@ def patched_kit(skin_env=None, export=True, out_dir=None, quiet=True):
                 m.review_render = lambda root, name, **kw: {"tris": m.tri_count(m.descendants(root))}
             if not export:
                 m.export_fbx = lambda root, rel_path: None
+        elif getattr(m, "__name__", "") == "a1_export" and quiet:
+            m.poses = lambda root, made: None  # the base's pose sheet stays the base's
         return m
 
     importlib.reload = reload
@@ -128,11 +155,17 @@ def patched_kit(skin_env=None, export=True, out_dir=None, quiet=True):
         real(K)
 
 
-def run_script(script, skin_env=None, export=True, out_dir=None, quiet=True):
-    """Runs BlenderSrc/characters/<script>; returns its globals (root, info, result)."""
+def run_script(script, skin_env=None, export=True, out_dir=None, quiet=True, style="classic"):
+    """Runs BlenderSrc/characters/<script> (an A1 script with export=1); returns its globals (root, info/result)."""
+    args = {"export": "1"} if style == "a1" else {}
     with patched_kit(skin_env, export, out_dir, quiet):
-        return runpy.run_path(os.path.join(HERE, script), init_globals={"ARGS": {}, "REPO": K.REPO},
+        return runpy.run_path(os.path.join(HERE, script), init_globals={"ARGS": args, "REPO": K.REPO},
                               run_name="gl_script")
+
+
+def root_of(g, base):
+    """The model's root after a script ran (the classic scripts' `root`; a1_nobody.py leaves it by name)."""
+    return g.get("root") or bpy.data.objects.get(base)
 
 
 # --------------------------------------------------------------------------- review lineup
@@ -188,7 +221,7 @@ def render_variant(root, frame, tmp, tag):
     return tiles, sil
 
 
-def review(table, gladiator, export=True):
+def review(table, gladiator, export=True, style="classic"):
     """Builds the default and both skins of `gladiator`, renders the lineup sheet. Returns the sheet path + checks."""
     import numpy as np
     from mathutils import Vector
@@ -206,8 +239,9 @@ def review(table, gladiator, export=True):
     d.show_cavity = d.show_object_outline = d.show_shadows = False
     renders, frame, out = [], None, {}
     for v in variants:
-        g = run_script(skins[0]["script"], env_of(table, v) if v else None, export=bool(v) and export)
-        root = g["root"]
+        g = run_script(script_of(skins[0], style), env_of(table, v, style) if v else None, export=bool(v) and export,
+                       style=style)
+        root = root_of(g, skins[0]["base"])
         if frame is None:
             lo, hi = K.world_bounds([o for o in K.descendants(root) if o.type == "MESH"])
             frame = ((lo + hi) / 2, max(hi - lo))
@@ -242,8 +276,9 @@ def review(table, gladiator, export=True):
     sheet = np.concatenate([sil_row] + rows[::-1], axis=0)  # Blender images are bottom-up: pale ends on top
     img = bpy.data.images.new("_skins_sheet", sheet.shape[1], sheet.shape[0], alpha=True)
     img.pixels = sheet.ravel()
-    os.makedirs(K.SHOTS_DIR, exist_ok=True)
-    out["sheet"] = os.path.join(K.SHOTS_DIR, "skins_%s.png" % gladiator)
+    shots = A1_SHOTS if style == "a1" else K.SHOTS_DIR
+    os.makedirs(shots, exist_ok=True)
+    out["sheet"] = os.path.join(shots, ("a1_skins_%s.png" if style == "a1" else "skins_%s.png") % gladiator)
     img.filepath_raw = out["sheet"]
     img.file_format = "PNG"
     img.save()
@@ -292,8 +327,9 @@ def read_fbx(path):
     return out
 
 
-def compare(base, other, remap=None, keep=()):
-    """Differences between two read_fbx() dicts; with a remap, other's faces must be base's faces remapped."""
+def compare(base, other, remap=None, keep=(), lenient=False):
+    """Differences between two read_fbx() dicts; with a remap, other's faces must be base's faces remapped (lenient:
+    each face kept or remapped, for A1 parts whose kept weapon is joined into the arm)."""
     diffs = []
     if set(base) != set(other):
         diffs.append("nodes differ: %s" % sorted(set(base) ^ set(other)))
@@ -308,39 +344,56 @@ def compare(base, other, remap=None, keep=()):
             kept = kept or any(n.startswith(k) for k in keep)
             n = base[n][0] if n in base else None
         want = bf if (remap is None or kept) else tuple(remap.get(f, f) for f in bf)
+        if lenient and remap is not None:
+            want = tuple(o if o in (b, remap.get(b, b)) else w for b, w, o in zip(bf, want, of))
         if want != of:
             bad = sorted({(w, f) for w, f in zip(want, of) if w != f})
             diffs.append("%s: UV cells %s" % (name, bad[:6]))
     return diffs
 
 
-def check_skins(table, skins):
+def check_skins(table, skins, style="classic"):
     out = {}
     for s in skins:
-        base = read_fbx(os.path.join(MODELS, "Characters", s["base"] + ".fbx"))
-        path = os.path.join(MODELS, "Characters", "Skins", s["base"] + s["suffix"] + ".fbx")
+        base = read_fbx(os.path.join(MODELS, model_dir(style), s["base"] + ".fbx"))
+        path = os.path.join(MODELS, model_dir(style), "Skins", s["base"] + s["suffix"] + ".fbx")
         if not os.path.exists(path):
             out[s["id"]] = "missing " + path
             continue
         skin = read_fbx(path)
         remapped = sum(1 for n, (_, _, _, f) in skin.items() if n in base for a, b in zip(base[n][3], f) if a != b)
-        diffs = compare(base, skin, env_of(table, s)["remap"], table["keep"][s["base"]])
+        diffs = compare(base, skin, env_of(table, s, style)["remap"], table["keep"][s["base"]], lenient=style == "a1")
         out[s["id"]] = diffs or "ok (%d tris, %d faces remapped)" % (sum(v[1] for v in skin.values()), remapped)
     return out
 
 
-def check_base(table, scripts):
+def check_base(table, scripts, style="classic"):
     """Each base script with no skin, its outputs in a temp folder, against the committed FBX."""
     out = {}
     for script, base in scripts:
         tmp = tempfile.mkdtemp(prefix="skins_base_")
-        run_script(script, None, export=True, out_dir=tmp, quiet=False)
-        fresh = read_fbx(os.path.join(tmp, "Models", "Characters", base + ".fbx"))
-        committed = read_fbx(os.path.join(MODELS, "Characters", base + ".fbx"))
+        run_script(script, None, export=True, out_dir=tmp, quiet=False, style=style)
+        fresh = read_fbx(os.path.join(tmp, "Models", model_dir(style), base + ".fbx"))
+        committed = read_fbx(os.path.join(MODELS, model_dir(style), base + ".fbx"))
         diffs = compare(committed, fresh)
         cells = sorted({f for v in fresh.values() for f in v[3]})
         out[base] = diffs or "identical: %d nodes, %d tris, UV cells %s" % (
             len(fresh), sum(v[1] for v in fresh.values()), cells)
+        shutil.rmtree(tmp, ignore_errors=True)
+    return out
+
+
+def check_rebuild(table, skins, style="classic"):
+    """Each skin rebuilt into a temp folder against its committed FBX: the table and the driver still make it."""
+    out = {}
+    for s in skins:
+        tmp = tempfile.mkdtemp(prefix="skins_rebuild_")
+        run_script(script_of(s, style), env_of(table, s, style), export=True, out_dir=tmp, style=style)
+        rel = os.path.join(model_dir(style), "Skins", s["base"] + s["suffix"] + ".fbx")
+        fresh = read_fbx(os.path.join(tmp, "Models", rel))
+        committed = read_fbx(os.path.join(MODELS, rel))
+        diffs = compare(committed, fresh)
+        out[s["id"]] = diffs or "identical: %d nodes, %d tris" % (len(fresh), sum(v[1] for v in fresh.values()))
         shutil.rmtree(tmp, ignore_errors=True)
     return out
 
@@ -357,27 +410,35 @@ def main(args):
         skins = [s for s in skins if s["gladiator"] == args["gladiator"]]
     if args.get("skin", "all") != "all":
         skins = [s for s in skins if s["id"] == args["skin"]]
+    style = args.get("style", "classic")
+    if style not in STYLES:
+        return {"errors": ["style must be one of %s" % (STYLES,)]}
+    if style == "a1":
+        skins = [s for s in skins if s.get("a1_script")]
     if not skins:
         return {"errors": ["no skin matches %s" % args]}
     check = args.get("check")
     if check == "skins":
-        return check_skins(table, skins)
+        return check_skins(table, skins, style)
     if check == "base":
         seen = []
         for s in skins:
-            if (s["script"], s["base"]) not in seen:
-                seen.append((s["script"], s["base"]))
-        return check_base(table, seen)
+            if (script_of(s, style), s["base"]) not in seen:
+                seen.append((script_of(s, style), s["base"]))
+        return check_base(table, seen, style)
+    if check == "rebuild":
+        return check_rebuild(table, skins, style)
     export = args.get("export") != "0"
     if args.get("review") == "1":
         out = {}
         for g in dict.fromkeys(s["gladiator"] for s in skins):
-            out[g] = review(table, g, export)
+            out[g] = review(table, g, export, style)
         return out
     out = {}
     for s in skins:
-        g = run_script(s["script"], env_of(table, s), export=export)
-        out[s["id"]] = {"tris": K.tri_count(K.descendants(g["root"])), "fbx": g["info"].get("fbx")}
+        g = run_script(script_of(s, style), env_of(table, s, style), export=export, style=style)
+        info = g.get("info") or g.get("result") or {}
+        out[s["id"]] = {"tris": K.tri_count(K.descendants(root_of(g, s["base"]))), "fbx": info.get("fbx")}
     return out
 
 

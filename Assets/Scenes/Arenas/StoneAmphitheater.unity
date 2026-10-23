@@ -7853,6 +7853,7 @@ MonoBehaviour:
   - {x: 10, y: 1.2, z: 41}
   - {x: 41.3, y: 1.2, z: 4}
   openLinger: 1.6
+  priceMul: 1
 --- !u!1 &675791731
 GameObject:
   m_ObjectHideFlags: 0
@@ -9090,6 +9091,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.ArenaMaster
   config: {fileID: 11400000, guid: 440ef651c63c9bdd0b638aaba7f11c82, type: 2}
+  boredomMul: 1
 --- !u!1001 &763819483
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -11895,7 +11897,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 607fa39e81b172f04b138263ac6c1c73, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.AshenStranger
-  model: {fileID: 919132149155446097, guid: 1772483be073b5a83a5f36a3d185f0c3, type: 3}
+  model: {fileID: 919132149155446097, guid: eb28617efea509ca0af2739b0b683bf0, type: 3}
   material: {fileID: 2100000, guid: 05a9990b9ad10f8f2aaf5ee4b41e035e, type: 2}
   spots:
   - {x: -34, y: 0, z: -6}
@@ -14823,6 +14825,7 @@ MonoBehaviour:
   table: {fileID: 11400000, guid: 96859dc17f9cf95bd87a4709abd55b47, type: 2}
   densityMultiplier: 1
   prewarmPerFrame: 16
+  clockScale: 1
   maxAliveOverride: 320
   maxSpawnDistance: 55
   arenaDensity: 1
@@ -17741,6 +17744,8 @@ MonoBehaviour:
   capacity: 1024
   arenaCenter: {x: 0, y: 0, z: 0}
   hpMul: 1.5
+  scriptedHpMul: 1
+  speedMul: 1
   arenaRadius: 42.9
   arenaAspect: 1
   arenaOutline:
@@ -20194,6 +20199,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.Favor
   config: {fileID: 11400000, guid: 440ef651c63c9bdd0b638aaba7f11c82, type: 2}
+  gainMul: 1
 --- !u!1 &1653644252
 GameObject:
   m_ObjectHideFlags: 0
@@ -20671,6 +20677,7 @@ MonoBehaviour:
   burst: {fileID: 2045959295}
   openDelay: 0.35
   rewardDelay: 0.3
+  levelUpCardDelta: 0
 --- !u!1 &1700267689
 GameObject:
   m_ObjectHideFlags: 0

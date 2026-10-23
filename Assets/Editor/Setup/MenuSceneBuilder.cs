@@ -61,6 +61,7 @@ namespace Gladiator.EditorTools
             menu.font = font;
             menu.fontMaterial = fontMat;
             menu.run = run;
+            PlaygroundSetup.Link(menu, AssetDatabase.LoadAssetAtPath<RunDef>(PlaygroundSetup.RunPath)); // T1: keep the PLAYGROUND button's run
             menu.hero = hero.transform; // swapped for the picked gladiator
             menu.heroMaterial = charMat;
             foreach (var t in hero.GetComponentsInChildren<Transform>(true)) GameObjectUtility.SetStaticEditorFlags(t.gameObject, 0);

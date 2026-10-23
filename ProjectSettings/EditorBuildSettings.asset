@@ -35,5 +35,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Arenas/Colosseum.unity
     guid: 16fc14502d6d17c758eac687556affe5
+  - enabled: 1
+    path: Assets/Scenes/Dev/Playground.unity
+    guid: 5ca5f41cc66fcb6d2ae622ed0a69976f
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

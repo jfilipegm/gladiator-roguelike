@@ -70,8 +70,10 @@ namespace Gladiator.Tests
         {
             yield return Boot(TestArena, Idol);
             var p = Player.Main.transform;
-            Assert.IsNotNull(FindDeep(p, "SunCrown"), "the sun-crown");
-            Assert.IsNotNull(FindDeep(p, "Sceptre"));
+            // his own model (A1: one mesh per part, so no piece names to look for), rigged
+            Assert.IsNotNull(FindDeep(p, Idol.model.name), "his model, " + Idol.model.name);
+            foreach (var part in new[] { "Body", "Head", "ArmL", "ArmR", "LegL", "LegR" })
+                Assert.IsNotNull(FindDeep(p, part), "his " + part);
             Assert.AreEqual(100f, Player.Main.GetComponent<PlayerHealth>().MaxHp, 0.01f);
             Assert.AreEqual(1, _weapons.Weapons.Count);
             Assert.AreEqual("coin_toss", _weapons.Weapons[0].Def.id);

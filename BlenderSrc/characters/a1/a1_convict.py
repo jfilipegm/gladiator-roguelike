@@ -4,6 +4,7 @@ Identity kept from en_convict.py: thin, hunched, grey starving skin, sack-cloth 
 (the enemy accent), yellow eyes and a grimace, charcoal hair, iron shackles on both wrists with broken chain stubs,
 arms reaching forward, bare feet, no weapon. Changed: the boxes become the variant-A body (lean: tier12 lib), the
 loincloth becomes a ragged sack tunic with a dirt hem.
+export=1: the game model Assets/Art/Models/A1/Enemies/EN_Convict.fbx (docs/tracks/A1-ingame-contract.md).
 """
 import importlib
 import os
@@ -16,8 +17,12 @@ import simple_kit as A
 importlib.reload(A)
 import a1_tier12_lib as L
 importlib.reload(L)
+import a1_export as X
+importlib.reload(X)
 
-OX = -0.55
+EXPORT = ARGS.get("export") == "1"
+OX = 0.0 if EXPORT else -0.55
+RULES = [("Rag", "Body"), ("ShackleL", "ArmL"), ("ShackleR", "ArmR"), ("LinkL", "ArmL"), ("LinkR", "ArmR")]
 
 
 def build():
@@ -53,8 +58,13 @@ def build():
     L.xform(head, L.rot_x(-0.2), (0, 0, a["neck_z"]), OX)
     upper = [o for o in parts if not o.name.startswith(("Leg", "Foot"))]
     L.xform(upper, L.rot_x(0.36), (0, 0.0, p["H"] - 0.06), OX)
-    return parts
+    # the joints, moved like the pieces (the arms and the head turn about their own joints: only the hunch moves them)
+    J = L.move_joints(X.joints(p), ("Head", "ArmL", "ArmR"), L.rot_x(0.36), (0, 0.0, p["H"] - 0.06))
+    return parts, J
 
 
-parts = build()
-result = A.review("convict", parts, original_blend="en_convict", original_root="EN_Convict")
+parts, J = build()
+if EXPORT:
+    result = L.export_enemy("EN_Convict", parts, J, 1.295, RULES)
+else:
+    result = A.review("convict", parts, original_blend="en_convict", original_root="EN_Convict")

@@ -40,3 +40,4 @@ The roster scripts now export the game models through `a1_export.export()` (one 
 | Model | Tris | Renderers | Height (original) | Doubts |
 |---|---|---|---|---|
 | EN_Praetorian | 591 (was 894) | 6 | 2.13 m (2.04, +4%) | a little over 550: the curved scutum (94) and the plume/cheek/neck guards are the identity |
+| EN_GildedMercenary | 533 (was 940) | 6 | 2.48 m (2.63, -6%) | the halberd is lengthened to 2.2 m to keep the height; no neck guard (the helm's back is painted on the head); the purse is an octahedron |

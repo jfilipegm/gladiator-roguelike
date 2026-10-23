@@ -5,6 +5,7 @@ fighters: dark hair, no helmet), the tall steel galerus guarding the left should
 right shoulder and a weighted net balled in the right fist (the lob), a long trident upright in the left hand, the
 blue loincloth under the magenta belt (the enemy accent), sandals. Changed: the variant-A body (lean); the nets are
 faceted rope lumps; no leg wrap (triangles).
+export=1: the game model Assets/Art/Models/A1/Enemies/EN_NetThrower.fbx (docs/tracks/A1-ingame-contract.md).
 """
 import importlib
 import math
@@ -20,8 +21,13 @@ import simple_kit as A
 importlib.reload(A)
 import a1_tier12_lib as L
 importlib.reload(L)
+import a1_export as X
+importlib.reload(X)
 
-OX = -0.55
+EXPORT = ARGS.get("export") == "1"
+OX = 0.0 if EXPORT else -0.55
+RULES = [("Loincloth", "Body"), ("Galerus", "Body"), ("Bundle", "Body"), ("Shaft", "ArmL"), ("Crossbar", "ArmL"),
+         ("Prong", "ArmL"), ("HandNet", "ArmR")]
 
 
 def net_ball(name, r, loc, scale, ox):
@@ -53,7 +59,9 @@ def build():
     rot = L.rot_x(-0.4)
     L.xform(L.by_name(parts, "ArmL", "FistL"), rot, (xl, 0, S), OX)
     hand = Vector((xl, 0.0, S)) + rot.to_3x3() @ (Vector(a["hand_l"]) - Vector((xl, 0.0, S)))
-    top = 1.62
+    # in game the body is scaled to the original's (0.85) and the trident lengthened so its tip stays near the
+    # original's 2.0 m (its height is the trident)
+    top = 2.02 if EXPORT else 1.62
     sq = L.ngon(4, 0.022, hand.x, hand.y, math.pi / 4)
     parts.append(L.loft("Shaft", [(0.12, sq), (top, sq)], "wood_dark", OX, False, False))
     parts.append(A.box("Crossbar", (0.26, 0.04, 0.045), (hand.x, hand.y, top), "steel", OX, pivot=(0, 0, 0)))
@@ -68,8 +76,12 @@ def build():
     ball = L.octa("HandNet", 0.14, (hand.x, hand.y - 0.04, hand.z - 0.07), "rope", OX, scale=(1.0, 0.9, 0.85))
     L.paint(ball, "wood_light", lambda c, n: n.x * n.y > 0, OX)   # a knotted weave
     parts.append(ball)
-    return parts
+    J = X.joints(p)
+    return parts, J
 
 
-parts = build()
-result = A.review("net_thrower", parts, original_blend="en_netthrower", original_root="EN_NetThrower")
+parts, J = build()
+if EXPORT:
+    result = L.export_enemy("EN_NetThrower", parts, J, 2.001, RULES, scale=0.85)
+else:
+    result = A.review("net_thrower", parts, original_blend="en_netthrower", original_root="EN_NetThrower")

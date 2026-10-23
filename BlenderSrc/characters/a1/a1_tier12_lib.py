@@ -290,13 +290,15 @@ def move_joints(J, names, mat, pivot):
     return J
 
 
-def fit_height(parts, J, target, tol=0.08):
+def fit_height(parts, J, target, tol=0.08, scale=None):
     """In-game size: if the built height is more than `tol` off the original's (A1-rigs.json `height`), scales the
-    pieces and the joints about the origin (the soles) to exactly that height. Returns (scale, built height)."""
+    pieces and the joints about the origin (the soles) to exactly that height; `scale` forces a factor instead (a
+    character whose height is a tall weapon: match the body, keep the weapon's tip near the original's). Returns
+    (scale, built height)."""
     bpy.context.view_layer.update()
     zs = [(o.matrix_world @ v.co).z for o in parts if o.type == "MESH" for v in o.data.vertices]
     h = max(zs) - min(zs)   # exact (a rotated piece's bound_box overshoots)
-    s = 1.0 if abs(h / target - 1.0) <= tol else target / h
+    s = scale if scale is not None else (1.0 if abs(h / target - 1.0) <= tol else target / h)
     if s != 1.0:
         xform(parts, Matrix.Scale(s, 4), (0.0, 0.0, 0.0), 0.0)
         for k in list(J):
@@ -304,11 +306,11 @@ def fit_height(parts, J, target, tol=0.08):
     return round(s, 4), round(h, 3)
 
 
-def export_enemy(root, parts, J, height, rules):
+def export_enemy(root, parts, J, height, rules, scale=None):
     """fit_height() then a1_export.export() into Assets/Art/Models/A1/Enemies/<root>.fbx (+ the pose sheet).
     `height`: the original's (docs/tracks/A1-rigs.json)."""
     import a1_export as X
-    s, h = fit_height(parts, J, height)
+    s, h = fit_height(parts, J, height, scale=scale)
     info = X.export(root, "Enemies", parts, J, rules=rules)
     info.update(fit_scale=s, built_height=h, original_height=height)
     return info

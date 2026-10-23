@@ -5,6 +5,7 @@ the pit: "the shooter") with a dark tip, a sack-cloth mask over the lower face, 
 a green tunic with a leather belt and a stone bag on the hip, light leather trousers, a sling hanging from the right
 hand with a glowing orange-red stone in its pouch (the thing that hurts). Changed: the variant-A body (lean); the hood
 is one chamfered loft with the face opening cut out; the mask is painted on the jaw.
+export=1: the game model Assets/Art/Models/A1/Enemies/EN_Slinger.fbx (docs/tracks/A1-ingame-contract.md).
 """
 import importlib
 import math
@@ -20,8 +21,12 @@ import simple_kit as A
 importlib.reload(A)
 import a1_tier12_lib as L
 importlib.reload(L)
+import a1_export as X
+importlib.reload(X)
 
-OX = -0.55
+EXPORT = ARGS.get("export") == "1"
+OX = 0.0 if EXPORT else -0.55
+RULES = [("Scarf", "Body"), ("StoneBag", "Body"), ("SlingStrap", "ArmR"), ("SlingStone", "ArmR")]
 
 
 def build():
@@ -65,8 +70,12 @@ def build():
          (c[0], c[1], c[2] + r * 1.1), (c[0], c[1], c[2] - r * 0.6)]
     f = [(4, 0, 2), (4, 2, 1), (4, 1, 3), (4, 3, 0), (5, 2, 0), (5, 1, 2), (5, 3, 1), (5, 0, 3)]
     parts.append(L.mesh("SlingStone", v, f, "glow_hazard_red", OX))
-    return parts
+    J = X.joints(p)
+    return parts, J
 
 
-parts = build()
-result = A.review("slinger", parts, original_blend="en_slinger", original_root="EN_Slinger")
+parts, J = build()
+if EXPORT:
+    result = L.export_enemy("EN_Slinger", parts, J, 1.437, RULES)
+else:
+    result = A.review("slinger", parts, original_blend="en_slinger", original_root="EN_Slinger")

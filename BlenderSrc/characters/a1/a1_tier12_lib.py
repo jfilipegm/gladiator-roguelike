@@ -52,6 +52,27 @@ def wedge_nose(name, w, h, d, loc, swatch, ox=0.0):
     return mesh(name, v, [(0, 1, 3), (0, 3, 2), (1, 2, 3)], swatch, ox)
 
 
+def spike(name, r, h, loc, swatch, ox=0.0, n=4, rot=(0.0, 0.0, 0.0), phase=0.0):
+    """A true n-sided pyramid (n + n-2 triangles; simple_kit.cone is a frustum with a tiny top, twice the cost):
+    base centred at loc, tip +Z before the object rotation `rot` (Euler XYZ about the base)."""
+    v = [(r * math.cos(phase + 2 * math.pi * i / n), r * math.sin(phase + 2 * math.pi * i / n), 0.0) for i in range(n)]
+    v.append((0.0, 0.0, h))
+    faces = [(i, (i + 1) % n, n) for i in range(n)] + [tuple(reversed(range(n)))]
+    o = mesh(name, v, faces, swatch, 0.0)
+    o.location = (loc[0] + ox, loc[1], loc[2])
+    o.rotation_euler = rot
+    return o
+
+
+def octa(name, r, loc, swatch, ox=0.0, scale=(1.0, 1.0, 1.0)):
+    """An octahedron (8 triangles): a faceted stone, a balled net."""
+    sx, sy, sz = (r * k for k in scale)
+    x, y, z = loc
+    v = [(x + sx, y, z), (x - sx, y, z), (x, y + sy, z), (x, y - sy, z), (x, y, z + sz), (x, y, z - sz)]
+    f = [(4, 0, 2), (4, 2, 1), (4, 1, 3), (4, 3, 0), (5, 2, 0), (5, 1, 2), (5, 3, 1), (5, 0, 3)]
+    return mesh(name, v, f, swatch, ox)
+
+
 def ring(name, z0, z1, sec, swatch, ox=0.0):
     """An open band (no caps) between z0 and z1 with the same section: belts, cuffs, collars."""
     return loft(name, [(z0, sec), (z1, sec)], swatch, ox, False, False)

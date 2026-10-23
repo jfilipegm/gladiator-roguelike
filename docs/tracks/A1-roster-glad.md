@@ -19,3 +19,36 @@ first (the originals are LFS pointers until checked out).
 | Wolf | 402 | grey timber wolf, lean, slate back and pale belly, the cyan collar and glowing cyan eyes, pale snout with dark nose and white fangs, slate ears up, slate tail out and back, pale paws | the body is one horizontal loft (chest rising to the neck, lean waist, hips) instead of boxes; the collar is a ring round the neck, not a bib | from straight ahead or behind the collar shows only as a thin cyan rim (it reads in side and three-quarter views) |
 | Net-Weaver | 1,134 | bare-chested retiarius, sea-blue skirt, wide leather belt with a bronze plate, the steel galerus standing up from the left shoulder (dark bronze rim) on a leather strap, the rope net down his back with cyan cords and iron weights on its hem, dark hair with a topknot, the cyan headband and tails, glowing cyan eyes, dark chin beard, the manica bands on the left arm, a leather bracer on the right, white shin wraps and sandals, the trident slanted forward with a cyan binding | the net's cords are thin tubes following the curved net (`G.on_cape`); the lead weights are small iron blocks (the round ones cost 180 tris) | the galerus is a thin plate seen edge-on from the front (as in the original) |
 | Bookmaker | 884 | short and fat, green robe over a round belly, gold sash with a fat gold coin pouch, dark leather legs, round face with small dark eyes and a big nose, wide-brimmed leather hat, the ledger (dark covers, bone pages) under his left arm, the quill raised in his right hand | the face is skin_mid with a skin_tan nose (the original's skin_tan face merged with the hat); the quill is an ivory curved feather with a dark nib (the original's white cone read as a knife); the review drops PR_GoldenRat, which shares secrets.blend | the quill can still read as a curved blade at a glance |
+
+## In-game models (docs/tracks/A1-ingame-contract.md)
+Each script takes `export=1`: built at ox = 0, exported through `a1_export` to
+`Assets/Art/Models/A1/Characters/<root>.fbx` with the original's root name and parts, one mesh per part at its joint.
+Pose sheets: `Screenshots/a1/ingame/a1_<root>_poses.png` (rest, run, swing, hit; every piece follows its part).
+Only the meshes are passed to `X.export` (a weapon's frame empty and its child pieces both in the list made `_bake`
+remove a child twice). Heights are measured on the export, against `docs/tracks/A1-rigs.json`.
+
+| Model | Tris | Renderers (orig.) | Height (orig.) | Notes |
+|---|---|---|---|---|
+| CH_BloodKnight | 980 | 6 (50) | 1.82 m (1.91, −5 %) | scaled ×1.06 (it was 1.72, −10.2 %); pauldrons, spikes, tabard, cape on Body as the original |
+| CH_MurderMachine | 894 | 6 (38) | 2.20 m (2.23, −1 %) | pauldrons on the arms as the original; the cleaver on ArmR |
+| CH_PitGoblin | 1,174 | 6 (48) | 1.37 m (1.27, +8.5 %) | the neck joint follows the hunched head; the satchel and its junk on Body, the bomb on ArmR |
+| CH_ThunderChampion | 1,094 | 6 (37) | 2.22 m (2.23, 0 %) | the spear's pieces renamed StormSpear* (the skins' keep) |
+| CH_GoldenIdol | 1,024 | 6 (37) | 1.84 m (1.93, −5 %) | the sun-crown on Head, the sceptre on ArmL, the boot cuffs on the legs |
+| CH_AshenOracle | 914 | 6 (33) | 1.93 m (1.81, +7 %) | staff 5 cm lower (it was +9.6 %); pieces renamed CenserStaff*; the legs are only the feet under the robe |
+| CH_Asterion | 1,198 | 7 (64) | 1.81 m (1.83, −1 %) | the chain and stone are a static `Chain` mesh under the root, as the original (WP_LabyrinthChain's modelPart hides it); its top link stays put while the arm swings, as before; pieces renamed Chain* |
+| CH_Beastmaster | 1,098 | 6 (38) | 1.80 m (1.72, +5 %) | the hunting horn on Body, the spear's pieces renamed HuntingSpear* |
+| CH_Wolf | 402 | 6 (21) | 0.95 m (0.90, +6 %) | front legs ArmL/ArmR under Body, hind legs LegL/LegR under the root (WOLF_JOINTS); the humanoid swing pose on a wolf is meaningless but every piece follows |
+| CH_NetWeaver | 1,134 | 6 (50) | 1.76 m (1.86, −5 %) | trident 12 cm longer (it was −10.3 %); galerus, net and its cords on Body; pieces renamed Trident* |
+| CH_Bookmaker | 884 | 1 (1) | 1.38 m (1.36, +2 %) | every piece on one static `Root` mesh under the CH_Bookmaker empty (the original's root was the mesh itself); 884 tris against the original's 332 |
+
+## A1 skins
+`build_skins.py style=a1` runs each skin's `a1_script` with `export=1` into `Assets/Art/Models/A1/Characters/Skins/`
+(20 FBX). Remap = the classic `remap` plus `a1_remap` (only swatches the classic model doesn't use, so the classic
+skins can't change): the Nobody's Unbowed (the A1 bronze buckle → gold) and the Goblin's Sewer King / Ratcatcher (the
+rag's dirt_light streaks → stone_grey / ochre). Every other A1 model uses the classic model's swatches (plus skin
+shades and the kept weapons' edges). The weapons stay unskinned through the same `keep` prefixes (the A1 weapon pieces
+are named or parented to match them). Sheets: `Screenshots/a1/ingame/a1_skins_<gladiator>.png` (default + two skins,
+pale and dark floor, 64 px silhouettes identical). Checks: `check=skins style=a1` all 20 ok (each face kept or
+remapped: the weapon is joined into its arm, so it can't be told apart by name); `check=rebuild` (new) rebuilds the 20
+classic skins into a temp folder: all identical to the committed FBX; `check=base style=a1 gladiator=asterion`:
+identical (the A1 export is deterministic).

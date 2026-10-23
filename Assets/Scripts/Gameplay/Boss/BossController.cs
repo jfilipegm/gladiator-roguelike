@@ -291,6 +291,7 @@ namespace Gladiator.Gameplay
             if (_slot < 0 || _state == State.Dead) return;
             if (!Alive) { Die(); return; }
             if (dt <= 0f) return;
+            if (DevSettings.FreezeEnemies) return; // the admin's FREEZE: he holds still (hits, flash and his death still work)
             if (_player == null && Player.Main != null)
             {
                 _player = Player.Main.transform;

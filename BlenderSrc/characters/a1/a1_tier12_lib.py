@@ -134,11 +134,12 @@ def by_name(parts, *names):
 
 def body(ox=0.0, p=None, skin="skin_light", skin_shade="skin_mid", top="cloth_white", top_shade=None,
          belt="leather_d", foot="leather_d", hair="mud_dark", legs="skin", leg_colour=None, hair_style="cap",
-         sleeves=(), head_top="round", skip=()):
+         sleeves=(), head_top="round", skip=(), torso_cap=True):
     """simple_kit.humanoid's variant-A body with fewer triangles. Same anchors (hand_r/hand_l, hz(f), head_front_y,
     chest_z, waist_z, hem_z, neck_z, shoulder_l/r, back_y, front_y, p) plus arm_x (the arm centres' |x|) and wz (the
     wrist height). top=None: a bare torso; top_shade: a hem band. hair_style "cap" | "none"; head_top "round" (an
-    extra ring for bald heads) | "flat" (hidden under hair or a helmet). Faces are added by face()."""
+    extra ring for bald heads) | "flat" (hidden under hair or a helmet); torso_cap=False drops a bare torso's bottom
+    cap (when a loincloth hides it). Faces are added by face()."""
     p = dict(A.CHIBI, **(p or {}))
     H, Sz, SX, N, HH, HW, TW = p["H"], p["S"], p["SX"], p["N"], p["HH"], p["HW"], p["TW"]
     LR, LX, AR, AL, HS, FL = p["LR"], p["LX"], p["AR"], p["AL"], p["HS"], p["FL"]
@@ -162,7 +163,7 @@ def body(ox=0.0, p=None, skin="skin_light", skin_shade="skin_mid", top="cloth_wh
             rings.append((hem + 0.07, oct8(TW * 1.08, TW * 0.78)))
         rings += [(waist, oct8(TW * 0.86, TW * 0.62)), (chest, oct8(TW * 1.0, TW * 0.66)),
                   (Sz + 0.03, oct8(TW * 1.06, TW * 0.62)), (N + 0.02, oct8(0.085 * TW / 0.2, 0.075 * TW / 0.2))]
-        t = loft("Torso", rings, top or skin, ox, cap_bottom=not top, cap_top=False)
+        t = loft("Torso", rings, top or skin, ox, cap_bottom=not top and torso_cap, cap_top=False)
         if top and top_shade:
             paint(t, top_shade, lambda c, n: c.z < hem + 0.06, ox)
         paint(t, skin, lambda c, n: c.z > N - 0.03, ox)

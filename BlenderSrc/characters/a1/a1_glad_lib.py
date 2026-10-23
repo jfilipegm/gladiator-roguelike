@@ -191,6 +191,49 @@ def ball(name, r, loc, swatch, ox=0.0, n=8, rz=None):
     return A.loft(name, rings, swatch, ox)
 
 
+def hloft(name, rings, swatch, ox, base, back=False, cap_start=True, cap_end=True):
+    """A horizontal loft: rings [(d, [(x, h), ...])] at distance d forward (-Y; backward, +Y, with back=True) from
+    base (character space), each section's points (x, h) across and up. Snouts, muzzles, quadruped bodies."""
+    if back:
+        rings = [(d, [(x, -h) for x, h in pts]) for d, pts in rings]
+    o = A.loft(name, rings, swatch, ox, cap_bottom=cap_start, cap_top=cap_end)
+    spin(o, rx=-90 if back else 90)
+    o.location = (base[0], base[1], base[2])
+    return o
+
+
+def chain(name, pts, swatch, ox=0.0, pitch=0.17, size=(0.045, 0.11, 0.2), alt=None):
+    """Links (boxes, alternately upright and flat) laid along the polyline pts (character space) every `pitch`.
+    alt: the flat links' swatch (a darker one, so the chain reads as links). Returns the link objects."""
+    P = [Vector(p) for p in pts]
+    segs = [(P[i], P[i + 1]) for i in range(len(P) - 1)]
+    total = sum((b - a).length for a, b in segs)
+    out = []
+    d, k = pitch * 0.5, 0
+    while d < total:
+        acc = 0.0
+        for a, b in segs:
+            ln = (b - a).length
+            if acc + ln >= d:
+                t = (d - acc) / ln
+                c = a.lerp(b, t)
+                dirv = (b - a).normalized()
+                break
+            acc += ln
+        o = K.box("%s%d" % (name, k), size=size, location=(c.x + ox, c.y, c.z), pivot=(0, 0, 0),
+                  swatch=(alt if (alt and k % 2) else swatch))
+        q = Vector((0, 0, 1)).rotation_difference(dirv)
+        if k % 2:
+            from mathutils import Quaternion
+            q = q @ Quaternion((0, 0, 1), math.radians(90))
+        o.rotation_mode = "QUATERNION"
+        o.rotation_quaternion = q
+        out.append(A.flat(o))
+        d += pitch
+        k += 1
+    return out
+
+
 def move(objs, d):
     """Translates objects (top-level ones; children follow) by d = (dx, dy, dz)."""
     for o in objs:

@@ -14,6 +14,9 @@ namespace Gladiator.Gameplay
     /// </summary>
     public sealed class BossFight : MonoBehaviour, ITickable
     {
+        [Tooltip("Tests: the old entrance (the horde dragged off, the Director off), so a boss test meets the boss alone. The game keeps the horde (note 38).")]
+        public bool clearHorde;
+
         public enum Stage : byte { Waiting, Fight, Falling, Reward, Done }
 
         public BossDef boss;
@@ -130,11 +133,17 @@ namespace Gladiator.Gameplay
             _takenInFight = 0f;
             _hitsInFight = 0;
             _dealtAtStart = RunState.Current != null ? RunState.Current.DamageDealt : 0f;
-            if (Director.Instance != null) Director.Instance.enabled = false;
+            // note 38 (the producer, v0.28.0: "the boss fights are too easy, don't remove the mobs nor their spawning"): the
+            // horde stays and keeps coming, a little slower, without swarms or elites (Director.BossPhase)
             var em = EnemyManager.Instance;
-            if (em != null) em.DespawnAll(); // the horde is dragged off (no XP shower: no cards mid-entrance)
-            if (PickupSystem.Instance != null) PickupSystem.Instance.ClearAll();
-            if (EnemyProjectiles.Instance != null) EnemyProjectiles.Instance.Clear();
+            if (clearHorde)
+            {
+                if (Director.Instance != null) Director.Instance.enabled = false;
+                if (em != null) em.DespawnAll(); // the old entrance: the horde dragged off (no XP shower)
+                if (PickupSystem.Instance != null) PickupSystem.Instance.ClearAll();
+                if (EnemyProjectiles.Instance != null) EnemyProjectiles.Instance.Clear();
+            }
+            else if (Director.Instance != null) Director.Instance.BossPhase = true;
             controller.def = boss;
             // the Eternal Victor rises from below at the arena's centre (the Colosseum's stage lift): no gate opens; the
             // gate is the fallback should he not spawn there

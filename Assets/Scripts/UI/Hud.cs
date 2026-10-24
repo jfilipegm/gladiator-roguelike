@@ -785,7 +785,10 @@ namespace Gladiator.UI
         const string SwarmText = "SWARM INCOMING!";
         const string EliteText = "AN ELITE ENTERS!";
 
-        void OnDirector(in DirectorEvent e) => RouteBanner(e.Kind == DirectorEventKind.Swarm ? SwarmText : EliteText, BannerCloth.Crimson, 0f);
+        const string ThreatText = "THE HORDE GROWS STRONGER!";
+
+        void OnDirector(in DirectorEvent e) =>
+            RouteBanner(e.Kind == DirectorEventKind.Swarm ? SwarmText : e.Kind == DirectorEventKind.Threat ? ThreatText : EliteText, BannerCloth.Crimson, 0f);
 
         /// <summary>
         /// Purple outranks crimson. The same rank or higher while a banner is down: it rolls up quickly and the new one

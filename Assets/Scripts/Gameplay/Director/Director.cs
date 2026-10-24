@@ -74,9 +74,14 @@ namespace Gladiator.Gameplay
         /// <summary>When the next elite comes, in PaceClock seconds (the run clock at clockScale 1).</summary>
         public float NextEliteAt => _nextElite;
 
+        /// <summary>Note 38: the boss is up. The horde keeps coming, a little slower, without swarms or elites.</summary>
+        public bool BossPhase;
+        int _threatTier;
+
         void Awake()
         {
             Instance = this;
+            Threat.Config = config; // note 39
             _steady = GameRandom.Fork(RngStream.Director, 0u);
             if (config != null) { _nextSwarm = config.firstSwarm; _nextElite = config.firstElite; }
         }
@@ -179,6 +184,11 @@ namespace Gladiator.Gameplay
             if (Instance == this) Instance = null;
         }
 
+        void OnDestroy()
+        {
+            if (Threat.Config == config) Threat.Config = null;
+        }
+
         /// <summary>Admin/tests: start the next swarm / elite now.</summary>
         public void TriggerSwarmNow() => _nextSwarm = PaceClock;
         public void TriggerEliteNow() => _nextElite = PaceClock;
@@ -198,11 +208,19 @@ namespace Gladiator.Gameplay
             if (pace > _nextSwarm + 2f) _nextSwarm = pace + config.swarmEvery * 0.5f;
             if (pace > _nextElite + 2f) _nextElite = pace + EliteEvery * 0.5f;
 
-            // steady pressure
-            int target = TargetAlive;
+            // note 39: the player crossed a threat tier (the horde already spawns stronger): say so
+            int tier = Threat.Tier;
+            if (tier > _threatTier)
+            {
+                _threatTier = tier;
+                GameEvents.OnDirector.Raise(new DirectorEvent { Kind = DirectorEventKind.Threat, Position = _cam != null ? _cam.position : Vector3.zero, Color = em.telegraphColor });
+            }
+
+            // steady pressure (note 38: a little less while the boss is up)
+            int target = BossPhase ? Mathf.RoundToInt(TargetAlive * config.bossAliveMul) : TargetAlive;
             if (em.AliveCount < target)
             {
-                _spawnAcc = Mathf.Min(_spawnAcc + config.spawnPerSecond.Evaluate(t) * (arenaDensity > 0f ? arenaDensity : 1f) * dt, 8f);
+                _spawnAcc = Mathf.Min(_spawnAcc + config.spawnPerSecond.Evaluate(t) * (arenaDensity > 0f ? arenaDensity : 1f) * (BossPhase ? config.bossSpawnMul : 1f) * dt, 8f);
                 while (_spawnAcc >= 1f && em.AliveCount < target)
                 {
                     _spawnAcc -= 1f;
@@ -213,7 +231,8 @@ namespace Gladiator.Gameplay
             }
             else _spawnAcc = 0f;
 
-            // swarm: a burst from one direction on top of the target
+            // swarm: a burst from one direction on top of the target (none while the boss is up: he calls his own)
+            if (BossPhase) { _nextSwarm = Mathf.Max(_nextSwarm, pace + 1f); _nextElite = Mathf.Max(_nextElite, pace + 1f); }
             if (pace >= _nextSwarm)
             {
                 _nextSwarm = pace + config.swarmEvery;

@@ -476,6 +476,7 @@ namespace Gladiator.Tests
             var fight = Object.FindAnyObjectByType<BossFight>();
             Assert.IsNotNull(fight, "the Colosseum has its boss fight");
             Park(Safe);
+            fight.clearHorde = true; // the boss alone (the game keeps the horde: note 38)
             fight.StartNow();
             yield return WaitFor(() => BossController.Active != null, 5f);
             var boss = BossController.Active;

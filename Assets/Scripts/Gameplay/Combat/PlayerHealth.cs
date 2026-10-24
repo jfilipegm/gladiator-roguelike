@@ -113,7 +113,7 @@ namespace Gladiator.Gameplay
             float before = Hp;
             float armor = _stats != null ? Mathf.Clamp(_stats.Get(StatId.Armor), 0f, maxArmor) : 0f;
             float arena = RunState.Current != null ? RunState.Current.playerDamageTakenMul : 1f; // the arena's difficulty
-            float amount = info.Amount * arena * (1f - armor);
+            float amount = info.Amount * arena * Threat.DamageMul * (1f - armor); // note 39: harder as the player levels
             if (!status && FlatReduction > 0f) amount = Mathf.Max(Mathf.Min(amount, 1f), amount - FlatReduction); // the Murder Machine's plate
             Hp = Mathf.Max(floor, Hp - amount);
             DamageTaken += before - Hp;

@@ -24,7 +24,7 @@ namespace Gladiator.Tests
         BossFight _fight;
         int _damaged;
 
-        IEnumerator BootToBoss()
+        IEnumerator BootToBoss(bool alone = true)
         {
             DevSettings.ResetAll();
             DevSettings.GodMode = true;
@@ -46,7 +46,9 @@ namespace Gladiator.Tests
             Assert.IsNotNull(_fight, "the Slave Pit has its boss fight");
             _damaged = 0;
             GameEvents.OnDamaged.Subscribe(OnDamaged);
-            yield return new WaitForSeconds(0.5f);
+            yield return new WaitForSeconds(alone ? 0.5f : 4f); // with the horde: let it gather first
+            _aliveBeforeBoss = _em.AliveCount;
+            _fight.clearHorde = alone; // the boss alone (the game keeps the horde: note 38)
             _fight.StartNow();
             float end = Time.time + 8f;
             while (Time.time < end && (BossController.Active == null || BossController.Active.CurrentState == BossController.State.Entering
@@ -64,6 +66,23 @@ namespace Gladiator.Tests
         }
 
         BossController Boss => BossController.Active;
+        int _aliveBeforeBoss;
+
+        [UnityTest, Timeout(90000)]
+        public IEnumerator TheHordeStays_AndKeepsComing_WithoutSwarmsOrElites() // note 38
+        {
+            yield return BootToBoss(alone: false);
+            Assert.IsNotNull(Boss);
+            Assert.Greater(_aliveBeforeBoss, 0, "a horde had gathered before the timer ran out");
+            var d = Director.Instance;
+            Assert.IsNotNull(d, "the Director runs through the fight");
+            Assert.IsTrue(d.enabled && d.BossPhase, "in its boss phase");
+            Assert.Greater(_em.AliveCount, 1, "the horde wasn't dragged off: Gorm and his crowd");
+            yield return new WaitForSeconds(2f);
+            Assert.Greater(_em.AliveCount, 1, "and it keeps coming");
+            Assert.Greater(d.NextSwarmAt, d.PaceClock, "no swarm while he's up");
+            Assert.Greater(d.NextEliteAt, d.PaceClock, "no elite either");
+        }
 
         [UnityTest, Timeout(90000)]
         public IEnumerator TimerEnd_BringsGorm_TheRunWaits()

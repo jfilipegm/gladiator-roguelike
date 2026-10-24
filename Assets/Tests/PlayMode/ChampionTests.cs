@@ -50,6 +50,7 @@ namespace Gladiator.Tests
             _damaged = 0;
             GameEvents.OnDamaged.Subscribe(OnDamaged);
             yield return new WaitForSeconds(0.3f);
+            _fight.clearHorde = true; // the boss alone (the game keeps the horde: note 38)
             _fight.StartNow();
             float end = Time.time + 10f;
             while (Time.time < end && (BossController.Active == null || BossController.Active.CurrentState == BossController.State.Entering

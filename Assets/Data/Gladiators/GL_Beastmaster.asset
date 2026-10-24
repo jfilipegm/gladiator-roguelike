@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.GladiatorDef
   id: beastmaster
   displayName: The Beastmaster
-  description: A hunter from the frontier forests who won't fight without his wolves. They hunt beside him, frenzy when he's hurt, and pounce when he blows his horn.
+  description: A hunter from the frontier forests who won't fight without his wolves. His spear marks the prey, the pack runs it down; they frenzy when he's hurt and pounce when he blows his horn.
   baseStats:
   - stat: 0
     value: 100
@@ -26,8 +26,9 @@ MonoBehaviour:
   traits:
   - {fileID: 11400000, guid: 9740929e04f1fb8258c8c926c0bc6f7e, type: 2}
   - {fileID: 11400000, guid: d969165f38b6bff8793d7dc9d9e9e1a2, type: 2}
+  - {fileID: 11400000, guid: 914a7f72f9109c6dea3e285566975402, type: 2}
   unlock: {fileID: 11400000, guid: 5f12b9c0c7a55ba62a9fcbadde9adc83, type: 2}
-  selectLine: 
-  tradeoff: 'The pack is his damage: two wolves at first, and they won''t stray far from him.'
+  selectLine: Starts with the Wolf Pack and a Hunting Spear
+  tradeoff: The pack is his damage, and it won't stray far from him; his own spear is short and light.
   portrait: {fileID: 21300000, guid: ac61bc0da14c443dd899747d36a10919, type: 3}
   portraitSilhouette: {fileID: 21300000, guid: 2d37ae08fbd7f09f6a67e1d43c37183b, type: 3}

@@ -1,0 +1,91 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 39f0cecc993934a19800cd9b6e8df985, type: 3}
+  m_Name: WP_HuntingSpear
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.WeaponDef
+  id: hunting_spear
+  displayName: Hunting Spear
+  description: 'A short boar spear: quick jabs at the nearest enemy that mark whatever they hit for your wolves.'
+  pattern: 1
+  damage: 8
+  critChance: 0.08
+  critMultiplier: 2
+  knockback: 3
+  onHitStatus: {fileID: 0}
+  onHitStatusPower: 0.1
+  onHitStacks: 1
+  cooldown: 0.7
+  swingDuration: 0.18
+  windup: 0.05
+  range: 3
+  arcDegrees: 150
+  width: 0.6
+  acquireRange: 3.4
+  amount: 1
+  speed: 16
+  pierce: 0
+  mesh: {fileID: 2845933236745570671, guid: 871de596c1444d84aa1184631a0607f1, type: 3}
+  meshScale: 1.1
+  flightTime: 0.6
+  fuse: 0.4
+  arcHeight: 2.2
+  echoDelay: 0
+  echoAngle: 180
+  echoScale: 1
+  targetFarthest: 0
+  tipLength: 0
+  spreadStrikes: 1
+  prongs: 3
+  prongInterval: 0.07
+  summon: {fileID: 0}
+  sweepTime: 0.3
+  whirlTimeMul: 1.5
+  sweepOutward: 0.35
+  tipKnockbackMul: 1.6
+  linkMesh: {fileID: 0}
+  linkLength: 0.6
+  chainHeight: {x: 1.05, y: 0.55}
+  weightOffset: 0.33
+  modelPart: 
+  hitEffects: []
+  levels:
+  - mods:
+    - stat: 4
+      op: 1
+      value: 0.2
+  - mods:
+    - stat: 5
+      op: 1
+      value: 0.15
+  - mods:
+    - stat: 8
+      op: 1
+      value: 0.2
+  - mods:
+    - stat: 9
+      op: 0
+      value: 1
+  - mods:
+    - stat: 4
+      op: 1
+      value: 0.25
+  - mods:
+    - stat: 6
+      op: 0
+      value: 0.1
+  - mods:
+    - stat: 5
+      op: 1
+      value: 0.2
+    - stat: 8
+      op: 1
+      value: 0.15

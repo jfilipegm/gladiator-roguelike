@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 40ebe3582a67739c6bdb000081f621a7, type: 3}
+  m_Name: UP_W_HuntingSpear
+  m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.UpgradeDef
+  id: weapon_hunting_spear
+  displayName: Hunting Spear
+  glyph: HS
+  icon: {fileID: 2800000, guid: 13ceaa4af4e914da3ab8c2724bbfa51d, type: 3}
+  iconRow: 76
+  kind: 1
+  tags: 0
+  weight: 8
+  maxLevel: 8
+  minRarity: 0
+  maxRarity: 3
+  requiresAny:
+  - {fileID: 11400000}
+  weapon: {fileID: 11400000, guid: 18d40f4b19974025781fd4cabc17c010, type: 2}
+  evolvesFrom: {fileID: 0}
+  catalyst: {fileID: 0}
+  perLevel: []
+  vow: 0
+  drawbacks: []
+  effects: []
+  healFraction: 0
+  gold: 0

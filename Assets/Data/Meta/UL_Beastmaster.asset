@@ -25,3 +25,4 @@ MonoBehaviour:
   renownBounty: 0
   addsToPool:
   - {fileID: 11400000, guid: abdbe86ea8d6a14e099273a9ed3b375f, type: 2}
+  - {fileID: 11400000, guid: 45b0752981465da459cd082e30c8094a, type: 2}

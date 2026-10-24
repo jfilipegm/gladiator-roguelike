@@ -21,7 +21,7 @@ Usage: Tools/bheadless BlenderSrc/props/chest_variants.py key=value ...
                             (closed front / side / 3-4, open 3-4, 64 px silhouette)
   variant=all  or lineup=1  the lineup sheet Screenshots/chest/chest_lineup.png: the classic chest ("now") and A-D,
                             closed and open (3-4 view on the sand floor), and the 64 px silhouettes
-  variant=<V> export=1      the game model Assets/Art/Models/A1/Props/PR_ArmoryChest.fbx through K.export_fbx
+  variant=<V> export=1      the game model Assets/Art/Models/A1/Props/PR_ArmoryChest_<V>.fbx through K.export_fbx
                             (+ BlenderSrc/blend/pr_armorychest.blend); no renders
   variant=<V|all> check=1   builds the game model(s) and checks the contract (names, origins, hinge, budget); no
                             renders, no export
@@ -813,8 +813,9 @@ def main():
         s = stats(root, parts)
         if s["tris"] > TRI_BUDGET:
             raise ValueError("over budget: %d tris" % s["tris"])
-        path = K.export_fbx(root, "A1/Props/" + ROOT_NAME)
-        return {"variant": variant, "fbx": path, "blend": K.save_blend("pr_armorychest"), **s}
+        # one file per design (the producer's pick, 2026-10-24: all four, a different one per arena; ArenaLayoutDef.chestModel)
+        path = K.export_fbx(root, "A1/Props/" + ROOT_NAME + "_" + variant)
+        return {"variant": variant, "fbx": path, "blend": K.save_blend("pr_armorychest_" + variant.lower()), **s}
     if ARGS.get("check") == "1":
         return {v: check(v) for v in (BUILDERS if variant == "ALL" else [variant])}
     K.clear_scene()

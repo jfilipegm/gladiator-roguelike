@@ -118,6 +118,7 @@ namespace Gladiator.EditorTools
 
             var (player, _) = ArenaSceneCommon.AddPlayerAndCamera(layout.playerSpawn, layout.playerYaw);
             var (enemies, _) = ArenaSceneCommon.AddCombatSystems(player, layout.radius, debugEnemies: 0);
+            if (layout.chestModel != null) Object.FindAnyObjectByType<Interactables>().chestModel = layout.chestModel; // note 30: each arena its own chest
             enemies.arenaCenter = layout.center;
             enemies.arenaAspect = layout.aspect > 0f ? layout.aspect : 1f;
             enemies.arenaOutline = layout.outline ?? new Vector2[0];

@@ -260,8 +260,10 @@ namespace Gladiator.Gameplay
             if (veil != null) sb.Append(" veils ").Append(veil.Veils).Append(" (hit ").Append(veil.VeilHits).Append(')');
             if (fx != null && player.GetComponent<TraitEffects>() != null && fx.BurstsFired > 0) sb.Append(" cursedBursts ").Append(fx.BurstsFired);
             var net = player.GetComponent<CastNet>();
-            if (net != null) sb.Append(" nets ").Append(net.Casts).Append(" (hauled ").Append(net.Hauled).Append(')');
+            if (net != null) sb.Append(" nets ").Append(net.Casts).Append(" (hauled ").Append(net.Hauled).Append(", snared ").Append(net.Snared).Append(')');
             if (weapons != null && weapons.Prongs > 0) sb.Append(" prongs ").Append(weapons.Prongs);
+            if (weapons != null && weapons.FireballsCast > 0 && PlayerProjectiles.Instance != null)
+                sb.Append(" fireballs ").Append(weapons.FireballsCast).Append(" (burst ").Append(PlayerProjectiles.Instance.Fireballs).Append(')');
             var pack = CompanionPack.Instance;
             if (pack != null && pack.Bites > 0)
                 sb.Append(" wolves ").Append(pack.Count).Append(" bites ").Append(pack.Bites).Append(" pounces ").Append(pack.Pounces).Append(" frenzies ").Append(pack.Frenzies);

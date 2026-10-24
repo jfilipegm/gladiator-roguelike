@@ -10,6 +10,9 @@ namespace Gladiator.EditorTools
     /// Pit Curs on leashes; kill him and they're freed) in the Stone Amphitheater's and the Grand Arena's tables; the
     /// Beastmaster (GL_Beastmaster), the Wolf Pack (the Summon pattern, CH_Wolf) and its card, the Feral Bond and
     /// Hunting Horn traits, and UL_Beastmaster (KillEnemies beasthandler 25).
+    /// Note 37 (v0.28.0 playtest: the wolves got stuck on a couple of mobs while he had no weapon of his own): the
+    /// Hunting Spear (WP_HuntingSpear, a short quick Thrust) and its card (only ever levelled by whoever holds it), the
+    /// Hunter's Mark trait (he starts with the spear; its hits mark enemies for the pack), and the pack's shorter leash.
     /// </summary>
     public static class BeastmasterSetup
     {
@@ -28,6 +31,12 @@ namespace Gladiator.EditorTools
         public const string Model = "Assets/Art/Models/Characters/CH_Beastmaster.fbx";
         public const string WolfModel = "Assets/Art/Models/Characters/CH_Wolf.fbx";
         public const string HandlerId = "beasthandler";
+        public const string MarkPath = Dir + "TR_HuntersMark.asset";
+        public const string SpearPath = UpgradeSetup.WeaponDir + "WP_HuntingSpear.asset";
+        public const string SpearCardPath = UpgradeSetup.Dir + "UP_W_HuntingSpear.asset";
+        public const string SpearModel = "Assets/Art/Models/Weapons/WP_HuntingSpear.fbx";
+        public const string SigilModel = "Assets/Art/Models/FX/FX_HuntMark.fbx";
+        const string PitSpearModel = "Assets/Art/Models/Weapons/WP_Spear.fbx";
 
         [MenuItem("Gladiator/Setup/Gladiators/Create Beastmaster Data")]
         public static GladiatorDef CreateOrUpdate()
@@ -39,6 +48,8 @@ namespace Gladiator.EditorTools
             AddToTable(GrandArenaSetup.EnsureTable(), 90f, 0.12f, 0.2f, 3);
             var g = Beastmaster();
             AssetDatabase.SaveAssets();
+            UpgradeSetup.Refresh(); // note 37: the Hunting Spear's card joins the catalog (PlayerBuild levels it from there)
+            IconSetup.Apply();
             return g;
         }
 
@@ -85,6 +96,8 @@ namespace Gladiator.EditorTools
             var stagger = AssetDatabase.LoadAssetAtPath<StatusDef>(GladiatorSetup.StaggerPath);
             var pack = WolfPack();
             var card = WeaponCard(pack);
+            var spear = HuntingSpear();
+            var spearCard = SpearCard(spear);
             var unlock = AssetDatabase.LoadAssetAtPath<UnlockDef>(UnlockPath);
             if (unlock == null)
             {
@@ -95,6 +108,14 @@ namespace Gladiator.EditorTools
                 unlock.hint = "Somewhere a man is waiting for someone to free the beasts. Kill their handlers.";
                 unlock.conditions = new[] { new UnlockCondition { kind = UnlockConditionKind.KillEnemies, id = HandlerId, amount = 25f } };
                 unlock.addsToPool = new[] { card };
+                EditorUtility.SetDirty(unlock);
+            }
+            // note 37: the spear is held back with him (its card asks for itself, so it's never a new pick anyway; this
+            // keeps the crowd's weapon-in-the-sand and the goblin's scavenging off it until he's earned)
+            if (spearCard != null && System.Array.IndexOf(unlock.addsToPool ?? System.Array.Empty<UpgradeDef>(), spearCard) < 0)
+            {
+                var pool = new System.Collections.Generic.List<UpgradeDef>(unlock.addsToPool ?? System.Array.Empty<UpgradeDef>()) { spearCard };
+                unlock.addsToPool = pool.ToArray();
                 EditorUtility.SetDirty(unlock);
             }
             var move = Copy<MovementConfig>(PlayerSetup.MovementPath, MovePath, m =>
@@ -114,6 +135,12 @@ namespace Gladiator.EditorTools
             var horn = Trait<HuntingHornTrait>(HornPath, "hunting_horn", "Hunting Horn",
                 "Start a slide with the horn ready (every 5 s): every wolf pounces on the enemies ahead of you, biting three times and Staggering them.");
             if (horn.status == null) { horn.status = stagger; EditorUtility.SetDirty(horn); }
+            var mark = Trait<HuntersMarkTrait>(MarkPath, "hunters_mark", "Hunter's Mark",
+                "You also carry a Hunting Spear. Whatever it hits is marked for 4 s, and your wolves go for marked enemies first.");
+            if (mark.weapon == null) mark.weapon = spear;
+            if (mark.sigil == null) mark.sigil = AssetDatabase.LoadAssetAtPath<Mesh>(SigilModel);
+            if (mark.material == null) mark.material = AssetDatabase.LoadAssetAtPath<Material>(LookSetup.CharMat);
+            EditorUtility.SetDirty(mark);
 
             var g = AssetDatabase.LoadAssetAtPath<GladiatorDef>(BeastmasterPath);
             if (g == null)
@@ -121,19 +148,83 @@ namespace Gladiator.EditorTools
                 g = PlayerSetup.EnsureAsset<GladiatorDef>(BeastmasterPath);
                 g.id = "beastmaster";
                 g.displayName = "The Beastmaster";
-                g.description = "A hunter from the frontier forests who won't fight without his wolves. They hunt beside him, frenzy when he's hurt, and pounce when he blows his horn.";
+                g.description = Description;
                 g.baseStats = new[] { new GladiatorDef.BaseStat { stat = StatId.MaxHp, value = 100f } };
                 g.cameraTargetHeight = 1.25f;
-                g.tradeoff = "The pack is his damage: two wolves at first, and they won't stray far from him.";
+                g.tradeoff = Tradeoff;
             }
+            // note 37: the texts from before the spear move on (a designer's own text stays)
+            if (g.description == OldDescription) g.description = Description;
+            if (g.tradeoff == OldTradeoff) g.tradeoff = Tradeoff;
+            if (string.IsNullOrEmpty(g.selectLine)) g.selectLine = "Starts with the Wolf Pack and a Hunting Spear";
             if (g.model == null) g.model = ModelStyle.Load(Model);
             if (g.movement == null) g.movement = move;
             if (g.animProfile == null) g.animProfile = anim;
             if (g.startingWeapon == null) g.startingWeapon = pack;
-            if (g.traits == null || g.traits.Length == 0 || System.Array.IndexOf(g.traits, null) >= 0) g.traits = new GladiatorTrait[] { bond, horn };
+            if (g.traits == null || g.traits.Length == 0 || System.Array.IndexOf(g.traits, null) >= 0) g.traits = new GladiatorTrait[] { bond, horn, mark };
+            else if (System.Array.IndexOf(g.traits, mark) < 0)
+            {
+                var traits = new System.Collections.Generic.List<GladiatorTrait>(g.traits) { mark };
+                g.traits = traits.ToArray();
+            }
             if (g.unlock == null) g.unlock = unlock;
             EditorUtility.SetDirty(g);
             return g;
+        }
+
+        const string OldDescription = "A hunter from the frontier forests who won't fight without his wolves. They hunt beside him, frenzy when he's hurt, and pounce when he blows his horn.";
+        const string Description = "A hunter from the frontier forests who won't fight without his wolves. His spear marks the prey, the pack runs it down; they frenzy when he's hurt and pounce when he blows his horn.";
+        const string OldTradeoff = "The pack is his damage: two wolves at first, and they won't stray far from him.";
+        const string Tradeoff = "The pack is his damage, and it won't stray far from him; his own spear is short and light.";
+
+        /// <summary>
+        /// Note 37: his own weapon. A short, quick Thrust with modest damage; its hits mark (HuntersMarkTrait). Knockback
+        /// is low so a marked enemy stays where the pack is heading. Amount strikes the next-nearest (more marks).
+        /// </summary>
+        static WeaponDef HuntingSpear()
+        {
+            var w = AssetDatabase.LoadAssetAtPath<WeaponDef>(SpearPath);
+            if (w == null)
+            {
+                w = PlayerSetup.EnsureAsset<WeaponDef>(SpearPath);
+                w.id = "hunting_spear"; w.displayName = "Hunting Spear";
+                w.description = "A short boar spear: quick jabs at the nearest enemy that mark whatever they hit for your wolves.";
+                w.pattern = WeaponPattern.Thrust;
+                w.damage = 8f; w.critChance = 0.08f; w.critMultiplier = 2f; w.knockback = 3f;
+                w.cooldown = 0.7f; w.swingDuration = 0.18f; w.windup = 0.05f;
+                w.range = 3f; w.width = 0.6f; w.acquireRange = 3.4f; w.amount = 1; w.spreadStrikes = true;
+                w.meshScale = 1.1f;
+                w.levels = new[]
+                {
+                    L(Pct(StatId.Damage, 0.2f)), L(Pct(StatId.AttackSpeed, 0.15f)), L(Pct(StatId.Area, 0.2f)), L(Add(StatId.Amount, 1f)),
+                    L(Pct(StatId.Damage, 0.25f)), L(Add(StatId.CritChance, 0.1f)), L(Pct(StatId.AttackSpeed, 0.2f), Pct(StatId.Area, 0.15f)),
+                };
+            }
+            // its own model (BlenderSrc/weapons/wp_huntingspear.py); the Pit Spear's stands in until that's imported
+            var own = AssetDatabase.LoadAssetAtPath<Mesh>(SpearModel);
+            var pit = AssetDatabase.LoadAssetAtPath<Mesh>(PitSpearModel);
+            if (w.mesh == null || (own != null && w.mesh == pit)) w.mesh = own != null ? own : pit;
+            EditorUtility.SetDirty(w);
+            return w;
+        }
+
+        /// <summary>The spear's level-up card. It asks for itself (requiresAny), so it's never offered as a new weapon:
+        /// only the one who starts with it sees it, to level it.</summary>
+        static UpgradeDef SpearCard(WeaponDef spear)
+        {
+            var d = AssetDatabase.LoadAssetAtPath<UpgradeDef>(SpearCardPath);
+            if (d == null)
+            {
+                d = PlayerSetup.EnsureAsset<UpgradeDef>(SpearCardPath);
+                d.id = "weapon_" + spear.id; d.displayName = spear.displayName; d.glyph = "HS";
+                d.kind = UpgradeKind.Weapon;
+                d.weapon = spear;
+                d.maxLevel = spear.MaxLevel;
+                d.weight = 8f;
+            }
+            if (d.requiresAny == null || System.Array.IndexOf(d.requiresAny, d) < 0) d.requiresAny = new[] { d };
+            EditorUtility.SetDirty(d);
+            return d;
         }
 
         static WeaponDef WolfPack()
@@ -143,13 +234,13 @@ namespace Gladiator.EditorTools
             {
                 w = PlayerSetup.EnsureAsset<WeaponDef>(WolfPackPath);
                 w.id = "wolf_pack"; w.displayName = "Wolf Pack";
-                w.description = "Wolves fight beside you for the whole run: each hunts the nearest enemy near you and bites. More levels, more wolves.";
+                w.description = PackDescription;
                 w.pattern = WeaponPattern.Summon;
                 // amount = wolves, cooldown = seconds between one wolf's bites, speed = run speed (m/s),
-                // acquireRange = how far from you they hunt, range = the leash (past it they come back)
+                // acquireRange = how far from you they pick targets, range = the leash (past it they come back)
                 w.damage = 9f; w.critChance = 0.06f; w.critMultiplier = 2f; w.knockback = 2f;
                 w.cooldown = 0.8f; w.swingDuration = 0.2f; w.windup = 0.05f;
-                w.range = 12f; w.width = 0.6f; w.acquireRange = 10f; w.amount = 2; w.speed = 8.5f; w.meshScale = 1.3f;
+                w.range = 9f; w.width = 0.6f; w.acquireRange = 9f; w.amount = 2; w.speed = 8.5f; w.meshScale = 1.3f;
                 w.levels = new[]
                 {
                     L(Add(StatId.Amount, 1f)), L(Pct(StatId.Damage, 0.25f)), L(Pct(StatId.AttackSpeed, 0.2f)), L(Add(StatId.Amount, 1f)),
@@ -157,9 +248,17 @@ namespace Gladiator.EditorTools
                 };
             }
             if (w.summon == null) w.summon = ModelStyle.Load(WolfModel);
+            // note 37: the pack fights near him: a 9 m leash, picking within it (the old 12 / 10 move; a designer's own
+            // numbers stay), and the text says how they hunt now
+            if (Mathf.Approximately(w.range, 12f)) w.range = 9f;
+            if (Mathf.Approximately(w.acquireRange, 10f)) w.acquireRange = 9f;
+            if (w.description == OldPackDescription) w.description = PackDescription;
             EditorUtility.SetDirty(w);
             return w;
         }
+
+        const string OldPackDescription = "Wolves fight beside you for the whole run: each hunts the nearest enemy near you and bites. More levels, more wolves.";
+        const string PackDescription = "Wolves fight beside you all run: they go for what's nearest you (marked prey first), bite and move on. More levels, more wolves.";
 
         static UpgradeDef WeaponCard(WeaponDef weapon)
         {

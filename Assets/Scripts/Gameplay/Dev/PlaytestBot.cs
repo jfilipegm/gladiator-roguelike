@@ -264,7 +264,14 @@ namespace Gladiator.Gameplay
             if (weapons != null && weapons.Prongs > 0) sb.Append(" prongs ").Append(weapons.Prongs);
             var pack = CompanionPack.Instance;
             if (pack != null && pack.Bites > 0)
+            {
                 sb.Append(" wolves ").Append(pack.Count).Append(" bites ").Append(pack.Bites).Append(" pounces ").Append(pack.Pounces).Append(" frenzies ").Append(pack.Frenzies);
+                // note 37: how they hunt (picks, of them marked; moves on after a bite window; runs back from the leash)
+                sb.Append(" picks ").Append(pack.Picks).Append(" (marked ").Append(pack.MarkedPicks).Append(") moves ").Append(pack.Switches)
+                  .Append(" recalls ").Append(pack.Recalls);
+                var marks = HuntersMark.Instance;
+                if (marks != null) sb.Append(" marks ").Append(marks.Marks);
+            }
             if (weapons != null && weapons.Sweeps > 0)
                 sb.Append(" sweeps ").Append(weapons.Sweeps).Append(" (whirls ").Append(weapons.Whirls).Append(", hits ").Append(weapons.SweepHits)
                   .Append(", stone ").Append(weapons.WeightHits).Append(')');

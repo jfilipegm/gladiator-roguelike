@@ -1,7 +1,9 @@
 # U2 — Items, Satchels, Epic, and three sources of power (spec for the producer's OK)
 
 The producer's note 31 on v0.28.0 and their answers (2026-10-24, `N29-v028-notes.md`). After v0.29.0 (the quick fixes).
-Status: **draft, waiting for the producer's OK**. Numbers are starting values; all of them are data.
+Status: **approved by the producer 2026-10-24** ("The items and satchels plan is OK, build it after v0.29.0"), with the
+open points as written: 2 / 3 / 3 starting slots, 6 / 9 / 12 caps, the Blood Altar gives gear. Numbers are starting
+values; all of them are data.
 
 ## 1. Three sources, three kinds of power
 | Source | Gives | Never gives |
@@ -77,6 +79,3 @@ measured with bot runs: **the first chest affordable by ~1:00, 6–9 chests in a
 - The orchestrator integrates, re-runs the setups, measures the gold and chest timing with bot runs, then runs the
   suites, takes screenshots and opens the PR.
 
-## Open points for the producer
-1. Are 2 / 3 / 3 starting slots and 6 / 9 / 12 caps about right?
-2. Should the Blood Altar give gear (as above) or stay a Rare upgrade?

@@ -251,6 +251,8 @@ namespace Gladiator.UI
 
         /// <summary>The NEW seal's size on plates, tabs and tiles (12 art px at 3 units each); Codex entries use 24 (2 each).</summary>
         public const float SealSize = 36f;
+        /// <summary>The seal beside a plate's word (PlaceSeal): about the capitals' height (note 27).</summary>
+        public const float SealSizeInline = 24f;
 
         /// <summary>The NEW mark (note 6): a crimson wax seal with a gold N (`FrameKind.SealNew`), hidden until enabled;
         /// PlaceSeal puts it on a plate's corner.</summary>
@@ -261,21 +263,67 @@ namespace Gladiator.UI
             return img;
         }
 
-        /// <summary>Puts `seal` (a child of `plate`) on the plate's top-right corner over the last letter of `label`: its
-        /// centre a fifth of the seal right of the last letter's ink and a little under the plate's top edge, never past
-        /// the plate's right edge. Call after the text is set (menu-only: it measures).</summary>
+        /// <summary>Puts `seal` (a child of `plate`) on the text line right after the last letter of `label`, like the dot
+        /// after DAILY (note 27, v0.27.0: it sat on the plate's top-right corner, too big and off the word): its centre a
+        /// third of its size plus half of it right of the ink, at the ink's vertical middle, never past the plate's right
+        /// edge. Call after the text is set (menu-only: it measures).</summary>
         public static void PlaceSeal(Image seal, RectTransform plate, TMP_Text label)
         {
             if (seal == null || plate == null) return;
             var r = plate.rect;
             float size = seal.rectTransform.sizeDelta.x;
-            float x = r.xMax - size * 0.5f;
+            float x = r.xMax - size * 0.5f, y = r.center.y;
             if (label != null && UiAudit.TryInkBounds(label, out var ink))
-                x = plate.InverseTransformPoint(label.transform.TransformPoint(new Vector3(ink.xMax, 0f, 0f))).x + size * 0.2f;
-            x = Mathf.Min(x, r.xMax - size * 0.5f);
+            {
+                var at = plate.InverseTransformPoint(label.transform.TransformPoint(new Vector3(ink.xMax, (ink.yMin + ink.yMax) * 0.5f, 0f)));
+                x = at.x + size * (0.5f + 0.35f);
+                y = at.y;
+            }
+            x = Mathf.Min(x, r.xMax - size * 0.5f - 4f);
             var rt = seal.rectTransform;
             rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
-            rt.anchoredPosition = new Vector2(x, r.yMax - size * 0.15f) - r.center; // from the plate's centre (its anchor)
+            rt.anchoredPosition = new Vector2(x, y) - r.center; // from the plate's centre (its anchor)
+        }
+
+        sealed class LabelHome { public float X, Width, Size, Min, Max; public bool Auto; }
+        static readonly ConditionalWeakTable<RectTransform, LabelHome> _labelHome = new ConditionalWeakTable<RectTransform, LabelHome>();
+
+        /// <summary>Shows or hides `seal` beside `label` on `plate` (note 27): while it shows, the word's box gives up the
+        /// seal's room on its right and moves left by half of it, so the word and its seal sit centred on the plate together,
+        /// the word shrinking (to 80 %) only if it no longer fits; hidden, the word is back as it was.</summary>
+        public static void ShowSeal(Image seal, RectTransform plate, TMP_Text label, bool on)
+        {
+            if (seal == null) return;
+            seal.enabled = on;
+            if (label != null)
+            {
+                var lr = label.rectTransform;
+                var home = _labelHome.GetValue(lr, r => new LabelHome
+                {
+                    X = r.anchoredPosition.x, Width = r.sizeDelta.x, Size = label.fontSize, Auto = label.enableAutoSizing,
+                    Min = label.fontSizeMin, Max = label.fontSizeMax,
+                });
+                float room = seal.rectTransform.sizeDelta.x * (1f + 0.35f);
+                if (on)
+                {
+                    lr.anchoredPosition = new Vector2(home.X - room * 0.5f, lr.anchoredPosition.y);
+                    lr.sizeDelta = new Vector2(home.Width - room, lr.sizeDelta.y);
+                    label.enableAutoSizing = true;
+                    label.fontSizeMax = home.Auto ? home.Max : home.Size;
+                    label.fontSizeMin = label.fontSizeMax * 0.8f;
+                }
+                else
+                {
+                    lr.anchoredPosition = new Vector2(home.X, lr.anchoredPosition.y);
+                    lr.sizeDelta = new Vector2(home.Width, lr.sizeDelta.y);
+                    label.enableAutoSizing = home.Auto;
+                    label.fontSizeMin = home.Min;
+                    label.fontSizeMax = home.Max;
+                    if (!home.Auto) label.fontSize = home.Size;
+                }
+                label.ForceMeshUpdate();
+            }
+            if (on) PlaceSeal(seal, plate, label);
         }
 
         /// <summary>A pager arrow (note 11): a bronze pilum tip (`ArrowLeft` / `ArrowRight` at their art's size), no plate

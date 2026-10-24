@@ -33,6 +33,16 @@ namespace Gladiator.Gameplay
         public BossAttack[] phase1Attacks = { BossAttack.Sweep, BossAttack.Whip, BossAttack.Slam };
         public BossAttack[] phase2Attacks = { BossAttack.Sweep, BossAttack.Whip, BossAttack.Slam, BossAttack.Charge };
 
+        [Header("Difficulty (note 25, v0.27.0: \"the bosses are too easy\")")]
+        [Tooltip("His HP grows with the player's level when he enters: +hpPerLevel of it for every level above hpFromLevel (0 = his HP is fixed). A strong 8-minute build meets a bigger boss.")]
+        public float hpPerLevel = 0.025f;
+        public int hpFromLevel = 20;
+        [Tooltip("Every hit, projectile and bomb of his deals this much more than its own number.")]
+        public float damageMul = 1.25f;
+
+        /// <summary>His HP multiplier when he enters against a player of `level`.</summary>
+        public float HpMulAt(int level) => 1f + Mathf.Max(0f, hpPerLevel) * Mathf.Max(0, level - hpFromLevel);
+
         [Header("Movement")]
         public float moveSpeed = 3f;
         public float enragedMoveSpeed = 3.7f;

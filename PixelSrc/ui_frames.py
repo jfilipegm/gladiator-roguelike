@@ -800,19 +800,19 @@ def ansata_glow():
     return a
 
 
-SEAL_MASK = [  # 12x12: an irregular round of wax (a bulge up-right, a flat spot low down)
-    "...######...",
+SEAL_MASK = [  # 12x12: a round seal, symmetric (note 27, v0.27.0: the irregular wax read as "not a circle")
+    "....####....",
+    "..########..",
     ".##########.",
-    ".###########",
-    "############",
-    "############",
+    ".##########.",
     "############",
     "############",
     "############",
     "############",
     ".##########.",
-    "..#########.",
-    "...#####....",
+    ".##########.",
+    "..########..",
+    "....####....",
 ]
 SEAL_N = [  # 4x6, pressed in the middle of the field (cols 4-7, rows 3-8)
     "G..G",
@@ -825,8 +825,8 @@ SEAL_N = [  # 4x6, pressed in the middle of the field (cols 4-7, rows 3-8)
 
 
 def seal_new():
-    """SealNew, 12x12 simple (P3, note 6): the NEW mark, a crimson wax seal (a dark edge, a raised rim lit from the
-    top-left, the pressed field) with a gold N (novum) whose strokes cast a 1 px shadow down-right into the wax."""
+    """SealNew, 12x12 simple (P3, note 6; note 27): the NEW mark, a round crimson seal (a dark edge, a raised rim lit from
+    the top-left, the pressed field) with a gold N (novum) in its exact centre."""
     mask = {(x, y) for y, row in enumerate(SEAL_MASK) for x, ch in enumerate(row) if ch == "#"}
     edge = outline_inside(mask, 12, 12)
     rim = outline_inside(mask - edge, 12, 12)
@@ -839,11 +839,10 @@ def seal_new():
         else:
             a.set(x, y, "seal")
     a.set(3, 2, "sealShine")
+    # the N dead centre (cols 4-7, rows 3-8 of 12), no cast shadow: the shadow pulled it off centre (note 27)
     gold = {(4 + x, 3 + y) for y, row in enumerate(SEAL_N) for x, ch in enumerate(row) if ch == "G"}
     for (x, y) in gold:
         a.set(x, y, "goldBright")
-        if (x + 1, y + 1) not in gold and (x + 1, y + 1) not in rim | edge:
-            a.set(x + 1, y + 1, "sealInk")
     return a
 
 

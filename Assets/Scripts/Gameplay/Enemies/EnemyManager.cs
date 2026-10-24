@@ -989,6 +989,14 @@ namespace Gladiator.Gameplay
         /// the floor and returns false (the Eternal Victor's false death, R2: his controller watches for HP at the floor).
         /// Spawn resets it.
         /// </summary>
+        /// <summary>Scales enemy `i`'s HP and max HP together (a boss sized to the player's level as he enters).</summary>
+        public void ScaleMaxHp(int i, float mul)
+        {
+            if (i < 0 || i >= capacity || mul <= 0f) return;
+            _maxHp[i] *= mul;
+            _hp[i] *= mul;
+        }
+
         public void SetHpFloor(int i, float hp) { if (i >= 0 && i < capacity) _hpFloor[i] = Mathf.Max(0f, hp); }
         public float GetHpFloor(int i) => i >= 0 && i < capacity ? _hpFloor[i] : 0f;
 

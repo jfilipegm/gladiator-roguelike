@@ -173,10 +173,10 @@ namespace Gladiator.UI
             {
                 int t = i;
                 var pos = new Vector2(-690f + i * 230f, 345f);
-                _tabPlates[i] = UiKit.Button("Tab" + TabNames[i], box, TabNames[i], ButtonStyle.Secondary, mid, mid, pos, new Vector2(218, 62), () => Select((Tab)t), 24f);
+                _tabPlates[i] = UiKit.Button("Tab" + TabNames[i], box, TabNames[i], ButtonStyle.Secondary, mid, mid, pos, new Vector2(218, 62), () => Select((Tab)t), 22f); // note 27: 22 leaves room for the seal after GLADIATORS / CHALLENGES
                 _tabButtons[i] = _tabPlates[i].Button;
-                // P3 (note 6): the NEW seal on the tab's top-right corner, over its last letter (no meander under the tab: note 9)
-                var seal = UiKit.Seal("New", _tabPlates[i].Root);
+                // P3 (note 6), note 27: the NEW seal on the text line after the tab's word (no meander under the tab: note 9)
+                var seal = UiKit.Seal("New", _tabPlates[i].Root, 20f);
                 UiKit.PlaceSeal(seal, _tabPlates[i].Root, _tabPlates[i].Label);
                 _tabDots[i] = seal;
             }
@@ -585,7 +585,7 @@ namespace Gladiator.UI
                     if (plate.Frame != null) UiFrames.Apply(plate.Frame, active ? FrameKind.AnsataBronze : FrameKind.AnsataMarble);
                     if (plate.Label != null) plate.Label.color = active ? th.bronzeInk : th.marbleInk;
                 }
-                _tabDots[i].enabled = TabHasNew((Tab)i);
+                UiKit.ShowSeal(_tabDots[i], _tabPlates[i].Root, _tabPlates[i].Label, TabHasNew((Tab)i));
             }
             SealedEntries = 0;
             bool roster = _tab == Tab.Gladiators;

@@ -67,6 +67,7 @@ namespace Gladiator.EditorTools
                 };
             }
             boss.enemy = body;
+            boss.recover = 0.6f; // note 25 (v0.27.0): a little less pause between his attacks (was the default 0.7)
             EditorUtility.SetDirty(boss);
             AssetDatabase.SaveAssets();
             return boss;
@@ -87,7 +88,7 @@ namespace Gladiator.EditorTools
                 body.id = "champion";
                 body.displayName = "The Provincial Champion";
                 body.behaviour = EnemyBehaviour.Scripted;
-                body.maxHp = 13000f;
+                body.maxHp = 15000f; // note 25 (v0.27.0): was 13000
                 body.radius = 1.0f;
                 body.knockbackTaken = 0f;
                 body.blockArc = 140f;
@@ -117,7 +118,7 @@ namespace Gladiator.EditorTools
                 boss.phase1Attacks = new[] { BossAttack.Bash, BossAttack.Flurry, BossAttack.Charge };
                 boss.phase2Attacks = new[] { BossAttack.Bash, BossAttack.Flurry, BossAttack.Charge };
                 boss.moveSpeed = 3.2f; boss.enragedMoveSpeed = 3.8f; boss.turnRate = 110f; // slow to turn: get to his side
-                boss.contactDamage = 12f; boss.recover = 0.6f;
+                boss.contactDamage = 12f; boss.recover = 0.5f;
                 boss.bashRange = 4f; boss.bashAngle = 100f; boss.bashWindup = 0.7f; boss.bashDamage = 22f; boss.bashKnockback = 11f;
                 boss.flurryLength = 6f; boss.flurryWidth = 1.1f; boss.flurryWindup = 0.35f; boss.flurryDamage = 12f;
                 boss.flurryThrusts = new Vector2Int(3, 5);
@@ -164,7 +165,7 @@ namespace Gladiator.EditorTools
                 body.id = "beastlord";
                 body.displayName = "The Beast Lord";
                 body.behaviour = EnemyBehaviour.Scripted;
-                body.maxHp = 15000f;
+                body.maxHp = 24000f; // note 25: was 15000 (52 s to a random-card bot)
                 body.radius = 1.1f;
                 body.knockbackTaken = 0f;
                 body.blockArc = 0f;
@@ -196,7 +197,7 @@ namespace Gladiator.EditorTools
                 boss.phase1Attacks = new[] { BossAttack.Bash, BossAttack.Whip, BossAttack.Pounce };
                 boss.phase2Attacks = new[] { BossAttack.Bash, BossAttack.Whip, BossAttack.Pounce };
                 boss.moveSpeed = 3.4f; boss.enragedMoveSpeed = 4.2f; boss.turnRate = 200f;
-                boss.contactDamage = 12f; boss.recover = 0.6f;
+                boss.contactDamage = 12f; boss.recover = 0.5f;
                 // Goad Sweep: a wide cone round his front
                 boss.bashRange = 5f; boss.bashAngle = 150f; boss.bashWindup = 0.8f; boss.bashDamage = 24f; boss.bashKnockback = 11f;
                 // Hook Thrust: a lane, and the hook drags (Slow)
@@ -293,6 +294,7 @@ namespace Gladiator.EditorTools
             if (merc != null && (boss.guards == null || boss.guards.Length == 0)) boss.guards = new[] { merc };
             if (merc != null && boss.guardedBy == null) boss.guardedBy = merc;
             boss.enemy = body;
+            boss.hpPerLevel = 0.015f; // note 25: his guards already shield him; he grows less with the player's level
             EditorUtility.SetDirty(boss);
             AssetDatabase.SaveAssets();
             return boss;
@@ -384,6 +386,7 @@ namespace Gladiator.EditorTools
             }
             if (centurion != null && (boss.guards == null || boss.guards.Length == 0)) boss.guards = new[] { centurion };
             boss.enemy = body;
+            boss.hpPerLevel = 0.01f; // note 25: three phases and the longest fight already; he grows less with the level
             EditorUtility.SetDirty(boss);
             AssetDatabase.SaveAssets();
             return boss;
@@ -408,7 +411,7 @@ namespace Gladiator.EditorTools
                 body.id = "eternal_victor";
                 body.displayName = "The Eternal Victor";
                 body.behaviour = EnemyBehaviour.Scripted;
-                body.maxHp = 22000f;
+                body.maxHp = 34000f; // note 25: was 22000 (the final boss fell in 68 s to a random-card bot)
                 body.radius = 1.0f; // the falx isn't body
                 body.knockbackTaken = 0f;
                 body.blockArc = 0f; // no shield: the first boss since Gorm with no damage reduction
@@ -447,7 +450,7 @@ namespace Gladiator.EditorTools
                 boss.phase3Attacks = new[] { BossAttack.Sweep, BossAttack.Flurry, BossAttack.Whip, BossAttack.Disc, BossAttack.Pounce };
                 boss.moveSpeed = 3.6f; boss.enragedMoveSpeed = 4.0f; boss.phase3MoveSpeed = 4.6f; boss.turnRate = 200f;
                 boss.closeInRange = 30f; boss.closeInSpeed = 7f; // a 196 m floor: he strides in
-                boss.contactDamage = 12f; boss.contactInterval = 0.8f; boss.recover = 0.55f;
+                boss.contactDamage = 12f; boss.contactInterval = 0.8f; boss.recover = 0.47f;
                 // Reaper's Circle: the falx out at knee height in a full turn; jump it
                 boss.sweepRadius = 5.5f; boss.sweepWindup = 1.0f; boss.sweepDamage = 26f; boss.sweepKnockback = 9f; boss.sweepJumpClear = 0.7f;
                 // Victor's Lunges: two thrusts, three from phase 2

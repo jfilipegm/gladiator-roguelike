@@ -205,6 +205,7 @@ namespace Gladiator.Gameplay
             _pos = at;
             _slot = _em.Spawn(def.enemy, _pos);
             if (_slot < 0) return false;
+            if (RunState.Current != null) _em.ScaleMaxHp(_slot, def.HpMulAt(RunState.Current.Level)); // note 25
             _uid = _em.GetUid(_slot);
             _em.SetInvulnerable(_slot, true);
             if (def.falseDeath) _em.SetHpFloor(_slot, HpFloor); // R2-STUB(enemies): a lethal hit in any phase leaves him at 1 HP for his remains
@@ -780,9 +781,9 @@ namespace Gladiator.Gameplay
                         if (def.volleyJavelins)
                         {
                             at.y = pp.y + 0.9f; // at your height, not his: a straight shot dies when it dips below the ground (the spina)
-                            if (proj.FireStraight(from, at, def.volleySpeed, def.volleyDamage, 0.3f, def.volleyRange, arrow: true) >= 0) JavelinsFired++;
+                            if (proj.FireStraight(from, at, def.volleySpeed, def.volleyDamage * def.damageMul, 0.3f, def.volleyRange, arrow: true) >= 0) JavelinsFired++;
                         }
-                        else if (proj.FireCoin(from, at, def.volleySpeed, def.volleyDamage, 0.3f, def.volleyRange) >= 0) CoinsFired++;
+                        else if (proj.FireCoin(from, at, def.volleySpeed, def.volleyDamage * def.damageMul, 0.3f, def.volleyRange) >= 0) CoinsFired++;
                     }
                     SfxPlayer.Play(SfxId.Throw, _pos);
                     if (!def.volleyJavelins) SfxPlayer.Play(SfxId.Coin, _pos);
@@ -885,7 +886,7 @@ namespace Gladiator.Gameplay
                             at = pp + v * (def.bombFlight * 0.5f) + new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * _rng.Range(def.bombSpread * 0.4f, def.bombSpread);
                             _em.ClampInside(ref at, 0.5f);
                         }
-                        proj.Bomb(Hand, at, def.bombFlight, def.bombRadius, def.bombDamage, def.bombCoins);
+                        proj.Bomb(Hand, at, def.bombFlight, def.bombRadius, def.bombDamage * def.damageMul, def.bombCoins);
                         BombsThrown++;
                         SfxPlayer.Play(SfxId.Throw, _pos);
                         _bombsLeft--;
@@ -1000,7 +1001,7 @@ namespace Gladiator.Gameplay
         {
             if (_health == null) return false;
             dir.y = 0f;
-            if (!_health.TakeDamage(new DamageInfo { Amount = damage, Flags = DamageFlags.Melee, Point = _player.position, Direction = dir })) return false;
+            if (!_health.TakeDamage(new DamageInfo { Amount = damage * def.damageMul, Flags = DamageFlags.Melee, Point = _player.position, Direction = dir })) return false;
             if (_motor != null && knockback > 0f) _motor.AddImpulse(dir * knockback + Vector3.up * knockback * 0.45f);
             return true;
         }

@@ -325,8 +325,22 @@ namespace Gladiator.UI
             plate.Frame.raycastTarget = true;
             var hit = plate.Frame.gameObject.AddComponent<UiHit>();
             hit.Target = this; hit.Id = ResumeId + i;
-            WidenKey(plate, PauseKeyWidth); // every chip as wide as ESC's, so the three labels line up
+            WidenKey(plate, PauseKeyWidth); // every chip as wide as ESC's
+            CentreLabel(plate);
             return plate;
+        }
+
+        /// <summary>Note 26 (v0.27.0): the word centred on the whole plate, not on the room right of the key chip; its box
+        /// as wide as stays clear of the chip on both sides (AutoSize-free: the three pause words fit).</summary>
+        static void CentreLabel(UiPlate plate)
+        {
+            if (plate.KeyChip == null) return;
+            var chip = plate.KeyChip.rectTransform;
+            var label = plate.Label.rectTransform;
+            float chipRight = chip.anchoredPosition.x + chip.sizeDelta.x * 0.5f;
+            float half = Mathf.Max(10f, -chipRight - 6f);
+            label.sizeDelta = new Vector2(half * 2f, label.sizeDelta.y);
+            label.anchoredPosition = new Vector2(0f, label.anchoredPosition.y);
         }
 
         /// <summary>Widens a plate's key chip to `width` (growing right) and moves the label's left edge with it.</summary>

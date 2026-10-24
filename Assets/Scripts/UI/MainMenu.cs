@@ -310,6 +310,10 @@ namespace Gladiator.UI
             _adminView = AdminMode.On;
             var g = Selected;
             var r = SelectedRun;
+            // note 24 (v0.27.0): built while their screens were hidden (alpha 0), the tiles kept that batch and drew washed
+            // out once shown; built visible and hidden after, as on Awake, they draw right
+            Set(_select, true);
+            Set(_arena, true);
             Empty(_select.transform);
             Empty(_arena.transform);
             BuildSelect(_select.transform);
@@ -317,6 +321,7 @@ namespace Gladiator.UI
             if (g != null) Pick(g);      // still pickable: still picked
             if (r != null) PickArena(r);
             Refit();
+            Show(_screen);
         }
 
         /// <summary>Takes a screen's blocks down before it's built again (detached first: Destroy waits for the frame's end,
@@ -755,15 +760,14 @@ namespace Gladiator.UI
                 : "<color=" + MarbleHurtHex + ">EDICTS</color> · RENOWN <color=" + MarbleGoldHex + ">" + EdictsPanel.MulText(mul) + "</color>"; // orange-red: it hurts you (the marble's darker one)
         }
 
-        /// <summary>P3 (note 6): the crimson NEW seal on the CODEX plate's top-right corner while anything is new.</summary>
+        /// <summary>P3 (note 6), note 27: the round NEW seal after the word CODEX while anything is new.</summary>
         void RefreshCodexButton()
         {
             int n = Codex != null ? Codex.RemainingNew : 0;
             var label = UiFactory.Label(_codexButton);
             label.text = "CODEX";
             if (_codexSeal == null) return;
-            _codexSeal.enabled = n > 0;
-            if (n > 0) UiKit.PlaceSeal(_codexSeal, (RectTransform)_codexButton.transform, label);
+            UiKit.ShowSeal(_codexSeal, (RectTransform)_codexButton.transform, label, n > 0);
         }
 
         void Awake()
@@ -868,7 +872,7 @@ namespace Gladiator.UI
             for (int i = 0; i < _menuPlates.Length; i++) _menuButtons[i] = _menuPlates[i].Button;
             _dailyButton = _menuButtons[1];
             _codexButton = _menuButtons[2];
-            _codexSeal = UiKit.Seal("New", _menuPlates[2].Root);
+            _codexSeal = UiKit.Seal("New", _menuPlates[2].Root, UiKit.SealSizeInline);
             // the greyed DAILY's hint, beside it (its unlock's hint)
             _dailyHint = UiKit.Text("DailyHint", root, "", TextRole.Body, 22f, th.dust, TextAlignmentOptions.Left, left, left,
                 new Vector2(494, -82), new Vector2(760, 40), TextLook.Outline);

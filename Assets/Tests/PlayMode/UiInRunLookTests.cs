@@ -103,7 +103,7 @@ namespace Gladiator.Tests
             Assert.IsTrue(UiKit.HasRole(_hud.GoldLabel, TextRole.Number), "the gold");
             Assert.IsTrue(UiKit.HasRole(_hud.KillsLabel, TextRole.Number), "the kills");
             Assert.IsTrue(UiKit.HasRole(_hud.CalloutLabel, TextRole.Shout), "the callout is Caesar Dressing");
-            Assert.IsTrue(UiKit.HasRole(_hud.BossNameLabel, TextRole.Title), "the boss's name is Marcellus SC");
+            Assert.IsTrue(UiKit.HasRole(_hud.BossNameLabel, TextRole.Number), "the boss's name takes the timer's lettering (note 29)");
             var numbers = Object.FindAnyObjectByType<DamageNumbers>();
             Assert.IsNotNull(numbers, "the arena has damage numbers");
             Assert.IsTrue(UiKit.HasRole(numbers.PoolLabel(0), TextRole.Number), "damage numbers are Luckiest Guy");

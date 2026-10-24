@@ -83,16 +83,18 @@ namespace Gladiator.UI
         // theme colours read once (UiTheme.Current)
         Color _ink, _goldColor, _goldBright, _crimson, _crimsonLight, _coin, _loss;
 
-        // boss (M3.4): name + HP bar under the timer, phase-2 notch; the timer reads BOSS
+        // boss (M3.4): HP bar under the timer, phase-2 notch; the timer reads BOSS, then his name in its lettering
+        // (note 29, v0.28.0: no second name line) and the bar prints his HP
         CanvasGroup _bossGroup;
         Image _bossFill;
         Vector2 _bossInset; // the fill's left and right insets in its trough (phase notches sit on the fill's span)
-        TextMeshProUGUI _bossName;
+        TextMeshProUGUI _bossHpText;
+        int _lastBossHp = -1, _lastBossMaxHp = -1;
         TextMeshProUGUI _bossGuard; // the Gilded Patron's payroll (Phase 5.13)
         bool _bossGuardOn;
         BossController _bossShown;
         bool _timerBoss;
-        const float BossBarW = 760f;
+        const float BossBarW = 760f, BossBarH = 30f, BossBarY = -112f, BossNameW = 1000f;
 
         // arena intro (M3.5): name + tagline on a mosaic plaque over a dim screen while the pools fill, then FIGHT!
         CanvasGroup _introGroup;
@@ -495,13 +497,14 @@ namespace Gladiator.UI
             _bossGroup = bossRoot.GetComponent<CanvasGroup>();
             _bossGroup.alpha = 0f;
             _bossGroup.blocksRaycasts = _bossGroup.interactable = false;
-            _bossName = AutoSize(UiKit.Text("BossName", bossRoot.transform, "", TextRole.Title, 30f, _ink, TextAlignmentOptions.Center, top, top,
-                new Vector2(0, -115), new Vector2(900, 36), TextLook.Outline), 20f, 30f);
-            PreSize(_bossName, "GORM, THE PIT MASTER OF THE SLAVE PITS");
-            _bossFill = Trough("BossBar", bossRoot.transform, _crimson, top, top, new Vector2(0, -153), new Vector2(BossBarW, 26));
+            _bossFill = Trough("BossBar", bossRoot.transform, _crimson, top, top, new Vector2(0, BossBarY), new Vector2(BossBarW, BossBarH));
             _bossInset = new Vector2(_bossFill.rectTransform.offsetMin.x, -_bossFill.rectTransform.offsetMax.x);
+            _bossHpText = UiKit.Text("BossHpText", _bossFill.transform.parent, "34000 / 34000", TextRole.Number, 22f, Color.white,
+                TextAlignmentOptions.Midline, mid, mid, Vector2.zero, new Vector2(BossBarW, BossBarH), TextLook.Outline);
+            UiAudit.ExemptPadding(_bossHpText); // printed on its bar, as the player's HP is
+            PreSize(_bossHpText, "888888 / 888888");
             _bossGuard = UiKit.Text("BossGuard", bossRoot.transform, GuardedText, TextRole.Title, 20f, _goldColor, TextAlignmentOptions.Center, top, top,
-                new Vector2(0, -181), new Vector2(900, 24), TextLook.Outline);
+                new Vector2(0, BossBarY - BossBarH - 4f), new Vector2(900, 24), TextLook.Outline);
             _bossGuard.enabled = false;
             // P3: the pause is LevelUpPanel's now (the producer's note 17: PAUSED, its plates, the inventory and the stats)
             _debug = UiFactory.Text("Debug", canvas, "", 20, new Color(1f, 1f, 1f, 0.75f), TextAlignmentOptions.BottomLeft, Vector2.zero, Vector2.zero, new Vector2(16, 12), new Vector2(900, 30), font, fontMaterial);
@@ -721,7 +724,8 @@ namespace Gladiator.UI
             if (show && _bossShown != b)
             {
                 _bossShown = b;
-                _bossName.text = b.def.displayName + ", " + b.def.title; // once per boss
+                ShowBossName(b.def.displayName); // once per boss: BOSS gives way to his name, in its lettering and size
+                _lastBossHp = _lastBossMaxHp = -1;
                 Notch("Phase2", b.def.phase2At);
                 if (b.def.phase3At > 0f) Notch("Phase3", b.def.phase3At); // a third phase (the Emperor's Champion)
             }
@@ -731,7 +735,12 @@ namespace Gladiator.UI
                 _bossGroup.alpha = a;
                 if (_edictRow != null) _edictRow.gameObject.SetActive(!show); // the boss's name sits where the edicts do
             }
-            if (show) _bossFill.fillAmount = Mathf.MoveTowards(_bossFill.fillAmount, b.Hp01, Time.unscaledDeltaTime * 1.5f);
+            if (show)
+            {
+                _bossFill.fillAmount = Mathf.MoveTowards(_bossFill.fillAmount, b.Hp01, Time.unscaledDeltaTime * 1.5f);
+                int hp = Mathf.CeilToInt(b.Hp), max = Mathf.CeilToInt(b.MaxHp);
+                if (hp != _lastBossHp || max != _lastBossMaxHp) { _lastBossHp = hp; _lastBossMaxHp = max; _bossHpText.SetText("{0} / {1}", (float)hp, (float)max); }
+            }
             bool guard = show && b.Guarded;
             if (guard != _bossGuardOn)
             {
@@ -739,6 +748,20 @@ namespace Gladiator.UI
                 _bossGuard.enabled = guard;
                 _bossFill.color = guard ? _goldColor : _crimson; // a gilded bar: he's paying someone to take the hits
             }
+        }
+
+        /// <summary>
+        /// The boss's name where the timer's BOSS was, in the same lettering and size (the producer's note 29): the label
+        /// widens to take the longest name, shrinking only if it must; the daily chip beside the digits steps aside.
+        /// </summary>
+        void ShowBossName(string name)
+        {
+            _timer.text = name;
+            _timer.color = _crimsonLight;
+            var rt = _timer.rectTransform;
+            rt.sizeDelta = new Vector2(BossNameW, rt.sizeDelta.y);
+            AutoSize(_timer, 40f, _timer.fontSize);
+            if (_dailyChip != null) _dailyChip.gameObject.SetActive(false);
         }
 
         /// <summary>A gold phase notch on the boss bar's fill, at `at` (0-1) of its span (once per boss).</summary>
@@ -856,7 +879,9 @@ namespace Gladiator.UI
         public Component GoldLabel => _gold;
         public Component KillsLabel => _kills;
         public Component CalloutLabel => _announce;
-        public Component BossNameLabel => _bossName;
+        public Component BossNameLabel => _timer; // the boss's name takes the timer's place (note 29)
+        public string BossNameText => _timerBoss ? _timer.text : "";
+        public string BossHpText => _bossHpText != null ? _bossHpText.text : "";
         public Component DebugLabel => _debug;
         public RectTransform CanvasRect => (RectTransform)_canvas;
 

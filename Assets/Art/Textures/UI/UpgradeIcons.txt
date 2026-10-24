@@ -74,3 +74,4 @@ ed_meagre_choices 72
 ed_impatient_emperor 73
 ed_champions_day 74
 ed_no_mercy 75
+weapon_hunting_spear 76

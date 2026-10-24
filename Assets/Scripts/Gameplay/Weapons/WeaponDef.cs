@@ -5,8 +5,9 @@ using UnityEngine;
 namespace Gladiator.Gameplay
 {
     /// <summary>Attack patterns that weapon data composes (CLAUDE.md §6.8). Every one is implemented; Sweep (R3) is the
-    /// Labyrinth Chain. Append new patterns at the end (assets serialize the index: Sweep = 10).</summary>
-    public enum WeaponPattern { MeleeArc, Thrust, MultiHit, GroundSlam, Projectile, Returning, Orbit, Chain, Summon, Lob, Sweep }
+    /// Labyrinth Chain, Fireball (note 33) the Ashen Censer. Append new patterns at the end (assets serialize the
+    /// index: Sweep = 10, Fireball = 11).</summary>
+    public enum WeaponPattern { MeleeArc, Thrust, MultiHit, GroundSlam, Projectile, Returning, Orbit, Chain, Summon, Lob, Sweep, Fireball }
 
     /// <summary>
     /// A weapon as data. Its numbers are the level-1 base; each level 2-8 adds `levels[level-2].mods` to that weapon only
@@ -14,10 +15,14 @@ namespace Gladiator.Gameplay
     /// Implemented patterns: MeleeArc (Gladius), Thrust (Spear), Projectile (Javelins), Returning (Chakram), Orbit (Gorm's
     /// Flail: range = orbit radius, width = ball radius, speed = m/s along the circle, cooldown = re-hit interval per enemy),
     /// Lob (Bomb Satchel: acquireRange = throw range, width = blast radius, flightTime/fuse shortened by Projectile Speed),
-    /// GroundSlam (the Cleaver), Chain (the Storm Spear), MultiHit (the Trident: `prongs` thrust lines fanned across
-    /// arcDegrees, `prongInterval` s apart), Summon (the Wolf Pack: companions driven by CompanionPack), Sweep (the
+    /// GroundSlam (the Cleaver), Chain (the Storm Spear), MultiHit (the Trident, note 34: one lunge whose `prongs`
+    /// parallel lanes, `prongSpacing` × √Area apart, each range long and width wide, strike at once; an enemy on two or
+    /// three lanes takes each), Summon (the Wolf Pack: companions driven by CompanionPack), Sweep (the
     /// Labyrinth Chain, R3: the chain travels across arcDegrees in `sweepTime`, range long, hitting what it passes once
-    /// per sweep; its last tipLength m is the stone, which always crits; Amount = backswings, each the other way).
+    /// per sweep; its last tipLength m is the stone, which always crits; Amount = backswings, each the other way),
+    /// Fireball (the Ashen Censer, note 33: Amount fireballs at the nearest enemies, speed m/s, turning `homing` deg/s
+    /// toward their target, range = max travel; each bursts on the first enemy it touches, the ground or a wall, hitting
+    /// everything within width × Area).
     /// </summary>
     [CreateAssetMenu(menuName = "Gladiator/Weapon", fileName = "WP_")]
     public sealed class WeaponDef : ScriptableObject
@@ -102,9 +107,9 @@ namespace Gladiator.Gameplay
         public bool spreadStrikes;
 
         [Header("MultiHit (the Trident, Phase 5.14)")]
-        [Tooltip("MultiHit: jabs per flurry, fanned evenly across arcDegrees (each a Thrust line: range long, width wide).")]
+        [Tooltip("MultiHit: the trident's prongs, each a parallel lane of the lunge (range long, width wide, prongSpacing apart).")]
         [Min(1)] public int prongs = 3;
-        [Tooltip("MultiHit: seconds between two jabs of one flurry.")]
+        [Tooltip("Unused since note 34 (the lunge strikes with every prong at once; it was the gap between a flurry's jabs). Kept so old assets load.")]
         public float prongInterval = 0.07f;
 
         [Header("Summon (the Wolf Pack, Phase 5.15)")]
@@ -137,6 +142,16 @@ namespace Gladiator.Gameplay
 
         [Header("Levels 2-8")]
         public Level[] levels = Array.Empty<Level>();
+
+        [Header("MultiHit lunge (the Trident, note 34)")]
+        [Tooltip("MultiHit: metres between two neighbouring prongs' lanes (× √Area); the lanes run parallel along the aim, the middle one through the target.")]
+        public float prongSpacing = 0.45f;
+
+        [Header("Fireball (the Ashen Censer, note 33)")]
+        [Tooltip("Fireball: how fast it turns toward its target (deg/s); 0 = straight. A fireball whose target died flies on straight.")]
+        public float homing = 150f;
+        [Tooltip("Fireball: height above the feet it leaves from (m), the censer's; 0 = the projectiles' flight height.")]
+        public float castHeight = 0f;
 
         public int MaxLevel => 1 + (levels != null ? levels.Length : 0);
     }

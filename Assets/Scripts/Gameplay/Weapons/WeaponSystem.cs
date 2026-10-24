@@ -23,9 +23,6 @@ namespace Gladiator.Gameplay
         public float[] NextHit;
         /// <summary>Echo (evolutions): seconds until the second strike (-1 = none pending), its direction, and the size boost while it runs.</summary>
         public float EchoT = -1f;
-        /// <summary>MultiHit: jabs of the current flurry still to come, and the time to the next one.</summary>
-        public int ProngNext, ProngLeft;
-        public float ProngT;
         public Vector3 EchoDir;
         public float AreaBoost = 1f;
         public bool InEcho;
@@ -85,8 +82,10 @@ namespace Gladiator.Gameplay
     /// Fires the player's weapons automatically (CLAUDE.md §5): nearest-enemy auto-aim, central tick, hits via the
     /// enemy spatial hash (never Physics.Overlap), damage through EnemyManager.ApplyDamage. Up to 4 slots.
     /// Every weapon runs the same timeline (acquire → wind-up → impact → cooldown); the impact is the pattern:
-    /// MeleeArc (arc hit around the aim), Thrust (line hit + spear visual), Projectile (javelin volley at the nearest
-    /// enemies), Returning (chakram out and back), Lob (bombs at the densest groups in reach, exploding after a fuse),
+    /// MeleeArc (arc hit around the aim), Thrust (line hit + spear visual), MultiHit (the trident's lunge, note 34: its
+    /// prongs strike parallel lanes at once), Projectile (javelin volley at the nearest enemies), Returning (chakram out
+    /// and back), Lob (bombs at the densest groups in reach, exploding after a fuse), Fireball (the Ashen Censer's
+    /// cursed fireballs, note 33: homing on the nearest, bursting on the first enemy they touch),
     /// Sweep (the Labyrinth Chain, R3: the impact starts a sweep that carries the chain across its arc over sweepTime,
     /// hitting each enemy it passes once; Amount = backswings straight after, the other way; no new swing until the
     /// last one ends). Orbit (Gorm's Flail) has no timeline: its balls always circle the player and hit whatever they
@@ -152,8 +151,10 @@ namespace Gladiator.Gameplay
         public int Echoes { get; private set; }
         /// <summary>Thrust hits that landed on a weapon's tip (the Whip's crack, always crits; tests).</summary>
         public int TipHits { get; private set; }
-        /// <summary>MultiHit jabs (the Trident's prongs; tests, bot log).</summary>
+        /// <summary>MultiHit prongs thrust (the Trident: its prong count every lunge; tests, bot log).</summary>
         public int Prongs { get; private set; }
+        /// <summary>Fireballs cast (the Ashen Censer's; tests, bot log).</summary>
+        public int FireballsCast { get; private set; }
         /// <summary>GroundSlam impacts (tests).</summary>
         public int Slams { get; private set; }
         /// <summary>Enemies struck by Chain lightning, the first strikes and the jumps (tests, bot log).</summary>
@@ -320,7 +321,6 @@ namespace Gladiator.Gameplay
         {
             w.SwingT = -1f;
             w.EchoT = -1f;
-            w.ProngLeft = 0;
             w.BurstLeft = 0;
             w.DownT += dt;
             StopSweep(w); // a chain stops mid-sweep: no more hits, the model's chain is back
@@ -361,11 +361,6 @@ namespace Gladiator.Gameplay
             {
                 w.EchoT -= dt;
                 if (w.EchoT < 0f && em != null) Echo(w, em);
-            }
-            if (w.ProngLeft > 0)
-            {
-                w.ProngT -= dt;
-                while (w.ProngLeft > 0 && w.ProngT <= 0f && em != null) { Prong(w, em, w.ProngNext++); w.ProngLeft--; w.ProngT += Mathf.Max(0.01f, d.prongInterval); }
             }
             w.Cooldown -= dt;
             if (w.SweepT >= 0f && em != null) StepSweep(w, em, dt);
@@ -420,6 +415,15 @@ namespace Gladiator.Gameplay
                 if (pp != null) pp.Thrust(w.AimDir, d.range * area, d.swingDuration, MeshOf(w, pp), d.meshScale * Mathf.Sqrt(area));
                 SfxPlayer.Play(SfxId.Thrust, origin);
             }
+            else if (d.pattern == WeaponPattern.MultiHit)
+            {
+                // the trident's lunge (note 34): drawn back, driven out at the wind-up (when LungeHit strikes), pulled back
+                var pp = PlayerProjectiles.Instance;
+                float root = Mathf.Sqrt(area), dur = Mathf.Max(0.05f, d.swingDuration);
+                if (pp != null) pp.Lunge(w.AimDir, d.range * area, dur, d.windup / dur, Mathf.Max(1, d.prongs), d.prongSpacing * root,
+                    MeshOf(w, pp), d.meshScale * root);
+                SfxPlayer.Play(SfxId.Thrust, origin);
+            }
             else if (d.pattern == WeaponPattern.GroundSlam) SfxPlayer.Play(SfxId.Swing, origin); // raised over the head
             else if (d.pattern == WeaponPattern.Sweep)
             {
@@ -447,7 +451,8 @@ namespace Gladiator.Gameplay
                 case WeaponPattern.Lob: Lob(w, em); break;
                 case WeaponPattern.GroundSlam: SlamHit(w, em); break;
                 case WeaponPattern.Chain: ChainHit(w, em); break;
-                case WeaponPattern.MultiHit: StartFlurry(w, em); break;
+                case WeaponPattern.MultiHit: LungeHit(w, em); break;
+                case WeaponPattern.Fireball: CastFireballs(w, em); break;
                 case WeaponPattern.Sweep: w.SweepLeft = AmountOf(w) - 1; BeginSweep(w); break;
             }
             var d = w.Def;
@@ -650,32 +655,93 @@ namespace Gladiator.Gameplay
             }
         }
 
-        /// <summary>MultiHit (the Trident): the first jab now, the rest of the flurry every prongInterval s (TickWeapon).</summary>
-        void StartFlurry(WeaponInstance w, EnemyManager em)
-        {
-            w.ProngNext = 0;
-            w.ProngLeft = Mathf.Max(1, w.Def.prongs);
-            w.ProngT = 0f;
-            Prong(w, em, w.ProngNext++);
-            w.ProngLeft--;
-            w.ProngT = Mathf.Max(0.01f, w.Def.prongInterval);
-        }
-
-        /// <summary>Jab k of a flurry: a thrust line turned across the fan (left to right), from where the player is now.</summary>
-        void Prong(WeaponInstance w, EnemyManager em, int k)
+        /// <summary>
+        /// MultiHit (the Trident, note 34): one lunge. Its `prongs` lanes run parallel along the aim from the player, the
+        /// middle one through the target, prongSpacing × √area apart, each range × area long and width × √area wide; every
+        /// lane an enemy's body touches strikes it once (a big one, or one between two prongs, takes two or three). The
+        /// lanes flash white-cyan on the ground.
+        /// </summary>
+        void LungeHit(WeaponInstance w, EnemyManager em)
         {
             var d = w.Def;
-            int n = Mathf.Max(1, d.prongs);
-            float angle = n > 1 ? -d.arcDegrees * 0.5f + d.arcDegrees * k / (n - 1) : 0f;
-            Vector3 aim = w.AimDir;
-            w.AimDir = Quaternion.Euler(0f, angle, 0f) * aim;
-            float area = AreaOf(w);
+            float area = AreaOf(w), root = Mathf.Sqrt(area);
+            float length = d.range * area, half = d.width * 0.5f * root, spacing = d.prongSpacing * root;
+            int prongs = Mathf.Max(1, d.prongs);
+            float mid = (prongs - 1) * 0.5f, across = mid * spacing + half;
+            Vector3 origin = transform.position, aim = w.AimDir;
+            var right = new Vector3(aim.z, 0f, -aim.x);
+            int n = em.QueryAlive(origin + aim * (length * 0.5f), Mathf.Sqrt(length * length * 0.25f + across * across) + 0.4f, _hits);
+            for (int k = 0; k < n; k++)
+            {
+                int i = _hits[k];
+                Vector3 to = em.GetPosition(i) - origin;
+                to.y = 0f;
+                float r = em.GetRadius(i);
+                float along = Vector3.Dot(to, aim);
+                if (along < -0.4f || along > length + r) continue;
+                float side = Vector3.Dot(to, right);
+                int uid = em.GetUid(i);
+                for (int p = 0; p < prongs; p++)
+                {
+                    if (Mathf.Abs(side - (p - mid) * spacing) > half + r) continue;
+                    if (!em.IsAlive(i) || em.GetUid(i) != uid) break; // an earlier prong killed it
+                    Strike(w, em, i, Hit(w, em, i, aim, DamageFlags.Melee));
+                }
+            }
+            Prongs += prongs;
             var pp = PlayerProjectiles.Instance;
-            if (pp != null) pp.Thrust(w.AimDir, d.range * area, Mathf.Max(0.08f, d.prongInterval * 2f), MeshOf(w, pp), d.meshScale * Mathf.Sqrt(area));
-            SfxPlayer.Play(SfxId.Thrust, transform.position);
-            ThrustHit(w, em);
-            Prongs++;
-            w.AimDir = aim;
+            if (pp != null) pp.ProngLanes(origin, aim, length, Mathf.Max(0.25f, d.width * root * 1.3f), spacing, prongs);
+        }
+
+        /// <summary>
+        /// Fireball (the Ashen Censer, note 33): AmountOf(w) cursed fireballs from the censer (castHeight) at the nearest
+        /// distinct enemies; extra ones leave fanned out either side and curve back onto a target. Each steers `homing`
+        /// deg/s toward its target and bursts on the first enemy it touches, hitting everything within width × area (the
+        /// weapon's hit effects curse them and leave the cursed patch).
+        /// </summary>
+        void CastFireballs(WeaponInstance w, EnemyManager em)
+        {
+            var pp = PlayerProjectiles.Instance;
+            if (pp == null) return;
+            var d = w.Def;
+            Vector3 origin = transform.position;
+            int amount = Mathf.Min(AmountOf(w), _targets.Length);
+            int found = PickTargets(em, origin, Acquire(w), amount, d.targetFarthest);
+            float area = AreaOf(w);
+            var shot = new ShotParams
+            {
+                Speed = SpeedOf(w),
+                Range = d.range,
+                Radius = d.width * area,
+                Damage = Damage(w),
+                CritChance = Crit(w),
+                CritMultiplier = CritMul(w),
+                Knockback = Knock(w),
+                Scale = d.meshScale * Mathf.Sqrt(area),
+                SourceId = d.RuntimeId,
+                Mesh = MeshOf(w, pp),
+                Homing = d.homing,
+            };
+            Vector3 from = origin + Vector3.up * (d.castHeight > 0f ? d.castHeight : pp.flightHeight) + w.AimDir * 0.5f;
+            SfxPlayer.Play(SfxId.Throw, origin);
+            if (pp.burst != null) pp.burst.Burst(from, 6, 1.8f, 0.14f, pp.fireballBurstA, pp.fireballSmoke); // the censer flares
+            for (int k = 0; k < amount; k++)
+            {
+                int target = found > 0 ? _targets[k % found] : -1;
+                Vector3 dir = w.AimDir;
+                if (target >= 0)
+                {
+                    Vector3 to = em.GetPosition(target) + Vector3.up * pp.fireballAimHeight - from;
+                    if (to.sqrMagnitude > 1e-4f) dir = to.normalized;
+                }
+                if (found == 0 || k >= found) // more fireballs than targets: they leave fanned out and curve in
+                {
+                    int extra = found == 0 ? k : k - found + 1;
+                    float ang = volleySpread * 2f * ((extra + 1) / 2) * (extra % 2 == 0 ? 1f : -1f);
+                    dir = Quaternion.Euler(0f, ang, 0f) * dir;
+                }
+                if (pp.FireFireball(from, dir, target, target >= 0 ? em.GetUid(target) : 0, shot)) FireballsCast++;
+            }
         }
 
         // ---------- Sweep (the Labyrinth Chain, R3) ----------

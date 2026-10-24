@@ -10,9 +10,11 @@ namespace Gladiator.Tests
 {
     /// <summary>
     /// Phase 5.14 (docs/GLADIATORS.md): the Net-Weaver. He spawns with his model, stats, trident and traits; the
-    /// Trident's flurry hits one enemy three times up close and spreads across three at range, missing one outside the
-    /// fan; Caught adds 50 % against a rooted enemy; the Cast Net hauls a group to its landing point and roots it, not
-    /// again inside the cooldown, and only slows a boss; a won run holding the Spear unlocks him.
+    /// Trident's lunge (note 34) skewers a big enemy on all three prongs and strikes three parallel lanes at range,
+    /// missing one beside them and one beyond its reach; Caught adds 50 % against a rooted enemy; the Cast Net hauls a
+    /// group to its landing point and roots it, not again inside the cooldown, and only slows a boss; a slide's net goes
+    /// for the crowd, not the empty sand ahead (note 34), and lands ahead with nobody in reach; a lying net holds what it
+    /// caught, snares what walks on, and lets go when it's gone; a won run holding the Spear unlocks him.
     /// </summary>
     public class NetWeaverTests
     {
@@ -91,33 +93,39 @@ namespace Gladiator.Tests
         }
 
         [UnityTest, Timeout(60000)]
-        public IEnumerator Flurry_CloseUp_HitsOneEnemyThreeTimes()
+        public IEnumerator Lunge_CloseUp_SkewersABruteOnAllThreeProngs()
         {
             yield return Boot(TestArena, Weaver);
             Vector3 p = Player.Main.transform.position;
             int a = _em.Spawn(Brute, p + new Vector3(1.6f, 0f, 0f));
-            int prongs = _weapons.Prongs, hits = _weapons.Hits;
+            var pp = PlayerProjectiles.Instance;
+            int prongs = _weapons.Prongs, hits = _weapons.Hits, lunges = pp.Lunges;
             float end = Time.time + 4f;
             while (Time.time < end && _weapons.Prongs < prongs + 3)
             {
                 if (_em.IsAlive(a)) _em.ApplyStatus(a, Root, 0f); // held still
                 yield return null;
             }
-            Assert.AreEqual(prongs + 3, _weapons.Prongs, "one flurry: three jabs");
-            Assert.AreEqual(hits + 3, _weapons.Hits, "all three land on the one in front of him");
+            Assert.AreEqual(prongs + 3, _weapons.Prongs, "one lunge: three prongs at once");
+            Assert.AreEqual(hits + 3, _weapons.Hits, "a brute is wide enough for all three");
+            Assert.AreEqual(lunges + 1, pp.Lunges, "one trident lunging out of his hands, not three spears");
         }
 
         [UnityTest, Timeout(60000)]
-        public IEnumerator Flurry_AtRange_SpreadsAcrossTheFan_AndMissesOneOutsideIt()
+        public IEnumerator Lunge_StrikesThreeParallelLanes_AndMissesOneBesideThem_AndOneBeyond()
         {
             yield return Boot(TestArena, Weaver);
             Vector3 p = Player.Main.transform.position;
-            float half = _weapons.Weapons[0].Def.arcDegrees * 0.5f;
-            int centre = _em.Spawn(Convict, p + new Vector3(3.7f, 0f, 0f)); // the nearest: the aim
-            int left = _em.Spawn(Convict, p + Quaternion.Euler(0f, -half, 0f) * Vector3.right * 4f);
-            int right = _em.Spawn(Convict, p + Quaternion.Euler(0f, half, 0f) * Vector3.right * 4f);
-            int outside = _em.Spawn(Convict, p + Quaternion.Euler(0f, 55f, 0f) * Vector3.right * 4f);
-            var all = new[] { centre, left, right, outside };
+            var w = _weapons.Weapons[0];
+            float area = _weapons.AreaOf(w), root = Mathf.Sqrt(area);
+            float spacing = w.Def.prongSpacing * root, length = w.Def.range * area, half = w.Def.width * 0.5f * root;
+            int centre = _em.Spawn(Convict, p + new Vector3(2f, 0f, 0f)); // the nearest: the aim, on the middle lane
+            int left = _em.Spawn(Convict, p + new Vector3(3f, 0f, spacing)); // on an outer lane, further out
+            int right = _em.Spawn(Convict, p + new Vector3(3.4f, 0f, -spacing));
+            float r = _em.GetRadius(centre);
+            int beside = _em.Spawn(Convict, p + new Vector3(2.6f, 0f, spacing + half + r + 0.6f)); // clear of every lane
+            int beyond = _em.Spawn(Convict, p + new Vector3(length + r + 1f, 0f, 0f)); // past the middle prong's reach
+            var all = new[] { centre, left, right, beside, beyond };
             int prongs = _weapons.Prongs;
             float end = Time.time + 4f;
             while (Time.time < end && _weapons.Prongs < prongs + 3)
@@ -125,11 +133,14 @@ namespace Gladiator.Tests
                 foreach (int i in all) if (_em.IsAlive(i)) _em.ApplyStatus(i, Root, 0f);
                 yield return null;
             }
-            Assert.AreEqual(prongs + 3, _weapons.Prongs);
+            Assert.AreEqual(prongs + 3, _weapons.Prongs, "one lunge");
             foreach (int i in new[] { centre, left, right })
-                Assert.IsTrue(!_em.IsAlive(i) || _em.GetHp(i) < _em.GetMaxHp(i), "each prong finds its own enemy");
-            Assert.IsTrue(_em.IsAlive(outside), "outside the fan");
-            Assert.AreEqual(_em.GetMaxHp(outside), _em.GetHp(outside), 0.01f, "untouched");
+                Assert.IsTrue(!_em.IsAlive(i) || _em.GetHp(i) < _em.GetMaxHp(i), "each lane strikes what's on it");
+            foreach (int i in new[] { beside, beyond })
+            {
+                Assert.IsTrue(_em.IsAlive(i), "off the lanes");
+                Assert.AreEqual(_em.GetMaxHp(i), _em.GetHp(i), 0.01f, "untouched");
+            }
         }
 
         [UnityTest, Timeout(60000)]
@@ -166,7 +177,7 @@ namespace Gladiator.Tests
             int away = _em.Spawn(Convict, land + new Vector3(0f, 0f, 7f));
             yield return null;
             Assert.IsTrue(net.Ready);
-            Assert.IsTrue(net.Perform(Vector3.right));
+            Assert.IsTrue(net.CastAt(land));
             Assert.IsTrue(net.InFlight, "it flies first");
             Assert.IsFalse(net.Perform(Vector3.right), "one net at a time: recharging");
             yield return new WaitForSeconds(net.trait.flightTime + 0.6f);
@@ -193,11 +204,74 @@ namespace Gladiator.Tests
             int boss = _em.Spawn(Gorm, land + new Vector3(1.5f, 0f, 0f)); // a scripted body: nothing drives it here
             yield return null;
             Vector3 at = _em.GetPosition(boss);
-            Assert.IsTrue(net.Perform(Vector3.right));
+            Assert.IsTrue(net.CastAt(land));
             yield return new WaitForSeconds(net.trait.flightTime + 0.4f);
             Assert.IsFalse(_em.HasStatus(boss, StatusKind.Root), "a boss can't be held");
             Assert.IsTrue(_em.HasStatus(boss, StatusKind.Slow), "only slowed (and so Caught)");
             Assert.Less(Flat(_em.GetPosition(boss) - at).magnitude, 0.05f, "and not hauled");
+        }
+
+        [UnityTest, Timeout(60000)]
+        public IEnumerator CastNet_ASlidesNetGoesForTheCrowd_NotTheEmptySandAhead()
+        {
+            yield return Boot(TestArena, Weaver);
+            _weapons.RemoveAll();
+            _em.DespawnAll(); // nobody about
+            var net = Player.Main.GetComponent<CastNet>();
+            Vector3 p = Player.Main.transform.position;
+            Assert.IsTrue(net.Perform(Vector3.right), "nobody in reach: it still goes");
+            Assert.Less(Flat(net.LastLanding - (p + Vector3.right * net.trait.throwDistance)).magnitude, 0.05f, "throwDistance ahead along the slide");
+            yield return new WaitForSeconds(net.trait.flightTime + 0.1f);
+
+            // a crowd behind him and to his left; he slides away from it, to the right
+            Vector3 crowd = p + new Vector3(-4f, 0f, 3f);
+            var group = new[]
+            {
+                _em.Spawn(Convict, crowd), _em.Spawn(Convict, crowd + new Vector3(1f, 0f, 0f)), _em.Spawn(Convict, crowd + new Vector3(-1f, 0f, 0f)),
+                _em.Spawn(Convict, crowd + new Vector3(0f, 0f, 1f)), _em.Spawn(Convict, crowd + new Vector3(0f, 0f, -1f)),
+            };
+            int stray = _em.Spawn(Convict, p + new Vector3(5f, 0f, -5f)); // a lone one the slide's way
+            yield return null;
+            foreach (int i in group) _em.ApplyStatus(i, Root, 0f); // the crowd stands where it is until the net lands
+            Vector3 mean = Vector3.zero;
+            foreach (int i in group) mean += _em.GetPosition(i);
+            mean /= group.Length;
+            net.Recharge();
+            int hauled = net.Hauled;
+            GameEvents.OnSlide.Raise(new SlideEvent { Position = Player.Main.transform.position, Velocity = Vector3.right * 8f });
+            Assert.Less(Flat(net.LastLanding - mean).magnitude, 1f, "on the middle of the crowd");
+            yield return new WaitForSeconds(net.trait.flightTime + 0.2f);
+            Assert.GreaterOrEqual(net.Hauled - hauled, 4, "and it catches the crowd");
+            Assert.IsFalse(_em.HasStatus(stray, StatusKind.Root), "not the lone one ahead");
+        }
+
+        [UnityTest, Timeout(60000)]
+        public IEnumerator CastNet_HoldsWhatItCaught_AndSnaresWhatWalksOn_UntilItIsGone()
+        {
+            yield return Boot(TestArena, Weaver);
+            _weapons.RemoveAll();
+            _em.DespawnAll();
+            var net = Player.Main.GetComponent<CastNet>();
+            Vector3 land = Player.Main.transform.position + Vector3.right * 6f;
+            int held = _em.Spawn(Brute, land + new Vector3(1f, 0f, 0f));
+            yield return null;
+            Assert.IsTrue(net.CastAt(land));
+            yield return new WaitForSeconds(net.trait.flightTime + 0.05f);
+            Assert.IsTrue(net.Holding, "it lies on the sand");
+            Assert.IsTrue(_em.HasStatus(held, StatusKind.Root), "caught when it landed");
+            int walker = _em.Spawn(Brute, land + new Vector3(0f, 0f, -2f)); // steps onto the lying net
+            Assert.IsFalse(_em.HasStatus(walker, StatusKind.Root));
+            yield return new WaitForSeconds(net.trait.snareInterval + 0.1f);
+            Assert.IsTrue(_em.HasStatus(walker, StatusKind.Root), "snared");
+            Assert.GreaterOrEqual(net.Snared, 1);
+            float rootTime = Root.duration;
+            yield return new WaitForSeconds(rootTime + 0.1f); // past the first catch's own Root: the net still holds it
+            Assert.IsTrue(net.Holding);
+            Assert.IsTrue(_em.HasStatus(held, StatusKind.Root), "held while the net lies there");
+            while (net.Holding) yield return null;
+            yield return new WaitForSeconds(0.15f);
+            Assert.IsFalse(_em.HasStatus(held, StatusKind.Root), "the net is gone: so is the hold");
+            Assert.IsFalse(_em.HasStatus(walker, StatusKind.Root));
         }
 
         [UnityTest, Timeout(120000)]

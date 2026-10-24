@@ -9,8 +9,10 @@ using UnityEngine.TestTools;
 namespace Gladiator.Tests
 {
     /// <summary>
-    /// Phase 5.12 (docs/GLADIATORS.md): the Ashen Oracle. He spawns with his model, stats, censer and traits; a censer
-    /// burst Curses what it hits and leaves a cursed patch that curses an enemy walking in; a cursed enemy's death bursts
+    /// Phase 5.12 (docs/GLADIATORS.md): the Ashen Oracle. He spawns with his model, stats, censer and traits; the
+    /// censer's cursed fireball (note 33: his own, not the goblin's lobbed bomb) flies at an enemy, steers after it and
+    /// bursts on it; the burst Curses what it hits and leaves a cursed patch that curses an enemy walking in; a fireball
+    /// bursts on the first enemy in its way; a cursed enemy's death bursts
     /// and passes the curse on (Contagion); a hit releases the Smoke Veil (curse, slow, push) once per cooldown, and a
     /// status tick doesn't; the masked stranger in the Stone Amphitheater reads a player who stays in his ring (stepping
     /// out resets it), saves the flag and leaves; unread he fades; the flag unlocks the Oracle.
@@ -80,6 +82,8 @@ namespace Gladiator.Tests
             Assert.AreEqual(85f, _health.MaxHp, 0.01f);
             Assert.AreEqual(1, _weapons.Weapons.Count);
             Assert.AreEqual("ashen_censer", _weapons.Weapons[0].Def.id);
+            Assert.AreEqual(WeaponPattern.Fireball, _weapons.Weapons[0].Def.pattern, "his own cursed fireball, not the goblin's lob");
+            Assert.AreNotEqual(Load<WeaponDef>("Assets/Data/Weapons/WP_BombSatchel.asset").mesh, _weapons.Weapons[0].Def.mesh, "nor its bomb");
             Assert.IsNotNull(Player.Main.GetComponent<TraitEffects>(), "Contagion");
             Assert.IsNotNull(Player.Main.GetComponent<SmokeVeil>());
         }
@@ -93,14 +97,19 @@ namespace Gladiator.Tests
             Vector3 p = Player.Main.transform.position;
             int a = _em.Spawn(Brute, p + new Vector3(6f, 0f, 0f));
             var root = Root;
-            int blasts = pp.Blasts;
+            int blasts = pp.Blasts, bursts = pp.Fireballs, cast = _weapons.FireballsCast, flying = 0;
             float end = Time.time + 5f;
-            while (Time.time < end && pp.Blasts == blasts)
+            while (Time.time < end && pp.Fireballs == bursts)
             {
                 if (_em.IsAlive(a)) _em.ApplyStatus(a, root, 0f);
+                if (_weapons.FireballsCast > cast) flying++; // frames it spent in the air
                 yield return null;
             }
-            Assert.Greater(pp.Blasts, blasts, "the orb burst");
+            Assert.Greater(pp.Fireballs, bursts, "the fireball burst");
+            Assert.Greater(flying, 2, "after a flight: a fireball, not an instant hit");
+            Assert.AreEqual(blasts, pp.Blasts, "and no bomb went off");
+            Assert.Less(Vector3.Distance(new Vector3(pp.LastFireballBurst.x, 0f, pp.LastFireballBurst.z),
+                new Vector3(_em.GetPosition(a).x, 0f, _em.GetPosition(a).z)), _em.GetRadius(a) + 0.8f, "on the brute");
             yield return null;
             Assert.IsTrue(_em.HasStatus(a, StatusKind.Curse), "what it hits is Cursed");
             Assert.GreaterOrEqual(_em.StatusStacks(a, StatusKind.Curse), 2, "two stacks a hit");
@@ -115,6 +124,31 @@ namespace Gladiator.Tests
                 yield return null;
             }
             Assert.IsTrue(_em.HasStatus(walker, StatusKind.Curse), "the patch curses whatever walks in");
+        }
+
+        [UnityTest, Timeout(60000)]
+        public IEnumerator Fireball_BurstsOnTheFirstEnemyInItsWay_AndCursesAllAroundIt()
+        {
+            yield return Boot(TestArena, Oracle);
+            _em.DespawnAll();
+            var pp = PlayerProjectiles.Instance;
+            Vector3 p = Player.Main.transform.position;
+            int front = _em.Spawn(Brute, p + new Vector3(0f, 0f, 4f)); // the nearest: its target
+            int behind = _em.Spawn(Brute, p + new Vector3(0f, 0f, 9f)); // in line behind it, out of the burst
+            int beside = _em.Spawn(Brute, p + new Vector3(1.6f, 0f, 4.6f)); // next to the target, inside the burst
+            var all = new[] { front, behind, beside };
+            int bursts = pp.Fireballs;
+            float end = Time.time + 4f;
+            while (Time.time < end && pp.Fireballs == bursts)
+            {
+                foreach (int i in all) if (_em.IsAlive(i)) _em.ApplyStatus(i, Root, 0f);
+                yield return null;
+            }
+            Assert.AreEqual(bursts + 1, pp.Fireballs, "one fireball, one burst");
+            Assert.Less(Mathf.Abs(pp.LastFireballBurst.z - _em.GetPosition(front).z), _em.GetRadius(front) + 0.8f, "it bursts on the first it touches");
+            Assert.IsTrue(_em.HasStatus(front, StatusKind.Curse) && _em.HasStatus(beside, StatusKind.Curse), "the burst curses all around it");
+            Assert.IsFalse(_em.HasStatus(behind, StatusKind.Curse), "it doesn't fly on through");
+            Assert.AreEqual(_em.GetMaxHp(behind), _em.GetHp(behind), 0.01f);
         }
 
         [UnityTest, Timeout(60000)]

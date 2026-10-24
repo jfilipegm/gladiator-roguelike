@@ -13,6 +13,7 @@ item after this one: `docs/tracks/U2-items-satchels.md`.
 | 34 | The Net-Weaver's trident looks no different from the javelin; the net throw doesn't really work. | The trident gets its own look and attack; the net throw is fixed so it clearly casts, lands and holds. | W-weapons |
 | 35 | The Thunder Champion's blink is sudden (looked like a bug): an icon showing it's ready, and a smoother blink. | A ready icon in the HUD; the blink with a wind-up/trail/arrival so it reads as a move. | W-blink |
 | 36 | The NEW seal stays after the word. | No change. | — |
+| 37 | The Beastmaster: the dogs get stuck fighting a couple of mobs while he has no weapon; rethink it. | He also starts with a **Hunting Spear** (a quick thrust that marks what it hits; the pack goes for marked enemies first); the pack is leashed to him, picks enemies near **him**, bites and moves on, follows when he runs. | W-beast |
 
 **The producer's answers on note 31 (2026-10-24):**
 1. Items stack (a second copy strengthens the first).

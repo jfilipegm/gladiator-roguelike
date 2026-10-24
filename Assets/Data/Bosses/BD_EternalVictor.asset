@@ -25,12 +25,15 @@ MonoBehaviour:
   victoryLine: 'The first champion lies still at last. Forty thousand chant a new name: yours.'
   phase1Attacks: 01060a07y
   phase2Attacks: 0106020a07y
+  hpPerLevel: 0.025
+  hpFromLevel: 20
+  damageMul: 1.25
   moveSpeed: 3.6
   enragedMoveSpeed: 4
   turnRate: 200
   contactDamage: 12
   contactInterval: 0.8
-  recover: 0.55
+  recover: 0.47
   closeInRange: 30
   closeInSpeed: 7
   sweepRadius: 5.5

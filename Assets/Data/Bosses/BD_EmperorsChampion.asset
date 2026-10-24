@@ -25,6 +25,9 @@ MonoBehaviour:
   victoryLine: The Emperor's own champion lies in the sand, and the Emperor is on his feet.
   phase1Attacks: 020509y
   phase2Attacks: 02050904y
+  hpPerLevel: 0.01
+  hpFromLevel: 20
+  damageMul: 1.25
   moveSpeed: 3.4
   enragedMoveSpeed: 3.9
   turnRate: 160
@@ -151,3 +154,8 @@ MonoBehaviour:
   riseBurstWarn: 1
   remainsColor: {r: 0.89, g: 0.84, b: 0.74, a: 0.85}
   rewardFloor: 2
+  revealText: 
+  revealUnlock: {fileID: 0}
+  revealDelay: 1.2
+  revealHold: 0
+  revealColor: {r: 0.86, g: 0.78, b: 0.62, a: 1}

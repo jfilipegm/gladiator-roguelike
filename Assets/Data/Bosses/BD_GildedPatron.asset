@@ -25,12 +25,17 @@ MonoBehaviour:
   victoryLine: The Patron is bankrupt and his gold is in the sand. The boxes chant your name.
   phase1Attacks: 080905y
   phase2Attacks: 080905y
+  hpPerLevel: 0.015
+  hpFromLevel: 20
+  damageMul: 1.25
   moveSpeed: 2.6
   enragedMoveSpeed: 3.2
   turnRate: 120
   contactDamage: 10
   contactInterval: 0.8
   recover: 0.7
+  closeInRange: 0
+  closeInSpeed: 0
   sweepRadius: 5.5
   sweepWindup: 1.1
   sweepDamage: 28
@@ -42,6 +47,7 @@ MonoBehaviour:
   whipDamage: 18
   whipSlow: 0.55
   whipSlowSeconds: 2
+  whipGrasp: 0
   slamRadius: 2.6
   slamWindup: 1
   slamDamage: 30
@@ -90,6 +96,16 @@ MonoBehaviour:
   volleySpeed: 15
   volleyDamage: 12
   volleyRange: 24
+  volleyJavelins: 0
+  discLength: 18
+  discWidth: 1.6
+  discWindup: 0.8
+  discSpeed: 24
+  discDamage: 18
+  discKnockback: 6
+  discSpin: 1080
+  discRepeats: {x: 1, y: 1}
+  discPart: Falx
   guardedBy: {fileID: 11400000, guid: 4165bb2b0d299f6b098d374ad7be05aa, type: 2}
   guardedDamageMul: 0.6
   guardThreadColor: {r: 1, g: 0.82, b: 0.25, a: 0.9}
@@ -102,6 +118,8 @@ MonoBehaviour:
   guards:
   - {fileID: 11400000, guid: 4165bb2b0d299f6b098d374ad7be05aa, type: 2}
   guardCount: {x: 4, y: 6}
+  guardsFromPhase: 1
+  guardsNearestGates: 0
   phase2At: 0.5
   phase2FireRing: 0
   phase2SpikeVolley: 0
@@ -113,4 +131,31 @@ MonoBehaviour:
   fireRingSpacing: 2.4
   fireRingPatch: 1.5
   fireRingDps: 12
+  phase3At: 0
+  phase3Attacks: 
+  phase3Text: 
+  phase3Speed: 1.4
+  phase3MoveSpeed: 0
+  phase3ChargeRepeats: 0
+  phase3DiscRepeats: 0
+  phase3PounceRepeats: 0
+  entranceRise: 0
+  riseDepth: 3
+  riseTime: 2.6
+  falseDeath: 0
+  remainsHp: 1500
+  remainsTime: 8
+  riseHp01: 0.2
+  remainsText: 
+  riseText: 
+  riseBurstRadius: 4
+  riseBurstDamage: 20
+  riseBurstKnockback: 10
+  riseBurstWarn: 1
+  remainsColor: {r: 0.89, g: 0.84, b: 0.74, a: 0.85}
   rewardFloor: 2
+  revealText: 
+  revealUnlock: {fileID: 0}
+  revealDelay: 1.2
+  revealHold: 0
+  revealColor: {r: 0.86, g: 0.78, b: 0.62, a: 1}

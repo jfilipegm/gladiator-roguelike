@@ -17,7 +17,7 @@ MonoBehaviour:
   model: {fileID: 919132149155446097, guid: 7613271bc68d5f7bdb62c143ac7c9f29, type: 3}
   anim: {fileID: 0}
   scale: 1
-  maxHp: 15000
+  maxHp: 24000
   moveSpeed: 0
   speedJitter: 0.15
   acceleration: 14

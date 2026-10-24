@@ -11,5 +11,28 @@ Branch `phase5-notes27`. The producer played the v0.27.0 dev build at home.
 | 28 | Every gold title in that font has letters going too dark. | Marcellus SC / Marcellus outlined at 0.32 SDF units on a 0.1 face: the dark rim ate the thin strokes, so gold showed only as slivers. | `UiThemeSetup`: thin fonts 0.15 outline on a 0.2 face (both Outline materials updated): the letters read gold, the rim still clear over sky and sand. |
 
 ## Boss tuning (note 25)
-Measured with bot runs to each boss (dev build, `-bot -timed`, the Nobody, seed 0C0FFEE5; the bot picks random
-cards, so a human's build is stronger): see the table below once filled.
+Measured with bot runs to each boss (dev build, `-bot -timed`, the Nobody, seed 0C0FFEE5, immortal: it never dodges;
+it picks random cards, so a human's build is 2-3x stronger):
+
+| Boss | Fight | Bot DPS | Taken (hits) | Level |
+|---|---|---|---|---|
+| Gorm | 95 s | 106/s | 959 (73) | 36 |
+| Provincial Champion | 89 s | 152/s | 787 (63) | 29 |
+| Beast Lord | 52 s | 332/s | 653 (23) | 34 |
+| Gilded Patron | not done: 97 % HP after ~95 s (his guards cut damage to 40 %; the bot ignores them) | | | 31 |
+| Emperor's Champion | not done: 50 % HP after ~95 s | | | 37 |
+| Eternal Victor (the final boss) | 68 s | 437/s | 891 (33) | 35 |
+
+**Changes (WIP, not yet tested):**
+- `BossDef.hpPerLevel` (0.025, from level 20): a boss's HP grows with the player's level when he enters (L35 = +37 %).
+- `BossDef.damageMul` (1.25): his hits, javelins, coins and bombs deal more.
+- HP: Champion 13000 -> 15000, Beast Lord 15000 -> 24000, Eternal Victor 22000 -> 34000.
+- Pause between attacks: Gorm 0.7 -> 0.6, Champion and Beast Lord 0.6 -> 0.5, Eternal Victor 0.55 -> 0.47.
+- Level scaling: Patron 0.015, Emperor 0.01 (already long fights).
+- Values in the assets and in `BossSetup.cs`.
+
+**Resume:**
+1. Run the boss PlayMode tests: BossTests, ChampionTests, BeastLordTests, GildedPatronTests, EmperorsChampionTests,
+   EternalVictorTests and AdminToolsTests. They were stopped mid-run, so the new numbers are untested.
+2. Rebuild the dev build, then bot runs to Gorm, the Beast Lord and the Eternal Victor (`scratchpad/boss/run.sh`) to check the new fight lengths.
+3. Full suites, screenshots, the PR and the producer's OK.

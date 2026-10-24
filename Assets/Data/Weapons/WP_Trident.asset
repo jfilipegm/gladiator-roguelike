@@ -14,27 +14,27 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.WeaponDef
   id: trident
   displayName: Trident
-  description: 'Three quick jabs fanned at the nearest enemy: all three land up close, and they spread across the crowd further out.'
+  description: 'Lunges with the trident: its three prongs strike three parallel lanes at once. A big enemy, or one between two prongs, takes two or three.'
   pattern: 2
-  damage: 8
+  damage: 7
   critChance: 0.08
   critMultiplier: 2
   knockback: 2.5
   onHitStatus: {fileID: 0}
   onHitStatusPower: 0.1
   onHitStacks: 1
-  cooldown: 1.2
+  cooldown: 1.3
   swingDuration: 0.34
   windup: 0.1
-  range: 4.2
-  arcDegrees: 36
-  width: 0.6
-  acquireRange: 4.6
+  range: 4.4
+  arcDegrees: 0
+  width: 0.3
+  acquireRange: 4.8
   amount: 1
   speed: 16
   pierce: -1
   mesh: {fileID: -8733962506376293549, guid: 9bad46967b6f53a3ab78b60f002163a8, type: 3}
-  meshScale: 1
+  meshScale: 1.4
   flightTime: 0.6
   fuse: 0.4
   arcHeight: 2.2
@@ -89,3 +89,6 @@ MonoBehaviour:
     - stat: 4
       op: 1
       value: 0.2
+  prongSpacing: 0.45
+  homing: 150
+  castHeight: 0

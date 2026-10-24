@@ -14,17 +14,27 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.CastNetTrait
   id: cast_net
   displayName: Cast Net
-  description: 'Start a slide with the net ready (every 4 s): it lands 5 m ahead, hauls everything within 3.2 m together and Roots it for 2 s. Bosses are only Slowed.'
+  description: 'Start a slide with the net ready (every 4 s): it''s flung at the thickest crowd within 9 m, hauls everything within 3.2 m together and holds it for 3 s, snaring whatever walks on. Bosses are only Slowed.'
   cooldown: 4
   throwDistance: 5
-  flightTime: 0.3
-  arcHeight: 1.6
+  flightTime: 0.55
+  arcHeight: 2.6
   radius: 3.2
   pull: 0.7
   damage: 6
   root: {fileID: 11400000, guid: 84f718aecfc90da8888b3b6634460765, type: 2}
   slow: {fileID: 11400000, guid: 0ec034d7e8deb959d8c6d4ef51835fb5, type: 2}
-  mesh: {fileID: 7706228179771015850, guid: 2acaf20a744c6351b88add728e2cb9ce, type: 3}
+  mesh: {fileID: 3924699105837927395, guid: 7cb16b65ac537632a8ac36d4c8cf9d3c, type: 3}
   material: {fileID: 2100000, guid: 05a9990b9ad10f8f2aaf5ee4b41e035e, type: 2}
-  meshScale: 1.6129032
+  meshScale: 1
   ring: {r: 0.72, g: 0.95, b: 1, a: 0.7}
+  throwRange: 9
+  aimCandidates: 12
+  holdTime: 3
+  snareInterval: 0.25
+  flightSize: 0.3
+  unfoldTime: 0.18
+  groundFlatten: 0.7
+  blinkTime: 0.5
+  holdRing: {r: 0.55, g: 0.95, b: 1, a: 0.75}
+  readyPuff: 1

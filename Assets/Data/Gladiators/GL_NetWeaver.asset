@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.GladiatorDef
   id: net_weaver
   displayName: The Net-Weaver
-  description: A retiarius, a fisherman with a net and a trident. His slide flings a net that hauls the crowd together and holds it; the trident's flurry does the rest, harder on whatever is caught.
+  description: A retiarius, a fisherman with a net and a trident. His slide flings a net that hauls the crowd together and holds it; the trident's lunge does the rest, harder on whatever is caught.
   baseStats:
   - stat: 0
     value: 95

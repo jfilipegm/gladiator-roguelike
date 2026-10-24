@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.WeaponDef
   id: ashen_censer
   displayName: Ashen Censer
-  description: 'Lobs a smoking orb into the crowd: it bursts, Curses everything it hits and leaves a cursed patch behind.'
-  pattern: 9
+  description: 'Hurls a cursed fireball at the nearest enemy: it curves after its target and bursts on the first one it touches, Cursing everything around and leaving a cursed patch behind.'
+  pattern: 11
   damage: 8
   critChance: 0.05
   critMultiplier: 2
@@ -23,18 +23,18 @@ MonoBehaviour:
   onHitStatus: {fileID: 0}
   onHitStatusPower: 0.1
   onHitStacks: 1
-  cooldown: 1.8
+  cooldown: 1.6
   swingDuration: 0.3
   windup: 0.12
-  range: 10
+  range: 14
   arcDegrees: 150
-  width: 2.4
+  width: 2.2
   acquireRange: 10
   amount: 1
-  speed: 16
+  speed: 13
   pierce: 0
-  mesh: {fileID: 7593729641053697157, guid: 31e4c83d4f5bb002097d25b058ba0a7c, type: 3}
-  meshScale: 1.1
+  mesh: {fileID: -4514111130974210962, guid: 31fa7552617048f36b9a4ec6af505d06, type: 3}
+  meshScale: 1.2
   flightTime: 0.7
   fuse: 0.25
   arcHeight: 2.8
@@ -106,3 +106,6 @@ MonoBehaviour:
     - stat: 8
       op: 1
       value: 0.15
+  prongSpacing: 0.45
+  homing: 150
+  castHeight: 1.45

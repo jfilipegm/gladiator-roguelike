@@ -48,7 +48,11 @@ name, be a different character, bigger than every other mob except the real boss
 3. **E1, named elites:** the elite models start in Blender during U2, since they're independent art work.
 4. **T2, new attacks by threat tier.**
 
-## Open points for the producer
-1. One elite per arena to start, or two?
-2. Should the old ring elites go away completely (recommended), or stay as unnamed tougher mobs without the ring?
-3. Opening a gate: hold a key (free, level-gated), or also cost gold like a chest?
+## The producer's answers (2026-10-24)
+1. **A growing number of specific elites per arena:** "arena 1 has 1, arena 2 has 2, and it keeps growing exponentially".
+   Orchestrator's proposal, waiting for the OK: each arena brings **n new** elites (1, 2, 3, 4, 5, 6 = 21 characters),
+   and the earlier ones come back in later arenas, stronger by Threat. The elites you can meet grow 1, 3, 6, 10, 15, 21
+   with 21 models. Strict doubling (1, 2, 4, 8, 16, 32) would be 63 models.
+2. **The ring elites go away.** The player knows an elite by its size, strength, abilities and HP bar.
+3. **The cage or door shows a "!" or "?" icon and the interact button.** Opening plays an animation and the elite walks
+   out. Free once the level is reached.

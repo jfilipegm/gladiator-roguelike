@@ -79,3 +79,10 @@ measured with bot runs: **the first chest affordable by ~1:00, 6–9 chests in a
 - The orchestrator integrates, re-runs the setups, measures the gold and chest timing with bot runs, then runs the
   suites, takes screenshots and opens the PR.
 
+
+## Added 2026-10-24: a friend's notes 41, 42, 44 and 45 (`N29-v028-notes.md`)
+These touch the same files (cards, the pause inventory, the Codex, the save), so they ship with U2:
+- **Hidden synergies (41):** cards show the tag count and "???" until the synergy is first completed. Discoveries are
+  saved; the Codex lists discovered synergies and evolutions with what makes them.
+- **Pause tooltips (42)** carry the tag and synergy lines; **active synergies (45)** get their own row with tooltips.
+- **Tabbed menus (44):** Tab / Shift+Tab and LB / RB switch tabs; arrows move inside a tab.

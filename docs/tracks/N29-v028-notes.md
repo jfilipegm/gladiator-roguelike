@@ -23,3 +23,12 @@ item after this one: `docs/tracks/U2-items-satchels.md`.
 2. Slots are earned: a **Satchel** item, in every rarity; each rarity adds a number of new slots to weapons, boons or items.
 3. Mobs drop gold more often (so the first chest comes early), instead of a cheap first chest.
 4. The NEW seal stays after the word.
+
+## A friend's playtest (relayed by the producer, 2026-10-24)
+| # | The note (translated) | Plan |
+|---|---|---|
+| 41 | Synergies should be hidden: you learn one exists only when you complete it the first time. Then the Codex shows what makes it (which weapon with which weapon or boon), and after you first make an evolved weapon, the Codex shows that too. | Cards keep the tag counts ("HEAVY 2/3") but show "???" for an undiscovered synergy's name and effect. Discovery is saved in the meta save; the Codex lists discovered synergies and evolutions with their recipes. **U2** (W-core: the save; W-ui: cards and Codex). |
+| 42 | In the pause menu, an item's tooltip should also show its synergy, not only the card. | The pause tooltips get the same tag and synergy lines as the cards. **U2** (W-ui). |
+| 43 | Mobs shouldn't despawn when the boss appears: fight both, with a lower spawn rate while he lives. | Done in v0.29.0 (note 38). |
+| 44 | Menus: arrows work inside a tab (left/right pages, up/down items); Tab / Shift+Tab move between tabs. | Codex, select and other tabbed screens: Tab / Shift+Tab (and LB / RB on a pad) for tabs; arrows inside. **U2** (W-ui). |
+| 45 | (the producer) The active synergies (Bloodbath, Juggernaut…) should show in the pause menu, with a tooltip saying what they do. | A SYNERGIES row in the pause inventory, with tooltips. **U2** (W-ui). |

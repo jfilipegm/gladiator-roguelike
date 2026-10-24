@@ -9,6 +9,8 @@ namespace Gladiator.Gameplay
     /// RotationComposer + Deoccluder (pulls the camera in front of walls). Look input comes from the shared
     /// player input frame and drives the orbit axes directly; the resulting yaw is the player's movement reference.
     /// Adds a speed-based FOV kick. Ticked centrally (TickGroup.Camera, before CinemachineBrain's LateUpdate).
+    /// Note 35: Glide eases the look target from where the player was onto him after a teleport (the Thunder Champion's
+    /// blink), so the camera moves instead of cutting.
     /// </summary>
     public sealed class PlayerCameraRig : MonoBehaviour, ITickable
     {
@@ -25,8 +27,19 @@ namespace Gladiator.Gameplay
         CinemachineDecollider _decollider;
         float _yaw, _pitch, _fov;
 
+        // Note 35 (the Thunder Champion's blink read as a bug: the camera cut 7 m in one frame): a glide. The look target
+        // (the vcam's Follow and LookAt) is put back where the player was and eases onto him (ease-out cubic), so a
+        // teleport reads as a move. Only that target's position changes; the orbit, damping and walls work as before.
+        Vector3 _glideFrom, _restLocal;
+        float _glideT, _glideSeconds;
+
+        /// <summary>The rig following the player (LightningDash glides it).</summary>
+        public static PlayerCameraRig Main { get; private set; }
         public float Yaw => _yaw;
         public float Pitch => _pitch;
+        /// <summary>How far (world) the look target still is from its place on the player: zero unless gliding.</summary>
+        public Vector3 GlideOffset { get; private set; }
+        public bool Gliding => _glideSeconds > 0f;
 
         void Awake()
         {
@@ -40,8 +53,60 @@ namespace Gladiator.Gameplay
             ApplyConfig();
         }
 
-        void OnEnable() => GameLoop.Register(this, TickGroup.Camera);
-        void OnDisable() => GameLoop.Unregister(this);
+        void OnEnable()
+        {
+            Main = this;
+            GameLoop.Register(this, TickGroup.Camera);
+        }
+
+        void OnDisable()
+        {
+            if (Main == this) Main = null;
+            GameLoop.Unregister(this);
+            EndGlide();
+        }
+
+        /// <summary>
+        /// Note 35: the camera glides over `seconds` instead of cutting: its look target starts `offset` (world) from its
+        /// place on the player (a blink passes from - to) and eases onto him. A glide during a glide starts from where
+        /// the target is now. `seconds` 0 or less = no glide.
+        /// </summary>
+        public void Glide(Vector3 offset, float seconds)
+        {
+            if (lookTarget == null || seconds <= 0f) return;
+            if (!Gliding) _restLocal = lookTarget.localPosition;
+            _glideFrom = GlideOffset + offset;
+            _glideSeconds = seconds;
+            _glideT = 0f;
+            GlideOffset = _glideFrom;
+            PlaceTarget();
+        }
+
+        /// <summary>Real time, so a hit-stop or the cards opening mid-glide never leave the camera off the player.</summary>
+        void StepGlide(float unscaledDt)
+        {
+            if (!Gliding) return;
+            _glideT += unscaledDt;
+            float u = _glideT / _glideSeconds;
+            if (u >= 1f) { EndGlide(); return; }
+            float k = 1f - u;
+            GlideOffset = _glideFrom * (k * k * k);
+            PlaceTarget();
+        }
+
+        void EndGlide()
+        {
+            if (!Gliding) return;
+            _glideSeconds = 0f;
+            GlideOffset = Vector3.zero;
+            if (lookTarget != null) lookTarget.localPosition = _restLocal;
+        }
+
+        void PlaceTarget()
+        {
+            var parent = lookTarget.parent;
+            lookTarget.localPosition = _restLocal + (parent != null ? parent.InverseTransformVector(GlideOffset) : GlideOffset);
+        }
 
         public void SetAngles(float yaw, float pitch)
         {
@@ -57,6 +122,7 @@ namespace Gladiator.Gameplay
 #if UNITY_EDITOR
             ApplyConfig(); // live tuning while playing
 #endif
+            StepGlide(unscaledDt);
             var c = config;
             var input = player.Input;
             var opt = GameOptions.Data; // the player's options multiply the designer's tuning

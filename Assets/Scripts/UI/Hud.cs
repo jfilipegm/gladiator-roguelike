@@ -25,6 +25,7 @@ namespace Gladiator.UI
     /// heart, aureus and skull-in-a-galea are the 16 px art at 32×32 centred on their trough or number; the level plate
     /// reads LevelWord ("LEVEL 3") and is as wide as "LEVEL 88" needs; the XP bar is 21 tall. The pause moved to
     /// LevelUpPanel (PAUSED, its plates and keys, the inventory and the stats column).
+    /// Note 35: the Thunder Champion's blink has its own tile at the weapon row's right end (BlinkReadyIcon).
     /// </summary>
     public sealed class Hud : MonoBehaviour, ITickable
     {
@@ -178,6 +179,9 @@ namespace Gladiator.UI
         static readonly Color RageColor = new Color(0.80f, 0.56f, 0.30f);
         static readonly Color RageHot = new Color(1f, 0.93f, 0.7f);
         static readonly Color RageSpent = new Color(0.45f, 0.45f, 0.48f);
+        // Thunder Champion (note 35): his blink's tile at the weapon row's right end, under the status plate's right corner
+        // (BlinkReadyIcon: lit and pulsing when ready, filling while it recharges, a pop when it's back; "SLIDE" under it)
+        BlinkReadyIcon _blink;
 
         // R7: the edicts in effect, one 28 px icon each on a dark chip, centred under the timer
         Transform _canvas;
@@ -427,6 +431,7 @@ namespace Gladiator.UI
                     new Vector2(ChipNameLeft, 1), new Vector2(110, 26));
                 PreSize(_chipText[j], "EXECUTIONER!");
             }
+            _blink = new BlinkReadyIcon(strip, PlateX + PlateW, _weaponRowY); // note 35: hidden until a LightningDash shows up
 
             for (int i = 0; i < Tags; i++)
             {
@@ -936,6 +941,7 @@ namespace Gladiator.UI
             DrawInteractables(run);
             DrawFavor(unscaledDt);
             DrawBlood(unscaledDt);
+            _blink.Draw(LightningDash.Instance, unscaledDt); // note 35
             DrawBoss(run);
             DrawObjective();
             DrawIntro(unscaledDt);
@@ -1151,6 +1157,8 @@ namespace Gladiator.UI
 
         /// <summary>The Blood bar's label right now (tests).</summary>
         public string BloodLabel => _bloodText != null ? _bloodText.text : "";
+        /// <summary>The Thunder Champion's blink tile (note 35; tests).</summary>
+        public BlinkReadyIcon BlinkIcon => _blink;
 
         /// <summary>The Favor bar (pulses gold-white when a gift is close) and the loaned weapon's tile + seconds left.</summary>
         void DrawFavor(float unscaledDt)

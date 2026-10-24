@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.HuntingHornTrait
   id: hunting_horn
   displayName: Hunting Horn
-  description: 'Start a slide with the horn ready (every 5 s): every wolf pounces on the enemies ahead of you, biting three times and Staggering them.'
+  description: 'Slide with the horn ready (every 5 s): every wolf pounces ahead of you, biting three times and Staggering.'
   cooldown: 5
   ahead: 4
   range: 8

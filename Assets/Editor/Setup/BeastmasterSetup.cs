@@ -133,10 +133,15 @@ namespace Gladiator.EditorTools
             var bond = Trait<FeralBondTrait>(FeralBondPath, "feral_bond", "Feral Bond",
                 "When you're hit, your wolves frenzy for 4 s: they bite 60 % faster and run 25 % faster.");
             var horn = Trait<HuntingHornTrait>(HornPath, "hunting_horn", "Hunting Horn",
-                "Start a slide with the horn ready (every 5 s): every wolf pounces on the enemies ahead of you, biting three times and Staggering them.");
+                "Slide with the horn ready (every 5 s): every wolf pounces ahead of you, biting three times and Staggering.");
             if (horn.status == null) { horn.status = stagger; EditorUtility.SetDirty(horn); }
+            // v0.29.0: shorter lines so three traits fit his tablet (only the old texts are replaced)
+            ShortenTrait(horn, "Start a slide with the horn ready (every 5 s): every wolf pounces on the enemies ahead of you, biting three times and Staggering them.",
+                "Slide with the horn ready (every 5 s): every wolf pounces ahead of you, biting three times and Staggering.");
             var mark = Trait<HuntersMarkTrait>(MarkPath, "hunters_mark", "Hunter's Mark",
-                "You also carry a Hunting Spear. Whatever it hits is marked for 4 s, and your wolves go for marked enemies first.");
+                "Your Hunting Spear marks what it hits for 4 s; the wolves hunt marked enemies first.");
+            ShortenTrait(mark, "You also carry a Hunting Spear. Whatever it hits is marked for 4 s, and your wolves go for marked enemies first.",
+                "Your Hunting Spear marks what it hits for 4 s; the wolves hunt marked enemies first.");
             if (mark.weapon == null) mark.weapon = spear;
             if (mark.sigil == null) mark.sigil = AssetDatabase.LoadAssetAtPath<Mesh>(SigilModel);
             if (mark.material == null) mark.material = AssetDatabase.LoadAssetAtPath<Material>(LookSetup.CharMat);
@@ -154,9 +159,10 @@ namespace Gladiator.EditorTools
                 g.tradeoff = Tradeoff;
             }
             // note 37: the texts from before the spear move on (a designer's own text stays)
-            if (g.description == OldDescription) g.description = Description;
+            if (g.description == OldDescription || g.description == SpearDescriptionV1) g.description = Description;
             if (g.tradeoff == OldTradeoff) g.tradeoff = Tradeoff;
-            if (string.IsNullOrEmpty(g.selectLine)) g.selectLine = "Starts with the Wolf Pack and a Hunting Spear";
+            if (string.IsNullOrEmpty(g.selectLine) || g.selectLine == "Starts with the Wolf Pack and a Hunting Spear") // the long one ran off the tablet's line
+                g.selectLine = "Starts with Wolf Pack + Spear";
             if (g.model == null) g.model = ModelStyle.Load(Model);
             if (g.movement == null) g.movement = move;
             if (g.animProfile == null) g.animProfile = anim;
@@ -172,8 +178,9 @@ namespace Gladiator.EditorTools
             return g;
         }
 
+        const string SpearDescriptionV1 = "A hunter from the frontier forests who won't fight without his wolves. His spear marks the prey, the pack runs it down; they frenzy when he's hurt and pounce when he blows his horn."; // too long for the tablet with three traits
         const string OldDescription = "A hunter from the frontier forests who won't fight without his wolves. They hunt beside him, frenzy when he's hurt, and pounce when he blows his horn.";
-        const string Description = "A hunter from the frontier forests who won't fight without his wolves. His spear marks the prey, the pack runs it down; they frenzy when he's hurt and pounce when he blows his horn.";
+        const string Description = "A frontier hunter who won't fight without his wolves: his spear marks the prey, the pack runs it down.";
         const string OldTradeoff = "The pack is his damage: two wolves at first, and they won't stray far from him.";
         const string Tradeoff = "The pack is his damage, and it won't stray far from him; his own spear is short and light.";
 
@@ -252,13 +259,14 @@ namespace Gladiator.EditorTools
             // numbers stay), and the text says how they hunt now
             if (Mathf.Approximately(w.range, 12f)) w.range = 9f;
             if (Mathf.Approximately(w.acquireRange, 10f)) w.acquireRange = 9f;
-            if (w.description == OldPackDescription) w.description = PackDescription;
+            if (w.description == OldPackDescription || w.description == PackDescriptionV1) w.description = PackDescription;
             EditorUtility.SetDirty(w);
             return w;
         }
 
         const string OldPackDescription = "Wolves fight beside you for the whole run: each hunts the nearest enemy near you and bites. More levels, more wolves.";
-        const string PackDescription = "Wolves fight beside you all run: they go for what's nearest you (marked prey first), bite and move on. More levels, more wolves.";
+        const string PackDescriptionV1 = "Wolves fight beside you all run: they go for what's nearest you (marked prey first), bite and move on. More levels, more wolves."; // too long for his tablet
+        const string PackDescription = "Wolves fight beside you: they hunt what's near you (marked prey first), bite and move on.";
 
         static UpgradeDef WeaponCard(WeaponDef weapon)
         {
@@ -286,6 +294,13 @@ namespace Gladiator.EditorTools
             t.id = id; t.displayName = name; t.description = description;
             EditorUtility.SetDirty(t);
             return t;
+        }
+
+        static void ShortenTrait(GladiatorTrait t, string old, string now)
+        {
+            if (t == null || t.description != old) return;
+            t.description = now;
+            EditorUtility.SetDirty(t);
         }
 
         static T Copy<T>(string from, string to, System.Action<T> tweak) where T : ScriptableObject

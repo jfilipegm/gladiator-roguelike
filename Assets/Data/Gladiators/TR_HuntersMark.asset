@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.HuntersMarkTrait
   id: hunters_mark
   displayName: Hunter's Mark
-  description: You also carry a Hunting Spear. Whatever it hits is marked for 4 s, and your wolves go for marked enemies first.
+  description: Your Hunting Spear marks what it hits for 4 s; the wolves hunt marked enemies first.
   weapon: {fileID: 11400000, guid: 18d40f4b19974025781fd4cabc17c010, type: 2}
   seconds: 4
   sigil: {fileID: 712988216244499070, guid: 5483c5867a78424d9c0c89c6fee99d8d, type: 3}

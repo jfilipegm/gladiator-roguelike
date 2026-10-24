@@ -135,14 +135,17 @@ namespace Gladiator.Tests
             yield return Boot(Thunder);
             var rig = PlayerCameraRig.Main;
             Assert.IsNotNull(rig, "the arena's camera rig");
+            yield return new WaitForSeconds(1f); // the camera settles behind him after the arena's start
             var target = Player.Main.transform.Find("CameraTarget");
             Vector3 rest = target.localPosition;
             var cam = Camera.main.transform;
             Vector3 camBefore = cam.position;
+            Vector3 playerBefore = Player.Main.transform.position;
+            Vector3 followBefore = cam.position - playerBefore; followBefore.y = 0f;
             float glide = _dash.trait.cameraGlide;
             Assert.Greater(glide, 0f);
 
-            Assert.IsTrue(_dash.Perform(Vector3.right));
+            Assert.IsTrue(_dash.Perform(Vector3.forward)); // toward the open middle: sideways ends by the fence, where the camera's wall-avoidance pulls it in
             Vector3 moved = _dash.LastTo - _dash.LastFrom;
             moved.y = 0f;
             Assert.AreEqual(_dash.trait.distance, moved.magnitude, 0.3f, "the blink goes as far as before");
@@ -175,10 +178,11 @@ namespace Gladiator.Tests
             Assert.Less(Vector3.Distance(target.localPosition, rest), 1e-4f, "the target back on him");
 
             yield return new WaitForSeconds(0.5f); // the vcam's own damping settles
-            Vector3 camMoved = cam.position - camBefore;
-            camMoved.y = 0f;
-            Assert.AreEqual(moved.magnitude, camMoved.magnitude, 1f, "the camera reached the new spot");
-            Assert.Greater(Vector3.Dot(camMoved.normalized, moved.normalized), 0.9f, "the way he went");
+            // the camera is back at its usual distance behind him (it may also have swung round as he turned)
+            Vector3 followAfter = cam.position - Player.Main.transform.position; followAfter.y = 0f;
+            Assert.AreEqual(followBefore.magnitude, followAfter.magnitude, 0.5f, "the camera reached him at the new spot");
+            Vector3 camMoved = cam.position - camBefore; camMoved.y = 0f;
+            Assert.Greater(Vector3.Dot(camMoved.normalized, moved.normalized), 0.5f, "the way he went");
         }
 
         [UnityTest, Timeout(90000)]

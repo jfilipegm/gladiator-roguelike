@@ -21,3 +21,18 @@ MonoBehaviour:
   damage: 25
   knockback: 3
   shock: {fileID: 11400000, guid: c4e3ba58329c4cad9b688e5c182978b7, type: 2}
+  cameraGlide: 0.22
+  ghostMaterial: {fileID: 2100000, guid: 2fbf202819faaf498abf2c36dc93c07b, type: 2}
+  ghostSpacing: 1.4
+  ghostLife: 0.3
+  ghostSweep: 0.05
+  ghostColorStart: {r: 0.2, g: 0.62, b: 1, a: 1}
+  ghostColorEnd: {r: 0.78, g: 0.96, b: 1, a: 1}
+  landingFlash: 0.14
+  landingFlashGrow: 0.2
+  landingFlashColor: {r: 0.92, g: 0.98, b: 1, a: 1}
+  streakSegment: 1.6
+  streakJitter: 0.4
+  landingRing: 1.8
+  departureSparks: 8
+  landingSparks: 14

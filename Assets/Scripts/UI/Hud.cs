@@ -771,6 +771,7 @@ namespace Gladiator.UI
             var notch = UiFactory.Image(name, _bossFill.transform.parent, _goldColor, new Vector2(0f, 0.5f), new Vector2(0.5f, 0.5f),
                 new Vector2(_bossInset.x + span * at, 0f), new Vector2(3f, 30f), PixelIcons.White);
             notch.raycastTarget = false;
+            _bossHpText.transform.SetAsLastSibling(); // his HP reads over the notches
         }
 
         const string GuardedText = "GUARDED: KILL HIS HIRED SWORDS";

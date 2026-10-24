@@ -3426,6 +3426,25 @@ MonoBehaviour:
   maxFizzles: 24
   shockwaveColor: {r: 0.82, g: 0.97, b: 1, a: 0.95}
   shockwaveTime: 0.28
+  lungeDrawBack: 0.35
+  lungeReach: 1
+  prongStreakWidth: 0.16
+  prongLaneColor: {r: 0.75, g: 0.97, b: 1, a: 0.5}
+  prongLaneTime: 0.16
+  fireballContact: 0.3
+  fireballAimHeight: 0.8
+  fireballTrail: 1.6
+  fireballTrailWidth: 0.5
+  fireballStreakHead: {r: 1.5, g: 0.7, b: 2.2, a: 1}
+  fireballStreakTrail: {r: 0.55, g: 0.12, b: 1, a: 1}
+  fireballPuffEvery: 0.045
+  fireballSmoke: {r: 0.36, g: 0.32, b: 0.42, a: 1}
+  fireballEmber: {r: 0.8, g: 0.55, b: 1, a: 1}
+  fireballRing: {r: 0.72, g: 0.45, b: 1, a: 0.95}
+  fireballBurstA: {r: 0.66, g: 0.38, b: 0.95, a: 1}
+  fireballBurstB: {r: 0.88, g: 0.78, b: 1, a: 1}
+  fireballShake: 0.03
+  fireballSpin: 540
 --- !u!1 &298876681
 GameObject:
   m_ObjectHideFlags: 0
@@ -9406,7 +9425,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.Interactables
   config: {fileID: 11400000, guid: 4aacc27199ced567dac3c09d0fde38aa, type: 2}
-  chestModel: {fileID: 919132149155446097, guid: f1d61c1864940eb2f9b547a5665b356f, type: 3}
+  chestModel: {fileID: 919132149155446097, guid: e218c3b5f51c45b3b8010681b2817b36, type: 3}
   altarModel: {fileID: 919132149155446097, guid: 627907c779b43f5559841ada2002236c, type: 3}
   material: {fileID: 2100000, guid: e150b2621cd59fedbb971e176776eb64, type: 2}
   burst: {fileID: 1945727541}
@@ -9436,6 +9455,7 @@ MonoBehaviour:
   - {x: -28, y: 2.2, z: 50.5}
   - {x: 28, y: 2.2, z: -50.5}
   openLinger: 1.6
+  priceMul: 1
 --- !u!1001 &859775458
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -14521,6 +14541,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.Favor
   config: {fileID: 11400000, guid: 440ef651c63c9bdd0b638aaba7f11c82, type: 2}
+  gainMul: 1
 --- !u!1001 &1297856145
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -16322,6 +16343,7 @@ MonoBehaviour:
   burst: {fileID: 1945727541}
   openDelay: 0.35
   rewardDelay: 0.3
+  levelUpCardDelta: 0
 --- !u!1 &1437466768
 GameObject:
   m_ObjectHideFlags: 0
@@ -17906,7 +17928,6 @@ MonoBehaviour:
   crowd: {fileID: 1913783851}
   health: {fileID: 1293636926}
   pickups: {fileID: 1639851806}
-  allowInReleaseBuilds: 0
 --- !u!1 &1586390128
 GameObject:
   m_ObjectHideFlags: 0
@@ -18148,6 +18169,8 @@ MonoBehaviour:
   capacity: 1024
   arenaCenter: {x: 0, y: 0, z: 0}
   hpMul: 2.55
+  scriptedHpMul: 1
+  speedMul: 1
   arenaRadius: 96.9
   arenaAspect: 0.68
   arenaOutline:
@@ -22318,6 +22341,7 @@ MonoBehaviour:
   table: {fileID: 11400000, guid: 749d76185f6c337889016520ab47c515, type: 2}
   densityMultiplier: 1
   prewarmPerFrame: 16
+  clockScale: 1
   maxAliveOverride: 450
   maxSpawnDistance: 55
   arenaDensity: 1.3
@@ -25274,6 +25298,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.ArenaMaster
   config: {fileID: 11400000, guid: 440ef651c63c9bdd0b638aaba7f11c82, type: 2}
+  boredomMul: 1
 --- !u!1 &1911453728
 GameObject:
   m_ObjectHideFlags: 0

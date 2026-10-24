@@ -19,7 +19,7 @@ namespace Gladiator.Gameplay
     public struct PickupEvent { public int Kind; public Vector3 Position; public float Amount; }
     public struct LevelUpEvent { public int NewLevel; }
     public struct RunEndEvent { public RunOutcome Outcome; public float Elapsed; }
-    public enum DirectorEventKind { Swarm, Elite }
+    public enum DirectorEventKind { Swarm, Elite, Threat }
     /// <summary>What an announcer line is about (Favor listens for streaks, close calls and the boss's beats).</summary>
     public enum AnnounceKind { Line, Streak, CloseCall, Roar, BossEnters, BossPhase, BossGuards, BossFalls, Gift, Whim }
     /// <summary>A line for the HUD announcer. Text must be a constant string. Tier = the streak rung for Streak lines.</summary>

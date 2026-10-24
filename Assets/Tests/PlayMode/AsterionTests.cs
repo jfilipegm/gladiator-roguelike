@@ -345,6 +345,7 @@ namespace Gladiator.Tests
             _teases = 0;
             _teaseText = null;
             GameEvents.OnAnnounce.Subscribe(OnAnnounce);
+            _fight.clearHorde = true; // the boss alone (the game keeps the horde: note 38)
             _fight.StartNow();
             float end = Time.time + 8f;
             while (Time.time < end && (BossController.Active == null || BossController.Active.CurrentState == BossController.State.Entering

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.WeaponDef
   id: wolf_pack
   displayName: Wolf Pack
-  description: 'Wolves fight beside you for the whole run: each hunts the nearest enemy near you and bites. More levels, more wolves.'
+  description: 'Wolves fight beside you: they hunt what''s near you (marked prey first), bite and move on.'
   pattern: 8
   damage: 9
   critChance: 0.06
@@ -26,10 +26,10 @@ MonoBehaviour:
   cooldown: 0.8
   swingDuration: 0.2
   windup: 0.05
-  range: 12
+  range: 9
   arcDegrees: 150
   width: 0.6
-  acquireRange: 10
+  acquireRange: 9
   amount: 2
   speed: 8.5
   pierce: 0
@@ -89,3 +89,6 @@ MonoBehaviour:
     - stat: 9
       op: 0
       value: 1
+  prongSpacing: 0.45
+  homing: 150
+  castHeight: 0

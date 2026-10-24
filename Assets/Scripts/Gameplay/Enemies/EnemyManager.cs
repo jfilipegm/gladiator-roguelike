@@ -399,8 +399,10 @@ namespace Gladiator.Gameplay
             float scale = affix != null ? affix.scale : 1f;
             _affix[i] = affix;
             _scale[i] = scale;
-            _hp[i] = _maxHp[i] = def.maxHp * (affix != null ? affix.hpMultiplier : 1f) * (def.behaviour == EnemyBehaviour.Scripted ? scriptedHpMul : hpMul);
-            _speed[i] = def.moveSpeed * (1f + GameRandom.Range(RngStream.Enemies, -def.speedJitter, def.speedJitter)) * (affix != null ? affix.speedMultiplier : 1f) * speedMul;
+            bool scripted = def.behaviour == EnemyBehaviour.Scripted; // bosses scale by their own BossDef (note 25)
+            _hp[i] = _maxHp[i] = def.maxHp * (affix != null ? affix.hpMultiplier : 1f) * (scripted ? scriptedHpMul : hpMul * Threat.HpMul);
+            _speed[i] = def.moveSpeed * (1f + GameRandom.Range(RngStream.Enemies, -def.speedJitter, def.speedJitter)) * (affix != null ? affix.speedMultiplier : 1f) * speedMul
+                        * (scripted ? 1f : Threat.SpeedMul); // note 39: the horde grows with the player's level
             _radius[i] = def.radius * scale;
             if (_radius[i] > _maxRadius) _maxRadius = _radius[i];
             _dmgTakenMul[i] = affix != null ? affix.damageTakenMultiplier : 1f;

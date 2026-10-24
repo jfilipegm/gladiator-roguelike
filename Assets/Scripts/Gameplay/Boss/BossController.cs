@@ -103,6 +103,9 @@ namespace Gladiator.Gameplay
         public bool Alive => _slot >= 0 && _em != null && _em.IsAlive(_slot) && _em.GetUid(_slot) == _uid;
         public bool Defeated { get; private set; }
         public float Hp01 => Alive ? _em.GetHp(_slot) / Mathf.Max(1f, _em.GetMaxHp(_slot)) : 0f;
+        /// <summary>His HP and max HP as the bar prints them (note 29, v0.28.0: the bar shows his total).</summary>
+        public float Hp => Alive ? _em.GetHp(_slot) : 0f;
+        public float MaxHp => Alive ? _em.GetMaxHp(_slot) : 0f;
         public Vector3 Position => _pos;
         public int AttacksDone { get; private set; }
         public int GuardWaves { get; private set; }

@@ -1420,6 +1420,31 @@ ICONS["ed_no_mercy"] = edict([  # No Mercy (review iteration 2: read as a clover
     "............",
 ])
 
+
+def hunting_spear():
+    """Note 37: the Beastmaster's Hunting Spear. Shorter than the Pit Spear's icon, with a broad leaf blade, the boar
+    spear's crossbar under it and his cyan tassel hanging from the binding."""
+    g = blank()
+    put(g, [(2, 14), (3, 13), (4, 12), (5, 11), (6, 10), (7, 9)], "b")   # the shaft, butt at the bottom left
+    put(g, [(3, 14), (4, 13), (5, 12), (6, 11), (7, 10)], "B")           # its shaded underside
+    put(g, [(8, 8)], "c")                                                # the binding
+    put(g, [(8, 9), (8, 10)], "c")                                       # the tassel, hanging
+    put(g, [(8, 11)], "C")
+    put(g, [(7, 5), (8, 6), (9, 7), (10, 8), (11, 9)], "s")              # the crossbar, across the shaft
+    # the leaf: along the diagonal a = x - y from 4 (its root) to 12 (the tip), half-width w across it (c = x + y - 16);
+    # lit above the ridge, steel on it, shaded below
+    width = {4: 1, 5: 1, 6: 2, 7: 2, 8: 2, 9: 2, 10: 1, 11: 1, 12: 0}
+    for a, w in width.items():
+        for c in range(-w, w + 1):
+            if (a + c) % 2:
+                continue
+            x, y = (a + c + 16) // 2, (c + 16 - a) // 2
+            put(g, [(x, y)], "w" if c < 0 or a == 12 else "l" if c == 0 else "s")
+    return g
+
+
+ICONS["weapon_hunting_spear"] = hunting_spear()
+
 # ---------- frames ----------
 def to_rgba(g):
     """Fill + 4-neighbour outline, as an RGBA pixel grid (None = transparent)."""

@@ -24998,7 +24998,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Gladiator.Gameplay::Gladiator.Gameplay.Interactables
   config: {fileID: 11400000, guid: 4aacc27199ced567dac3c09d0fde38aa, type: 2}
-  chestModel: {fileID: 919132149155446097, guid: f1d61c1864940eb2f9b547a5665b356f, type: 3}
+  chestModel: {fileID: 919132149155446097, guid: 280dd3cd36caef14f9a000954973da28, type: 3}
   altarModel: {fileID: 919132149155446097, guid: 627907c779b43f5559841ada2002236c, type: 3}
   material: {fileID: 2100000, guid: e150b2621cd59fedbb971e176776eb64, type: 2}
   burst: {fileID: 390842637}
@@ -27218,6 +27218,25 @@ MonoBehaviour:
   maxFizzles: 24
   shockwaveColor: {r: 0.82, g: 0.97, b: 1, a: 0.95}
   shockwaveTime: 0.28
+  lungeDrawBack: 0.35
+  lungeReach: 1
+  prongStreakWidth: 0.16
+  prongLaneColor: {r: 0.75, g: 0.97, b: 1, a: 0.5}
+  prongLaneTime: 0.16
+  fireballContact: 0.3
+  fireballAimHeight: 0.8
+  fireballTrail: 1.6
+  fireballTrailWidth: 0.5
+  fireballStreakHead: {r: 1.5, g: 0.7, b: 2.2, a: 1}
+  fireballStreakTrail: {r: 0.55, g: 0.12, b: 1, a: 1}
+  fireballPuffEvery: 0.045
+  fireballSmoke: {r: 0.36, g: 0.32, b: 0.42, a: 1}
+  fireballEmber: {r: 0.8, g: 0.55, b: 1, a: 1}
+  fireballRing: {r: 0.72, g: 0.45, b: 1, a: 0.95}
+  fireballBurstA: {r: 0.66, g: 0.38, b: 0.95, a: 1}
+  fireballBurstB: {r: 0.88, g: 0.78, b: 1, a: 1}
+  fireballShake: 0.03
+  fireballSpin: 540
 --- !u!1001 &1404880215
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -28789,7 +28808,6 @@ MonoBehaviour:
   crowd: {fileID: 779966209}
   health: {fileID: 1729640127}
   pickups: {fileID: 198790758}
-  allowInReleaseBuilds: 0
 --- !u!1001 &1485798305
 PrefabInstance:
   m_ObjectHideFlags: 0

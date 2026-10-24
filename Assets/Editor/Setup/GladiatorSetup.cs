@@ -110,6 +110,11 @@ namespace Gladiator.EditorTools
         public const string NetWeaverModel = "Assets/Art/Models/Characters/CH_NetWeaver.fbx";
         public const string TridentModel = "Assets/Art/Models/Weapons/WP_Trident.fbx";
         public const string NetModel = "Assets/Art/Models/Weapons/WP_Net.fbx";
+        /// <summary>Note 34: the Cast Net's own net (player white and cyan, 1 m in radius); WP_Net is the rope one the
+        /// Net weapon and the Net-Thrower throw.</summary>
+        public const string CastNetModel = "Assets/Art/Models/Weapons/WP_CastNet.fbx";
+        /// <summary>Note 33: the Ashen Censer's cursed fireball.</summary>
+        public const string FireballModel = "Assets/Art/Models/Weapons/WP_CurseFireball.fbx";
 
         static WeaponDef.Level L(params StatMod[] mods) => new WeaponDef.Level { mods = mods };
         static StatMod Pct(StatId s, float v) => new StatMod(s, ModOp.Percent, v);
@@ -581,8 +586,7 @@ namespace Gladiator.EditorTools
                 };
                 EditorUtility.SetDirty(caught);
             }
-            var cast = Trait<CastNetTrait>(CastNetPath, "cast_net", "Cast Net",
-                "Start a slide with the net ready (every 4 s): it lands 5 m ahead, hauls everything within 3.2 m together and Roots it for 2 s. Bosses are only Slowed.");
+            var cast = Trait<CastNetTrait>(CastNetPath, "cast_net", "Cast Net", CastNetText);
             if (cast.root == null || cast.slow == null || cast.mesh == null || cast.material == null)
             {
                 cast.root = root;
@@ -592,6 +596,22 @@ namespace Gladiator.EditorTools
                 cast.meshScale = 1f / 0.62f; // WP_Net's rim radius is 0.62 m
                 EditorUtility.SetDirty(cast);
             }
+            // note 34 (v0.28.0 playtest, "the net throw doesn't really work"): once, the v0.28 throw (0.3 s, 1.6 m high)
+            // becomes a high, readable arc; its own white-cyan net replaces the rope one as soon as WP_CastNet is imported
+            if (Mathf.Approximately(cast.flightTime, 0.3f) && Mathf.Approximately(cast.arcHeight, 1.6f))
+            {
+                cast.flightTime = 0.55f;
+                cast.arcHeight = 2.6f;
+                cast.description = CastNetText;
+                EditorUtility.SetDirty(cast);
+            }
+            var castNetMesh = FirstMesh(CastNetModel);
+            if (castNetMesh != null && cast.mesh != castNetMesh)
+            {
+                cast.mesh = castNetMesh;
+                cast.meshScale = 1f; // WP_CastNet is 1 m in radius
+                EditorUtility.SetDirty(cast);
+            }
 
             var g = AssetDatabase.LoadAssetAtPath<GladiatorDef>(NetWeaverPath);
             if (g == null)
@@ -599,7 +619,7 @@ namespace Gladiator.EditorTools
                 g = PlayerSetup.EnsureAsset<GladiatorDef>(NetWeaverPath);
                 g.id = "net_weaver";
                 g.displayName = "The Net-Weaver";
-                g.description = "A retiarius, a fisherman with a net and a trident. His slide flings a net that hauls the crowd together and holds it; the trident's flurry does the rest, harder on whatever is caught.";
+                g.description = "A retiarius, a fisherman with a net and a trident. His slide flings a net that hauls the crowd together and holds it; the trident's lunge does the rest, harder on whatever is caught.";
                 g.baseStats = new[]
                 {
                     new GladiatorDef.BaseStat { stat = StatId.MaxHp, value = 95f },
@@ -608,6 +628,8 @@ namespace Gladiator.EditorTools
                 g.cameraTargetHeight = 1.2f;
                 g.tradeoff = "Control without armour: 95 HP, and a short reach when the net isn't ready.";
             }
+            if (g.description != null && g.description.Contains("the trident's flurry")) // note 34: it lunges now
+                g.description = g.description.Replace("the trident's flurry", "the trident's lunge");
             if (g.model == null) g.model = ModelStyle.Load(NetWeaverModel);
             if (g.movement == null) g.movement = move;
             if (g.animProfile == null) g.animProfile = anim;
@@ -618,6 +640,21 @@ namespace Gladiator.EditorTools
             return g;
         }
 
+        const string CastNetText = "Start a slide with the net ready (every 4 s): it's flung at the thickest crowd within 9 m, hauls everything within 3.2 m together and holds it for 3 s, snaring whatever walks on. Bosses are only Slowed.";
+        const string TridentText = "Lunges with the trident: its three prongs strike three parallel lanes at once. A big enemy, or one between two prongs, takes two or three.";
+        const string CenserText = "Hurls a cursed fireball at the nearest enemy: it curves after its target and bursts on the first one it touches, Cursing everything around and leaving a cursed patch behind.";
+
+        /// <summary>Note 34: the trident's lunge numbers (MultiHit: 3 parallel lanes, prongSpacing apart, range long).</summary>
+        static void TridentLunge(WeaponDef w)
+        {
+            w.description = TridentText;
+            w.damage = 7f; w.critChance = 0.08f; w.critMultiplier = 2f; w.knockback = 2.5f;
+            w.cooldown = 1.3f; w.swingDuration = 0.34f; w.windup = 0.1f;
+            w.range = 4.4f; w.width = 0.3f; w.acquireRange = 4.8f; w.amount = 1; w.pierce = -1;
+            w.prongs = 3; w.prongSpacing = 0.45f; w.meshScale = 1.4f; // the outer prongs (±0.29 m in WP_Trident) about on the outer lanes
+            w.arcDegrees = 0f; // the old flurry's fan; 0 also marks the asset as migrated
+        }
+
         static WeaponDef Trident()
         {
             var w = AssetDatabase.LoadAssetAtPath<WeaponDef>(TridentPath);
@@ -625,22 +662,33 @@ namespace Gladiator.EditorTools
             {
                 w = PlayerSetup.EnsureAsset<WeaponDef>(TridentPath);
                 w.id = "trident"; w.displayName = "Trident";
-                w.description = "Three quick jabs fanned at the nearest enemy: all three land up close, and they spread across the crowd further out.";
                 w.pattern = WeaponPattern.MultiHit;
-                // range = each jab's length, width = its width, arcDegrees = the fan, prongs / prongInterval = the flurry
-                w.damage = 8f; w.critChance = 0.08f; w.critMultiplier = 2f; w.knockback = 2.5f;
-                w.cooldown = 1.2f; w.swingDuration = 0.34f; w.windup = 0.1f;
-                w.range = 4.2f; w.width = 0.6f; w.arcDegrees = 36f; w.acquireRange = 4.6f; w.amount = 1; w.pierce = -1;
-                w.prongs = 3; w.prongInterval = 0.07f; w.meshScale = 1f;
+                TridentLunge(w);
                 w.levels = new[]
                 {
                     L(Pct(StatId.Damage, 0.2f)), L(Pct(StatId.Area, 0.15f)), L(Pct(StatId.AttackSpeed, 0.15f)), L(Add(StatId.Amount, 1f)),
                     L(Pct(StatId.Damage, 0.25f)), L(Add(StatId.CritChance, 0.1f)), L(Pct(StatId.Area, 0.15f), Pct(StatId.Damage, 0.2f)),
                 };
             }
+            // note 34 (v0.28.0 playtest, "the trident looks no different from the javelin"): once, the v0.28 flurry (three
+            // jabs fanned across 36°, 0.6 m wide) becomes the lunge
+            if (w.pattern == WeaponPattern.MultiHit && Mathf.Approximately(w.arcDegrees, 36f) && Mathf.Approximately(w.width, 0.6f))
+                TridentLunge(w);
             if (w.mesh == null) w.mesh = FirstMesh(TridentModel);
             EditorUtility.SetDirty(w);
             return w;
+        }
+
+        /// <summary>Note 33: the censer's fireball numbers (width = burst radius, range = how far it flies, acquireRange =
+        /// how far it looks for a target, speed / homing = its flight, castHeight = the censer's height).</summary>
+        static void CenserFireball(WeaponDef w)
+        {
+            w.description = CenserText;
+            w.pattern = WeaponPattern.Fireball;
+            w.damage = 8f; w.critChance = 0.05f; w.critMultiplier = 2f; w.knockback = 3f;
+            w.cooldown = 1.6f; w.swingDuration = 0.3f; w.windup = 0.12f;
+            w.range = 14f; w.width = 2.2f; w.acquireRange = 10f; w.amount = 1; w.pierce = 0;
+            w.speed = 13f; w.homing = 150f; w.castHeight = 1.45f; w.meshScale = 1.2f;
         }
 
         static WeaponDef Censer(StatusDef curse)
@@ -650,26 +698,29 @@ namespace Gladiator.EditorTools
             {
                 w = PlayerSetup.EnsureAsset<WeaponDef>(CenserPath);
                 w.id = "ashen_censer"; w.displayName = "Ashen Censer";
-                w.description = "Lobs a smoking orb into the crowd: it bursts, Curses everything it hits and leaves a cursed patch behind.";
-                w.pattern = WeaponPattern.Lob;
-                // width = burst radius, acquireRange = throw range; hit effects: Curse on hit + a cursed ground patch
-                w.damage = 8f; w.critChance = 0.05f; w.critMultiplier = 2f; w.knockback = 3f;
-                w.cooldown = 1.8f; w.swingDuration = 0.3f; w.windup = 0.12f;
-                w.range = 10f; w.width = 2.4f; w.acquireRange = 10f; w.amount = 1;
-                w.flightTime = 0.7f; w.fuse = 0.25f; w.arcHeight = 2.8f; w.meshScale = 1.1f;
+                CenserFireball(w);
                 w.levels = new[]
                 {
                     L(Add(StatId.Amount, 1f)), L(Pct(StatId.Damage, 0.2f)), L(Pct(StatId.Area, 0.15f)), L(Pct(StatId.AttackSpeed, 0.15f)),
                     L(Add(StatId.Amount, 1f)), L(Pct(StatId.Damage, 0.25f)), L(Pct(StatId.Area, 0.15f)),
                 };
             }
+            // note 33 (v0.28.0 playtest, "almost the same as the Pit Goblin"): once, the v0.28 lob of the goblin's bomb
+            // becomes his own cursed fireball
+            if (w.pattern == WeaponPattern.Lob) CenserFireball(w);
             if (w.hitEffects == null || w.hitEffects.Length == 0)
                 w.hitEffects = new[]
                 {
                     new BoonEffect { kind = EffectKind.StatusOnHit, status = curse, chance = 1f, power = 0.4f, stacks = 2 },
                     new BoonEffect { kind = EffectKind.GroundOnHit, status = curse, radius = 1.8f, duration = 3f, power = 2f, stacks = 1 },
                 };
-            if (w.mesh == null) w.mesh = AssetDatabase.LoadAssetAtPath<Mesh>(BombMesh);
+            // the fireball, as soon as WP_CurseFireball is imported (never the goblin's bomb again)
+            var bomb = AssetDatabase.LoadAssetAtPath<Mesh>(BombMesh);
+            if (w.mesh == null || w.mesh == bomb)
+            {
+                var fireball = FirstMesh(FireballModel);
+                w.mesh = fireball != null ? fireball : (w.mesh != null ? w.mesh : bomb);
+            }
             EditorUtility.SetDirty(w);
             return w;
         }

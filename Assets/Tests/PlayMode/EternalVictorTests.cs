@@ -104,6 +104,7 @@ namespace Gladiator.Tests
             _phaseText = _guardsText = null;
             if (scene == Scene) _motor.Teleport(Field + Vector3.up * 0.1f);
             yield return new WaitForSeconds(0.3f);
+            _fight.clearHorde = true; // the boss alone (the game keeps the horde: note 38)
             _fight.StartNow();
             yield return WaitFor(() => BossController.Active != null && BossController.Active.Alive, 3f);
             Assert.IsNotNull(Boss, "the boss is in");

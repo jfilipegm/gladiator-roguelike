@@ -412,6 +412,7 @@ namespace Gladiator.Tests
             Assert.That(crowd.Count, Is.InRange(2000, 2400), "the biggest crowd yet (~2,200)");
 
             _motor.Teleport(new Vector3(60f, 0.1f, -20f));
+            fight.clearHorde = true; // the boss alone (the game keeps the horde: note 38)
             fight.StartNow();
             float end = Time.time + 12f;
             while (Time.time < end && BossController.Active == null) yield return null;

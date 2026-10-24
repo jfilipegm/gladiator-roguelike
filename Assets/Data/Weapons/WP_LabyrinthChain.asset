@@ -92,3 +92,6 @@ MonoBehaviour:
     - stat: 4
       op: 1
       value: 0.15
+  prongSpacing: 0.45
+  homing: 150
+  castHeight: 0

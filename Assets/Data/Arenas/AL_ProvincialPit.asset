@@ -1682,3 +1682,4 @@ MonoBehaviour:
   liftsPerWave: 3
   liftMinDistance: 12
   liftPacks: []
+  chestModel: {fileID: 919132149155446097, guid: 38e5620b0516f040cb5c00d5f584af6b, type: 3}

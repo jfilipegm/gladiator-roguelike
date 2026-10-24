@@ -231,6 +231,10 @@ namespace Gladiator.Gameplay
         public float liftMinDistance = 12f;
         public LiftPack[] liftPacks = Array.Empty<LiftPack>();
 
+        [Header("Armory Chest (note 30, v0.29.0)")]
+        [Tooltip("This arena's chest model (Body + Lid, the lid's pivot on its hinge); empty = the shared default. Set by Gladiator/Setup/Arenas/Assign Armory Chests.")]
+        public GameObject chestModel;
+
         /// <summary>The play area's floor (m²): the outline's, else the ellipse's. Each arena of the ladder must be bigger
         /// than the one before it (docs/GDD.md).</summary>
         public float PlayArea()

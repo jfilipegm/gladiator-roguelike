@@ -42,5 +42,26 @@ namespace Gladiator.Gameplay
         [Header("Elites")]
         public float firstElite = 60f;
         public float eliteEvery = 90f;
+
+        [Header("The boss fight (note 38, v0.29.0: the horde stays)")]
+        [Tooltip("While the boss is up the horde keeps coming, a little slower: steady spawns at this rate (×). No swarms or elites: the boss brings his own.")]
+        [Range(0f, 1f)] public float bossSpawnMul = 0.75f;
+        [Tooltip("…and up to this share of targetAlive.")]
+        [Range(0f, 1f)] public float bossAliveMul = 0.85f;
+
+        [Header("Threat (note 39, v0.29.0): the horde grows with the player's level (Threat)")]
+        [Tooltip("Enemy HP grows from this level on.")]
+        public int threatFromLevel = 5;
+        [Tooltip("+HP per level past threatFromLevel (0.06: level 30 = ×2.5).")]
+        public float threatHpPerLevel = 0.06f;
+        [Tooltip("Damage to the player and enemy speed grow from this level on.")]
+        public int threatDamageFromLevel = 10;
+        [Tooltip("+damage per level past threatDamageFromLevel (0.02: level 30 = ×1.4).")]
+        public float threatDamagePerLevel = 0.02f;
+        [Tooltip("+speed per level past threatDamageFromLevel, up to threatSpeedMax.")]
+        public float threatSpeedPerLevel = 0.006f;
+        public float threatSpeedMax = 0.15f;
+        [Tooltip("Levels where the announcer warns that the horde grows stronger.")]
+        public int[] threatTiers = { 12, 22, 32 };
     }
 }

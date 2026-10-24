@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: M_FxBloodTrail
+  m_Shader: {fileID: 4800000, guid: 4db5b334046c46d996abd5fa95939d13, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 1
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _SmearTex:
+        m_Texture: {fileID: 2800000, guid: 4ad5e3b4f1f74167807225b08c00d731, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _Cells: 2
+    - _DryLength: 0.5
+    - _DryNoise: 0.15
+    - _DryStart: 0.15
+    - _EdgeLead: 0.15
+    - _FadeStart: 0.6
+    - _GrowTime: 0.1
+    - _Opacity: 1
+    - _ShadowStrength: 0.8
+    - _SheenEnd: 0.3
+    - _Wrap: 0.35
+    m_Colors:
+    - _DryThick: {r: 0.16999996, g: 0.04, b: 0.04, a: 1}
+    - _DryThin: {r: 0.32999998, g: 0.11999995, b: 0.079999976, a: 1}
+    - _FreshThick: {r: 0.32999998, g: 0.02, b: 0.04, a: 1}
+    - _FreshThin: {r: 0.54999995, g: 0.049999982, b: 0.089999996, a: 1}
+    - _ShadowTint: {r: 0.62, g: 0.65999997, b: 0.9, a: 1}
+    - _Sheen: {r: 0.72, g: 0.17999998, b: 0.20999995, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

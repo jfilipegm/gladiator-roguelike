@@ -16,7 +16,7 @@ namespace Gladiator.Gameplay
         [Tooltip("Spark and burst damage scale with the player's Damage stat.")]
         public Color sparkColorA = new Color(0.55f, 0.95f, 1f), sparkColorB = Color.white;
         public Color burstColorA = new Color(1f, 0.85f, 0.3f), burstColorB = new Color(1f, 0.97f, 0.8f);
-        [Tooltip("Slide-trail marks: cool player colour even for Blood (orange-red is reserved for player danger).")]
+        [Tooltip("Slide-trail rings (every trail but Blood Slide's, e.g. Whirlwind's Slow): drawn in their status's colour with this alpha; this colour only for a trail without a status. Bleed trails are blood smears (BloodTrailRenderer); orange-red stays reserved for player danger.")]
         public Color trailColor = new Color(0.85f, 0.35f, 0.55f, 0.8f);
         [Tooltip("Distance slid between two trail marks (m).")]
         public float trailSpacing = 0.8f;
@@ -29,8 +29,14 @@ namespace Gladiator.Gameplay
         /// <summary>One running effect. SourceFilter: only hits from this source id trigger it (a weapon's own hit effects); 0 = any hit.</summary>
         struct Active { public BoonEffect E; public float Potency; public int Source; public int SourceFilter; public int HitCount; }
         struct Burst { public Vector3 Pos; public float StatusPower; public int Fx; }
-        /// <summary>A slide-trail or ground mark: carries what it applies, so marks outlive a Refresh.</summary>
-        struct Mark { public Vector3 Pos; public float Life, MaxLife, Radius, Dps; public int Stacks; public StatusDef Status; public bool Ground; }
+        /// <summary>A slide-trail or ground mark: carries what it applies, so marks outlive a Refresh. A trail mark also
+        /// keeps how its blood smear lies (note 32): the slide direction, the ground normal, the distance slid since the
+        /// previous mark and its running number (the smear's shape).</summary>
+        struct Mark
+        {
+            public Vector3 Pos; public float Life, MaxLife, Radius, Dps; public int Stacks; public StatusDef Status; public bool Ground;
+            public Vector3 Dir, Up; public float Spacing; public int Serial;
+        }
 
         const int MaxEffects = 32;
         readonly Active[] _fx = new Active[MaxEffects];
@@ -43,6 +49,7 @@ namespace Gladiator.Gameplay
         int _markCount;
         float _trailClock, _slidDist, _spreadClock;
         Vector3 _lastSlidePos;
+        int _markSerial;
 
         readonly int[] _query = new int[256];
         readonly int[] _struck = new int[16];
@@ -53,12 +60,16 @@ namespace Gladiator.Gameplay
         PlayerStats _stats;
         PlayerMotor _motor;
         WeaponSystem _weapons;
+        BloodTrailRenderer _blood;
 
         public int SparksFired { get; private set; }
         public int BurstsFired { get; private set; }
         public int Spreads { get; private set; }
         public int Executions { get; private set; }
         public int MarkCount => _markCount;
+        /// <summary>Marks drawn last tick as telegraph rings / as blood smears (tests: Bleed trails never go through the rings).</summary>
+        public int RingsDrawn { get; private set; }
+        public int SmearsDrawn { get; private set; }
 
         void Awake()
         {
@@ -66,6 +77,7 @@ namespace Gladiator.Gameplay
             _stats = GetComponent<PlayerStats>();
             _motor = GetComponent<PlayerMotor>();
             _weapons = GetComponent<WeaponSystem>();
+            _blood = GetComponent<BloodTrailRenderer>();
         }
 
         void OnEnable()
@@ -312,6 +324,17 @@ namespace Gladiator.Gameplay
             Dps = a.E.power * a.Potency * DamageMul, Stacks = Mathf.Max(1, a.E.stacks), Status = a.E.status, Ground = ground,
         };
 
+        /// <summary>A slide-trail mark, with what its smear needs: slid along `dir` over ground with normal `up`, `spacing` m after the last mark.</summary>
+        Mark TrailMark(in Active a, Vector3 pos, Vector3 dir, Vector3 up, float spacing)
+        {
+            var mark = MarkFor(a, pos, ground: false);
+            mark.Dir = dir; mark.Up = up; mark.Spacing = spacing; mark.Serial = _markSerial++;
+            return mark;
+        }
+
+        /// <summary>Bleed slide trails are drawn as blood on the sand (note 32); every other mark keeps its ring.</summary>
+        static bool IsBloodTrail(in Mark mk) => !mk.Ground && mk.Status != null && mk.Status.kind == StatusKind.Bleed;
+
         /// <summary>GroundOnHit: a mark where enemy `i` was hit, unless a fresh ground mark already covers that spot (renewed instead).</summary>
         void Ground(EnemyManager em, ref Active a, int i)
         {
@@ -339,18 +362,23 @@ namespace Gladiator.Gameplay
                 _slidDist += (p - _lastSlidePos).magnitude;
                 if (_slidDist >= trailSpacing || _markCount == 0)
                 {
+                    float spacing = Mathf.Clamp(_slidDist, trailSpacing, trailSpacing * 1.5f); // how long its smear is
                     _slidDist = 0f;
+                    Vector3 dir = _motor.HorizontalVelocity;
+                    if (dir.sqrMagnitude < 0.01f) dir = transform.forward;
                     // every trail lays its own mark (Blood Slide's Bleed and Whirlwind's Slow side by side, Phase 5.6)
                     for (int k = 0; k < _fxCount; k++)
-                        if (_fx[k].E.kind == EffectKind.SlideTrail) AddMark(MarkFor(_fx[k], p, ground: false));
+                        if (_fx[k].E.kind == EffectKind.SlideTrail) AddMark(TrailMark(_fx[k], p, dir, _motor.GroundNormal, spacing));
                 }
             }
             _lastSlidePos = transform.position;
-            if (_markCount == 0) return;
+            if (_markCount == 0) { RingsDrawn = SmearsDrawn = 0; return; }
 
             _trailClock -= dt;
             bool apply = _trailClock <= 0f;
             if (apply) _trailClock += trailTick;
+            var blood = _blood != null && _blood.material != null ? _blood : null; // none yet: Bleed trails fall back to rings
+            int rings = 0, smears = 0;
             for (int m = 0; m < _markCount; m++)
             {
                 ref var mk = ref _marks[m];
@@ -362,16 +390,26 @@ namespace Gladiator.Gameplay
                     m--;
                     continue;
                 }
-                if (tele != null)
+                if (blood != null && IsBloodTrail(mk))
                 {
-                    var c = mk.Ground && mk.Status != null ? mk.Status.color : trailColor;
+                    // smeared on the sand behind the slide; it dries and crumbles away over the mark's life
+                    blood.Smear(mk.Pos, mk.Dir, mk.Up, mk.Radius, mk.Spacing, 1f - mk.Life / mk.MaxLife, mk.MaxLife, mk.Serial);
+                    smears++;
+                }
+                else if (tele != null)
+                {
+                    // ground marks and the other trails (Whirlwind's Slow): a ring in their status's colour
+                    var c = mk.Status != null ? mk.Status.color : trailColor;
                     c.a = (mk.Ground ? 0.75f : trailColor.a) * Mathf.Clamp01(mk.Life / mk.MaxLife * 2f);
                     tele.Circle(mk.Pos, mk.Radius, 0f, c, TelegraphRenderer.Style.Ring, 0.18f, m * 0.31f);
+                    rings++;
                 }
                 if (!apply || em == null || mk.Status == null) continue;
                 int n = em.QueryAlive(mk.Pos, mk.Radius, _query);
                 for (int q = 0; q < n; q++) em.ApplyStatus(_query[q], mk.Status, mk.Dps, mk.Stacks);
             }
+            RingsDrawn = rings;
+            SmearsDrawn = smears;
         }
 
         /// <summary>StatusSpread: every carrier passes its status to `count` neighbours without it (collected first, so one tick spreads one step).</summary>
@@ -415,7 +453,7 @@ namespace Gladiator.Gameplay
         public void DebugMark(Vector3 pos)
         {
             for (int k = 0; k < _fxCount; k++)
-                if (_fx[k].E.kind == EffectKind.SlideTrail) AddMark(MarkFor(_fx[k], pos, ground: false));
+                if (_fx[k].E.kind == EffectKind.SlideTrail) AddMark(TrailMark(_fx[k], pos, transform.forward, Vector3.up, trailSpacing));
         }
 
         public void Tick(float dt, float unscaledDt)

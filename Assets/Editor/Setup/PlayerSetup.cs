@@ -48,6 +48,7 @@ namespace Gladiator.EditorTools
             build.catalog = catalog;
             build.meta = MetaSetup.CreateOrUpdate();
             root.AddComponent<BoonEffects>();
+            BloodTrailSetup.AddTo(root); // note 32: Blood Slide's trail drawn as blood smears
 
             var visual = new GameObject("Visual").transform;
             visual.SetParent(root.transform, false);

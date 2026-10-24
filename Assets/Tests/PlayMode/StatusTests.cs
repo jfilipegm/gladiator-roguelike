@@ -203,5 +203,36 @@ namespace Gladiator.Tests
             yield return new WaitForSeconds(2.3f);
             Assert.AreEqual(0, _fx.MarkCount, "marks fade after their duration");
         }
+
+        [UnityTest, Timeout(60000)]
+        public IEnumerator BloodSlide_TrailIsBloodSmears_NotRings_OtherTrailsKeepTheirRing()
+        {
+            yield return Boot();
+            var blood = _player.GetComponent<BloodTrailRenderer>();
+            Assert.IsNotNull(blood, "the player prefab carries the blood trail renderer (Gladiator/Setup/Combat/Blood Trail)");
+            Assert.IsNotNull(blood.material, "with M_FxBloodTrail");
+            Give(new BoonEffect { kind = EffectKind.SlideTrail, status = _bleed, power = 3f, stacks = 1, radius = 1f, duration = 2.5f });
+            yield return null;
+            Vector3 spot = _player.transform.position + new Vector3(0f, 0f, 3f);
+            _fx.DebugMark(spot);
+            yield return null;
+            yield return null;
+            Assert.AreEqual(1, _fx.SmearsDrawn, "the Bleed trail mark is drawn as a blood smear (note 32)");
+            Assert.AreEqual(0, _fx.RingsDrawn, "and not as a telegraph ring");
+            Assert.AreEqual(1, blood.DrawnLastFrame, "through the blood trail renderer");
+
+            // Whirlwind's Slow trail isn't blood: it keeps its ring (in the Slow colour), beside the smears
+            var slow = Load<StatusDef>("Assets/Data/Status/SE_Slow.asset");
+            Assert.IsNotNull(slow);
+            Give(new BoonEffect { kind = EffectKind.SlideTrail, status = slow, power = 0f, stacks = 1, radius = 1.2f, duration = 2f });
+            yield return null;
+            _fx.DebugMark(spot + new Vector3(0.8f, 0f, 0f)); // one mark per trail: Bleed + Slow
+            yield return null;
+            yield return null;
+            Assert.AreEqual(3, _fx.MarkCount);
+            Assert.AreEqual(2, _fx.SmearsDrawn, "both Bleed marks are smears");
+            Assert.AreEqual(1, _fx.RingsDrawn, "the Slow mark is a ring");
+            Assert.AreEqual(2, blood.DrawnLastFrame);
+        }
     }
 }

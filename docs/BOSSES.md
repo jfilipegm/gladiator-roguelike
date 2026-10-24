@@ -3,6 +3,16 @@
 Each boss gets this spec before any code (CLAUDE.md §6.4): distinct silhouette, telegraphed unique attacks, arena
 interaction, ≥ 2 phases, a memorable entrance, personality.
 
+## Difficulty (v0.28.0, the producer's note 25: "the bosses are too easy")
+Applies to every boss (`BossDef`, read by `BossController`):
+- **HP grows with the player's level** on entry: ×(1 + `hpPerLevel` × (level − `hpFromLevel`)), 0.025 from level 20
+  (level 35 = ×1.375). The Gilded Patron 0.015 and the Emperor's Champion 0.01: their fights were already long.
+- **`damageMul` 1.25** on everything the boss deals: melee, javelins/coins (`volleyDamage`), bombs.
+- HP: Champion 15,000, Beast Lord 24,000, Eternal Victor 34,000. Recovery between attacks: Gorm 0.6, Champion and
+  Beast Lord 0.5, Eternal Victor 0.47.
+- Aim: a bot with random cards needs ~110–190 s; a human's build (2–3× its damage) ~50–90 s, the last boss longest.
+  `BossFight` logs every fight (`[Boss] <id> down after Ns: dealt D (D/s), the player took T in H hits ...`).
+
 ## Gorm, the Pit Master (Arena 1 — Slave Pit)
 
 1. **Who:** the slaver who owns the pit and its champion; a huge, hunched man (~3.4 m, twice the Nobody) in a studded leather apron and an iron slaver's collar of keys, chain flail in the right hand, bullwhip in the left. Bald, beard, one golden earring. He thinks you're property.
@@ -31,7 +41,7 @@ interaction, ≥ 2 phases, a memorable entrance, personality.
 9. **Phase 2 — "For the province!" (at 50 % HP):** roars (invulnerable 1.5 s), the crowd throws him a second gladius, and every spike trap fires at once on his roar. Attacks 25 % faster, the Charge comes twice in a row (re-aiming between), and the Flurry has five thrusts.
 10. **Arena interaction and defeat:** barricades (smashed by charges), pillars and walls (stun him), braziers (burning ground), spike traps (phase-2 volley; they hurt him too, 1/4 damage), gates (guards). Defeat: slow-mo, "THE CHAMPION FALLS!", the crowd goes silent then wild, a pick of 3 Rare-or-better upgrades, victory screen.
 
-**Built (Phase 5.4):** all ten points except the crowd throwing him a second gladius (BACKLOG). Body `EN_Champion` (13,000 HP, 540 tris), tuning `BD_Champion`. The boss bar reads "THE PROVINCIAL CHAMPION, UNDEFEATED".
+**Built (Phase 5.4):** all ten points except the crowd throwing him a second gladius (BACKLOG). Body `EN_Champion` (15,000 HP since v0.28.0, was 13,000; 540 tris), tuning `BD_Champion`. The boss bar reads "THE PROVINCIAL CHAMPION, UNDEFEATED".
 
 **Tunables (`BossDef BD_Champion`):** HP, speeds, block arc and reduction, every attack's wind-up / damage / size / weight, charge stun and damage bonus, guard interval and counts, phase threshold, phase-2 speed-up, the flurry count per phase.
 
@@ -122,11 +132,11 @@ Effective wind-ups are the listed wind-up ÷ the phase's speed (1.0 / 1.2 / 1.4)
 
 **Arena interaction:** the stage's lift (his entrance), the trapdoors (they drop near you all fight; **lure him onto a dropping door: 500**; his phase-2 roar drops them all; phase 3 leaves them open), the lifts (his dead), the statues (cover from the falx), the hills (he leaps onto them after you), the chasms (he leaps them). He has **no shield**: the first boss since Gorm with no damage reduction. The fight is about his movement, the floor and his refusal to die.
 
-**Bar:** "THE ETERNAL VICTOR, FIRST CHAMPION OF THE COLOSSEUM". **Body** `EN_EternalVictor`: 22,000 HP, radius 1.0 (the falx isn't body), knockback 0, no block. **Words:** guards "THE DEAD RISE!", phase 2 "\"RISE, BROTHERS!\"", phase 3 "\"THE ARENA IS MINE!\"", remains "HE WILL NOT STAY DOWN!", rising "\"NOT YET.\"", summary "The Eternal Victor" / *"The Eternal Victor salutes the crowd, then carves your name into the podium wall."* / *"The first champion of the Colosseum lies still at last. Forty thousand voices chant a new name: yours."* (Gorm's line, at the end of the ladder.)
+**Bar:** "THE ETERNAL VICTOR, FIRST CHAMPION OF THE COLOSSEUM". **Body** `EN_EternalVictor`: 34,000 HP (v0.28.0; was 22,000), radius 1.0 (the falx isn't body), knockback 0, no block. **Words:** guards "THE DEAD RISE!", phase 2 "\"RISE, BROTHERS!\"", phase 3 "\"THE ARENA IS MINE!\"", remains "HE WILL NOT STAY DOWN!", rising "\"NOT YET.\"", summary "The Eternal Victor" / *"The Eternal Victor salutes the crowd, then carves your name into the podium wall."* / *"The first champion of the Colosseum lies still at last. Forty thousand voices chant a new name: yours."* (Gorm's line, at the end of the ladder.)
 
 ### Attacks per phase (starting numbers; damage is before the arena's ×1.55)
-Effective wind-ups are the listed wind-up ÷ the phase's speed (1.0 / 1.2 / 1.4). He recovers 0.55 s after every attack
-(÷ the same speed); no per-attack cooldowns: `BossController.Weight` picks by range, the last attack 0.3× as likely.
+Effective wind-ups are the listed wind-up ÷ the phase's speed (1.0 / 1.2 / 1.4). He recovers 0.47 s after every attack
+(v0.28.0; was 0.55; ÷ the same speed); no per-attack cooldowns: `BossController.Weight` picks by range, the last attack 0.3× as likely.
 
 | Attack (kind) | Telegraph | Wind-up P1 / P2 / P3 (s) | Damage | Size | Knockback | Phases |
 |---|---|---|---|---|---|---|
@@ -147,7 +157,7 @@ Effective wind-ups are the listed wind-up ÷ the phase's speed (1.0 / 1.2 / 1.4)
 | Light (`Hypogeum`) | late afternoon | dusk (sun ×0.85, warmer) | last light (sun ×0.72, red) |
 | Eternal | — | — | at 0 HP, once: remains 1,500 HP for 8 s, else he rises with 20 % |
 
-Fight length: 22,000 HP plus the remains. The Beast Lord's 15,000 fell to the bot in ~48 s (the run survived at 528 s);
+Fight length: 22,000 HP plus the remains (34,000 since v0.28.0: see Difficulty at the top). The Beast Lord's 15,000 fell to the bot in ~48 s (the run survived at 528 s);
 with three phases, roars and the remains, aim at **100–140 s** for the last boss. Measure, then tune HP.
 
 ### The Colosseum through the fight (who does what)

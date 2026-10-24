@@ -23,7 +23,7 @@ it picks random cards, so a human's build is 2-3x stronger):
 | Emperor's Champion | not done: 50 % HP after ~95 s | | | 37 |
 | Eternal Victor (the final boss) | 68 s | 437/s | 891 (33) | 35 |
 
-**Changes (WIP, not yet tested):**
+**Changes (tested 2026-10-24: the boss PlayMode tests 65/65; EditMode 309/309 after the Victor's spec test moved to 34000):**
 - `BossDef.hpPerLevel` (0.025, from level 20): a boss's HP grows with the player's level when he enters (L35 = +37 %).
 - `BossDef.damageMul` (1.25): his hits, javelins, coins and bombs deal more.
 - HP: Champion 13000 -> 15000, Beast Lord 15000 -> 24000, Eternal Victor 22000 -> 34000.
@@ -31,8 +31,15 @@ it picks random cards, so a human's build is 2-3x stronger):
 - Level scaling: Patron 0.015, Emperor 0.01 (already long fights).
 - Values in the assets and in `BossSetup.cs`.
 
-**Resume:**
-1. Run the boss PlayMode tests: BossTests, ChampionTests, BeastLordTests, GildedPatronTests, EmperorsChampionTests,
-   EternalVictorTests and AdminToolsTests. They were stopped mid-run, so the new numbers are untested.
-2. Rebuild the dev build, then bot runs to Gorm, the Beast Lord and the Eternal Victor (`scratchpad/boss/run.sh`) to check the new fight lengths.
-3. Full suites, screenshots, the PR and the producer's OK.
+**After (the same bot and seed, 2026-10-24; the bot stops at 640 s, so a fight still going is cut there):**
+
+| Boss | HP at the bot's level | Fight | Bot DPS | Before |
+|---|---|---|---|---|
+| Gorm | 11 250 (L30) | 77 s, down | 154/s (a stronger build than before) | 95 s at 106/s |
+| Provincial Champion | 17 600 (L27) | 30 % left after 108 s (≈ 155 s) | ≈ 114/s | 89 s |
+| Beast Lord | 31 800 (L33) | 42 % left after 92 s (≈ 160 s) | ≈ 200/s | 52 s |
+| Eternal Victor | 47 600 (L36) | 54 % left after 86 s (≈ 185 s + the remains) | ≈ 255/s | 68 s |
+
+The bot's random cards swing its damage 2-4x between runs, so one run per boss is a rough measure. At a human's
+2-3x the bot's damage, the fights land around 50-90 s, the final boss longest. Logs: `~/.local/share/gladiator-roguelike/scratch-2026-10-24/*2.log`.
+The producer's playtest decides from here: every number is in the `BD_*` assets (`hpPerLevel`, `damageMul`, `recover`) and the `EN_*` bodies (`maxHp`).

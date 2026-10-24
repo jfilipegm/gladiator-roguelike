@@ -70,7 +70,7 @@ namespace Gladiator.Tests
             Assert.IsNotNull(body);
             Assert.AreEqual("eternal_victor", body.id);
             Assert.AreEqual(EnemyBehaviour.Scripted, body.behaviour);
-            Assert.AreEqual(22000f, body.maxHp);
+            Assert.AreEqual(34000f, body.maxHp, "note 25 (v0.28.0): 22000 -> 34000");
             Assert.AreEqual(1.0f, body.radius, 1e-4f);
             Assert.AreEqual(0f, body.blockArc, "no shield");
             Assert.AreEqual(0f, body.knockbackTaken);
